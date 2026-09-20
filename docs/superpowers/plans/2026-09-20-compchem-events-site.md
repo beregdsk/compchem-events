@@ -3985,7 +3985,9 @@ if (form && list && countEl) {
     if (deadline) deadline.checked = state.deadline;
   }
 
-  function apply(state: FilterState, pushUrl: boolean): void {
+  // History mode is three-valued, not a boolean: 'none' on load and popstate,
+  // 'replace' while typing so a query collapses into one entry, 'push' otherwise.
+  function apply(state: FilterState, mode: 'none' | 'push' | 'replace'): void {
     let shown = 0;
     for (const { el, row } of rows) {
       const match = matchesFilter(row, state);
@@ -3997,30 +3999,65 @@ if (form && list && countEl) {
       ? `${shown} upcoming ${shown === 1 ? 'event' : 'events'}`
       : `${shown} of ${rows.length} ${rows.length === 1 ? 'event' : 'events'} match`;
 
-    if (pushUrl) {
-      const params = serialiseFilterState(state).toString();
-      history.pushState(null, '', params ? `?${params}` : location.pathname);
-    }
+    if (mode === 'none') return;
+
+    const params = serialiseFilterState(state).toString();
+    const next = params ? `${location.pathname}?${params}` : location.pathname;
+    const current = `${location.pathname}${location.search}`;
+    // A no-op interaction must never create a history entry. This guard also
+    // means a duplicate event cannot produce a duplicate entry.
+    if (next === current) return;
+
+    if (mode === 'replace') history.replaceState(null, '', next);
+    else history.pushState(null, '', next);
   }
 
   function syncFromUrl(): void {
     const state = parseFilterState(new URLSearchParams(location.search));
     writeForm(state);
-    apply(state, false);
+    apply(state, 'none');
   }
 
   form.addEventListener('submit', (e) => e.preventDefault());
-  form.addEventListener('input', () => apply(readForm(), true));
-  form.addEventListener('change', () => apply(readForm(), true));
+
+  // ONE listener, not two. `input` fires on checkboxes, selects, date inputs and
+  // text inputs alike. Adding a `change` listener as well double-fires on
+  // checkboxes and selects, so a single topic tick pushes two identical history
+  // entries and the user's first Back press does nothing.
+  form.addEventListener('input', (event) => {
+    const target = event.target as HTMLElement | null;
+    const isTextEntry = target instanceof HTMLInputElement && target.type === 'text';
+    apply(readForm(), isTextEntry ? 'replace' : 'push');
+  });
+
   clearButton?.addEventListener('click', () => {
     writeForm(EMPTY_FILTER);
-    apply(EMPTY_FILTER, true);
+    apply(EMPTY_FILTER, 'push');
   });
   window.addEventListener('popstate', syncFromUrl);
 
   syncFromUrl();
 }
 ```
+
+- [ ] **Step 8b: Test the island**
+
+This is the only file in the project that touches `document`, `history` and `location`, and it is
+the one surface no other test reaches. Install `happy-dom` as a **devDependency only** and scope it
+to a single file with a docblock — do not change the global vitest environment:
+
+```ts
+// @vitest-environment happy-dom
+```
+
+Build a minimal DOM fixture (a hidden `#filters` form with a text input, two topic checkboxes and a
+select; an `#event-list` with a few `<li class="event">` rows carrying data attributes;
+`#result-count`; `#clear-filters`). **Spy on `history.pushState` and `history.replaceState`** rather
+than relying on happy-dom's own History implementation. Cover four behaviours: ticking one checkbox
+pushes exactly once; typing calls `replaceState` and never `pushState`; an interaction producing the
+same URL calls neither; Clear resets the form and pushes once.
+
+Verify the first of those genuinely fails against a two-listener implementation before keeping it.
 
 - [ ] **Step 9: Verify the build, the JS budget and manual behaviour**
 
