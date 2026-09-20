@@ -1,0 +1,300 @@
+/* Isosurface — dark-first editorial grid. Spec section 8.
+   System fonts only (spec D2). No webfonts, no external requests. */
+
+:root {
+  color-scheme: dark light;
+
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+
+  --step--1: clamp(0.78rem, 0.76rem + 0.1vw, 0.84rem);
+  --step-0: clamp(0.95rem, 0.92rem + 0.15vw, 1.05rem);
+  --step-1: clamp(1.12rem, 1.02rem + 0.5vw, 1.35rem);
+  --step-2: clamp(1.4rem, 1.2rem + 1vw, 1.95rem);
+  --step-3: clamp(1.85rem, 1.45rem + 2vw, 2.9rem);
+
+  --space-xs: 0.375rem;
+  --space-s: 0.75rem;
+  --space-m: 1.25rem;
+  --space-l: 2rem;
+  --space-xl: 3.5rem;
+
+  --measure: 68ch;
+  --radius: 2px;
+
+  /* Dark theme: deep desaturated blue-black with orbital-phase accents. */
+  --bg: #0a0e13;
+  --bg-raise: #111922;
+  --fg: #dde5ed;
+  --fg-muted: #8697a6;
+  --rule: #1d2833;
+  --rule-strong: #2c3c4b;
+  --warm: #f2a950;
+  --warm-soft: #3a2a14;
+  --cool: #58d6c8;
+  --cool-soft: #133733;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    /* Warm paper, never white. */
+    --bg: #f5f1e8;
+    --bg-raise: #fffdf7;
+    --fg: #1a2127;
+    --fg-muted: #54616b;
+    --rule: #ded6c6;
+    --rule-strong: #c3b8a3;
+    --warm: #9c4f14;
+    --warm-soft: #f0e0cb;
+    --cool: #0c645c;
+    --cool-soft: #d3e8e4;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--step-0);
+  line-height: 1.6;
+  color: var(--fg);
+  background-color: var(--bg);
+  /* Atmosphere: two low-contrast density lobes. Pure CSS, no image bytes. */
+  background-image:
+    radial-gradient(
+      58% 38% at 10% -6%,
+      color-mix(in oklab, var(--cool) 13%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      48% 32% at 94% 6%,
+      color-mix(in oklab, var(--warm) 10%, transparent),
+      transparent 70%
+    );
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  font-weight: 650;
+  margin: 0 0 var(--space-s);
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: var(--step-3);
+}
+h2 {
+  font-size: var(--step-2);
+}
+h3 {
+  font-size: var(--step-1);
+}
+
+p {
+  margin: 0 0 var(--space-s);
+  max-width: var(--measure);
+}
+
+a {
+  color: var(--cool);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+
+a:hover {
+  text-decoration-thickness: 2px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--warm);
+  outline-offset: 2px;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--step--1);
+  letter-spacing: -0.01em;
+}
+
+.muted {
+  color: var(--fg-muted);
+}
+
+.wrap {
+  width: min(100% - 2rem, 78rem);
+  margin-inline: auto;
+  padding-block: var(--space-l);
+}
+
+.rule {
+  border: 0;
+  border-top: 1px solid var(--rule);
+  margin-block: var(--space-m);
+}
+
+/* Skip link */
+.skip {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--bg-raise);
+  color: var(--fg);
+  padding: var(--space-s) var(--space-m);
+  z-index: 10;
+}
+.skip:focus {
+  left: var(--space-s);
+  top: var(--space-s);
+}
+
+/* Header and footer */
+.site-head,
+.site-foot {
+  border-block-end: 1px solid var(--rule);
+}
+.site-foot {
+  border-block: 1px solid var(--rule);
+  border-block-end: 0;
+  margin-block-start: var(--space-xl);
+  color: var(--fg-muted);
+  font-size: var(--step--1);
+}
+.site-head__inner,
+.site-foot__inner {
+  width: min(100% - 2rem, 78rem);
+  margin-inline: auto;
+  padding-block: var(--space-m);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-m);
+  align-items: baseline;
+  justify-content: space-between;
+}
+.site-head__name {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+  text-decoration: none;
+}
+.site-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-m);
+  font-size: var(--step--1);
+}
+.site-nav a {
+  color: var(--fg-muted);
+  text-decoration: none;
+}
+.site-nav a:hover,
+.site-nav a[aria-current='page'] {
+  color: var(--fg);
+  text-decoration: underline;
+  text-underline-offset: 0.3em;
+}
+
+/* Two-column layout: filter rail plus results. */
+.rail {
+  display: grid;
+  grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+  gap: var(--space-xl);
+  align-items: start;
+}
+
+@media (max-width: 52rem) {
+  .rail {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-m);
+  }
+}
+
+/* Pills: topics and status markers. */
+.pill {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  padding: 0.1em 0.5em;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  color: var(--fg-muted);
+  background: var(--bg-raise);
+}
+.pill--topic {
+  border-color: color-mix(in oklab, var(--cool) 45%, var(--rule));
+  color: var(--cool);
+  background: var(--cool-soft);
+}
+.pill--deadline {
+  border-color: color-mix(in oklab, var(--warm) 45%, var(--rule));
+  color: var(--warm);
+  background: var(--warm-soft);
+}
+.pill--status {
+  border-color: var(--warm);
+  color: var(--warm);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.warn {
+  border-inline-start: 2px solid var(--warm);
+  padding-inline-start: var(--space-s);
+  color: var(--fg-muted);
+  font-size: var(--step--1);
+}
+
+/* Staggered load-in. Motion is opt-out by default. */
+@media (prefers-reduced-motion: no-preference) {
+  .reveal > * {
+    animation: rise 420ms cubic-bezier(0.2, 0.7, 0.3, 1) backwards;
+  }
+  .reveal > *:nth-child(1) {
+    animation-delay: 30ms;
+  }
+  .reveal > *:nth-child(2) {
+    animation-delay: 60ms;
+  }
+  .reveal > *:nth-child(3) {
+    animation-delay: 90ms;
+  }
+  .reveal > *:nth-child(4) {
+    animation-delay: 120ms;
+  }
+  .reveal > *:nth-child(5) {
+    animation-delay: 150ms;
+  }
+  .reveal > *:nth-child(6) {
+    animation-delay: 180ms;
+  }
+  .reveal > *:nth-child(n + 7) {
+    animation-delay: 210ms;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+[hidden] {
+  display: none !important;
+}
