@@ -56,7 +56,7 @@ if (form && list && countEl) {
     if (deadline) deadline.checked = state.deadline;
   }
 
-  function apply(state: FilterState, pushUrl: boolean): void {
+  function apply(state: FilterState, mode: 'none' | 'push' | 'replace'): void {
     let shown = 0;
     for (const { el, row } of rows) {
       const match = matchesFilter(row, state);
@@ -68,24 +68,31 @@ if (form && list && countEl) {
       ? `${shown} upcoming ${shown === 1 ? 'event' : 'events'}`
       : `${shown} of ${rows.length} ${rows.length === 1 ? 'event' : 'events'} match`;
 
-    if (pushUrl) {
-      const params = serialiseFilterState(state).toString();
-      history.pushState(null, '', params ? `?${params}` : location.pathname);
-    }
+    if (mode === 'none') return;
+    const params = serialiseFilterState(state).toString();
+    const next = params ? `${location.pathname}?${params}` : location.pathname;
+    const current = `${location.pathname}${location.search}`;
+    // A no-op interaction must not create a history entry.
+    if (next === current) return;
+    if (mode === 'replace') history.replaceState(null, '', next);
+    else history.pushState(null, '', next);
   }
 
   function syncFromUrl(): void {
     const state = parseFilterState(new URLSearchParams(location.search));
     writeForm(state);
-    apply(state, false);
+    apply(state, 'none');
   }
 
   form.addEventListener('submit', (e) => e.preventDefault());
-  form.addEventListener('input', () => apply(readForm(), true));
-  form.addEventListener('change', () => apply(readForm(), true));
+  form.addEventListener('input', (event) => {
+    const target = event.target as HTMLElement | null;
+    const isTextEntry = target instanceof HTMLInputElement && target.type === 'text';
+    apply(readForm(), isTextEntry ? 'replace' : 'push');
+  });
   clearButton?.addEventListener('click', () => {
     writeForm(EMPTY_FILTER);
-    apply(EMPTY_FILTER, true);
+    apply(EMPTY_FILTER, 'push');
   });
   window.addEventListener('popstate', syncFromUrl);
 
