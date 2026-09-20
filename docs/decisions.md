@@ -128,3 +128,19 @@ settles the borderline toward fewer listings.
 Recorded rather than dropped silently so the call is reversible: if the policy is
 later widened to cover research-software practice for the field, this is the
 first event to reconsider.
+
+## 2026-09-20 — `/about/` ships without a "Feeds and exports" section
+
+`/events.ics`, `/deadlines.ics`, `/feed.xml` and `/events.json` do not exist yet
+(they land in the phase 3 export tasks). Listing them on `/about/` would promise
+a feature the site does not have, and this site's value rests on its claims
+being reliable, so the section was omitted rather than shipped with dead links.
+
+`Base.astro`'s footer already links three of the same four endpoints
+(`/events.ics`, `/feed.xml`, `/events.json`) site-wide, so those links are dead
+for the same reason until the same moment: one fact, two symptoms, resolved
+together.
+
+Reverse this once phase 3 ships the endpoints: restore the "Feeds and exports"
+section on `/about/` listing all four, and the footer's links become live at
+the same time.
