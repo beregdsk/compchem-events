@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   deriveStatus,
   eventById,
@@ -152,5 +152,50 @@ describe('isStale', () => {
 
   it('is true more than 90 days after last_verified, before the event starts', () => {
     expect(isStale(events[0]!, '2027-01-05')).toBe(true);
+  });
+});
+
+describe('memoisation', () => {
+  it('caches a bare loadEvents() call and returns the same array reference', () => {
+    const a = loadEvents();
+    const b = loadEvents();
+    expect(a).toBe(b);
+  });
+
+  it('does not leak between an explicit-options call and a bare call', () => {
+    // Explicit options must always bypass the cache. Assert the explicit call
+    // first: if the bare-call cache (populated above, and empty because
+    // data/events/ does not exist yet) leaked into it, this would see 0
+    // instead of 3. Then assert the bare call still sees 0: if the explicit
+    // call above had leaked *into* the cache, this would see 3 instead.
+    const explicit = loadEvents(opts);
+    expect(explicit).toHaveLength(3);
+
+    const bare = loadEvents();
+    expect(bare).toHaveLength(0);
+  });
+});
+
+describe('warnings (do not throw)', () => {
+  it('prints a warning and returns the event rather than throwing', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    try {
+      let result: ReturnType<typeof loadEvents> = [];
+      expect(() => {
+        result = loadEvents({
+          eventsDir: 'tests/fixtures/warnings',
+          today: '2026-09-20',
+          includeFixtures: true,
+        });
+      }).not.toThrow();
+
+      expect(result).toHaveLength(1);
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      const message = warnSpy.mock.calls[0]!.join(' ');
+      expect(message).toContain('stale-warning-2027.yaml');
+      expect(message).toMatch(/90 days/);
+    } finally {
+      warnSpy.mockRestore();
+    }
   });
 });

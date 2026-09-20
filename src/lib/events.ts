@@ -2,7 +2,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse } from 'yaml';
 import { compareISO, daysBetween, todayUTC, type ISODate } from './dates';
-import { regionOf } from './regions';
+import { regionOf, type DisplayRegion } from './regions';
 import {
   formatProblems,
   loadValidationContext,
@@ -33,6 +33,26 @@ export function deriveStatus(event: RawEvent, today: ISODate): DerivedStatus {
   return 'ongoing';
 }
 
+/**
+ * `'Online'` is reserved by spec D6 for "online format, or no location" — it
+ * must never mean "we couldn't work out the region." If a located,
+ * non-online event's country has no entry in `COUNTRY_REGIONS`, fail loudly
+ * instead of relabelling it Online, which would silently conflate the two.
+ * Unreachable today: the validator's rule 4 already rejects any country not
+ * in the region table, so this only fires if that invariant is ever dropped
+ * or the two tables drift apart.
+ */
+function regionFor(e: RawEvent): DisplayRegion {
+  if (e.format === 'online' || !e.location) return 'Online';
+  const region = regionOf(e.location.country);
+  if (region === undefined) {
+    throw new Error(
+      `event ${e.id}: country "${e.location.country}" has no region; add it to src/lib/regions.ts`,
+    );
+  }
+  return region;
+}
+
 function readAll(dir: string): EventFile[] {
   if (!existsSync(dir)) return [];
   return readdirSync(dir, { recursive: true, encoding: 'utf8' })
@@ -44,6 +64,19 @@ function readAll(dir: string): EventFile[] {
     }));
 }
 
+/**
+ * Holds the result of the most recent bare `loadEvents()` call (no options
+ * given at all). There is only one slot: it is consulted and populated only
+ * when `isDefault` is true below, so any explicit option bypasses it entirely
+ * and never reads or writes it. `today` is captured at the moment the cache
+ * is populated and is never refreshed afterwards. That is correct and
+ * desirable for a one-shot `astro build`. A long-running `astro dev` server,
+ * however, will keep serving `status_derived` (and any date-relative
+ * selector built on it) computed against that captured `today` across a UTC
+ * day boundary, until the process is restarted — this is accepted rather
+ * than adding invalidation to a build-time module, since production rebuilds
+ * daily anyway.
+ */
 let cached: LoadedEvent[] | undefined;
 
 export function loadEvents(options: LoadOptions = {}): LoadedEvent[] {
@@ -82,10 +115,7 @@ export function loadEvents(options: LoadOptions = {}): LoadedEvent[] {
     .filter((e) => includeFixtures || e.fixture !== true)
     .map<LoadedEvent>((e) => ({
       ...e,
-      region:
-        e.format === 'online' || !e.location
-          ? 'Online'
-          : (regionOf(e.location.country) ?? 'Online'),
+      region: regionFor(e),
       status_derived: deriveStatus(e, today),
     }))
     .sort((a, b) => compareISO(a.start_date, b.start_date) || a.title.localeCompare(b.title));
