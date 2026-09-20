@@ -1,0 +1,57 @@
+---
+import Base from '../layouts/Base.astro';
+import { site } from '../../site.config';
+---
+
+<Base
+  title="Add an event"
+  description="Three ways to add a computational chemistry event: a pull request, a GitHub issue, or a form that needs no account."
+  path="/submit/"
+>
+  <div class="prose">
+    <h1>Add an event</h1>
+    <p>
+      Anyone can add or correct a listing. Pick whichever of the three routes suits you. Every
+      submission is checked against the <a href="/policy/">curation policy</a> before it appears.
+    </p>
+
+    <h2>1. Pull request</h2>
+    <p>
+      Fastest if you are comfortable with Git. Add one YAML file to <code>data/events/</code>, run{' '}
+      <code>npm run validate</code>, and open a pull request. The
+      <a href={`${site.repoUrl}/blob/main/CONTRIBUTING.md`} rel="noopener">
+        contributing guide
+      </a>
+      has the exact steps and the
+      <a href={`${site.repoUrl}/blob/main/docs/data-schema.md`} rel="noopener">
+        data schema
+      </a>
+      documents every field.
+    </p>
+
+    <h2>2. GitHub issue</h2>
+    <p>
+      No coding needed. Open an
+      <a href={`${site.repoUrl}/issues/new?labels=event-submission`} rel="noopener">
+        event submission issue
+      </a>
+      with a link to the official page, and a maintainer will turn it into a pull request.
+    </p>
+
+    <h2>3. Submission form</h2>
+    <p>
+      No GitHub account needed. Use the
+      <a href={site.submissionFormUrl} rel="noopener">
+        submission form
+      </a>
+      . A maintainer reviews it and adds the event.
+    </p>
+
+    <h2>What we need</h2>
+    <p>
+      A link to the organiser's official page, the dates, the location or online format, and an
+      identifiable organising body. We write descriptions in our own words rather than copying the
+      organiser's text.
+    </p>
+  </div>
+</Base>

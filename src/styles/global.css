@@ -506,3 +506,54 @@ a:hover {
     margin-block-end: var(--space-xs);
   }
 }
+
+/* Prose: long-form pages (about, submit, policy, 404). */
+.prose {
+  max-width: var(--measure);
+}
+
+.prose h2 {
+  margin-block-start: var(--space-l);
+}
+
+.prose h3 {
+  margin-block-start: var(--space-m);
+}
+
+.prose ul,
+.prose ol {
+  max-width: var(--measure);
+  padding-inline-start: 1.2em;
+}
+
+.prose li {
+  margin-block-end: var(--space-xs);
+}
+
+.prose code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: var(--bg-raise);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 0.1em 0.35em;
+}
+
+.prose table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.prose th,
+.prose td {
+  text-align: start;
+  padding: var(--space-xs) var(--space-s);
+  border-block-end: 1px solid var(--rule);
+}
+
+.prose blockquote {
+  margin-inline: 0;
+  padding-inline-start: var(--space-m);
+  border-inline-start: 2px solid var(--cool);
+  color: var(--fg-muted);
+}
