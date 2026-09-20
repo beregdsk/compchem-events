@@ -2470,6 +2470,27 @@ export interface UpcomingDeadline {
   deadline: Deadline;
 }
 
+/**
+ * Display region for an event. Spec D6 keeps `regionOf` purely geographic, so the
+ * Online case is decided here.
+ *
+ * An unmapped country throws rather than falling back. A fallback to 'Online'
+ * would relabel a located event with the one value reserved for online events,
+ * conflating "region unknown" with "this is an online event" — silent corruption
+ * in the module every page reads through. Unreachable while the validator enforces
+ * rule 4, and this is what makes that invariant explicit.
+ */
+function regionFor(e: RawEvent): DisplayRegion {
+  if (e.format === 'online' || !e.location) return 'Online';
+  const region = regionOf(e.location.country);
+  if (region === undefined) {
+    throw new Error(
+      `event ${e.id}: country "${e.location.country}" has no region; add it to src/lib/regions.ts`,
+    );
+  }
+  return region;
+}
+
 export function deriveStatus(event: RawEvent, today: ISODate): DerivedStatus {
   if (compareISO(event.end_date, today) < 0) return 'past';
   if (compareISO(event.start_date, today) > 0) return 'upcoming';
@@ -2525,7 +2546,7 @@ export function loadEvents(options: LoadOptions = {}): LoadedEvent[] {
     .filter((e) => includeFixtures || e.fixture !== true)
     .map<LoadedEvent>((e) => ({
       ...e,
-      region: e.format === 'online' || !e.location ? 'Online' : (regionOf(e.location.country) ?? 'Online'),
+      region: regionFor(e),
       status_derived: deriveStatus(e, today),
     }))
     .sort((a, b) => compareISO(a.start_date, b.start_date) || a.title.localeCompare(b.title));
@@ -2577,10 +2598,30 @@ export function isStale(event: LoadedEvent, today: ISODate): boolean {
 Run: `npx vitest run tests/lib/events.test.ts`
 Expected: PASS, 21 tests.
 
+- [ ] **Step 4b: Cover the branches the happy-path tests miss**
+
+Three behaviours of this module are load-bearing for ten downstream tasks but are not
+exercised by the tests above, because every call in them passes explicit options:
+
+1. **Memoisation.** Add a `describe('memoisation', ...)` with two tests: two consecutive bare
+   `loadEvents()` calls return the same array reference, and an explicit-option call followed by
+   a bare call does not cross-contaminate (3 events from the fixtures, then 0 from the absent
+   `data/events/`). Order the assertions so a leak in either direction fails.
+2. **The warn-not-throw path.** Create `tests/fixtures/warnings/2027/stale-warning-2027.yaml`:
+   fully valid, `fixture: true`, an `example.org` URL, a future `start_date`, and `added` and
+   `last_verified` more than 90 days before 2026-09-20 so it trips warning 2 and nothing else.
+   Add a test that spies on `console.warn`, asserts `loadEvents` does not throw and returns one
+   event, and asserts the warning names the file and mentions the 90-day staleness. Restore the
+   spy in a `finally`. Do NOT put this fixture in `tests/fixtures/valid/` — assertions there pin
+   that directory at exactly three files.
+3. **The `NODE_ENV` default.** The suite never exercises `includeFixtures`' default. Verify it
+   out of band at least once: with `NODE_ENV=production`, a fixture-only directory must load zero
+   events; unset, it must load them all.
+
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/lib/events.ts tests/lib/events.test.ts
+git add src/lib/events.ts tests/lib/events.test.ts tests/fixtures/warnings/
 git commit -m "feat: add the single event loader
 
 Parses, validates, drops fixtures in production builds, sorts, and derives
