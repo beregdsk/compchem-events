@@ -1,0 +1,83 @@
+---
+import { site } from '../../site.config';
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description: string;
+  /** Route path with leading and trailing slashes, e.g. `/deadlines/`. */
+  path: string;
+}
+
+const { title, description, path } = Astro.props;
+const canonical = new URL(path, site.url).href;
+const fullTitle = path === '/' ? `${site.name} — ${site.tagline}` : `${title} — ${site.name}`;
+
+const nav = [
+  { href: '/', label: 'Events' },
+  { href: '/deadlines/', label: 'Deadlines' },
+  { href: '/archive/', label: 'Archive' },
+  { href: '/submit/', label: 'Add an event' },
+  { href: '/policy/', label: 'Policy' },
+  { href: '/about/', label: 'About' },
+];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:site_name" content={site.name} />
+    <meta name="twitter:card" content="summary" />
+    <link
+      rel="alternate"
+      type="application/atom+xml"
+      title={`${site.name} — new events`}
+      href="/feed.xml"
+    />
+    <link rel="sitemap" href="/sitemap.xml" />
+  </head>
+  <body>
+    <a class="skip" href="#main">
+      Skip to content
+    </a>
+    <header class="site-head">
+      <div class="site-head__inner">
+        <a class="site-head__name" href="/">
+          {site.name}
+        </a>
+        <nav class="site-nav" aria-label="Main">
+          {nav.map((item) => (
+            <a href={item.href} aria-current={item.href === path ? 'page' : undefined}>
+              {item.label}
+            </a>
+          ))}
+        </nav>
+      </div>
+    </header>
+
+    <main id="main" class="wrap">
+      <slot />
+    </main>
+
+    <footer class="site-foot">
+      <div class="site-foot__inner">
+        <p class="muted">
+          Community-maintained. Listings follow the <a href="/policy/">curation policy</a>.
+        </p>
+        <p class="muted">
+          <a href="/events.ics">Calendar</a> · <a href="/feed.xml">Feed</a> ·
+          <a href="/events.json">JSON</a> · <a href={site.repoUrl}>Source</a>
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -2731,7 +2731,7 @@ Spec §8, "Isosurface". Spec D2 rules out webfonts, so colour, density and struc
 
 **Interfaces:**
 - Consumes: `site` from `site.config.ts`.
-- Produces: `Base.astro` with props `{ title: string; description: string; path: string; ogType?: string }`. Every page uses it. CSS classes `.wrap`, `.rail`, `.reveal`, `.mono`, `.pill`, `.rule`, `.muted`, `.warn` are the shared vocabulary later tasks reference.
+- Produces: `Base.astro` with props `{ title: string; description: string; path: string }` — exactly three. `og:type` is hardcoded to `website`; no page needs to vary it. Every page uses it. CSS classes `.wrap`, `.rail`, `.reveal`, `.mono`, `.pill`, `.rule`, `.muted`, `.warn` are the shared vocabulary later tasks reference.
 
 - [ ] **Step 1: Create the branch and write `src/styles/global.css`**
 
@@ -3537,7 +3537,6 @@ export function formatDate(d: ISODate): string {
 export function formatDateRange(start: ISODate, end: ISODate): string {
   if (start === end) return formatDate(start);
   const a = parseISODate(start);
-  const b = parseISODate(end);
   const sameYear = start.slice(0, 4) === end.slice(0, 4);
   const sameMonth = start.slice(0, 7) === end.slice(0, 7);
   if (sameMonth) return `${DAY.format(a)}–${formatDate(end)}`;
@@ -3986,7 +3985,9 @@ if (form && list && countEl) {
     if (deadline) deadline.checked = state.deadline;
   }
 
-  function apply(state: FilterState, pushUrl: boolean): void {
+  // History mode is three-valued, not a boolean: 'none' on load and popstate,
+  // 'replace' while typing so a query collapses into one entry, 'push' otherwise.
+  function apply(state: FilterState, mode: 'none' | 'push' | 'replace'): void {
     let shown = 0;
     for (const { el, row } of rows) {
       const match = matchesFilter(row, state);
@@ -3998,24 +3999,40 @@ if (form && list && countEl) {
       ? `${shown} upcoming ${shown === 1 ? 'event' : 'events'}`
       : `${shown} of ${rows.length} ${rows.length === 1 ? 'event' : 'events'} match`;
 
-    if (pushUrl) {
-      const params = serialiseFilterState(state).toString();
-      history.pushState(null, '', params ? `?${params}` : location.pathname);
-    }
+    if (mode === 'none') return;
+
+    const params = serialiseFilterState(state).toString();
+    const next = params ? `${location.pathname}?${params}` : location.pathname;
+    const current = `${location.pathname}${location.search}`;
+    // A no-op interaction must never create a history entry. This guard also
+    // means a duplicate event cannot produce a duplicate entry.
+    if (next === current) return;
+
+    if (mode === 'replace') history.replaceState(null, '', next);
+    else history.pushState(null, '', next);
   }
 
   function syncFromUrl(): void {
     const state = parseFilterState(new URLSearchParams(location.search));
     writeForm(state);
-    apply(state, false);
+    apply(state, 'none');
   }
 
   form.addEventListener('submit', (e) => e.preventDefault());
-  form.addEventListener('input', () => apply(readForm(), true));
-  form.addEventListener('change', () => apply(readForm(), true));
+
+  // ONE listener, not two. `input` fires on checkboxes, selects, date inputs and
+  // text inputs alike. Adding a `change` listener as well double-fires on
+  // checkboxes and selects, so a single topic tick pushes two identical history
+  // entries and the user's first Back press does nothing.
+  form.addEventListener('input', (event) => {
+    const target = event.target as HTMLElement | null;
+    const isTextEntry = target instanceof HTMLInputElement && target.type === 'text';
+    apply(readForm(), isTextEntry ? 'replace' : 'push');
+  });
+
   clearButton?.addEventListener('click', () => {
     writeForm(EMPTY_FILTER);
-    apply(EMPTY_FILTER, true);
+    apply(EMPTY_FILTER, 'push');
   });
   window.addEventListener('popstate', syncFromUrl);
 
@@ -4023,14 +4040,45 @@ if (form && list && countEl) {
 }
 ```
 
+- [ ] **Step 8b: Test the island**
+
+This is the only file in the project that touches `document`, `history` and `location`, and it is
+the one surface no other test reaches. Install `happy-dom` as a **devDependency only** and scope it
+to a single file with a docblock — do not change the global vitest environment:
+
+```ts
+// @vitest-environment happy-dom
+```
+
+Build a minimal DOM fixture (a hidden `#filters` form with a text input, two topic checkboxes and a
+select; an `#event-list` with a few `<li class="event">` rows carrying data attributes;
+`#result-count`; `#clear-filters`). **Spy on `history.pushState` and `history.replaceState`** rather
+than relying on happy-dom's own History implementation. Cover four behaviours: ticking one checkbox
+pushes exactly once; typing calls `replaceState` and never `pushState`; an interaction producing the
+same URL calls neither; Clear resets the form and pushes once.
+
+Verify the first of those genuinely fails against a two-listener implementation before keeping it.
+
 - [ ] **Step 9: Verify the build, the JS budget and manual behaviour**
 
 ```bash
 npm run build
-find dist/_astro -name '*.js' -exec sh -c 'gzip -c "$1" | wc -c' _ {} \; | paste -sd+ | bc
+node -e "
+const fs=require('fs'),zlib=require('zlib');
+const h=fs.readFileSync('dist/index.html','utf8');
+const inline=[...h.matchAll(/<script type=\"module\">([\s\S]*?)<\/script>/g)].map(m=>m[1]).join('');
+let ext=0;
+for (const f of fs.existsSync('dist/_astro')?fs.readdirSync('dist/_astro').filter(f=>f.endsWith('.js')):[])
+  ext+=zlib.gzipSync(fs.readFileSync('dist/_astro/'+f)).length;
+console.log('gzipped JS on /:', zlib.gzipSync(Buffer.from(inline)).length + ext, 'bytes (budget 30720)');
+"
 ```
 
-Expected: the total is well under 30720 bytes. Record the number for the PR.
+Expected: well under 30720 bytes. Record the number for the PR.
+
+**Measure the inline script, not just `dist/_astro/`.** An island this small is inlined
+straight into `index.html` by Astro, so scanning only `dist/_astro/*.js` reports zero and
+looks like a pass for the wrong reason.
 
 ```bash
 npm run preview
@@ -4129,7 +4177,7 @@ const zoneLabel = (tz: string | undefined): string =>
 ---
 import Base from '../../layouts/Base.astro';
 import DeadlineList from '../../components/DeadlineList.astro';
-import { eventById, isStale, loadEvents } from '../../lib/events';
+import { isStale, loadEvents } from '../../lib/events';
 import { formatDate, formatDateRange, todayUTC } from '../../lib/dates';
 import { site } from '../../../site.config';
 import type { LoadedEvent } from '../../lib/types';
@@ -4370,7 +4418,18 @@ Run: `npm run build && npm run typecheck`
 Expected: both pass, and `dist/events/<id>/index.html` exists for every event.
 
 ```bash
-node -e "const h=require('fs').readFileSync(process.argv[1],'utf8');const m=/<script type=\"application\/ld\+json\">(.+?)<\/script>/s.exec(h);JSON.parse(m[1]);console.log('JSON-LD parses')" dist/events/full-online-2027/index.html
+node -e "
+const fs = require('fs');
+// Pick whatever event page the build actually produced. Never hard-code a
+// fixture id here: fixtures are excluded from production builds, so the check
+// would fail on a missing file and look like broken JSON-LD.
+const dir = fs.readdirSync('dist/events')[0];
+const html = fs.readFileSync(\`dist/events/\${dir}/index.html\`, 'utf8');
+const m = /<script type=\"application\/ld\+json\">([\s\S]*?)<\/script>/.exec(html);
+if (!m) throw new Error('no JSON-LD found in ' + dir);
+const d = JSON.parse(m[1]);
+console.log('JSON-LD parses for', dir, '-', d['@type'], d.startDate, d.endDate);
+"
 ```
 
 Expected: `JSON-LD parses`.
@@ -5364,7 +5423,9 @@ with ical.js and assert counts, UIDs and dates."
 
 **Files:**
 - Create: `src/pages/feed.xml.ts`, `src/pages/events.json.ts`, `tests/endpoints/exports.test.ts`
-- Modify: `docs/data-schema.md` (document `schema_version`)
+- Modify: `docs/data-schema.md` (document `schema_version`), `src/pages/about.astro` (restore the
+  deferred "Feeds and exports" section — see Step 5b), `docs/decisions.md` (close the entry that
+  deferred it)
 
 **Interfaces:**
 - Consumes: `loadEvents` from `src/lib/events.ts`; `site` from `site.config.ts`.
@@ -5560,6 +5621,26 @@ And add below it:
 
 > `schema_version` is `1`. Field names in the export are a public API. Additions are fine; renames and removals need a `schema_version` bump and a note in the README.
 
+- [ ] **Step 5b: Restore the deferred "Feeds and exports" section on `/about/`**
+
+Task 14 deliberately shipped `/about/` without this section, because none of the four endpoints
+existed and the page must not promise a feature the site lacks. `docs/decisions.md` records that
+decision and its reversal condition. **This task ships the last of the four, so the condition is
+now met.** Add the section back, listing all four:
+
+```astro
+    <h2>Feeds and exports</h2>
+    <ul>
+      <li><a href="/events.ics">Events calendar</a> — subscribe in any calendar app.</li>
+      <li><a href="/deadlines.ics">Deadlines calendar</a> — every open deadline.</li>
+      <li><a href="/feed.xml">Atom feed</a> — newly added events.</li>
+      <li><a href="/events.json">JSON</a> — the full dataset.</li>
+    </ul>
+```
+
+Then close the `docs/decisions.md` entry by noting the date the condition was met, rather than
+deleting it — the reasoning stays useful.
+
 - [ ] **Step 6: Verify and commit**
 
 ```bash
@@ -5692,6 +5773,33 @@ npm ci && npm run lint && npm run typecheck && npm run validate && npm test && n
 ```
 
 Expected: all pass from a clean install.
+
+- [ ] **Step 7b: Sweep every internal link**
+
+Until phase 3 shipped, `Base.astro`'s footer linked `/events.ics`, `/feed.xml` and `/events.json`
+on every page while none of them existed — three dead links site-wide. They should now resolve.
+Verify rather than assume: extract every root-relative `href` from the built output and confirm
+each one corresponds to a real file in `dist/`.
+
+```bash
+npm run build
+node -e "
+const fs=require('fs'), path=require('path');
+const files=[]; (function walk(d){for(const e of fs.readdirSync(d,{withFileTypes:true})){
+  const f=path.join(d,e.name); e.isDirectory()?walk(f):f.endsWith('.html')&&files.push(f);}})('dist');
+const hrefs=new Set();
+for(const f of files) for(const m of fs.readFileSync(f,'utf8').matchAll(/href=\"(\/[^\"#?]*)/g)) hrefs.add(m[1]);
+const missing=[...hrefs].filter(h=>{
+  const p='dist'+h;
+  return !(fs.existsSync(p) || fs.existsSync(p.replace(/\/$/,'')+'/index.html') || fs.existsSync(p+'/index.html'));
+});
+console.log(hrefs.size,'distinct internal links;',missing.length,'missing');
+if(missing.length) { console.log(missing); process.exit(1); }
+"
+```
+
+Expected: zero missing. If any are missing, fix them before continuing — a dead internal link is
+a defect, not a cosmetic issue.
 
 - [ ] **Step 8: Measure the JavaScript budget and attempt Lighthouse**
 

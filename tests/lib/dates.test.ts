@@ -3,6 +3,8 @@ import {
   addDays,
   compareISO,
   daysBetween,
+  formatDate,
+  formatDateRange,
   parseISODate,
   todayUTC,
   toISODate,
@@ -73,5 +75,33 @@ describe('todayUTC', () => {
 
   it('handles the first instant of a day', () => {
     expect(todayUTC(new Date('2026-03-02T00:00:00Z'))).toBe('2026-03-02');
+  });
+});
+
+describe('formatDate', () => {
+  it('formats in UTC, never the local timezone', () => {
+    expect(formatDate('2027-03-08')).toBe('8 Mar 2027');
+  });
+
+  it('formats the first of January without slipping a year', () => {
+    expect(formatDate('2027-01-01')).toBe('1 Jan 2027');
+  });
+});
+
+describe('formatDateRange', () => {
+  it('collapses a single-day event', () => {
+    expect(formatDateRange('2027-03-08', '2027-03-08')).toBe('8 Mar 2027');
+  });
+
+  it('collapses the month when both dates share it', () => {
+    expect(formatDateRange('2027-03-08', '2027-03-10')).toBe('8–10 Mar 2027');
+  });
+
+  it('keeps both months within one year', () => {
+    expect(formatDateRange('2027-02-28', '2027-03-03')).toBe('28 Feb – 3 Mar 2027');
+  });
+
+  it('keeps both years across a year boundary', () => {
+    expect(formatDateRange('2026-12-28', '2027-01-03')).toBe('28 Dec 2026 – 3 Jan 2027');
   });
 });

@@ -1,0 +1,82 @@
+---
+import type { LoadedEvent } from '../lib/types';
+import { hasOpenDeadline, isStale } from '../lib/events';
+import { compareISO, formatDate, formatDateRange, type ISODate } from '../lib/dates';
+
+interface Props {
+  event: LoadedEvent;
+  today: ISODate;
+}
+
+const { event, today } = Astro.props;
+
+const search = [event.title, event.organizer ?? '', event.location?.city ?? '']
+  .join(' ')
+  .toLowerCase();
+
+const open = hasOpenDeadline(event, today);
+const next = (event.deadlines ?? [])
+  .filter((d) => compareISO(d.date, today) >= 0)
+  .sort((a, b) => compareISO(a.date, b.date))[0];
+
+const place =
+  event.format === 'online'
+    ? 'Online'
+    : [event.location?.city, event.location?.country].filter(Boolean).join(', ');
+---
+
+<li
+  class="event"
+  data-search={search}
+  data-topics={event.topics.join(' ')}
+  data-region={event.region}
+  data-country={event.location?.country ?? ''}
+  data-format={event.format}
+  data-type={event.type}
+  data-start={event.start_date}
+  data-end={event.end_date}
+  data-deadline={open ? 'open' : ''}
+>
+  <p class="mono event__when">
+    <time datetime={event.start_date}>{formatDateRange(event.start_date, event.end_date)}</time>
+  </p>
+
+  <div class="event__body">
+    <h3 class="event__title">
+      <a href={`/events/${event.id}/`}>{event.title}</a>
+      {event.status && event.status !== 'scheduled' && (
+        <span class="pill pill--status">{event.status}</span>
+      )}
+    </h3>
+
+    <p class="mono muted event__meta">
+      {event.type} · {event.format} · {place}
+      {event.organizer && <> · {event.organizer}</>}
+    </p>
+
+    <p class="event__desc">{event.description}</p>
+
+    <p class="event__tags">
+      {event.topics.map((t) => (
+        <span class="pill pill--topic">{t}</span>
+      ))}
+      {next && (
+        <span class="pill pill--deadline">
+          {next.type.replace('_', ' ')}{' '}
+          <time datetime={next.date} data-countdown>
+            {formatDate(next.date)}
+          </time>
+        </span>
+      )}
+    </p>
+
+    {event.status && event.status !== 'scheduled' && event.status_note && (
+      <p class="warn">{event.status_note}</p>
+    )}
+    {isStale(event, today) && (
+      <p class="warn">
+        Dates last verified on {formatDate(event.last_verified)}. Check the official page.
+      </p>
+    )}
+  </div>
+</li>

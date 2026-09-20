@@ -1,0 +1,47 @@
+---
+import Base from '../layouts/Base.astro';
+import { site } from '../../site.config';
+---
+
+<Base
+  title="About"
+  description="A community-maintained calendar of computational and theoretical chemistry events, built as a static site with no tracking."
+  path="/about/"
+>
+  <div class="prose">
+    <h1>About</h1>
+    <p>
+      {site.name} is a community-maintained calendar of conferences, workshops and schools in
+      computational and theoretical chemistry: electronic structure, molecular simulation, machine
+      learning for chemistry and materials, computational materials science and computational drug
+      design.
+    </p>
+
+    <h2>How it works</h2>
+    <p>
+      Every event is a YAML file in a public Git repository, validated automatically. The site is
+      built to static files, so there is no server and no database. Anyone can
+      <a href="/submit/">add or correct an event</a>.
+    </p>
+
+    <h2>Privacy</h2>
+    <p>
+      No cookies, no analytics, no trackers, no third-party scripts and no external fonts. Nothing
+      about your visit is recorded by this site.
+    </p>
+
+    <h2>Corrections</h2>
+    <p>
+      Every event page has a correction link and a report link. See the
+      <a href="/policy/">curation policy</a> for how reports are handled, or email
+      <a href={`mailto:${site.contactEmail}`}>{site.contactEmail}</a>.
+    </p>
+
+    <h2>Source</h2>
+    <p>
+      <a href={site.repoUrl} rel="noopener">
+        {site.repoUrl}
+      </a>
+    </p>
+  </div>
+</Base>
