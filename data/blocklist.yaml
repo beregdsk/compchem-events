@@ -1,0 +1,15 @@
+# Organiser domains that must not be listed.
+#
+# Each entry requires maintainer approval in a pull request and needs at least
+# one public evidence link. Describe conduct and evidence, not motives. See
+# docs/curation-policy.md. Anyone can request a review by opening an issue.
+#
+# Format:
+#   - domain: example-predatory-publisher.com
+#     added: 2026-09-20
+#     evidence:
+#       - https://example.org/published-report
+#     note: Short factual description of the documented conduct.
+#
+# Matching is on the registrable host and all its subdomains.
+# The list is intentionally empty until there is evidence to add.

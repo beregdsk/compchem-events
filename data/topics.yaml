@@ -1,0 +1,43 @@
+# Controlled vocabulary for event topics.
+# Adding a slug is a schema-level change: update docs/data-schema.md in the
+# same pull request and keep the list short. Reject near-duplicates.
+- slug: electronic-structure
+  label: Electronic structure
+- slug: dft
+  label: Density functional theory
+- slug: wavefunction-methods
+  label: Wavefunction methods
+- slug: excited-states
+  label: Excited states
+- slug: photochemistry
+  label: Photochemistry
+- slug: quantum-dynamics
+  label: Quantum dynamics
+- slug: molecular-dynamics
+  label: Molecular dynamics
+- slug: enhanced-sampling
+  label: Enhanced sampling
+- slug: biomolecular-simulation
+  label: Biomolecular simulation
+- slug: soft-matter
+  label: Soft matter
+- slug: ml-potentials
+  label: Machine-learned potentials
+- slug: ml-chemistry
+  label: Machine learning for chemistry
+- slug: cheminformatics
+  label: Cheminformatics
+- slug: drug-design
+  label: Computational drug design
+- slug: materials-modeling
+  label: Materials modelling
+- slug: catalysis
+  label: Catalysis
+- slug: spectroscopy
+  label: Computational spectroscopy
+- slug: quantum-computing-chemistry
+  label: Quantum computing for chemistry
+- slug: software-hpc
+  label: Software and HPC
+- slug: education-training
+  label: Education and training
