@@ -1,0 +1,52 @@
+---
+import Base from '../layouts/Base.astro';
+import { loadEvents, pastEvents } from '../lib/events';
+import { formatDateRange } from '../lib/dates';
+
+const past = pastEvents(loadEvents());
+
+const byYear = new Map<string, typeof past>();
+for (const event of past) {
+  const year = event.start_date.slice(0, 4);
+  byYear.set(year, [...(byYear.get(year) ?? []), event]);
+}
+const years = [...byYear.keys()].sort().reverse();
+---
+
+<Base
+  title="Archive"
+  description="Past computational chemistry conferences, workshops and schools, grouped by year."
+  path="/archive/"
+>
+  <h1>Archive</h1>
+  <p class="muted">Events that have already finished, newest first.</p>
+
+  {years.length === 0 && <p class="muted">Nothing has been archived yet.</p>}
+
+  {years.map((year) => (
+    <section>
+      <h2 class="mono">{year}</h2>
+      <ul class="event-list">
+        {byYear.get(year)!.map((event) => (
+          <li class="event">
+            <p class="mono event__when">
+              <time datetime={event.start_date}>
+                {formatDateRange(event.start_date, event.end_date)}
+              </time>
+            </p>
+            <div class="event__body">
+              <h3 class="event__title">
+                <a href={`/events/${event.id}/`}>{event.title}</a>
+                {event.status === 'cancelled' && <span class="pill pill--status">cancelled</span>}
+              </h3>
+              <p class="mono muted event__meta">
+                {event.type} · {event.format} ·{' '}
+                {event.format === 'online' ? 'Online' : event.location?.city}
+              </p>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </section>
+  ))}
+</Base>
