@@ -90,3 +90,41 @@ one-line call for the maintainer to make once a GitHub remote exists, and
 guessing wrong here is cheap to get wrong twice. Flagged for the maintainer to
 resolve before first push: either rename the default branch to `main` or
 change the workflow's `branches` list to `master`.
+
+## 2026-09-20 — Three seed events take `location.city` from a CECAM node page, not the event page
+
+`location.city` is required for any event that is not `online`, but three CECAM
+event pages state only the node code for their location. The city was read from
+CECAM's own node page in each case:
+
+| Event id                                   | Field                     | Secondary page                                                                  |
+| ------------------------------------------ | ------------------------- | ------------------------------------------------------------------------------- |
+| `mlip-model-development-applications-2026` | `location.city` = Taipei  | `https://www.cecam.org/cecam-tw` ("Academia Sinica, Taipei, Taiwan")            |
+| `computational-electrochemistry-ai-2027`   | `location.city` = Beijing | `https://www.cecam.org/cecam-bj` ("Central location: Beijing, P.R. China")      |
+| `fleur-all-electron-dft-tutorial-2027`     | `location.city` = Jülich  | `https://www.cecam.org/cecam-de-juelich` ("Location: Forschungszentrum Jülich") |
+
+`source_url` is deliberately **not** used for these. `docs/data-schema.md`
+defines it as the page where the _dates_ were verified; the dates for all three
+came from the cited `url`, and a node page supplying a city does not fit that
+field's meaning. Recording the second hop here keeps it visible without
+stretching the schema. The node pages are on the organiser's own site, so this
+is a lookup of what CECAM's own node code denotes rather than an inference.
+
+## 2026-09-20 — MolSSI AI-assisted development workshop considered and declined
+
+The MolSSI "AI-Assisted Development Best Practices" workshop (online,
+15-16 October 2026, `https://molssi.org/the-molssi-ai-assisted-development-best-practices-workshop-returns-in-october/`)
+was verified and drafted, then removed before release.
+
+`docs/curation-policy.md` scopes listings to events "whose main subject is
+computational or theoretical chemistry". This workshop's subject is software
+engineering practice — containerised agent execution, requirements-driven
+workflows, static and LLM-based code analysis, technical debt. Its organiser and
+audience are computational chemists, but the policy's test is the subject of the
+event, not the affiliation of the organiser. Listing it would imply that anything
+a chemistry-software institute runs qualifies by association. AGENTS.md rule 10
+settles the borderline toward fewer listings.
+
+Recorded rather than dropped silently so the call is reversible: if the policy is
+later widened to cover research-software practice for the field, this is the
+first event to reconsider.
