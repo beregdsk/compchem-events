@@ -4177,7 +4177,7 @@ const zoneLabel = (tz: string | undefined): string =>
 ---
 import Base from '../../layouts/Base.astro';
 import DeadlineList from '../../components/DeadlineList.astro';
-import { eventById, isStale, loadEvents } from '../../lib/events';
+import { isStale, loadEvents } from '../../lib/events';
 import { formatDate, formatDateRange, todayUTC } from '../../lib/dates';
 import { site } from '../../../site.config';
 import type { LoadedEvent } from '../../lib/types';
@@ -4418,7 +4418,18 @@ Run: `npm run build && npm run typecheck`
 Expected: both pass, and `dist/events/<id>/index.html` exists for every event.
 
 ```bash
-node -e "const h=require('fs').readFileSync(process.argv[1],'utf8');const m=/<script type=\"application\/ld\+json\">(.+?)<\/script>/s.exec(h);JSON.parse(m[1]);console.log('JSON-LD parses')" dist/events/full-online-2027/index.html
+node -e "
+const fs = require('fs');
+// Pick whatever event page the build actually produced. Never hard-code a
+// fixture id here: fixtures are excluded from production builds, so the check
+// would fail on a missing file and look like broken JSON-LD.
+const dir = fs.readdirSync('dist/events')[0];
+const html = fs.readFileSync(\`dist/events/\${dir}/index.html\`, 'utf8');
+const m = /<script type=\"application\/ld\+json\">([\s\S]*?)<\/script>/.exec(html);
+if (!m) throw new Error('no JSON-LD found in ' + dir);
+const d = JSON.parse(m[1]);
+console.log('JSON-LD parses for', dir, '-', d['@type'], d.startDate, d.endDate);
+"
 ```
 
 Expected: `JSON-LD parses`.
