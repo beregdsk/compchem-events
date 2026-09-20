@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { parse } from 'yaml';
 import {
   formatProblems,
@@ -61,6 +62,9 @@ function main(): void {
 }
 
 // Only run when invoked directly, so importing this module has no side effects.
-if (process.argv[1] && import.meta.url.endsWith(process.argv[1].split('/').pop() ?? '')) {
+// Compares full resolved file URLs rather than basenames: a basename-only
+// comparison would wrongly run main() when a differently-located entry script
+// that happens to also be named validate.ts imports this module.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   main();
 }
