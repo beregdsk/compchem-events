@@ -1703,6 +1703,42 @@ describe('rule 5: collection-level duplicates', () => {
     expect(r.errors.map((e) => e.message).join()).toMatch(/duplicate title/i);
   });
 
+  it('rejects a hyphenated title and its spaced variant as duplicates', () => {
+    const b = {
+      file: 'data/events/2027/b-2027.yaml',
+      data: {
+        ...valid,
+        id: 'b-2027',
+        url: 'https://example.org/other/',
+        title: 'Example Workshop on Excited State Methods',
+      },
+    };
+    const hyphenated = {
+      file: 'data/events/2027/a-2027.yaml',
+      data: { ...valid, id: 'a-2027', title: 'Example Workshop on Excited-State Methods' },
+    };
+    expect(validateCollection([hyphenated, b], ctx).errors.map((e) => e.message).join()).toMatch(
+      /duplicate title/i,
+    );
+  });
+
+  it('does not merge two genuinely different hyphenated titles', () => {
+    const a = {
+      file: 'data/events/2027/a-2027.yaml',
+      data: { ...valid, id: 'a-2027', title: 'Multi-Scale Modelling School' },
+    };
+    const b = {
+      file: 'data/events/2027/b-2027.yaml',
+      data: {
+        ...valid,
+        id: 'b-2027',
+        url: 'https://example.org/other/',
+        title: 'Multi-Reference Methods School',
+      },
+    };
+    expect(validateCollection([a, b], ctx).errors).toEqual([]);
+  });
+
   it('accepts genuinely distinct events', () => {
     const b = {
       file: 'data/events/2027/b-2027.yaml',
@@ -1794,11 +1830,16 @@ import { compareISO, daysBetween } from './dates';
 import { regionOf } from './regions';
 import type { RawEvent } from './types';
 
-/** Lowercase, strip punctuation, collapse whitespace — for duplicate detection. */
+/**
+ * Lowercase, replace punctuation with a space, collapse whitespace — for
+ * duplicate detection. Punctuation becomes a SPACE rather than being deleted,
+ * so "AI-Driven Workshop" and "AI Driven Workshop" normalise alike. Deleting it
+ * would join the words either side and miss the duplicate.
+ */
 function normaliseTitle(title: string): string {
   return title
     .toLowerCase()
-    .replace(/[^\p{L}\p{N}\s]/gu, '')
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -2097,7 +2138,7 @@ Repeat the same shape for these files, changing only the field named in each com
 | `http-url-2027.yaml` | `# EXPECTED ERROR: url must be https` — `url: http://example.org/x/` |
 | `deadline-after-end-2027.yaml` | `# EXPECTED ERROR: deadline falls after end_date` — a deadline dated after `end_date` |
 | `missing-location-2027.yaml` | `# EXPECTED ERROR: location is required when format is in-person` — `format: in-person`, no `location` |
-| `too-many-topics-2027.yaml` | `# EXPECTED ERROR: more than five topics` — six valid slugs |
+| `too-many-topics-2027.yaml` | `# EXPECTED ERROR: topics must not have more than 5 items` — six valid slugs. The comment must use words that appear in Ajv's own message; "topics" alone only matches the field name. |
 | `long-description-2027.yaml` | `# EXPECTED ERROR: description over 280 characters` — a 281-character description |
 | `cancelled-no-note-2027.yaml` | `# EXPECTED ERROR: status_note required when status is cancelled` — `status: cancelled`, no `status_note` |
 | `duplicate-deadline-type-2027.yaml` | `# EXPECTED ERROR: deadline type appears more than once` — two deadlines both `type: abstract`, different dates, both on or before `end_date` |
@@ -2165,13 +2206,19 @@ describe('invalid fixtures', () => {
       expect(r.errors.length, `${path} produced no errors`).toBeGreaterThan(0);
 
       // Match on the distinctive words of the comment, so wording can evolve
-      // without the test becoming brittle.
-      const haystack = r.errors.map((e) => `${e.field} ${e.message}`).join(' ').toLowerCase();
+      // without the test becoming brittle — but match against the error MESSAGES
+      // only. Including the field name lets a fixture pass on a keyword that merely
+      // names the field, without the message describing the error it claims.
+      const messages = r.errors.map((e) => e.message).join(' ').toLowerCase();
+      const diagnostic = r.errors.map((e) => `${e.field}: ${e.message}`).join('; ');
       const keywords = (expected ?? '')
         .toLowerCase()
         .split(/\s+/)
         .filter((w) => w.length > 4);
-      expect(keywords.some((w) => haystack.includes(w)), `${path}: expected "${expected}", got: ${haystack}`).toBe(true);
+      expect(
+        keywords.some((w) => messages.includes(w)),
+        `${path}: expected "${expected}", got: ${diagnostic}`,
+      ).toBe(true);
     });
   }
 });
