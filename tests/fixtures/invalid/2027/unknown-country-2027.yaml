@@ -1,0 +1,16 @@
+# EXPECTED ERROR: country is not in the region table
+id: unknown-country-2027
+title: Invalid Example with an Unknown Country
+type: conference
+start_date: 2027-04-10
+end_date: 2027-04-12
+format: in-person
+location:
+  city: X
+  country: ZZ
+url: https://example.org/unknown-country-2027/
+topics: [dft]
+description: The country code is not present in the region table.
+added: 2026-09-20
+last_verified: 2026-09-20
+fixture: true

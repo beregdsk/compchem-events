@@ -1,0 +1,13 @@
+# EXPECTED ERROR: file must sit in the folder for its start year
+id: wrong-year-folder-2027
+title: Invalid Example Sitting in the Wrong Folder
+type: conference
+start_date: 2027-04-10
+end_date: 2027-04-12
+format: online
+url: https://example.org/wrong-year-folder-2027/
+topics: [dft]
+description: This file lives in the 2026 folder despite starting in 2027.
+added: 2026-09-20
+last_verified: 2026-09-20
+fixture: true

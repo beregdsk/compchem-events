@@ -72,7 +72,12 @@ describe('event schema', () => {
     expect(validate({ ...base, status: 'scheduled' })).toBe(true);
   });
 
-  it('rejects a repeated deadline shape error', () => {
+  it('requires status_note when status is postponed', () => {
+    expect(validate({ ...base, status: 'postponed' })).toBe(false);
+    expect(validate({ ...base, status: 'postponed', status_note: 'Moved to 2028.' })).toBe(true);
+  });
+
+  it('rejects an unknown deadline type', () => {
     expect(validate({ ...base, deadlines: [{ type: 'unknown', date: '2027-01-01' }] })).toBe(false);
   });
 });

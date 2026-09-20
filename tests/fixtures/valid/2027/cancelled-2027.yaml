@@ -1,0 +1,17 @@
+id: cancelled-2027
+title: Cancelled Example Workshop on Catalysis
+type: workshop
+start_date: 2027-09-01
+end_date: 2027-09-03
+format: hybrid
+location:
+  city: Exampleburg
+  country: DE
+url: https://example.org/cancelled-2027/
+topics: [catalysis]
+description: A cancelled event, which must stay listed and visibly marked.
+status: cancelled
+status_note: Cancelled by the organisers; see the official page.
+added: 2026-09-20
+last_verified: 2026-09-20
+fixture: true

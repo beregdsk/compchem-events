@@ -1,0 +1,13 @@
+# EXPECTED ERROR: id must equal the file name stem
+id: something-else-2027
+title: Invalid Example with a Mismatched Id
+type: conference
+start_date: 2027-04-10
+end_date: 2027-04-12
+format: online
+url: https://example.org/id-mismatch-2027/
+topics: [dft]
+description: The id does not match the file name stem.
+added: 2026-09-20
+last_verified: 2026-09-20
+fixture: true

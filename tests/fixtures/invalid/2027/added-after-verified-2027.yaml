@@ -1,0 +1,13 @@
+# EXPECTED ERROR: added is after last_verified
+id: added-after-verified-2027
+title: Invalid Example Added After Verification
+type: conference
+start_date: 2027-04-10
+end_date: 2027-04-12
+format: online
+url: https://example.org/added-after-verified-2027/
+topics: [dft]
+description: The added date comes after the last_verified date.
+added: 2026-09-20
+last_verified: 2026-09-19
+fixture: true

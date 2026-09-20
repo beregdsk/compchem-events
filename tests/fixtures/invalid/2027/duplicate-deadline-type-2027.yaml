@@ -1,0 +1,18 @@
+# EXPECTED ERROR: deadline type appears more than once
+id: duplicate-deadline-type-2027
+title: Invalid Example with a Repeated Deadline Type
+type: conference
+start_date: 2027-04-10
+end_date: 2027-04-12
+format: online
+url: https://example.org/duplicate-deadline-type-2027/
+topics: [dft]
+description: Two abstract deadlines are given, which is not allowed.
+deadlines:
+  - type: abstract
+    date: 2027-03-01
+  - type: abstract
+    date: 2027-03-15
+added: 2026-09-20
+last_verified: 2026-09-20
+fixture: true

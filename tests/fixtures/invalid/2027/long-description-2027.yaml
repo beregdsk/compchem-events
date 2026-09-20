@@ -1,0 +1,13 @@
+# EXPECTED ERROR: description over 280 characters
+id: long-description-2027
+title: Invalid Example with an Overlong Description
+type: conference
+start_date: 2027-04-10
+end_date: 2027-04-12
+format: online
+url: https://example.org/long-description-2027/
+topics: [dft]
+description: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+added: 2026-09-20
+last_verified: 2026-09-20
+fixture: true
