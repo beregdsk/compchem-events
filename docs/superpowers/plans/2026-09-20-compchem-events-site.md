@@ -1646,6 +1646,32 @@ describe('rule 8: location required unless online', () => {
   });
 });
 
+describe('rule 9: each deadline type appears at most once', () => {
+  it('rejects a repeated deadline type', () => {
+    expect(
+      errorsFor({
+        ...valid,
+        deadlines: [
+          { type: 'abstract', date: '2027-01-10' },
+          { type: 'abstract', date: '2027-02-10' },
+        ],
+      }).join(),
+    ).toMatch(/more than once/i);
+  });
+
+  it('accepts distinct deadline types', () => {
+    expect(
+      errorsFor({
+        ...valid,
+        deadlines: [
+          { type: 'abstract', date: '2027-01-10' },
+          { type: 'registration', date: '2027-02-10' },
+        ],
+      }),
+    ).toEqual([]);
+  });
+});
+
 describe('rule 5: collection-level duplicates', () => {
   const a = { file: 'data/events/2027/a-2027.yaml', data: { ...valid, id: 'a-2027' } };
 
@@ -1855,6 +1881,18 @@ function semanticRules(entry: EventFile, ctx: ValidationContext, out: Validation
     }
   }
 
+  // Rule 9: each deadline type appears at most once per event.
+  // Stated at docs/data-schema.md:38 but absent from that document's own
+  // enumerated error list, and not expressible in the JSON Schema because it is
+  // a cross-item constraint. Without it, duplicate deadline types ship unvalidated.
+  const seenDeadlineTypes = new Set<string>();
+  for (const d of e.deadlines ?? []) {
+    if (seenDeadlineTypes.has(d.type)) {
+      err('deadlines', `deadline type "${d.type}" appears more than once; each type is allowed at most once per event`);
+    }
+    seenDeadlineTypes.add(d.type);
+  }
+
   // Rule 8: location required unless online.
   if (e.format !== 'online' && !e.location) {
     err('location', `location is required when format is "${e.format}"`);
@@ -2062,6 +2100,30 @@ Repeat the same shape for these files, changing only the field named in each com
 | `too-many-topics-2027.yaml` | `# EXPECTED ERROR: more than five topics` — six valid slugs |
 | `long-description-2027.yaml` | `# EXPECTED ERROR: description over 280 characters` — a 281-character description |
 | `cancelled-no-note-2027.yaml` | `# EXPECTED ERROR: status_note required when status is cancelled` — `status: cancelled`, no `status_note` |
+| `duplicate-deadline-type-2027.yaml` | `# EXPECTED ERROR: deadline type appears more than once` — two deadlines both `type: abstract`, different dates, both on or before `end_date` |
+
+- [ ] **Step 5b: Rename the unused parameter back, and fix two test-hygiene defects**
+
+Task 5 left `validateEvent(entry, _ctx)` and `validateCollection(_entries, _ctx)` underscore-prefixed
+because the schema layer did not use them. The semantic rules do use the context, so rename
+`_ctx` to `ctx` in `validateEvent`'s signature. `validateCollection` still does not read its context —
+leave `_ctx` there.
+
+Then two fixes in `tests/schema/schema.test.ts`, which this task's rule 9 makes relevant:
+
+- The test named `'rejects a repeated deadline shape error'` actually asserts that an unknown
+  deadline `type` enum value is rejected. Its name suggests a duplicate-type test was intended all
+  along — that check now lives in rule 9. Rename this one to `'rejects an unknown deadline type'`
+  so it describes what it does.
+- The `status_note` conditional is only exercised for `status: 'cancelled'`. Add the `postponed`
+  case beside it, since both share the same `if`/`then` branch:
+
+```ts
+  it('requires status_note when status is postponed', () => {
+    expect(validate({ ...base, status: 'postponed' })).toBe(false);
+    expect(validate({ ...base, status: 'postponed', status_note: 'Moved to 2028.' })).toBe(true);
+  });
+```
 
 - [ ] **Step 6: Write the fixture-corpus test**
 
