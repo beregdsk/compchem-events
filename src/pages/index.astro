@@ -1,14 +1,135 @@
 ---
-import { site } from '../../site.config';
+import Base from '../layouts/Base.astro';
+import EventRow from '../components/EventRow.astro';
+import { loadEvents, upcomingEvents } from '../lib/events';
+import { todayUTC } from '../lib/dates';
+import { EVENT_FORMATS, EVENT_TYPES, type Topic } from '../lib/types';
+import { REGIONS } from '../lib/regions';
+import { readFileSync } from 'node:fs';
+import { parse } from 'yaml';
+
+const today = todayUTC();
+const events = upcomingEvents(loadEvents());
+const topics = (parse(readFileSync('data/topics.yaml', 'utf8')) as Topic[]) ?? [];
+
+// Only offer options the data actually contains.
+const usedTopics = new Set(events.flatMap((e) => e.topics));
+const countries = [...new Set(events.map((e) => e.location?.country).filter(Boolean))].sort();
+const regions = REGIONS.filter((r) => events.some((e) => e.region === r));
+const hasOnline = events.some((e) => e.region === 'Online');
 ---
 
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>{site.name}</title>
-  </head>
-  <body>
-    <h1>{site.name}</h1>
-  </body>
-</html>
+<Base
+  title="Upcoming events"
+  description="Upcoming conferences, workshops and schools in computational and theoretical chemistry, with deadlines, filters and calendar export."
+  path="/"
+>
+  <h1>Upcoming events</h1>
+  <p class="muted">
+    Conferences, workshops and schools in computational and theoretical chemistry. Listings follow
+    the <a href="/policy/">curation policy</a>.
+  </p>
+
+  <noscript>
+    <p class="warn">
+      Filtering needs JavaScript. Every upcoming event is listed below in date order, and the
+      <a href="/deadlines/">deadlines page</a> lists every open deadline.
+    </p>
+  </noscript>
+
+  <div class="rail">
+    <form class="filters" id="filters" hidden>
+      <div>
+        <label for="f-q">Search title, organiser or city</label>
+        <input type="text" id="f-q" name="q" autocomplete="off" />
+      </div>
+
+      <fieldset>
+        <legend>Topics</legend>
+        <div class="filters__topics">
+          {topics
+            .filter((t) => usedTopics.has(t.slug))
+            .map((t) => (
+              <label>
+                <input type="checkbox" name="topic" value={t.slug} />
+                {t.label}
+              </label>
+            ))}
+        </div>
+      </fieldset>
+
+      <div>
+        <label for="f-region">Region</label>
+        <select id="f-region" name="region">
+          <option value="">Any</option>
+          {regions.map((r) => (
+            <option value={r}>{r}</option>
+          ))}
+          {hasOnline && <option value="Online">Online</option>}
+        </select>
+      </div>
+
+      <div>
+        <label for="f-country">Country</label>
+        <select id="f-country" name="country">
+          <option value="">Any</option>
+          {countries.map((c) => (
+            <option value={c}>{c}</option>
+          ))}
+        </select>
+      </div>
+
+      <div>
+        <label for="f-format">Format</label>
+        <select id="f-format" name="format">
+          <option value="">Any</option>
+          {EVENT_FORMATS.map((f) => (
+            <option value={f}>{f}</option>
+          ))}
+        </select>
+      </div>
+
+      <div>
+        <label for="f-type">Type</label>
+        <select id="f-type" name="type">
+          <option value="">Any</option>
+          {EVENT_TYPES.map((t) => (
+            <option value={t}>{t}</option>
+          ))}
+        </select>
+      </div>
+
+      <fieldset>
+        <legend>Dates</legend>
+        <label for="f-from">From</label>
+        <input type="date" id="f-from" name="from" />
+        <label for="f-to">To</label>
+        <input type="date" id="f-to" name="to" />
+      </fieldset>
+
+      <label>
+        <input type="checkbox" name="deadline" value="open" /> Has an open deadline
+      </label>
+
+      <button type="button" class="filters__clear" id="clear-filters">
+        Clear filters
+      </button>
+    </form>
+
+    <div>
+      <p class="result-count" id="result-count" role="status" aria-live="polite">
+        {events.length} upcoming {events.length === 1 ? 'event' : 'events'}
+      </p>
+      <ul class="event-list reveal" id="event-list">
+        {events.map((event) => (
+          <EventRow event={event} today={today} />
+        ))}
+      </ul>
+      {events.length === 0 && <p class="muted">No upcoming events are listed yet.</p>}
+    </div>
+  </div>
+</Base>
+
+<script>
+  import '../scripts/filters.ts';
+</script>
