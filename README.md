@@ -1,4 +1,4 @@
-# <SITE_NAME>
+# CompChem Events
 
 A community-maintained calendar of conferences, workshops and schools in computational and theoretical chemistry: electronic structure, molecular simulation, ML for chemistry and materials, computational materials science and computational drug design.
 

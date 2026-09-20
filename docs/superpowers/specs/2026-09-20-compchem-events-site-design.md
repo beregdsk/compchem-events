@@ -210,7 +210,7 @@ analytics, translations.
 These cannot be done from here and are carried as clearly marked placeholders in
 `site.config.ts`:
 
-1. Final site name and domain.
+1. ~~Final site name~~ — **decided 2026-09-20: "CompChem Events"**. Domain still undecided, so `site.url` remains a placeholder.
 2. Public GitHub repository.
 3. Cloudflare Pages connection (build `npm run build`, output `dist`, Node pinned to `.nvmrc`).
 4. Report form and submission form URLs, with their query-parameter names.
