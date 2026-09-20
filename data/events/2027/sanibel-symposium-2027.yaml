@@ -1,0 +1,26 @@
+id: sanibel-symposium-2027
+title: 66th Sanibel Symposium
+series: sanibel-symposium
+type: symposium
+start_date: 2027-02-21
+end_date: 2027-02-26
+format: in-person
+location:
+  city: St. Augustine Beach
+  country: US
+  venue: Embassy Suites by Hilton
+url: https://sanibelsymposium.qtp.ufl.edu/
+organizer: Quantum Theory Project, University of Florida
+topics: [electronic-structure, quantum-dynamics, ml-chemistry, quantum-computing-chemistry]
+description: >-
+  The sixty-sixth edition of a theory meeting running since 1961, covering the
+  quantum theory of atoms, molecules and materials. Announced themes include
+  machine learning, quantum computing, DFT, dynamics and electronic resonances.
+deadlines:
+  - type: early_bird
+    date: 2026-11-30
+  - type: abstract
+    date: 2026-12-18
+    note: Abstracts are accepted only from registered participants.
+added: 2026-09-20
+last_verified: 2026-09-20

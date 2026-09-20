@@ -1,0 +1,23 @@
+id: theoretical-spectroscopy-lectures-2027
+title: Theoretical Spectroscopy Lectures
+series: theoretical-spectroscopy-lectures
+type: school
+start_date: 2027-03-08
+end_date: 2027-03-12
+format: in-person
+location:
+  city: Lausanne
+  country: CH
+  venue: CECAM-HQ-EPFL
+url: https://www.cecam.org/workshop-details/theoretical-spectroscopy-lectures-1482
+organizer: CECAM
+topics: [spectroscopy, excited-states, electronic-structure]
+description: >-
+  A school on the ab initio methods used to predict what spectroscopy measures,
+  where ground-state DFT is not enough. Covers time-dependent DFT and many-body
+  perturbation theory, including Green's function approaches.
+deadlines:
+  - type: registration
+    date: 2027-02-05
+added: 2026-09-20
+last_verified: 2026-09-20

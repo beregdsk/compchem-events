@@ -1,0 +1,21 @@
+id: fleur-all-electron-dft-tutorial-2027
+title: All electron DFT with Fleur - a Hands-on Tutorial
+type: school
+start_date: 2027-03-08
+end_date: 2027-03-12
+format: hybrid
+location:
+  city: Jülich
+  country: DE
+url: https://www.cecam.org/workshop-details/all-electron-dft-with-fleur-a-hands-on-tutorial-1506
+organizer: CECAM-DE-JUELICH, Forschungszentrum Jülich
+topics: [dft, electronic-structure, software-hpc]
+description: >-
+  A week of hands-on training on FLEUR, an all-electron full-potential LAPW
+  code, with its developers present. Run at Forschungszentrum Jülich and
+  streamed online at the same time.
+deadlines:
+  - type: registration
+    date: 2027-02-05
+added: 2026-09-20
+last_verified: 2026-09-20

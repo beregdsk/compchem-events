@@ -1,0 +1,24 @@
+id: automating-atomistic-machine-learning-2027
+title: Automating atomistic machine learning
+type: workshop
+start_date: 2027-01-25
+end_date: 2027-01-27
+format: in-person
+location:
+  city: Lausanne
+  country: CH
+  venue: CECAM-HQ-EPFL
+url: https://www.cecam.org/workshop-details/automating-atomistic-machine-learning-1494
+organizer: CECAM
+topics: [ml-potentials, software-hpc, materials-modeling]
+description: >-
+  Machine-learned interatomic potentials still lean on hand-tuning and personal
+  experience. This workshop looks at the automated workflows, provenance and
+  reproducible benchmarking needed to make them a routine tool.
+deadlines:
+  - type: application
+    date: 2026-10-16
+  - type: registration
+    date: 2026-12-23
+added: 2026-09-20
+last_verified: 2026-09-20

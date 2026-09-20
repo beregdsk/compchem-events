@@ -1,0 +1,23 @@
+id: ml-statistical-mechanics-molecular-simulation-2026
+title: 'From Data to Dynamics: Machine Learning in Statistical Mechanics and Molecular Simulations'
+type: workshop
+start_date: 2026-10-14
+end_date: 2026-10-16
+format: in-person
+location:
+  city: Lugano
+  country: CH
+  venue: CECAM-Lugano
+url: https://www.cecam.org/workshop-details/from-data-to-dynamics-machine-learning-in-statistical-mechanics-and-molecular-simulations-1487
+organizer: CECAM
+topics: [ml-chemistry, molecular-dynamics, enhanced-sampling]
+description: >-
+  How machine learning is changing molecular simulation in practice: learning
+  collective variables, analysing the large trajectory datasets long runs now
+  produce, and reaching biological timescales through enhanced sampling and
+  coarse-graining.
+deadlines:
+  - type: registration
+    date: 2026-09-11
+added: 2026-09-20
+last_verified: 2026-09-20
