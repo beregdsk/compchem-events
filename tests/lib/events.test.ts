@@ -163,16 +163,22 @@ describe('memoisation', () => {
   });
 
   it('does not leak between an explicit-options call and a bare call', () => {
-    // Explicit options must always bypass the cache. Assert the explicit call
-    // first: if the bare-call cache (populated above, and empty because
-    // data/events/ does not exist yet) leaked into it, this would see 0
-    // instead of 3. Then assert the bare call still sees 0: if the explicit
-    // call above had leaked *into* the cache, this would see 3 instead.
+    // Explicit options must always bypass the cache, in both directions.
+    // Asserted against references rather than counts, so that seeding
+    // data/events/ (which the bare call reads) cannot invalidate the test.
+    const bareBefore = loadEvents();
+
+    // If the bare-call cache leaked into the explicit call, this would return
+    // everything in data/events/ rather than the three fixtures.
     const explicit = loadEvents(opts);
     expect(explicit).toHaveLength(3);
+    expect(explicit).not.toBe(bareBefore);
 
+    // If the explicit call had leaked *into* the cache, this would hand back
+    // the fixture array instead of the cached bare result.
     const bare = loadEvents();
-    expect(bare).toHaveLength(0);
+    expect(bare).toBe(bareBefore);
+    expect(bare).not.toBe(explicit);
   });
 });
 
