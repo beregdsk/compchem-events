@@ -2731,7 +2731,7 @@ Spec §8, "Isosurface". Spec D2 rules out webfonts, so colour, density and struc
 
 **Interfaces:**
 - Consumes: `site` from `site.config.ts`.
-- Produces: `Base.astro` with props `{ title: string; description: string; path: string; ogType?: string }`. Every page uses it. CSS classes `.wrap`, `.rail`, `.reveal`, `.mono`, `.pill`, `.rule`, `.muted`, `.warn` are the shared vocabulary later tasks reference.
+- Produces: `Base.astro` with props `{ title: string; description: string; path: string }` — exactly three. `og:type` is hardcoded to `website`; no page needs to vary it. Every page uses it. CSS classes `.wrap`, `.rail`, `.reveal`, `.mono`, `.pill`, `.rule`, `.muted`, `.warn` are the shared vocabulary later tasks reference.
 
 - [ ] **Step 1: Create the branch and write `src/styles/global.css`**
 
