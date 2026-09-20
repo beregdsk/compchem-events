@@ -1378,6 +1378,7 @@ Overwrite `scripts/validate.ts`:
 #!/usr/bin/env node
 import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { parse } from 'yaml';
 import {
   formatProblems,
@@ -1438,7 +1439,10 @@ function main(): void {
 }
 
 // Only run when invoked directly, so importing this module has no side effects.
-if (process.argv[1] && import.meta.url.endsWith(process.argv[1].split('/').pop() ?? '')) {
+// Compare the FULL resolved path, never the basename: TASK.md section 7 promises the
+// discovery agent will import this module, and its own entry script could also be
+// named validate.ts, which a basename comparison would not distinguish.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   main();
 }
 ```
