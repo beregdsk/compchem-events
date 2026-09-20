@@ -217,6 +217,51 @@ describe('rule 5: collection-level duplicates', () => {
     };
     expect(validateCollection([a, b], ctx).errors).toEqual([]);
   });
+
+  it('rejects a hyphenated title and its spaced variant as duplicates', () => {
+    const b = {
+      file: 'data/events/2027/b-2027.yaml',
+      data: {
+        ...valid,
+        id: 'b-2027',
+        url: 'https://example.org/other/',
+        title: 'AI-Driven Drug Design Workshop',
+      },
+    };
+    const c = {
+      file: 'data/events/2027/c-2027.yaml',
+      data: {
+        ...valid,
+        id: 'c-2027',
+        url: 'https://example.org/another/',
+        title: 'AI Driven Drug Design Workshop',
+      },
+    };
+    const r = validateCollection([b, c], ctx);
+    expect(r.errors.map((e) => e.message).join()).toMatch(/duplicate title/i);
+  });
+
+  it('does not merge two genuinely different hyphenated titles', () => {
+    const b = {
+      file: 'data/events/2027/b-2027.yaml',
+      data: {
+        ...valid,
+        id: 'b-2027',
+        url: 'https://example.org/other/',
+        title: 'AI-Driven Drug Design Workshop',
+      },
+    };
+    const c = {
+      file: 'data/events/2027/c-2027.yaml',
+      data: {
+        ...valid,
+        id: 'c-2027',
+        url: 'https://example.org/another/',
+        title: 'Multi-Scale Materials Modelling Workshop',
+      },
+    };
+    expect(validateCollection([b, c], ctx).errors).toEqual([]);
+  });
 });
 
 describe('warnings', () => {

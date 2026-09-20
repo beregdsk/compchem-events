@@ -13,7 +13,7 @@ import type { RawEvent, Topic } from './types';
 function normaliseTitle(title: string): string {
   return title
     .toLowerCase()
-    .replace(/[^\p{L}\p{N}\s]/gu, '')
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 }

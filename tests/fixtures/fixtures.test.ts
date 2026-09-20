@@ -33,8 +33,18 @@ describe('invalid fixtures', () => {
       expect(r.errors.length, `${path} produced no errors`).toBeGreaterThan(0);
 
       // Match on the distinctive words of the comment, so wording can evolve
-      // without the test becoming brittle.
-      const haystack = r.errors
+      // without the test becoming brittle. The match itself is against the
+      // MESSAGES only: matching the field name too would let a fixture pass
+      // on nothing more than "some error mentioning this field occurred"
+      // (the field is always present verbatim, whether or not the message
+      // says anything about the named failure).
+      const messageHaystack = r.errors
+        .map((e) => e.message)
+        .join(' ')
+        .toLowerCase();
+      // Field-inclusive haystack kept only for the failure message below, so
+      // a mismatch is still easy to diagnose.
+      const debugHaystack = r.errors
         .map((e) => `${e.field} ${e.message}`)
         .join(' ')
         .toLowerCase();
@@ -43,8 +53,8 @@ describe('invalid fixtures', () => {
         .split(/\s+/)
         .filter((w) => w.length > 4);
       expect(
-        keywords.some((w) => haystack.includes(w)),
-        `${path}: expected "${expected}", got: ${haystack}`,
+        keywords.some((w) => messageHaystack.includes(w)),
+        `${path}: expected "${expected}", got: ${debugHaystack}`,
       ).toBe(true);
     });
   }

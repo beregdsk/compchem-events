@@ -1,4 +1,4 @@
-# EXPECTED ERROR: more than five topics
+# EXPECTED ERROR: topics must not have more than 5 items
 id: too-many-topics-2027
 title: Invalid Example with Too Many Topics
 type: conference
