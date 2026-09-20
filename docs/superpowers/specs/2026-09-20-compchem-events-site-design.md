@@ -33,6 +33,7 @@ service reached by a plain link · English only.
 | D6 | **`regionOf(country)` stays pure and geographic; `Online` is derived in the loader.** | `docs/data-schema.md` asks one function to depend on both country and format. Splitting keeps the lookup table testable against ISO codes alone. |
 | D7 | **Visual direction: "Isosurface"** (section 8). | Maintainer to edit freely. |
 | D8 | **Local git with one branch per phase**, merged `--no-ff` into `main`. | No GitHub remote exists yet. Branch-per-phase preserves the history `TASK.md` wants and pushes cleanly once the repo is created. |
+| D9 | **Ratings and reactions considered and deferred**, not rejected. v1 ships without them. | Reactions need state outliving a page load, which a static site cannot hold; the cheapest honest option (Cloudflare Pages Function plus KV) would amend `AGENTS.md` rule 3. Ratings additionally collide with `curation-policy.md` neutrality, need a moderation and disputes process, and are statistically meaningless at this site's expected sample size. Revisit once the calendar has traffic to justify a backend. |
 
 ## 4. Architecture
 
@@ -195,7 +196,13 @@ Phase 5 (separate task): the discovery agent, specified in `docs/discovery-agent
 only obligations toward it are keeping `validateEvent` importable as a library and keeping
 `data/` free of anything an automated pull request would trip over. Both are satisfied.
 
-Permanently out: any server or backend code, databases, accounts, ratings, paid listings,
+Deferred pending traffic (D9): reactions on upcoming events. Nothing in this design blocks
+them. Event `id` is already a stable, unique, permanent key, which is the only thing a
+reactions store needs; adding one later touches the event page template and introduces a
+storage layer, and changes nothing else. Star ratings remain rejected on their merits rather
+than deferred, for the neutrality and sample-size reasons in D9.
+
+Permanently out: any server or backend code, databases, accounts, paid listings,
 analytics, translations.
 
 ## 12. Blocked on the maintainer
