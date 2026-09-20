@@ -3537,7 +3537,6 @@ export function formatDate(d: ISODate): string {
 export function formatDateRange(start: ISODate, end: ISODate): string {
   if (start === end) return formatDate(start);
   const a = parseISODate(start);
-  const b = parseISODate(end);
   const sameYear = start.slice(0, 4) === end.slice(0, 4);
   const sameMonth = start.slice(0, 7) === end.slice(0, 7);
   if (sameMonth) return `${DAY.format(a)}–${formatDate(end)}`;
@@ -4027,10 +4026,22 @@ if (form && list && countEl) {
 
 ```bash
 npm run build
-find dist/_astro -name '*.js' -exec sh -c 'gzip -c "$1" | wc -c' _ {} \; | paste -sd+ | bc
+node -e "
+const fs=require('fs'),zlib=require('zlib');
+const h=fs.readFileSync('dist/index.html','utf8');
+const inline=[...h.matchAll(/<script type=\"module\">([\s\S]*?)<\/script>/g)].map(m=>m[1]).join('');
+let ext=0;
+for (const f of fs.existsSync('dist/_astro')?fs.readdirSync('dist/_astro').filter(f=>f.endsWith('.js')):[])
+  ext+=zlib.gzipSync(fs.readFileSync('dist/_astro/'+f)).length;
+console.log('gzipped JS on /:', zlib.gzipSync(Buffer.from(inline)).length + ext, 'bytes (budget 30720)');
+"
 ```
 
-Expected: the total is well under 30720 bytes. Record the number for the PR.
+Expected: well under 30720 bytes. Record the number for the PR.
+
+**Measure the inline script, not just `dist/_astro/`.** An island this small is inlined
+straight into `index.html` by Astro, so scanning only `dist/_astro/*.js` reports zero and
+looks like a pass for the wrong reason.
 
 ```bash
 npm run preview
