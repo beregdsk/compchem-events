@@ -5423,7 +5423,9 @@ with ical.js and assert counts, UIDs and dates."
 
 **Files:**
 - Create: `src/pages/feed.xml.ts`, `src/pages/events.json.ts`, `tests/endpoints/exports.test.ts`
-- Modify: `docs/data-schema.md` (document `schema_version`)
+- Modify: `docs/data-schema.md` (document `schema_version`), `src/pages/about.astro` (restore the
+  deferred "Feeds and exports" section — see Step 5b), `docs/decisions.md` (close the entry that
+  deferred it)
 
 **Interfaces:**
 - Consumes: `loadEvents` from `src/lib/events.ts`; `site` from `site.config.ts`.
@@ -5619,6 +5621,26 @@ And add below it:
 
 > `schema_version` is `1`. Field names in the export are a public API. Additions are fine; renames and removals need a `schema_version` bump and a note in the README.
 
+- [ ] **Step 5b: Restore the deferred "Feeds and exports" section on `/about/`**
+
+Task 14 deliberately shipped `/about/` without this section, because none of the four endpoints
+existed and the page must not promise a feature the site lacks. `docs/decisions.md` records that
+decision and its reversal condition. **This task ships the last of the four, so the condition is
+now met.** Add the section back, listing all four:
+
+```astro
+    <h2>Feeds and exports</h2>
+    <ul>
+      <li><a href="/events.ics">Events calendar</a> — subscribe in any calendar app.</li>
+      <li><a href="/deadlines.ics">Deadlines calendar</a> — every open deadline.</li>
+      <li><a href="/feed.xml">Atom feed</a> — newly added events.</li>
+      <li><a href="/events.json">JSON</a> — the full dataset.</li>
+    </ul>
+```
+
+Then close the `docs/decisions.md` entry by noting the date the condition was met, rather than
+deleting it — the reasoning stays useful.
+
 - [ ] **Step 6: Verify and commit**
 
 ```bash
@@ -5751,6 +5773,33 @@ npm ci && npm run lint && npm run typecheck && npm run validate && npm test && n
 ```
 
 Expected: all pass from a clean install.
+
+- [ ] **Step 7b: Sweep every internal link**
+
+Until phase 3 shipped, `Base.astro`'s footer linked `/events.ics`, `/feed.xml` and `/events.json`
+on every page while none of them existed — three dead links site-wide. They should now resolve.
+Verify rather than assume: extract every root-relative `href` from the built output and confirm
+each one corresponds to a real file in `dist/`.
+
+```bash
+npm run build
+node -e "
+const fs=require('fs'), path=require('path');
+const files=[]; (function walk(d){for(const e of fs.readdirSync(d,{withFileTypes:true})){
+  const f=path.join(d,e.name); e.isDirectory()?walk(f):f.endsWith('.html')&&files.push(f);}})('dist');
+const hrefs=new Set();
+for(const f of files) for(const m of fs.readFileSync(f,'utf8').matchAll(/href=\"(\/[^\"#?]*)/g)) hrefs.add(m[1]);
+const missing=[...hrefs].filter(h=>{
+  const p='dist'+h;
+  return !(fs.existsSync(p) || fs.existsSync(p.replace(/\/$/,'')+'/index.html') || fs.existsSync(p+'/index.html'));
+});
+console.log(hrefs.size,'distinct internal links;',missing.length,'missing');
+if(missing.length) { console.log(missing); process.exit(1); }
+"
+```
+
+Expected: zero missing. If any are missing, fix them before continuing — a dead internal link is
+a defect, not a cosmetic issue.
 
 - [ ] **Step 8: Measure the JavaScript budget and attempt Lighthouse**
 
