@@ -1,0 +1,9 @@
+# Pre-existing project documentation is out of scope for the phase-0
+# tooling scaffold. Reformatting it wholesale is a large, unreviewable diff
+# with no functional benefit; new docs (e.g. docs/decisions.md) and code are
+# still checked.
+/*.md
+docs/curation-policy.md
+docs/data-schema.md
+docs/discovery-agent.md
+docs/superpowers/

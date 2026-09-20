@@ -1,0 +1,13 @@
+# EXPECTED ERROR: unknown topic
+id: unknown-topic-2027
+title: Invalid Example with an Unknown Topic
+type: conference
+start_date: 2027-04-10
+end_date: 2027-04-12
+format: online
+url: https://example.org/unknown-topic-2027/
+topics: [quantum-astrology]
+description: The topic is not in the controlled vocabulary.
+added: 2026-09-20
+last_verified: 2026-09-20
+fixture: true

@@ -1,0 +1,14 @@
+# EXPECTED ERROR: status_note required when status is cancelled
+id: cancelled-no-note-2027
+title: Invalid Example Cancelled Without a Note
+type: conference
+start_date: 2027-04-10
+end_date: 2027-04-12
+format: online
+url: https://example.org/cancelled-no-note-2027/
+topics: [dft]
+description: The event is cancelled but no status_note explains why.
+status: cancelled
+added: 2026-09-20
+last_verified: 2026-09-20
+fixture: true

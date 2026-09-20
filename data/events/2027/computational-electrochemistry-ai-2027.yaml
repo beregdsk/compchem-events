@@ -1,0 +1,21 @@
+id: computational-electrochemistry-ai-2027
+title: Computational electrochemistry in the era of AI
+type: workshop
+start_date: 2027-01-11
+end_date: 2027-01-14
+format: in-person
+location:
+  city: Beijing
+  country: CN
+url: https://www.cecam.org/workshop-details/computational-electrochemistry-in-the-era-of-ai-1501
+organizer: CECAM Beijing node
+topics: [materials-modeling, ml-potentials, catalysis]
+description: >-
+  Four days on simulating electrochemical interfaces for batteries, fuel cells
+  and electrolysers, and on what machine-learned potentials and AI-driven
+  workflows change about how those interfaces are modelled.
+deadlines:
+  - type: registration
+    date: 2026-12-10
+added: 2026-09-20
+last_verified: 2026-09-20

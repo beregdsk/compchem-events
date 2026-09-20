@@ -1,0 +1,16 @@
+id: quantum-classical-synergies-2026
+title: Synergies between quantum and classical computing for quantum chemistry and materials science
+type: workshop
+start_date: 2026-09-28
+end_date: 2026-09-30
+format: in-person
+location:
+  city: Lausanne
+  country: CH
+  venue: CECAM-HQ-EPFL
+url: https://www.cecam.org/workshop-details/synergies-between-quantum-and-classical-computing-for-quantum-chemistry-and-materials-science-1479
+organizer: CECAM
+topics: [quantum-computing-chemistry, electronic-structure, materials-modeling]
+description: Three days on where quantum processors can usefully complement established electronic-structure methods, covering embedding of strongly correlated fragments, sampling schemes, and the limits imposed by present-day hardware.
+added: 2026-09-20
+last_verified: 2026-09-20

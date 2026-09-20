@@ -1,0 +1,13 @@
+# EXPECTED ERROR: end_date is before start_date
+id: end-before-start-2027
+title: Invalid Example with Reversed Dates
+type: conference
+start_date: 2027-04-10
+end_date: 2027-04-08
+format: online
+url: https://example.org/end-before-start-2027/
+topics: [dft]
+description: The end date precedes the start date.
+added: 2026-09-20
+last_verified: 2026-09-20
+fixture: true

@@ -1,0 +1,13 @@
+# EXPECTED ERROR: url must be https
+id: http-url-2027
+title: Invalid Example with a Plain Http Url
+type: conference
+start_date: 2027-04-10
+end_date: 2027-04-12
+format: online
+url: http://example.org/x/
+topics: [dft]
+description: The url uses plain http instead of https.
+added: 2026-09-20
+last_verified: 2026-09-20
+fixture: true

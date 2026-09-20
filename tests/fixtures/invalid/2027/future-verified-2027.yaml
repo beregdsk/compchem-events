@@ -1,0 +1,13 @@
+# EXPECTED ERROR: last_verified is in the future
+id: future-verified-2027
+title: Invalid Example Verified in the Future
+type: conference
+start_date: 2027-04-10
+end_date: 2027-04-12
+format: online
+url: https://example.org/future-verified-2027/
+topics: [dft]
+description: The last_verified date has not happened yet.
+added: 2026-09-20
+last_verified: 2099-01-01
+fixture: true

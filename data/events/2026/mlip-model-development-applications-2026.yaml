@@ -1,0 +1,19 @@
+id: mlip-model-development-applications-2026
+title: 'Machine Learning Interatomic Potentials: Bridging Model Development and Interdisciplinary Applications'
+type: workshop
+start_date: 2026-09-30
+end_date: 2026-10-02
+format: in-person
+location:
+  city: Taipei
+  country: TW
+  venue: Interdisciplinary Research Building for Science and Technology, Academia Sinica
+url: https://www.cecam.org/workshop-details/machine-learning-interatomic-potentials-bridging-model-development-and-interdisciplinary-applications-1543
+organizer: CECAM Taiwan node, Academia Sinica
+topics: [ml-potentials, materials-modeling, molecular-dynamics]
+description: A CECAM workshop in Taiwan that puts the people who build machine-learned interatomic potentials in the same room as the people who apply them, covering descriptors, message-passing models, transferability and cost.
+deadlines:
+  - type: registration
+    date: 2026-08-28
+added: 2026-09-20
+last_verified: 2026-09-20

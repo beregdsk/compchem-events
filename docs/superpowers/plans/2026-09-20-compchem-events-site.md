@@ -1378,6 +1378,7 @@ Overwrite `scripts/validate.ts`:
 #!/usr/bin/env node
 import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { parse } from 'yaml';
 import {
   formatProblems,
@@ -1438,7 +1439,10 @@ function main(): void {
 }
 
 // Only run when invoked directly, so importing this module has no side effects.
-if (process.argv[1] && import.meta.url.endsWith(process.argv[1].split('/').pop() ?? '')) {
+// Compare the FULL resolved path, never the basename: TASK.md section 7 promises the
+// discovery agent will import this module, and its own entry script could also be
+// named validate.ts, which a basename comparison would not distinguish.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   main();
 }
 ```
@@ -1642,6 +1646,32 @@ describe('rule 8: location required unless online', () => {
   });
 });
 
+describe('rule 9: each deadline type appears at most once', () => {
+  it('rejects a repeated deadline type', () => {
+    expect(
+      errorsFor({
+        ...valid,
+        deadlines: [
+          { type: 'abstract', date: '2027-01-10' },
+          { type: 'abstract', date: '2027-02-10' },
+        ],
+      }).join(),
+    ).toMatch(/more than once/i);
+  });
+
+  it('accepts distinct deadline types', () => {
+    expect(
+      errorsFor({
+        ...valid,
+        deadlines: [
+          { type: 'abstract', date: '2027-01-10' },
+          { type: 'registration', date: '2027-02-10' },
+        ],
+      }),
+    ).toEqual([]);
+  });
+});
+
 describe('rule 5: collection-level duplicates', () => {
   const a = { file: 'data/events/2027/a-2027.yaml', data: { ...valid, id: 'a-2027' } };
 
@@ -1671,6 +1701,42 @@ describe('rule 5: collection-level duplicates', () => {
     };
     const r = validateCollection([a, b], ctx);
     expect(r.errors.map((e) => e.message).join()).toMatch(/duplicate title/i);
+  });
+
+  it('rejects a hyphenated title and its spaced variant as duplicates', () => {
+    const b = {
+      file: 'data/events/2027/b-2027.yaml',
+      data: {
+        ...valid,
+        id: 'b-2027',
+        url: 'https://example.org/other/',
+        title: 'Example Workshop on Excited State Methods',
+      },
+    };
+    const hyphenated = {
+      file: 'data/events/2027/a-2027.yaml',
+      data: { ...valid, id: 'a-2027', title: 'Example Workshop on Excited-State Methods' },
+    };
+    expect(validateCollection([hyphenated, b], ctx).errors.map((e) => e.message).join()).toMatch(
+      /duplicate title/i,
+    );
+  });
+
+  it('does not merge two genuinely different hyphenated titles', () => {
+    const a = {
+      file: 'data/events/2027/a-2027.yaml',
+      data: { ...valid, id: 'a-2027', title: 'Multi-Scale Modelling School' },
+    };
+    const b = {
+      file: 'data/events/2027/b-2027.yaml',
+      data: {
+        ...valid,
+        id: 'b-2027',
+        url: 'https://example.org/other/',
+        title: 'Multi-Reference Methods School',
+      },
+    };
+    expect(validateCollection([a, b], ctx).errors).toEqual([]);
   });
 
   it('accepts genuinely distinct events', () => {
@@ -1764,11 +1830,16 @@ import { compareISO, daysBetween } from './dates';
 import { regionOf } from './regions';
 import type { RawEvent } from './types';
 
-/** Lowercase, strip punctuation, collapse whitespace — for duplicate detection. */
+/**
+ * Lowercase, replace punctuation with a space, collapse whitespace — for
+ * duplicate detection. Punctuation becomes a SPACE rather than being deleted,
+ * so "AI-Driven Workshop" and "AI Driven Workshop" normalise alike. Deleting it
+ * would join the words either side and miss the duplicate.
+ */
 function normaliseTitle(title: string): string {
   return title
     .toLowerCase()
-    .replace(/[^\p{L}\p{N}\s]/gu, '')
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -1849,6 +1920,18 @@ function semanticRules(entry: EventFile, ctx: ValidationContext, out: Validation
     if (compareISO(d.date, e.end_date) > 0) {
       err('deadlines', `${d.type} deadline ${d.date} falls after end_date ${e.end_date}`);
     }
+  }
+
+  // Rule 9: each deadline type appears at most once per event.
+  // Stated at docs/data-schema.md:38 but absent from that document's own
+  // enumerated error list, and not expressible in the JSON Schema because it is
+  // a cross-item constraint. Without it, duplicate deadline types ship unvalidated.
+  const seenDeadlineTypes = new Set<string>();
+  for (const d of e.deadlines ?? []) {
+    if (seenDeadlineTypes.has(d.type)) {
+      err('deadlines', `deadline type "${d.type}" appears more than once; each type is allowed at most once per event`);
+    }
+    seenDeadlineTypes.add(d.type);
   }
 
   // Rule 8: location required unless online.
@@ -2055,9 +2138,33 @@ Repeat the same shape for these files, changing only the field named in each com
 | `http-url-2027.yaml` | `# EXPECTED ERROR: url must be https` — `url: http://example.org/x/` |
 | `deadline-after-end-2027.yaml` | `# EXPECTED ERROR: deadline falls after end_date` — a deadline dated after `end_date` |
 | `missing-location-2027.yaml` | `# EXPECTED ERROR: location is required when format is in-person` — `format: in-person`, no `location` |
-| `too-many-topics-2027.yaml` | `# EXPECTED ERROR: more than five topics` — six valid slugs |
+| `too-many-topics-2027.yaml` | `# EXPECTED ERROR: topics must not have more than 5 items` — six valid slugs. The comment must use words that appear in Ajv's own message; "topics" alone only matches the field name. |
 | `long-description-2027.yaml` | `# EXPECTED ERROR: description over 280 characters` — a 281-character description |
 | `cancelled-no-note-2027.yaml` | `# EXPECTED ERROR: status_note required when status is cancelled` — `status: cancelled`, no `status_note` |
+| `duplicate-deadline-type-2027.yaml` | `# EXPECTED ERROR: deadline type appears more than once` — two deadlines both `type: abstract`, different dates, both on or before `end_date` |
+
+- [ ] **Step 5b: Rename the unused parameter back, and fix two test-hygiene defects**
+
+Task 5 left `validateEvent(entry, _ctx)` and `validateCollection(_entries, _ctx)` underscore-prefixed
+because the schema layer did not use them. The semantic rules do use the context, so rename
+`_ctx` to `ctx` in `validateEvent`'s signature. `validateCollection` still does not read its context —
+leave `_ctx` there.
+
+Then two fixes in `tests/schema/schema.test.ts`, which this task's rule 9 makes relevant:
+
+- The test named `'rejects a repeated deadline shape error'` actually asserts that an unknown
+  deadline `type` enum value is rejected. Its name suggests a duplicate-type test was intended all
+  along — that check now lives in rule 9. Rename this one to `'rejects an unknown deadline type'`
+  so it describes what it does.
+- The `status_note` conditional is only exercised for `status: 'cancelled'`. Add the `postponed`
+  case beside it, since both share the same `if`/`then` branch:
+
+```ts
+  it('requires status_note when status is postponed', () => {
+    expect(validate({ ...base, status: 'postponed' })).toBe(false);
+    expect(validate({ ...base, status: 'postponed', status_note: 'Moved to 2028.' })).toBe(true);
+  });
+```
 
 - [ ] **Step 6: Write the fixture-corpus test**
 
@@ -2099,13 +2206,19 @@ describe('invalid fixtures', () => {
       expect(r.errors.length, `${path} produced no errors`).toBeGreaterThan(0);
 
       // Match on the distinctive words of the comment, so wording can evolve
-      // without the test becoming brittle.
-      const haystack = r.errors.map((e) => `${e.field} ${e.message}`).join(' ').toLowerCase();
+      // without the test becoming brittle — but match against the error MESSAGES
+      // only. Including the field name lets a fixture pass on a keyword that merely
+      // names the field, without the message describing the error it claims.
+      const messages = r.errors.map((e) => e.message).join(' ').toLowerCase();
+      const diagnostic = r.errors.map((e) => `${e.field}: ${e.message}`).join('; ');
       const keywords = (expected ?? '')
         .toLowerCase()
         .split(/\s+/)
         .filter((w) => w.length > 4);
-      expect(keywords.some((w) => haystack.includes(w)), `${path}: expected "${expected}", got: ${haystack}`).toBe(true);
+      expect(
+        keywords.some((w) => messages.includes(w)),
+        `${path}: expected "${expected}", got: ${diagnostic}`,
+      ).toBe(true);
     });
   }
 });
@@ -2357,6 +2470,27 @@ export interface UpcomingDeadline {
   deadline: Deadline;
 }
 
+/**
+ * Display region for an event. Spec D6 keeps `regionOf` purely geographic, so the
+ * Online case is decided here.
+ *
+ * An unmapped country throws rather than falling back. A fallback to 'Online'
+ * would relabel a located event with the one value reserved for online events,
+ * conflating "region unknown" with "this is an online event" — silent corruption
+ * in the module every page reads through. Unreachable while the validator enforces
+ * rule 4, and this is what makes that invariant explicit.
+ */
+function regionFor(e: RawEvent): DisplayRegion {
+  if (e.format === 'online' || !e.location) return 'Online';
+  const region = regionOf(e.location.country);
+  if (region === undefined) {
+    throw new Error(
+      `event ${e.id}: country "${e.location.country}" has no region; add it to src/lib/regions.ts`,
+    );
+  }
+  return region;
+}
+
 export function deriveStatus(event: RawEvent, today: ISODate): DerivedStatus {
   if (compareISO(event.end_date, today) < 0) return 'past';
   if (compareISO(event.start_date, today) > 0) return 'upcoming';
@@ -2412,7 +2546,7 @@ export function loadEvents(options: LoadOptions = {}): LoadedEvent[] {
     .filter((e) => includeFixtures || e.fixture !== true)
     .map<LoadedEvent>((e) => ({
       ...e,
-      region: e.format === 'online' || !e.location ? 'Online' : (regionOf(e.location.country) ?? 'Online'),
+      region: regionFor(e),
       status_derived: deriveStatus(e, today),
     }))
     .sort((a, b) => compareISO(a.start_date, b.start_date) || a.title.localeCompare(b.title));
@@ -2464,10 +2598,30 @@ export function isStale(event: LoadedEvent, today: ISODate): boolean {
 Run: `npx vitest run tests/lib/events.test.ts`
 Expected: PASS, 21 tests.
 
+- [ ] **Step 4b: Cover the branches the happy-path tests miss**
+
+Three behaviours of this module are load-bearing for ten downstream tasks but are not
+exercised by the tests above, because every call in them passes explicit options:
+
+1. **Memoisation.** Add a `describe('memoisation', ...)` with two tests: two consecutive bare
+   `loadEvents()` calls return the same array reference, and an explicit-option call followed by
+   a bare call does not cross-contaminate (3 events from the fixtures, then 0 from the absent
+   `data/events/`). Order the assertions so a leak in either direction fails.
+2. **The warn-not-throw path.** Create `tests/fixtures/warnings/2027/stale-warning-2027.yaml`:
+   fully valid, `fixture: true`, an `example.org` URL, a future `start_date`, and `added` and
+   `last_verified` more than 90 days before 2026-09-20 so it trips warning 2 and nothing else.
+   Add a test that spies on `console.warn`, asserts `loadEvents` does not throw and returns one
+   event, and asserts the warning names the file and mentions the 90-day staleness. Restore the
+   spy in a `finally`. Do NOT put this fixture in `tests/fixtures/valid/` — assertions there pin
+   that directory at exactly three files.
+3. **The `NODE_ENV` default.** The suite never exercises `includeFixtures`' default. Verify it
+   out of band at least once: with `NODE_ENV=production`, a fixture-only directory must load zero
+   events; unset, it must load them all.
+
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/lib/events.ts tests/lib/events.test.ts
+git add src/lib/events.ts tests/lib/events.test.ts tests/fixtures/warnings/
 git commit -m "feat: add the single event loader
 
 Parses, validates, drops fixtures in production builds, sorts, and derives

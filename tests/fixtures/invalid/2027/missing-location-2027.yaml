@@ -1,0 +1,13 @@
+# EXPECTED ERROR: location is required when format is in-person
+id: missing-location-2027
+title: Invalid Example Missing Its Location
+type: conference
+start_date: 2027-04-10
+end_date: 2027-04-12
+format: in-person
+url: https://example.org/missing-location-2027/
+topics: [dft]
+description: An in-person event with no location given at all.
+added: 2026-09-20
+last_verified: 2026-09-20
+fixture: true

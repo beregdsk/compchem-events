@@ -1,0 +1,23 @@
+id: full-online-2027
+title: Fully Populated Online Example Symposium
+series: full-online-example
+type: symposium
+start_date: 2027-06-14
+end_date: 2027-06-16
+format: online
+url: https://example.org/full-online-2027/programme/
+source_url: https://example.org/full-online-2027/dates/
+organizer: Example Society for Computational Chemistry
+topics: [ml-potentials, molecular-dynamics, software-hpc]
+description: Every optional field populated, with no location because the event is online.
+deadlines:
+  - type: abstract
+    date: 2027-03-01
+  - type: registration
+    date: 2027-05-01
+    timezone: UTC
+    note: Late registration closes at 23:59 UTC.
+status: scheduled
+added: 2026-09-20
+last_verified: 2026-09-20
+fixture: true

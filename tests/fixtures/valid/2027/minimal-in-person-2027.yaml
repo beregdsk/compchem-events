@@ -1,0 +1,15 @@
+id: minimal-in-person-2027
+title: Minimal In-Person Example Meeting
+type: conference
+start_date: 2027-05-03
+end_date: 2027-05-05
+format: in-person
+location:
+  city: Exampleville
+  country: NL
+url: https://example.org/minimal-2027/
+topics: [dft]
+description: A minimal valid in-person event used to exercise the happy path.
+added: 2026-09-20
+last_verified: 2026-09-20
+fixture: true
