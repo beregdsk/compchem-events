@@ -1,0 +1,48 @@
+---
+import type { Deadline } from '../lib/types';
+import { formatDate } from '../lib/dates';
+
+interface Props {
+  deadlines: Deadline[];
+}
+
+const { deadlines } = Astro.props;
+
+const LABELS: Record<Deadline['type'], string> = {
+  abstract: 'Abstract',
+  registration: 'Registration',
+  early_bird: 'Early bird',
+  travel_grant: 'Travel grant',
+  poster: 'Poster',
+  application: 'Application',
+};
+
+const zoneLabel = (tz: string | undefined): string =>
+  !tz || tz === 'AoE' ? 'AoE (Anywhere on Earth)' : tz;
+---
+
+<table class="deadlines">
+  <caption class="muted">Deadlines as published by the organiser.</caption>
+  <thead>
+    <tr>
+      <th scope="col">Deadline</th>
+      <th scope="col">Date</th>
+      <th scope="col">Timezone</th>
+      <th scope="col">Note</th>
+    </tr>
+  </thead>
+  <tbody>
+    {deadlines.map((d) => (
+      <tr>
+        <th scope="row">{LABELS[d.type]}</th>
+        <td class="mono">
+          <time datetime={d.date} data-countdown>
+            {formatDate(d.date)}
+          </time>
+        </td>
+        <td class="mono">{zoneLabel(d.timezone)}</td>
+        <td>{d.note ?? ''}</td>
+      </tr>
+    ))}
+  </tbody>
+</table>

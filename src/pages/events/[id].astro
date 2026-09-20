@@ -1,0 +1,169 @@
+---
+import Base from '../../layouts/Base.astro';
+import DeadlineList from '../../components/DeadlineList.astro';
+import { isStale, loadEvents } from '../../lib/events';
+import { formatDate, formatDateRange, todayUTC } from '../../lib/dates';
+import { site } from '../../../site.config';
+import type { LoadedEvent } from '../../lib/types';
+
+export function getStaticPaths() {
+  return loadEvents().map((event) => ({ params: { id: event.id }, props: { event } }));
+}
+
+interface Props {
+  event: LoadedEvent;
+}
+
+const { event } = Astro.props;
+const today = todayUTC();
+const path = `/events/${event.id}/`;
+const pageUrl = new URL(path, site.url).href;
+
+const reportUrl = (() => {
+  const u = new URL(site.reportForm.url);
+  u.searchParams.set(site.reportForm.eventIdParam, event.id);
+  u.searchParams.set(site.reportForm.eventUrlParam, pageUrl);
+  return u.href;
+})();
+
+const correctionUrl = (() => {
+  const u = new URL(`${site.repoUrl}/issues/new`);
+  u.searchParams.set('template', 'correction.yml');
+  u.searchParams.set('title', `Correction: ${event.id}`);
+  u.searchParams.set('labels', 'correction');
+  return u.href;
+})();
+
+const place =
+  event.format === 'online'
+    ? 'Online'
+    : [event.location?.venue, event.location?.city, event.location?.country]
+        .filter(Boolean)
+        .join(', ');
+
+// schema.org Event. `endDate` is the last day, which is the schema.org
+// convention — unlike iCalendar's exclusive DTEND.
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Event',
+  name: event.title,
+  startDate: event.start_date,
+  endDate: event.end_date,
+  eventAttendanceMode:
+    event.format === 'online'
+      ? 'https://schema.org/OnlineEventAttendanceMode'
+      : event.format === 'hybrid'
+        ? 'https://schema.org/MixedEventAttendanceMode'
+        : 'https://schema.org/OfflineEventAttendanceMode',
+  eventStatus:
+    event.status === 'cancelled'
+      ? 'https://schema.org/EventCancelled'
+      : event.status === 'postponed'
+        ? 'https://schema.org/EventPostponed'
+        : 'https://schema.org/EventScheduled',
+  description: event.description,
+  url: event.url,
+  ...(event.organizer ? { organizer: { '@type': 'Organization', name: event.organizer } } : {}),
+  ...(event.location
+    ? {
+        location: {
+          '@type': 'Place',
+          name: event.location.venue ?? event.location.city,
+          address: {
+            '@type': 'PostalAddress',
+            addressLocality: event.location.city,
+            addressCountry: event.location.country,
+          },
+        },
+      }
+    : { location: { '@type': 'VirtualLocation', url: event.url } }),
+};
+---
+
+<Base title={event.title} description={event.description} path={path}>
+  <article class="reveal">
+    <h1>{event.title}</h1>
+
+    {event.status && event.status !== 'scheduled' && (
+      <p>
+        <span class="pill pill--status">{event.status}</span>
+        {event.status_note && <span class="muted"> {event.status_note}</span>}
+      </p>
+    )}
+
+    <dl class="detail">
+      <dt>Dates</dt>
+      <dd class="mono">
+        <time datetime={event.start_date}>{formatDateRange(event.start_date, event.end_date)}</time>
+      </dd>
+
+      <dt>Type</dt>
+      <dd class="mono">{event.type}</dd>
+
+      <dt>Format</dt>
+      <dd class="mono">{event.format}</dd>
+
+      <dt>Location</dt>
+      <dd>{place}</dd>
+
+      {event.organizer && <dt>Organiser</dt>}
+      {event.organizer && <dd>{event.organizer}</dd>}
+
+      <dt>Official page</dt>
+      <dd>
+        <a href={event.url} rel="noopener">
+          {event.url}
+        </a>
+      </dd>
+
+      {event.source_url && <dt>Dates verified on</dt>}
+      {event.source_url && (
+        <dd>
+          <a href={event.source_url} rel="noopener">
+            {event.source_url}
+          </a>
+        </dd>
+      )}
+
+      <dt>Topics</dt>
+      <dd class="event__tags">
+        {event.topics.map((t) => (
+          <a class="pill pill--topic" href={`/?topics=${t}`}>
+            {t}
+          </a>
+        ))}
+      </dd>
+    </dl>
+
+    <p>{event.description}</p>
+
+    {event.deadlines && event.deadlines.length > 0 && (
+      <>
+        <h2>Deadlines</h2>
+        <DeadlineList deadlines={event.deadlines} />
+      </>
+    )}
+
+    <hr class="rule" />
+
+    <p class="mono muted">
+      Last verified on {formatDate(event.last_verified)}.
+      {isStale(event, today) && ' Check the official page before relying on these dates.'}
+    </p>
+
+    <p>
+      <a href={correctionUrl} rel="noopener">
+        Suggest a correction
+      </a>{' '}
+      ·
+      <a href={reportUrl} rel="noopener">
+        Report this event
+      </a>
+    </p>
+  </article>
+
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} is:inline></script>
+  <script>
+    import '../../scripts/countdown.ts';
+  </script>
+</Base>
