@@ -110,11 +110,22 @@ describe('filters island', () => {
   it('an interaction that produces the same URL as the current one calls neither', async () => {
     const { pushSpy, replaceSpy } = await setup();
     const select = document.querySelector<HTMLSelectElement>('select[name="region"]')!;
+    const countEl = document.querySelector<HTMLElement>('#result-count')!;
+    // Clear the witness the initial `syncFromUrl()` already wrote, so a
+    // pass here cannot be explained by the load-time render alone.
+    countEl.textContent = '';
+
     // The select's value never actually changes (still the default ""), so
     // the serialised filter state is identical to the current, query-free
-    // location — this must be a no-op.
+    // location — this must be a no-op on history, but the handler must
+    // still have run.
     fireEvent(select, 'input');
 
+    // Positive witness that the `input` handler actually executed: it always
+    // recomputes the count before it ever reaches the history logic. Without
+    // this, `not.toHaveBeenCalled()` below would also pass if the event never
+    // reached the listener at all, proving nothing about the guard.
+    expect(countEl.textContent).toBe('2 upcoming events');
     expect(pushSpy).not.toHaveBeenCalled();
     expect(replaceSpy).not.toHaveBeenCalled();
   });
