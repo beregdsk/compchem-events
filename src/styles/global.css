@@ -193,21 +193,77 @@ a:hover {
   color: var(--fg);
   text-decoration: none;
 }
-.site-nav {
+.site-head__inner {
+  display: block;
+}
+
+.site-head__tagline {
+  margin: 0.15rem 0 0;
+  color: var(--fg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+.site-foot__inner {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-l);
+  align-items: start;
+}
+
+.site-foot__col p {
+  margin-block-end: var(--space-xs);
+}
+
+.site-foot__head {
+  font-size: var(--step--1);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--fg-muted);
+  margin-block-end: var(--space-s);
+}
+
+.site-foot__col ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-xs);
+}
+
+/* The result count and the page's action row share one instrument-panel line. */
+.listing-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-s) var(--space-m);
+  align-items: baseline;
+  justify-content: space-between;
+  margin-block-end: var(--space-s);
+}
+
+.listing-head .result-count {
+  margin: 0;
+}
+
+.actions {
+  list-style: none;
+  margin: 0 0 var(--space-m);
+  padding: 0;
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-m);
   font-size: var(--step--1);
 }
-.site-nav a {
-  color: var(--fg-muted);
-  text-decoration: none;
+
+.listing-head .actions {
+  margin-block-end: 0;
 }
-.site-nav a:hover,
-.site-nav a[aria-current='page'] {
-  color: var(--fg);
-  text-decoration: underline;
-  text-underline-offset: 0.3em;
+
+@media (max-width: 52rem) {
+  .site-foot__inner {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-m);
+  }
 }
 
 /* Two-column layout: filter rail plus results. */

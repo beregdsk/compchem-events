@@ -1,6 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import EventRow from '../components/EventRow.astro';
+import PageActions from '../components/PageActions.astro';
 import { loadEvents, upcomingEvents } from '../lib/events';
 import { todayUTC } from '../lib/dates';
 import { EVENT_FORMATS, EVENT_TYPES, type Topic } from '../lib/types';
@@ -117,9 +118,18 @@ const hasOnline = events.some((e) => e.region === 'Online');
     </form>
 
     <div>
-      <p class="result-count" id="result-count" role="status" aria-live="polite">
-        {events.length} upcoming {events.length === 1 ? 'event' : 'events'}
-      </p>
+      <div class="listing-head">
+        <p class="result-count" id="result-count" role="status" aria-live="polite">
+          {events.length} upcoming {events.length === 1 ? 'event' : 'events'}
+        </p>
+        <PageActions
+          actions={[
+            { href: '/submit/', label: 'Add an event' },
+            { href: '/archive/', label: 'Archive' },
+            { href: '/events.ics', label: 'Subscribe (.ics)' },
+          ]}
+        />
+      </div>
       <ul class="event-list reveal" id="event-list">
         {events.map((event) => (
           <EventRow event={event} today={today} />

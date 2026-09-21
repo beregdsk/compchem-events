@@ -1,0 +1,22 @@
+---
+export interface Action {
+  href: string;
+  label: string;
+}
+
+interface Props {
+  actions: Action[];
+}
+
+const { actions } = Astro.props;
+---
+
+<!-- A plain list, deliberately not a <nav>: these are controls for this page,
+     and a second navigation landmark would compete with the footer. -->
+<ul class="actions mono">
+  {actions.map((action) => (
+    <li>
+      <a href={action.href}>{action.label}</a>
+    </li>
+  ))}
+</ul>

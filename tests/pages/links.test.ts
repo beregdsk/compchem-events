@@ -19,4 +19,10 @@ describe('internal links', () => {
     const offenders = sources('src').filter((f) => REMOVED.test(readFileSync(f, 'utf8')));
     expect(offenders).toEqual([]);
   });
+
+  it('has no site navigation bar in the layout', () => {
+    const layout = readFileSync('src/layouts/Base.astro', 'utf8');
+    expect(layout).not.toMatch(/class="site-nav"/);
+    expect(layout).not.toMatch(/aria-label="Main"/);
+  });
 });
