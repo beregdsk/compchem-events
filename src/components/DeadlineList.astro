@@ -17,6 +17,10 @@ const LABELS: Record<Deadline['type'], string> = {
   application: 'Application',
 };
 
+// Both halves are load-bearing: `!tz` covers a missing timezone (AoE is the
+// documented default), and `tz === 'AoE'` expands the literal value some
+// YAML files spell out explicitly. Dropping either half stops handling one
+// of those two cases.
 const zoneLabel = (tz: string | undefined): string =>
   !tz || tz === 'AoE' ? 'AoE (Anywhere on Earth)' : tz;
 ---

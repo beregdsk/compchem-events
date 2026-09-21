@@ -59,7 +59,15 @@ const LABELS: Record<string, string> = {
     </form>
 
     <div>
-      <p class="result-count" id="result-count" role="status" aria-live="polite">
+      <p
+        class="result-count"
+        id="result-count"
+        role="status"
+        aria-live="polite"
+        data-noun-singular="deadline"
+        data-noun-plural="deadlines"
+        data-empty-adjective="open"
+      >
         {rows.length} open {rows.length === 1 ? 'deadline' : 'deadlines'}
       </p>
       <ul class="event-list reveal" id="event-list">

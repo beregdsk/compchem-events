@@ -101,10 +101,11 @@ fixture: true
 
 ```json
 {
+  "schema_version": 1,
   "generated_at": "2026-09-20T06:00:00Z",
   "count": 0,
   "events": [ /* every non-fixture event, same field names as above, plus "region" and "status_derived" */ ]
 }
 ```
 
-Field names in the export are a public API. Additions are fine; renames and removals need a version bump (`"schema_version"`) and a note in the README.
+> `schema_version` is `1`. Field names in the export are a public API. Additions are fine; renames and removals need a `schema_version` bump and a note in the README.

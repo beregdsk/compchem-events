@@ -79,17 +79,21 @@ here because the plan's dependency-justification text names specific
 ecosystem behaviour (e.g. js-yaml vs yaml) that predates these majors; nothing
 in that reasoning changes with the newer versions.
 
-## 2026-09-20 — Repository default branch is `master`, not `main`
+## 2026-09-20 — Repository default branch renamed from `master` to `main`
 
-The task brief and its CI workflow (`.github/workflows/ci.yml`, `push:
-branches: [main]`) assume the default branch is `main`. The actual local
-repository default branch is `master`. The CI workflow content is kept
-verbatim from the plan (`branches: [main]`) rather than silently rewritten to
-`master`, since renaming the default branch — or retargeting CI — is a
-one-line call for the maintainer to make once a GitHub remote exists, and
-guessing wrong here is cheap to get wrong twice. Flagged for the maintainer to
-resolve before first push: either rename the default branch to `main` or
-change the workflow's `branches` list to `master`.
+The repository was initialised with `master` as its default branch, which did
+not match the plan's merge steps, the design spec, or the already-committed
+CI workflow (`.github/workflows/ci.yml`, `push: branches: [main]`) — all of
+which name `main`. Rather than retarget the CI workflow to `master`, the
+local default branch was renamed to `main` during Task 1, immediately after
+this entry was first written. The repository is local-only with no remote
+configured, so the rename had no push, PR or collaborator to coordinate
+around.
+
+**Closed 2026-09-20.** `git branch -a` lists only `main` and the
+`feat/phase-*` branches; no `master` branch exists. `ci.yml`'s
+`branches: [main]` has named the correct branch ever since the rename. No
+maintainer action is required.
 
 ## 2026-09-20 — Three seed events take `location.city` from a CECAM node page, not the event page
 
@@ -144,3 +148,43 @@ together.
 Reverse this once phase 3 ships the endpoints: restore the "Feeds and exports"
 section on `/about/` listing all four, and the footer's links become live at
 the same time.
+
+**Closed 2026-09-21.** Task 16 shipped `/events.ics` and `/deadlines.ics`; this
+task ships `/feed.xml` and `/events.json`, the last two of the four. All four
+endpoints now exist, so the condition above is met: the "Feeds and exports"
+section is restored on `/about/` listing all four, and the footer's
+previously-dead `/feed.xml` and `/events.json` links are now live.
+
+## 2026-09-20 — `.prettierignore` excludes pre-existing Markdown docs
+
+The phase-0 tooling scaffold added `.prettierignore` covering `/*.md` and the
+pre-existing `docs/curation-policy.md`, `docs/data-schema.md`,
+`docs/discovery-agent.md` and `docs/superpowers/` — files that predate this
+project's tooling and were not part of that task's file list. Reformatting
+them wholesale would be a large, unreviewable diff with no functional benefit;
+new docs written by this project (`docs/decisions.md` and code) are still
+checked by Prettier. The rationale lived only as a comment inside
+`.prettierignore` itself; recorded here per Task 18's sweep for unrecorded
+decisions.
+
+## 2026-09-20 — Validation logic lives in `src/lib/validation.ts`; `scripts/validate.ts` re-exports it
+
+`TASK.md` §7 promises the discovery agent (`docs/discovery-agent.md`) a stable
+`import { validateEvent }` entry point as a library obligation that outlives
+this v1. Putting the schema and semantic checks in `src/lib/validation.ts`
+keeps that logic importable and unit-testable without pulling in Node's `fs`
+CLI concerns; `scripts/validate.ts` stays a thin CLI wrapper that reads
+`data/events/`, calls into `src/lib/validation.ts`, and re-exports
+`validateEvent`, `validateCollection`, `loadValidationContext` and their
+types, so both `npm run validate` and `import { validateEvent } from
+'../scripts/validate'` resolve to the same implementation.
+
+## 2026-09-21 — Countdown island appends beside the server-rendered date
+
+Task 18 adds `src/scripts/countdown.ts`, which finds every
+`time[data-countdown]` element and appends a relative-time phrase (`closes in
+3 days`, `closes today`, `closed`) as a separate `<span class="countdown">`
+after the element, rather than rewriting the `<time>` element's own text. This
+follows spec §6 directly: the server-rendered date remains complete and
+correct on its own, so a reader with JavaScript disabled loses only the
+relative phrase, never the date itself.
