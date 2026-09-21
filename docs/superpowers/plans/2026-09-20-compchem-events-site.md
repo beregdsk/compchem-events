@@ -4980,7 +4980,7 @@ describe('escapeText', () => {
   });
 
   it('escapes commas, semicolons and newlines', () => {
-    expect(escapeText('a,b;c\nd')).toBe('a\\,b\;c\\nd');
+    expect(escapeText('a,b;c\nd')).toBe('a\\,b\\;c\\nd');
   });
 
   it('collapses CRLF to a single escaped newline', () => {
@@ -5001,7 +5001,7 @@ describe('foldLine', () => {
       expect(new TextEncoder().encode(p).length).toBeLessThanOrEqual(75);
     }
     for (const p of parts.slice(1)) expect(p.startsWith(' ')).toBe(true);
-    expect(parts.join('').replace(/\r\n /g, '')).toBe(`SUMMARY:${'x'.repeat(200)}`);
+    expect(folded.replace(/\r\n /g, '')).toBe(`SUMMARY:${'x'.repeat(200)}`);
   });
 
   it('never splits a multi-byte character', () => {
@@ -5065,6 +5065,15 @@ describe('buildCalendar', () => {
     expect(new Set(uids).size).toBe(uids.length);
   });
 
+  it('escapes semicolons and commas in the raw serialised text', () => {
+    // RFC 5545 3.3.11 TSAFE-CHAR excludes ';', so a bare semicolon in a TEXT
+    // value is grammar-invalid: only '\;' is valid. Inspect the raw bytes
+    // directly rather than the ical.js-parsed value, since a parser that
+    // tolerates a bare semicolon would let a serialiser bug like this ship
+    // unnoticed.
+    expect(ics).toContain('SUMMARY:Workshop\\, with a comma\\; and a semicolon');
+  });
+
   it('round-trips escaped text', () => {
     const comp = new ICAL.Component(ICAL.parse(ics));
     const first = new ICAL.Event(comp.getAllSubcomponents('vevent')[0]);
@@ -5123,7 +5132,7 @@ export function escapeText(value: string): string {
     .replace(/\\/g, '\\\\')
     .replace(/\r\n/g, '\\n')
     .replace(/[\r\n]/g, '\\n')
-    .replace(/;/g, '\;')
+    .replace(/;/g, '\\;')
     .replace(/,/g, '\\,');
 }
 
@@ -5204,7 +5213,7 @@ export function buildCalendar(name: string, events: VEventInput[], stamp: Date):
 - [ ] **Step 4: Run the test to verify it passes**
 
 Run: `npx vitest run tests/lib/ical.test.ts`
-Expected: PASS, 17 tests.
+Expected: PASS, 19 tests.
 
 - [ ] **Step 5: Commit**
 
