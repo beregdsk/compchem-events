@@ -80,6 +80,12 @@ to the footer" asks for.
 
 ### Link rewrites
 
+The policy file's headings are demoted one level in the file itself, so they nest under the
+about page's `<h1>` and the `## Curation policy` heading's generated id serves the anchor.
+Astro 7 exposes heading transforms only through the Sätteri processor's `hastPlugins`, which
+would mean importing a package the project does not depend on directly; a one-time text edit
+costs nothing and leaves `astro.config.ts` untouched.
+
 `/policy/` currently appears in `src/pages/index.astro`, `src/pages/submit.astro`,
 `src/pages/about.astro` and the `Base.astro` footer. All become `/about/#curation-policy`.
 The first line of `docs/curation-policy.md`, which states the file is published at
@@ -166,7 +172,7 @@ animation are kept unchanged.
 | `tests/scripts/filters.test.ts` | The `data-noun-*` regression test removed (D5). |
 | `docs/curation-policy.md` | Publication path corrected. |
 | `docs/decisions.md` | Entries for D1, D2, D4, D5. |
-| `README.md` | Route list updated where it mentions the deadlines page or the policy page. |
+| `README.md` | No change needed: it links the policy *file*, not the route, and never mentions the deadlines page. Verified in Task 6. |
 
 Nothing under `data/`, `schema/`, `src/lib/` or the feed endpoints changes.
 

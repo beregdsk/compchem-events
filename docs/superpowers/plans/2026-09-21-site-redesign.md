@@ -270,6 +270,14 @@ Expected: FAIL, listing `src/pages/index.astro`, `src/pages/submit.astro` and `s
 
 - [ ] **Step 3: Demote the curation policy's headings when it renders inside a page**
 
+> **Executed differently.** Astro 7 replaced the rehype pipeline with the Sätteri processor:
+> `markdown.rehypePlugins` now errors unless `@astrojs/markdown-remark` is installed, and the
+> replacement hook (`satteri({ hastPlugins })`) would mean importing a package the project does
+> not depend on directly. The headings were demoted in `docs/curation-policy.md` itself instead,
+> `astro.config.ts` was left untouched, and `docs/decisions.md` records why. The `<section
+> id="curation-policy">` wrapper in step 4 was also dropped: the demoted `## Curation policy`
+> heading generates that id itself, and keeping both produced a duplicate id.
+
 `docs/curation-policy.md` opens with `# Curation policy`. Rendered inside `/about/`, which already has its own `<h1>`, that would invert the heading order. Add an inline rehype plugin to `astro.config.ts` — no dependency, no `any`:
 
 ```ts
