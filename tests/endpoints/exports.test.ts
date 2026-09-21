@@ -26,13 +26,18 @@ describe('atomFeed', () => {
     expect(feed).toContain('<id>https://placeholder.example/</id>');
   });
 
+  it('carries a feed-level author (RFC 4287 §4.1.1)', () => {
+    expect(feed).toContain('<author>');
+    expect(feed).toContain('<name>CompChem Events</name>');
+  });
+
   it('timestamps entries from the added date', () => {
     expect(feed).toContain('<updated>2026-09-20T00:00:00Z</updated>');
   });
 
   it('escapes special characters in titles', () => {
-    const escaped = atomFeed([{ ...events[0]!, title: 'A & B <tag>' }], at);
-    expect(escaped).toContain('A &amp; B &lt;tag&gt;');
+    const escaped = atomFeed([{ ...events[0]!, title: 'A & B <tag> "quoted"' }], at);
+    expect(escaped).toContain('A &amp; B &lt;tag&gt; &quot;quoted&quot;');
   });
 });
 
