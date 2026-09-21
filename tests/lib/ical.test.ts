@@ -29,7 +29,7 @@ describe('escapeText', () => {
   });
 
   it('escapes commas, semicolons and newlines', () => {
-    expect(escapeText('a,b;c\nd')).toBe('a\\,b;c\\nd');
+    expect(escapeText('a,b;c\nd')).toBe('a\\,b\\;c\\nd');
   });
 
   it('collapses CRLF to a single escaped newline', () => {
@@ -112,6 +112,15 @@ describe('buildCalendar', () => {
     const uids = comp.getAllSubcomponents('vevent').map((v) => new ICAL.Event(v).uid);
     expect(uids).toEqual(['a-2027@compchem.example', 'b-2027@compchem.example']);
     expect(new Set(uids).size).toBe(uids.length);
+  });
+
+  it('escapes semicolons and commas in the raw serialised text', () => {
+    // RFC 5545 3.3.11 TSAFE-CHAR excludes ';', so a bare semicolon in a TEXT
+    // value is grammar-invalid: only '\;' is valid. Inspect the raw bytes
+    // directly rather than the ical.js-parsed value, since a parser that
+    // tolerates a bare semicolon would let a serialiser bug like this ship
+    // unnoticed.
+    expect(ics).toContain('SUMMARY:Workshop\\, with a comma\\; and a semicolon');
   });
 
   it('round-trips escaped text', () => {
