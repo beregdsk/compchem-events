@@ -220,3 +220,15 @@ package the project does not depend on directly. A one-time text edit to the
 document costs nothing and keeps `astro.config.ts` empty of pipeline code; the
 file still reads correctly on GitHub, starting at a level-two heading. The
 anchor is the heading's own generated id, so the page has no duplicate ids.
+
+## 2026-09-21 — Dark-only palette built on the two orbital phase lobes
+
+The 2026-09-20 spec's section 8 specified dark-first with a warm-paper light
+mode. The redesign drops the light mode: the site's visual metaphor is a
+rendered isosurface on a dark ground, and a second theme that contradicts it
+costs more to maintain than it returns. Tokens are now `--lobe-neg` (blue,
+aliased as `--link`) and `--lobe-pos` (red, aliased as `--time`), with a new
+`--control` token for interactive borders because the old `--rule-strong`
+missed WCAG 1.4.11's 3:1 boundary requirement. `tests/styles/contrast.test.ts`
+asserts every ratio against the shipped values, so a future colour edit that
+breaks AA fails the suite.

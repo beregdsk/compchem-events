@@ -1,8 +1,8 @@
-/* Isosurface — dark-first editorial grid. Spec section 8.
+/* Isosurface — dark-only editorial grid. Spec 2026-09-21 §5-6.
    System fonts only (spec D2). No webfonts, no external requests. */
 
 :root {
-  color-scheme: dark light;
+  color-scheme: dark;
 
   --font-sans:
     ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -24,33 +24,25 @@
   --measure: 68ch;
   --radius: 2px;
 
-  /* Dark theme: deep desaturated blue-black with orbital-phase accents. */
-  --bg: #0a0e13;
-  --bg-raise: #111922;
-  --fg: #dde5ed;
-  --fg-muted: #8697a6;
-  --rule: #1d2833;
-  --rule-strong: #2c3c4b;
-  --warm: #f2a950;
-  --warm-soft: #3a2a14;
-  --cool: #58d6c8;
-  --cool-soft: #133733;
-}
+  /* Orbital isosurface: the two phase lobes on a plotted dark ground.
+     --lobe-neg (blue) is the interactive colour; --lobe-pos (red) marks time
+     and anything that needs attention, so red stays scarce enough to mean
+     something. Ratios are asserted in tests/styles/contrast.test.ts. */
+  --bg: #06080c;
+  --bg-raise: #0e141c;
+  --fg: #dfe6ee;
+  --fg-muted: #8b9aab;
+  --rule: #182231;
+  --rule-strong: #2a3a4d;
+  --control: #5b6d80;
 
-@media (prefers-color-scheme: light) {
-  :root {
-    /* Warm paper, never white. */
-    --bg: #f5f1e8;
-    --bg-raise: #fffdf7;
-    --fg: #1a2127;
-    --fg-muted: #54616b;
-    --rule: #ded6c6;
-    --rule-strong: #c3b8a3;
-    --warm: #8f4711;
-    --warm-soft: #f0e0cb;
-    --cool: #0c645c;
-    --cool-soft: #d3e8e4;
-  }
+  --lobe-neg: #7ab6ff;
+  --lobe-neg-soft: #0d1f36;
+  --lobe-pos: #ff7a68;
+  --lobe-pos-soft: #2e100c;
+
+  --link: var(--lobe-neg);
+  --time: var(--lobe-pos);
 }
 
 *,
@@ -74,12 +66,12 @@ body {
   background-image:
     radial-gradient(
       58% 38% at 10% -6%,
-      color-mix(in oklab, var(--cool) 13%, transparent),
+      color-mix(in oklab, var(--link) 13%, transparent),
       transparent 70%
     ),
     radial-gradient(
       48% 32% at 94% 6%,
-      color-mix(in oklab, var(--warm) 10%, transparent),
+      color-mix(in oklab, var(--time) 10%, transparent),
       transparent 70%
     );
   background-attachment: fixed;
@@ -112,7 +104,7 @@ p {
 }
 
 a {
-  color: var(--cool);
+  color: var(--link);
   text-decoration-thickness: 1px;
   text-underline-offset: 0.18em;
 }
@@ -122,7 +114,7 @@ a:hover {
 }
 
 :focus-visible {
-  outline: 2px solid var(--warm);
+  outline: 2px solid var(--time);
   outline-offset: 2px;
 }
 
@@ -293,24 +285,24 @@ a:hover {
   background: var(--bg-raise);
 }
 .pill--topic {
-  border-color: color-mix(in oklab, var(--cool) 45%, var(--rule));
-  color: var(--cool);
-  background: var(--cool-soft);
+  border-color: color-mix(in oklab, var(--link) 45%, var(--rule));
+  color: var(--link);
+  background: var(--lobe-neg-soft);
 }
 .pill--deadline {
-  border-color: color-mix(in oklab, var(--warm) 45%, var(--rule));
-  color: var(--warm);
-  background: var(--warm-soft);
+  border-color: color-mix(in oklab, var(--time) 45%, var(--rule));
+  color: var(--time);
+  background: var(--lobe-pos-soft);
 }
 .pill--status {
-  border-color: var(--warm);
-  color: var(--warm);
+  border-color: var(--time);
+  color: var(--time);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
 
 .warn {
-  border-inline-start: 2px solid var(--warm);
+  border-inline-start: 2px solid var(--time);
   padding-inline-start: var(--space-s);
   color: var(--fg-muted);
   font-size: var(--step--1);
@@ -377,7 +369,7 @@ a:hover {
 .event__when {
   margin: 0;
   padding-block-start: 0.25rem;
-  color: var(--warm);
+  color: var(--time);
 }
 
 .event__title {
@@ -395,7 +387,7 @@ a:hover {
 }
 
 .event__title a:hover {
-  color: var(--cool);
+  color: var(--link);
   text-decoration: underline;
   text-underline-offset: 0.2em;
 }
@@ -459,7 +451,7 @@ a:hover {
   font: inherit;
   color: var(--fg);
   background: var(--bg-raise);
-  border: 1px solid var(--rule-strong);
+  border: 1px solid var(--control);
   border-radius: var(--radius);
   padding: 0.35em 0.5em;
 }
@@ -481,9 +473,9 @@ a:hover {
 .filters__clear {
   font: inherit;
   font-family: var(--font-mono);
-  color: var(--warm);
+  color: var(--time);
   background: none;
-  border: 1px solid var(--warm);
+  border: 1px solid var(--time);
   border-radius: var(--radius);
   padding: 0.4em 0.8em;
   cursor: pointer;
@@ -610,7 +602,7 @@ a:hover {
 .prose blockquote {
   margin-inline: 0;
   padding-inline-start: var(--space-m);
-  border-inline-start: 2px solid var(--cool);
+  border-inline-start: 2px solid var(--link);
   color: var(--fg-muted);
 }
 
