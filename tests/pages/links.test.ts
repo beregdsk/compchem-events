@@ -1,0 +1,22 @@
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { describe, expect, it } from 'vitest';
+
+/** Every `.astro` file under `src/`, recursively. */
+function sources(dir: string): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const path = join(dir, entry.name);
+    if (entry.isDirectory()) return sources(path);
+    return entry.name.endsWith('.astro') ? [path] : [];
+  });
+}
+
+/** Routes this redesign removed. A link to one of them would 404. */
+const REMOVED = /href="\/deadlines\/"/;
+
+describe('internal links', () => {
+  it('never points at a removed route', () => {
+    const offenders = sources('src').filter((f) => REMOVED.test(readFileSync(f, 'utf8')));
+    expect(offenders).toEqual([]);
+  });
+});

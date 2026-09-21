@@ -50,53 +50,6 @@ function setFixture(): void {
   `;
 }
 
-/**
- * Mirrors the `/deadlines/` markup: `#result-count` carries the
- * `data-noun-singular` / `data-noun-plural` / `data-empty-adjective`
- * attributes that page sets, so the island must read "deadline"/"open"
- * from the DOM rather than defaulting to "event"/"upcoming".
- */
-function setDeadlinesFixture(): void {
-  document.body.innerHTML = `
-    <form id="filters" hidden>
-      <input type="checkbox" name="topic" value="dft" />
-    </form>
-    <p
-      id="result-count"
-      data-noun-singular="deadline"
-      data-noun-plural="deadlines"
-      data-empty-adjective="open"
-    ></p>
-    <ul id="event-list">
-      <li
-        class="event"
-        data-search="dft deadline example institute exampleville"
-        data-topics="dft"
-        data-region="Europe"
-        data-country="NL"
-        data-format="in-person"
-        data-type="workshop"
-        data-start="2027-01-01"
-        data-end="2027-01-01"
-        data-deadline=""
-      ></li>
-      <li
-        class="event"
-        data-search="catalysis deadline example institute exampleville"
-        data-topics="catalysis"
-        data-region="Europe"
-        data-country="DE"
-        data-format="in-person"
-        data-type="school"
-        data-start="2027-02-01"
-        data-end="2027-02-01"
-        data-deadline="open"
-      ></li>
-    </ul>
-    <button type="button" id="clear-filters">Clear filters</button>
-  `;
-}
-
 function fireEvent(el: Element, type: string): void {
   el.dispatchEvent(new Event(type, { bubbles: true }));
 }
@@ -178,15 +131,6 @@ describe('filters island', () => {
     expect(countEl.textContent).toBe('2 upcoming events');
     expect(pushSpy).not.toHaveBeenCalled();
     expect(replaceSpy).not.toHaveBeenCalled();
-  });
-
-  it('on load, a page whose #result-count carries deadline data attributes reports "open deadlines", not "upcoming events"', async () => {
-    // Regression test for the /deadlines/ page-load bug: syncFromUrl() runs
-    // unconditionally at import time and must not hardcode the home page's
-    // noun/adjective onto a page that never asked for them.
-    await setup('/', setDeadlinesFixture);
-    const countEl = document.querySelector<HTMLElement>('#result-count')!;
-    expect(countEl.textContent).toBe('2 open deadlines');
   });
 
   it('clear filters resets the form and pushes once', async () => {

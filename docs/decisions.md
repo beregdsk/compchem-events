@@ -188,3 +188,19 @@ after the element, rather than rewriting the `<time>` element's own text. This
 follows spec §6 directly: the server-rendered date remains complete and
 correct on its own, so a reader with JavaScript disabled loses only the
 relative phrase, never the date itself.
+
+## 2026-09-21 — The `/deadlines/` page is removed; deadline data stays everywhere else
+
+The redesign makes the upcoming-events list the whole front of the site, so the
+standalone index of deadlines goes. Every other surface that carries deadline
+information stays: `/deadlines.ics`, the deadline pill on each event row, the
+deadline table on each event page, the countdown island and the "has an open
+deadline" filter. No event data and no schema field changed.
+
+## 2026-09-21 — The filter island says "event" directly
+
+`src/scripts/filters.ts` read `data-noun-singular`, `data-noun-plural` and
+`data-empty-adjective` off `#result-count` so the `/deadlines/` page could say
+"open deadlines". With that page deleted, no caller sets those attributes and
+the branch was configuration for a fixed value, so it and its regression test
+were removed with the page.
