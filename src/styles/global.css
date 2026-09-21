@@ -557,3 +557,11 @@ a:hover {
   border-inline-start: 2px solid var(--cool);
   color: var(--fg-muted);
 }
+
+/* Countdown: relative-time phrase appended beside a deadline's <time>, added
+   client-side by scripts/countdown.ts. Absent with JavaScript disabled. */
+.countdown {
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  white-space: nowrap;
+}

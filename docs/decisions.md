@@ -150,3 +150,37 @@ task ships `/feed.xml` and `/events.json`, the last two of the four. All four
 endpoints now exist, so the condition above is met: the "Feeds and exports"
 section is restored on `/about/` listing all four, and the footer's
 previously-dead `/feed.xml` and `/events.json` links are now live.
+
+## 2026-09-20 — `.prettierignore` excludes pre-existing Markdown docs
+
+The phase-0 tooling scaffold added `.prettierignore` covering `/*.md` and the
+pre-existing `docs/curation-policy.md`, `docs/data-schema.md`,
+`docs/discovery-agent.md` and `docs/superpowers/` — files that predate this
+project's tooling and were not part of that task's file list. Reformatting
+them wholesale would be a large, unreviewable diff with no functional benefit;
+new docs written by this project (`docs/decisions.md` and code) are still
+checked by Prettier. The rationale lived only as a comment inside
+`.prettierignore` itself; recorded here per Task 18's sweep for unrecorded
+decisions.
+
+## 2026-09-20 — Validation logic lives in `src/lib/validation.ts`; `scripts/validate.ts` re-exports it
+
+`TASK.md` §7 promises the discovery agent (`docs/discovery-agent.md`) a stable
+`import { validateEvent }` entry point as a library obligation that outlives
+this v1. Putting the schema and semantic checks in `src/lib/validation.ts`
+keeps that logic importable and unit-testable without pulling in Node's `fs`
+CLI concerns; `scripts/validate.ts` stays a thin CLI wrapper that reads
+`data/events/`, calls into `src/lib/validation.ts`, and re-exports
+`validateEvent`, `validateCollection`, `loadValidationContext` and their
+types, so both `npm run validate` and `import { validateEvent } from
+'../scripts/validate'` resolve to the same implementation.
+
+## 2026-09-21 — Countdown island appends beside the server-rendered date
+
+Task 18 adds `src/scripts/countdown.ts`, which finds every
+`time[data-countdown]` element and appends a relative-time phrase (`closes in
+3 days`, `closes today`, `closed`) as a separate `<span class="countdown">`
+after the element, rather than rewriting the `<time>` element's own text. This
+follows spec §6 directly: the server-rendered date remains complete and
+correct on its own, so a reader with JavaScript disabled loses only the
+relative phrase, never the date itself.

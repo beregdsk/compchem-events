@@ -4,7 +4,7 @@ A community-maintained calendar of conferences, workshops and schools in computa
 
 Events are listed with topics, location, format and deadlines, and can be filtered and exported to your calendar. Listings are curated: see the [curation policy](docs/curation-policy.md).
 
-> **Status:** pre-release. Implementation is tracked in [`TASK.md`](TASK.md).
+> **Status:** v1 (phases 0-3). Phase 4 and the discovery agent are tracked in [`TASK.md`](TASK.md).
 
 ## How it works
 
@@ -15,17 +15,18 @@ Events are listed with topics, location, format and deadlines, and can be filter
 
 ## Local development
 
-Requires the current Node LTS (see `.nvmrc`).
+Requires the Node version in `.nvmrc`.
 
 ```
 npm ci
-npm run dev          # local dev server
-npm run validate     # check all event data
-npm test
-npm run build
+npm run dev          # local dev server at http://localhost:4321
+npm run validate     # schema and semantic checks on all event data
+npm run lint         # eslint + prettier
+npm run typecheck    # astro check
+npm test             # vitest
+npm run build        # production build into dist/ (fails on invalid data)
+npm run preview      # serve the production build
 ```
-
-_The implementing agent must keep this section accurate as commands change._
 
 ## Documentation
 
