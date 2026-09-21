@@ -12,7 +12,7 @@ function sources(dir: string): string[] {
 }
 
 /** Routes this redesign removed. A link to one of them would 404. */
-const REMOVED = /href="\/deadlines\/"/;
+const REMOVED = /href="\/(deadlines|policy)\/"/;
 
 describe('internal links', () => {
   it('never points at a removed route', () => {

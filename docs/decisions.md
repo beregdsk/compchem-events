@@ -204,3 +204,19 @@ deadline" filter. No event data and no schema field changed.
 "open deadlines". With that page deleted, no caller sets those attributes and
 the branch was configuration for a fixed value, so it and its regression test
 were removed with the page.
+
+## 2026-09-21 — `/policy/` is merged into `/about/`
+
+With the top navigation bar gone, the footer would otherwise point at two
+long-form pages. `docs/curation-policy.md` now renders inside `/about/` and
+`/policy/` no longer exists; inbound links became `/about/#curation-policy`.
+The markdown file remains the single source of the text.
+
+Its headings were demoted one level in the file itself (`# Curation policy`
+became `## Curation policy`) so they nest under the about page's `<h1>`. The
+alternative was a build-time heading transform, which Astro 7 only exposes
+through the Sätteri processor's `hastPlugins`, requiring an import from a
+package the project does not depend on directly. A one-time text edit to the
+document costs nothing and keeps `astro.config.ts` empty of pipeline code; the
+file still reads correctly on GitHub, starting at a level-two heading. The
+anchor is the heading's own generated id, so the page has no duplicate ids.

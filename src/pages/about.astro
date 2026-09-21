@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import { Content as CurationPolicy } from '../../docs/curation-policy.md';
 import { site } from '../../site.config';
 ---
 
@@ -46,10 +47,14 @@ import { site } from '../../site.config';
       </li>
     </ul>
 
+    <!-- Renders docs/curation-policy.md, whose own `## Curation policy` heading
+         carries the `#curation-policy` anchor the rest of the site links to. -->
+    <CurationPolicy />
+
     <h2>Corrections</h2>
     <p>
       Every event page has a correction link and a report link. See the
-      <a href="/policy/">curation policy</a> for how reports are handled, or email
+      <a href="#curation-policy">curation policy</a> above for how reports are handled, or email
       <a href={`mailto:${site.contactEmail}`}>{site.contactEmail}</a>.
     </p>
 
