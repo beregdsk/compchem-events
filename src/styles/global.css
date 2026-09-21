@@ -62,17 +62,24 @@ body {
   line-height: 1.6;
   color: var(--fg);
   background-color: var(--bg);
-  /* Atmosphere: two low-contrast density lobes. Pure CSS, no image bytes. */
+  /* Atmosphere: the two phase lobes of an isosurface, plus a dim third lobe low
+     on the page so the ground has depth rather than a flat vignette. Pure CSS,
+     no image bytes, no requests. */
   background-image:
     radial-gradient(
-      58% 38% at 10% -6%,
-      color-mix(in oklab, var(--link) 13%, transparent),
+      62% 40% at 12% -8%,
+      color-mix(in oklab, var(--lobe-neg) 16%, transparent),
       transparent 70%
     ),
     radial-gradient(
-      48% 32% at 94% 6%,
-      color-mix(in oklab, var(--time) 10%, transparent),
+      52% 34% at 92% 4%,
+      color-mix(in oklab, var(--lobe-pos) 13%, transparent),
       transparent 70%
+    ),
+    radial-gradient(
+      70% 30% at 50% 108%,
+      color-mix(in oklab, var(--lobe-neg) 8%, transparent),
+      transparent 72%
     );
   background-attachment: fixed;
   background-repeat: no-repeat;
@@ -196,6 +203,39 @@ a:hover {
   letter-spacing: 0.14em;
 }
 
+.site-head {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+/* A plotting grid crossed with density contours, faded out before it reaches
+   the wordmark. A pseudo-element, so it stays out of the accessibility tree. */
+.site-head::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    repeating-linear-gradient(
+      to right,
+      color-mix(in oklab, var(--lobe-neg) 22%, transparent) 0 1px,
+      transparent 1px 34px
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      color-mix(in oklab, var(--lobe-neg) 22%, transparent) 0 1px,
+      transparent 1px 34px
+    ),
+    repeating-radial-gradient(
+      circle at 88% 120%,
+      color-mix(in oklab, var(--lobe-pos) 30%, transparent) 0 1px,
+      transparent 1px 22px
+    );
+  opacity: 0.5;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), transparent 88%);
+}
+
 .site-foot__inner {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -245,6 +285,26 @@ a:hover {
   flex-wrap: wrap;
   gap: var(--space-m);
   font-size: var(--step--1);
+}
+
+/* The mono layer reads as an instrument panel: tracked, uppercase, and
+   underscored in the interactive lobe colour rather than underlined. */
+.result-count,
+.actions {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.actions a {
+  color: var(--fg-muted);
+  text-decoration: none;
+  border-block-end: 1px solid color-mix(in oklab, var(--link) 45%, transparent);
+  padding-block-end: 0.15em;
+}
+
+.actions a:hover {
+  color: var(--link);
+  border-block-end-color: var(--link);
 }
 
 .listing-head .actions {
