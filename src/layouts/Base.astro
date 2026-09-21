@@ -1,5 +1,6 @@
 ---
 import { site } from '../../site.config';
+import OrbitalField from '../components/OrbitalField.astro';
 import '../styles/global.css';
 
 interface Props {
@@ -35,17 +36,35 @@ const fullTitle = path === '/' ? `${site.name} — ${site.tagline}` : `${title} 
       href="/feed.xml"
     />
     <link rel="sitemap" href="/sitemap.xml" />
+    {/* Applies a stored theme choice before first paint, so the page never
+    flashes the other theme. Without a stored choice the system preference
+    decides, in CSS. */}
+    <script is:inline>
+      try {
+        const choice = localStorage.getItem('theme');
+        if (choice === 'light' || choice === 'dark')
+          document.documentElement.dataset.theme = choice;
+      } catch {
+        /* Blocked storage: fall back to the system preference. */
+      }
+    </script>
   </head>
   <body>
     <a class="skip" href="#main">
       Skip to content
     </a>
+    <OrbitalField />
     <header class="site-head">
       <div class="site-head__inner">
-        <a class="site-head__name" href="/">
-          {site.name}
-        </a>
-        <p class="site-head__tagline mono">{site.tagline}</p>
+        <div>
+          <a class="site-head__name" href="/">
+            {site.name}
+          </a>
+          <p class="site-head__tagline mono">{site.tagline}</p>
+        </div>
+        <button id="theme-toggle" class="theme-toggle" type="button" hidden>
+          Light
+        </button>
       </div>
     </header>
 
@@ -57,10 +76,6 @@ const fullTitle = path === '/' ? `${site.name} — ${site.tagline}` : `${title} 
       <div class="site-foot__inner">
         <section class="site-foot__col">
           <h2 class="site-foot__head mono">About</h2>
-          <p>
-            A community-maintained calendar of conferences, workshops and schools in computational
-            and theoretical chemistry. No accounts, no cookies, no tracking.
-          </p>
           <p>
             <a href="/about/">About this site</a>
           </p>
@@ -102,5 +117,9 @@ const fullTitle = path === '/' ? `${site.name} — ${site.tagline}` : `${title} 
         </section>
       </div>
     </footer>
+
+    <script>
+      import '../scripts/theme.ts';
+    </script>
   </body>
 </html>

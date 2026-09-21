@@ -1,0 +1,33 @@
+---
+// The page substrate: a Monte-Carlo point cloud of a real 3d(z²) orbital.
+//
+// Astro renders this at build time, so the visitor gets static markup and the
+// sampling never runs in a browser. The dots take their colour from the two
+// phase tokens, which is why the field is inline SVG rather than a background
+// image: an external file could not follow the theme.
+import { FIELD_SIZE, orbitalLayers } from '../lib/orbital';
+
+/** Dense enough to read as a cloud, light enough to stay under 10 kB gzipped. */
+const DOT_COUNT = 2400;
+
+const layers = orbitalLayers(DOT_COUNT);
+---
+
+<svg
+  class="field"
+  viewBox={`0 0 ${FIELD_SIZE} ${FIELD_SIZE}`}
+  preserveAspectRatio="xMidYMid slice"
+  aria-hidden="true"
+  focusable="false"
+>
+  {layers.map((layer) => (
+    <path
+      d={layer.d}
+      fill="none"
+      stroke={layer.phase === 1 ? 'var(--lobe-pos)' : 'var(--lobe-neg)'}
+      stroke-width={layer.width}
+      stroke-linecap="round"
+      opacity={layer.opacity}
+    />
+  ))}
+</svg>

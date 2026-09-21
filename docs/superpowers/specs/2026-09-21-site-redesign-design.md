@@ -26,7 +26,7 @@ D5; light mode; web fonts.
 | D1 | **Deadlines: the page only.** `/deadlines/` is deleted. `/deadlines.ics`, the deadline pill on each event row, the deadline table on each event page, the countdown island and the "has an open deadline" filter all stay. | The maintainer wants one front page, not less deadline information. Deadlines remain visible everywhere they are attached to an event; only the standalone index of them goes. |
 | D2 | **`/policy/` is merged into `/about/`.** The curation policy renders inside the about page under `<h2 id="curation-policy">`; `/policy/` stops existing and its inbound links become `/about/#curation-policy`. | "Move about to the footer" leaves the footer with two long-form pages to point at. One page holding what the site is, how it works, privacy, feeds and the curation policy is a smaller surface with the same content. |
 | D3 | **No top menu bar.** The masthead keeps only the wordmark and tagline. Routes move to a three-column footer, plus a small inline action row beside the result count. | The action row reads as page controls rather than site navigation, which is what the events-first framing asks for. |
-| D4 | **Dark only.** The `prefers-color-scheme: light` block is deleted and `color-scheme` becomes `dark`. | Maintainer decision. The isosurface metaphor is a render on a dark ground; maintaining a second theme that contradicts it costs more than it returns. This narrows the 2026-09-20 spec section 8, which specified dark-first with a warm-paper light mode. |
+| D4 | **Dark only.** The `prefers-color-scheme: light` block is deleted and `color-scheme` becomes `dark`. | Maintainer decision. The isosurface metaphor is a render on a dark ground; maintaining a second theme that contradicts it costs more than it returns. This narrows the 2026-09-20 spec section 8, which specified dark-first with a warm-paper light mode. **Superseded later the same day:** the light theme is back, selectable from a masthead toggle and defaulting to the system preference. See `docs/decisions.md`. |
 | D5 | **The `data-noun-*` branch in `src/scripts/filters.ts` is removed.** | It exists only so `/deadlines/` could say "open deadlines" instead of "upcoming events". With that page gone, no caller sets those attributes, and lean-build forbids configuration for a fixed value. Its regression test at `tests/scripts/filters.test.ts:183` goes with it. |
 | D6 | **System font stack retained**, reaffirming D2 of the 2026-09-20 spec. Self-hosted woff2 faces were offered and declined. | Zero font bytes and no licence obligations. Character comes from colour, scale, the mono metadata layer and the background substrate instead. |
 | D7 | **Per-event images deferred, not rejected.** | They need a schema field, committed binary assets, and a position on third-party logo use under `AGENTS.md` rule 2. None of that is settled, and the redesign does not depend on it. Revisit as its own task. |
@@ -139,6 +139,12 @@ Both motifs are pure CSS. No images, no requests, no runtime cost.
 with the current teal and amber lobes replaced by `--lobe-neg` top-left and `--lobe-pos`
 top-right, each mixed to a low alpha with `color-mix`. A third, dimmer lobe low on the page
 gives the ground depth rather than a flat vignette.
+
+**Superseded:** the gradient field was replaced with a Monte-Carlo point cloud sampled from
+|ψ|² of a 3d(z²) orbital, generated at build time and emitted as inline SVG
+(`src/lib/orbital.ts`, `src/components/OrbitalField.astro`). `body` keeps one soft wash
+behind it. This motif is therefore no longer pure CSS, and no longer free: it adds about
+10 kB gzipped per page, still with no requests.
 
 **Contour substrate.** The masthead carries two layers: a 1px lattice
 (`repeating-linear-gradient` on both axes, at a spacing that reads as a plotting grid) and a

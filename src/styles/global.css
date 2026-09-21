@@ -1,8 +1,15 @@
-/* Isosurface — dark-only editorial grid. Spec 2026-09-21 §5-6.
-   System fonts only (spec D2). No webfonts, no external requests. */
+/* Isosurface — dark-first editorial grid. Spec 2026-09-21 §5-6.
+   System fonts only (spec D2). No webfonts, no external requests.
+
+   Two themes. Dark is the default and lives on :root; the light palette is
+   declared twice, once for readers whose system asks for it and once for
+   readers who picked it with the masthead toggle, because CSS offers no way to
+   share one block between a media query and an attribute selector. The two
+   copies are asserted identical in tests/styles/contrast.test.ts, so they
+   cannot drift apart. */
 
 :root {
-  color-scheme: dark;
+  color-scheme: dark light;
 
   --font-sans:
     ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -41,8 +48,57 @@
   --lobe-pos: #ff7a68;
   --lobe-pos-soft: #2e100c;
 
+  /* How loud the orbital point cloud behind the page is allowed to be. */
+  --field-opacity: 0.32;
+
   --link: var(--lobe-neg);
   --time: var(--lobe-pos);
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+/* Light theme — warm paper, never white, so the stipple has something to sit
+   on. Keep these two blocks byte-identical. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) {
+    color-scheme: light;
+
+    --bg: #f4efe4;
+    --bg-raise: #fdfaf2;
+    --fg: #17202a;
+    --fg-muted: #586470;
+    --rule: #ded5c4;
+    --rule-strong: #bfb39c;
+    --control: #6f6552;
+
+    --lobe-neg: #15528f;
+    --lobe-neg-soft: #e4edf8;
+    --lobe-pos: #a3301d;
+    --lobe-pos-soft: #f8e5e0;
+
+    --field-opacity: 0.2;
+  }
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --bg: #f4efe4;
+  --bg-raise: #fdfaf2;
+  --fg: #17202a;
+  --fg-muted: #586470;
+  --rule: #ded5c4;
+  --rule-strong: #bfb39c;
+  --control: #6f6552;
+
+  --lobe-neg: #15528f;
+  --lobe-neg-soft: #e4edf8;
+  --lobe-pos: #a3301d;
+  --lobe-pos-soft: #f8e5e0;
+
+  --field-opacity: 0.2;
 }
 
 *,
@@ -62,27 +118,29 @@ body {
   line-height: 1.6;
   color: var(--fg);
   background-color: var(--bg);
-  /* Atmosphere: the two phase lobes of an isosurface, plus a dim third lobe low
-     on the page so the ground has depth rather than a flat vignette. Pure CSS,
-     no image bytes, no requests. */
-  background-image:
-    radial-gradient(
-      62% 40% at 12% -8%,
-      color-mix(in oklab, var(--lobe-neg) 16%, transparent),
-      transparent 70%
-    ),
-    radial-gradient(
-      52% 34% at 92% 4%,
-      color-mix(in oklab, var(--lobe-pos) 13%, transparent),
-      transparent 70%
-    ),
-    radial-gradient(
-      70% 30% at 50% 108%,
-      color-mix(in oklab, var(--lobe-neg) 8%, transparent),
-      transparent 72%
-    );
+  /* The orbital field carries the atmosphere now (see .field). All the ground
+     needs is one soft wash so the masthead has something to sit against. */
+  background-image: radial-gradient(
+    110% 55% at 50% -10%,
+    color-mix(in oklab, var(--lobe-neg) 11%, transparent),
+    transparent 72%
+  );
   background-attachment: fixed;
   background-repeat: no-repeat;
+}
+
+/* The Monte-Carlo point cloud from components/OrbitalField.astro: a fixed
+   layer behind every page, sized to cover the viewport and cropped rather than
+   squashed. Decorative, so it is hidden from assistive technology and takes no
+   pointer events. */
+.field {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  opacity: var(--field-opacity);
+  pointer-events: none;
 }
 
 h1,
@@ -192,10 +250,6 @@ a:hover {
   color: var(--fg);
   text-decoration: none;
 }
-.site-head__inner {
-  display: block;
-}
-
 .site-head__tagline {
   margin: 0.15rem 0 0;
   color: var(--fg-muted);
@@ -207,6 +261,29 @@ a:hover {
   position: relative;
   isolation: isolate;
   overflow: hidden;
+}
+
+/* The theme toggle joins the instrument-panel layer: mono, tracked, underscored
+   in the interactive lobe colour rather than boxed. It stays hidden until
+   scripts/theme.ts unhides it, so a reader without JavaScript is never offered
+   a control that cannot work — their system preference still decides. */
+.theme-toggle {
+  font: inherit;
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--fg-muted);
+  background: none;
+  border: 0;
+  border-block-end: 1px solid color-mix(in oklab, var(--link) 45%, transparent);
+  padding: 0 0 0.15em;
+  cursor: pointer;
+}
+
+.theme-toggle:hover {
+  color: var(--link);
+  border-block-end-color: var(--link);
 }
 
 /* A plotting grid crossed with density contours, faded out before it reaches

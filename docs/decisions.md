@@ -232,3 +232,38 @@ aliased as `--link`) and `--lobe-pos` (red, aliased as `--time`), with a new
 missed WCAG 1.4.11's 3:1 boundary requirement. `tests/styles/contrast.test.ts`
 asserts every ratio against the shipped values, so a future colour edit that
 breaks AA fails the suite.
+
+## 2026-09-21 — Light theme restored behind a toggle, on a sampled orbital field
+
+This reverses the dark-only decision recorded above, on the same day, at the
+maintainer's request. Two things changed the calculus. The first is reader
+control: a theme is not only a house style, and readers who work on paper-white
+screens were given no way out. The second is that the argument for dark-only
+rested on the metaphor — an isosurface render needs a dark ground — and the
+metaphor no longer depends on it.
+
+The background is no longer a stack of radial gradients standing in for an
+isosurface. `src/lib/orbital.ts` draws a Monte-Carlo sample of |ψ|² for a real
+hydrogenic 3d(z²) orbital, the same construction the poster art this borrows
+from uses, and `src/components/OrbitalField.astro` emits it as inline SVG at
+build time. Because the dots take their colour from `--lobe-pos` and
+`--lobe-neg`, the field repaints with the theme, which a background image could
+not do — that is why it is inline markup rather than a cached asset. It costs
+about 10 kB gzipped per page and no requests; `DOT_COUNT` in the component is
+the dial if that ever stops being worth it.
+
+Tiers are cut against the orbital's global peak density, so the equatorial torus
+never reaches the top tier — the axial lobes really are denser, and the render
+says so rather than flattering the shape.
+
+The light palette is warm paper (`#f4efe4`), never white, and keeps blue for
+links and red for time so the semantics of the two lobes survive the repaint. It
+has to be declared twice, once under `prefers-color-scheme: light` and once
+under `[data-theme='light']`, because CSS cannot share a block between a media
+query and an attribute selector; `tests/styles/contrast.test.ts` asserts the two
+copies are identical and checks every WCAG pair in both themes.
+
+The toggle in the masthead writes `localStorage.theme` and is unhidden by
+`src/scripts/theme.ts`, so it never appears when it could not work. A small
+inline script in `<head>` applies a stored choice before first paint. With
+JavaScript off, the system preference still decides.
