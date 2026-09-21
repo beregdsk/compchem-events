@@ -56,6 +56,16 @@ if (form && list && countEl) {
     if (deadline) deadline.checked = state.deadline;
   }
 
+  // The noun ("event" vs "deadline") and the empty-filter adjective ("upcoming"
+  // vs "open") vary by page. The server-rendered text carries them via data
+  // attributes on #result-count so the island can match it instead of
+  // hardcoding "event"/"events", which is what previously made the JS-enabled
+  // /deadlines/ page regress to "9 upcoming events" on load. Defaults match
+  // the home page so it keeps working unchanged without attributes.
+  const nounSingular = countEl!.dataset.nounSingular ?? 'event';
+  const nounPlural = countEl!.dataset.nounPlural ?? 'events';
+  const emptyAdjective = countEl!.dataset.emptyAdjective ?? 'upcoming';
+
   function apply(state: FilterState, mode: 'none' | 'push' | 'replace'): void {
     let shown = 0;
     for (const { el, row } of rows) {
@@ -65,8 +75,8 @@ if (form && list && countEl) {
     }
 
     countEl!.textContent = isEmptyFilter(state)
-      ? `${shown} upcoming ${shown === 1 ? 'event' : 'events'}`
-      : `${shown} of ${rows.length} ${rows.length === 1 ? 'event' : 'events'} match`;
+      ? `${shown} ${emptyAdjective} ${shown === 1 ? nounSingular : nounPlural}`
+      : `${shown} of ${rows.length} ${rows.length === 1 ? nounSingular : nounPlural} match`;
 
     if (mode === 'none') return;
     const params = serialiseFilterState(state).toString();

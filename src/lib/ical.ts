@@ -77,7 +77,10 @@ export function buildCalendar(name: string, events: VEventInput[], stamp: Date):
     'VERSION:2.0',
     'PRODID:-//CompChem Events//EN',
     'CALSCALE:GREGORIAN',
-    'METHOD:PUBLISH',
+    // No METHOD line: PUBLISH is iTIP scheduling transport (RFC 5546), not
+    // RFC 5545 core, and RFC 5546 §3.2.1 would then require ORGANIZER, which
+    // would mean publishing site.config.ts's placeholder contact into every
+    // event of a public subscription feed. Removing METHOD avoids both.
     `X-WR-CALNAME:${escapeText(name)}`,
   ];
 

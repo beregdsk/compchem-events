@@ -2,10 +2,28 @@ import { describe, expect, it } from 'vitest';
 import { atomFeed } from '../../src/pages/feed.xml';
 import { eventsExport } from '../../src/pages/events.json';
 import { loadEvents } from '../../src/lib/events';
+import { addDays } from '../../src/lib/dates';
+import type { LoadedEvent } from '../../src/lib/types';
 
 const opts = { eventsDir: 'tests/fixtures/valid', today: '2026-09-20', includeFixtures: true };
 const events = loadEvents(opts);
 const at = new Date('2026-09-20T06:00:00Z');
+
+/** A synthetic event based on a real fixture, with `id`/`added` overridden so
+ * ordering and cap tests don't depend on the corpus (every real fixture
+ * currently shares one `added` date, which is exactly why this coverage was
+ * missing). */
+function withAdded(added: string, id: string): LoadedEvent {
+  return { ...events[0]!, id, added, title: `Event ${id}` };
+}
+
+/** Entry ids in feed order, extracted from `<id>.../events/<id>/</id>` —
+ * distinct from the feed-level `<id>` element, which has no `/events/`. */
+function entryIdOrder(feed: string): string[] {
+  return [...feed.matchAll(/<id>https:\/\/placeholder\.example\/events\/([^/]+)\/<\/id>/g)].map(
+    (m) => m[1]!,
+  );
+}
 
 describe('atomFeed', () => {
   const feed = atomFeed(events, at);
@@ -38,6 +56,28 @@ describe('atomFeed', () => {
   it('escapes special characters in titles', () => {
     const escaped = atomFeed([{ ...events[0]!, title: 'A & B <tag> "quoted"' }], at);
     expect(escaped).toContain('A &amp; B &lt;tag&gt; &quot;quoted&quot;');
+  });
+
+  it('lists newly added events by `added`, newest first', () => {
+    const synthetic = [
+      withAdded('2026-01-01', 'oldest'),
+      withAdded('2026-03-01', 'newest'),
+      withAdded('2026-02-01', 'middle'),
+    ];
+    const order = entryIdOrder(atomFeed(synthetic, at));
+    expect(order).toEqual(['newest', 'middle', 'oldest']);
+  });
+
+  it('caps the feed at 50 entries, keeping the most recently added', () => {
+    const synthetic = Array.from({ length: 55 }, (_, i) =>
+      withAdded(addDays('2020-01-01', i), `e${i}`),
+    );
+    const feed = atomFeed(synthetic, at);
+    expect(feed.match(/<entry>/g) ?? []).toHaveLength(50);
+    // Entries 0-4 have the earliest `added` dates and must be dropped;
+    // 5-54 must survive, newest (54) first.
+    const expected = Array.from({ length: 50 }, (_, i) => `e${54 - i}`);
+    expect(entryIdOrder(feed)).toEqual(expected);
   });
 });
 

@@ -3,6 +3,7 @@ import ICAL from 'ical.js';
 import { eventsCalendar } from '../../src/pages/events.ics';
 import { deadlinesCalendar } from '../../src/pages/deadlines.ics';
 import { loadEvents, upcomingDeadlines, upcomingEvents } from '../../src/lib/events';
+import { addDays } from '../../src/lib/dates';
 
 const opts = { eventsDir: 'tests/fixtures/valid', today: '2026-09-20', includeFixtures: true };
 const events = loadEvents(opts);
@@ -25,12 +26,21 @@ describe('events.ics', () => {
     for (const uid of uids) expect(uid).toContain('@placeholder.example');
   });
 
-  it('makes DTEND exclusive', () => {
-    for (const v of vevents(ics)) {
+  it('sets DTEND to exactly one day after the event’s last day', () => {
+    const upcoming = upcomingEvents(events);
+    const parsed = vevents(ics);
+    expect(parsed).toHaveLength(upcoming.length);
+    parsed.forEach((v, i) => {
       const e = new ICAL.Event(v);
-      // The stored end_date is the last day, so DTEND must be strictly later.
-      expect(e.endDate.toJSDate().getTime()).toBeGreaterThan(e.startDate.toJSDate().getTime());
-    }
+      const expected = addDays(upcoming[i]!.end_date, 1);
+      // Exact offset, not just "later than start" — a stray extra +1 day
+      // (e.g. double-applying addDays before buildCalendar already does)
+      // would still pass a merely-greater-than check. Compare the date-only
+      // string rather than toJSDate().getTime(): ical.js resolves a floating
+      // VALUE=DATE to local-timezone midnight, so an epoch-ms comparison
+      // against a UTC-parsed value is flaky across machine timezones.
+      expect(e.endDate.toString()).toBe(expected);
+    });
   });
 
   it('marks the cancelled fixture as cancelled', () => {
