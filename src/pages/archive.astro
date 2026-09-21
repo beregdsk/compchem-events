@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import PageActions from '../components/PageActions.astro';
 import { loadEvents, pastEvents } from '../lib/events';
 import { formatDateRange } from '../lib/dates';
 
@@ -20,6 +21,13 @@ const years = [...byYear.keys()].sort().reverse();
 >
   <h1>Archive</h1>
   <p class="muted">Events that have already finished, newest first.</p>
+
+  <PageActions
+    actions={[
+      { href: '/', label: 'Upcoming events' },
+      { href: '/submit/', label: 'Add an event' },
+    ]}
+  />
 
   {years.length === 0 && <p class="muted">Nothing has been archived yet.</p>}
 

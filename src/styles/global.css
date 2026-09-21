@@ -1,8 +1,8 @@
-/* Isosurface — dark-first editorial grid. Spec section 8.
+/* Isosurface — dark-only editorial grid. Spec 2026-09-21 §5-6.
    System fonts only (spec D2). No webfonts, no external requests. */
 
 :root {
-  color-scheme: dark light;
+  color-scheme: dark;
 
   --font-sans:
     ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -24,33 +24,25 @@
   --measure: 68ch;
   --radius: 2px;
 
-  /* Dark theme: deep desaturated blue-black with orbital-phase accents. */
-  --bg: #0a0e13;
-  --bg-raise: #111922;
-  --fg: #dde5ed;
-  --fg-muted: #8697a6;
-  --rule: #1d2833;
-  --rule-strong: #2c3c4b;
-  --warm: #f2a950;
-  --warm-soft: #3a2a14;
-  --cool: #58d6c8;
-  --cool-soft: #133733;
-}
+  /* Orbital isosurface: the two phase lobes on a plotted dark ground.
+     --lobe-neg (blue) is the interactive colour; --lobe-pos (red) marks time
+     and anything that needs attention, so red stays scarce enough to mean
+     something. Ratios are asserted in tests/styles/contrast.test.ts. */
+  --bg: #06080c;
+  --bg-raise: #0e141c;
+  --fg: #dfe6ee;
+  --fg-muted: #8b9aab;
+  --rule: #182231;
+  --rule-strong: #2a3a4d;
+  --control: #5b6d80;
 
-@media (prefers-color-scheme: light) {
-  :root {
-    /* Warm paper, never white. */
-    --bg: #f5f1e8;
-    --bg-raise: #fffdf7;
-    --fg: #1a2127;
-    --fg-muted: #54616b;
-    --rule: #ded6c6;
-    --rule-strong: #c3b8a3;
-    --warm: #8f4711;
-    --warm-soft: #f0e0cb;
-    --cool: #0c645c;
-    --cool-soft: #d3e8e4;
-  }
+  --lobe-neg: #7ab6ff;
+  --lobe-neg-soft: #0d1f36;
+  --lobe-pos: #ff7a68;
+  --lobe-pos-soft: #2e100c;
+
+  --link: var(--lobe-neg);
+  --time: var(--lobe-pos);
 }
 
 *,
@@ -70,17 +62,24 @@ body {
   line-height: 1.6;
   color: var(--fg);
   background-color: var(--bg);
-  /* Atmosphere: two low-contrast density lobes. Pure CSS, no image bytes. */
+  /* Atmosphere: the two phase lobes of an isosurface, plus a dim third lobe low
+     on the page so the ground has depth rather than a flat vignette. Pure CSS,
+     no image bytes, no requests. */
   background-image:
     radial-gradient(
-      58% 38% at 10% -6%,
-      color-mix(in oklab, var(--cool) 13%, transparent),
+      62% 40% at 12% -8%,
+      color-mix(in oklab, var(--lobe-neg) 16%, transparent),
       transparent 70%
     ),
     radial-gradient(
-      48% 32% at 94% 6%,
-      color-mix(in oklab, var(--warm) 10%, transparent),
+      52% 34% at 92% 4%,
+      color-mix(in oklab, var(--lobe-pos) 13%, transparent),
       transparent 70%
+    ),
+    radial-gradient(
+      70% 30% at 50% 108%,
+      color-mix(in oklab, var(--lobe-neg) 8%, transparent),
+      transparent 72%
     );
   background-attachment: fixed;
   background-repeat: no-repeat;
@@ -112,7 +111,7 @@ p {
 }
 
 a {
-  color: var(--cool);
+  color: var(--link);
   text-decoration-thickness: 1px;
   text-underline-offset: 0.18em;
 }
@@ -122,7 +121,7 @@ a:hover {
 }
 
 :focus-visible {
-  outline: 2px solid var(--warm);
+  outline: 2px solid var(--time);
   outline-offset: 2px;
 }
 
@@ -193,21 +192,130 @@ a:hover {
   color: var(--fg);
   text-decoration: none;
 }
-.site-nav {
+.site-head__inner {
+  display: block;
+}
+
+.site-head__tagline {
+  margin: 0.15rem 0 0;
+  color: var(--fg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+.site-head {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+/* A plotting grid crossed with density contours, faded out before it reaches
+   the wordmark. A pseudo-element, so it stays out of the accessibility tree. */
+.site-head::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    repeating-linear-gradient(
+      to right,
+      color-mix(in oklab, var(--lobe-neg) 22%, transparent) 0 1px,
+      transparent 1px 34px
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      color-mix(in oklab, var(--lobe-neg) 22%, transparent) 0 1px,
+      transparent 1px 34px
+    ),
+    repeating-radial-gradient(
+      circle at 88% 120%,
+      color-mix(in oklab, var(--lobe-pos) 30%, transparent) 0 1px,
+      transparent 1px 22px
+    );
+  opacity: 0.5;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), transparent 88%);
+}
+
+.site-foot__inner {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-l);
+  align-items: start;
+}
+
+.site-foot__col p {
+  margin-block-end: var(--space-xs);
+}
+
+.site-foot__head {
+  font-size: var(--step--1);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--fg-muted);
+  margin-block-end: var(--space-s);
+}
+
+.site-foot__col ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-xs);
+}
+
+/* The result count and the page's action row share one instrument-panel line. */
+.listing-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-s) var(--space-m);
+  align-items: baseline;
+  justify-content: space-between;
+  margin-block-end: var(--space-s);
+}
+
+.listing-head .result-count {
+  margin: 0;
+}
+
+.actions {
+  list-style: none;
+  margin: 0 0 var(--space-m);
+  padding: 0;
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-m);
   font-size: var(--step--1);
 }
-.site-nav a {
+
+/* The mono layer reads as an instrument panel: tracked, uppercase, and
+   underscored in the interactive lobe colour rather than underlined. */
+.result-count,
+.actions {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.actions a {
   color: var(--fg-muted);
   text-decoration: none;
+  border-block-end: 1px solid color-mix(in oklab, var(--link) 45%, transparent);
+  padding-block-end: 0.15em;
 }
-.site-nav a:hover,
-.site-nav a[aria-current='page'] {
-  color: var(--fg);
-  text-decoration: underline;
-  text-underline-offset: 0.3em;
+
+.actions a:hover {
+  color: var(--link);
+  border-block-end-color: var(--link);
+}
+
+.listing-head .actions {
+  margin-block-end: 0;
+}
+
+@media (max-width: 52rem) {
+  .site-foot__inner {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-m);
+  }
 }
 
 /* Two-column layout: filter rail plus results. */
@@ -237,24 +345,24 @@ a:hover {
   background: var(--bg-raise);
 }
 .pill--topic {
-  border-color: color-mix(in oklab, var(--cool) 45%, var(--rule));
-  color: var(--cool);
-  background: var(--cool-soft);
+  border-color: color-mix(in oklab, var(--link) 45%, var(--rule));
+  color: var(--link);
+  background: var(--lobe-neg-soft);
 }
 .pill--deadline {
-  border-color: color-mix(in oklab, var(--warm) 45%, var(--rule));
-  color: var(--warm);
-  background: var(--warm-soft);
+  border-color: color-mix(in oklab, var(--time) 45%, var(--rule));
+  color: var(--time);
+  background: var(--lobe-pos-soft);
 }
 .pill--status {
-  border-color: var(--warm);
-  color: var(--warm);
+  border-color: var(--time);
+  color: var(--time);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
 
 .warn {
-  border-inline-start: 2px solid var(--warm);
+  border-inline-start: 2px solid var(--time);
   padding-inline-start: var(--space-s);
   color: var(--fg-muted);
   font-size: var(--step--1);
@@ -321,7 +429,7 @@ a:hover {
 .event__when {
   margin: 0;
   padding-block-start: 0.25rem;
-  color: var(--warm);
+  color: var(--time);
 }
 
 .event__title {
@@ -339,7 +447,7 @@ a:hover {
 }
 
 .event__title a:hover {
-  color: var(--cool);
+  color: var(--link);
   text-decoration: underline;
   text-underline-offset: 0.2em;
 }
@@ -403,7 +511,7 @@ a:hover {
   font: inherit;
   color: var(--fg);
   background: var(--bg-raise);
-  border: 1px solid var(--rule-strong);
+  border: 1px solid var(--control);
   border-radius: var(--radius);
   padding: 0.35em 0.5em;
 }
@@ -425,9 +533,9 @@ a:hover {
 .filters__clear {
   font: inherit;
   font-family: var(--font-mono);
-  color: var(--warm);
+  color: var(--time);
   background: none;
-  border: 1px solid var(--warm);
+  border: 1px solid var(--time);
   border-radius: var(--radius);
   padding: 0.4em 0.8em;
   cursor: pointer;
@@ -554,7 +662,7 @@ a:hover {
 .prose blockquote {
   margin-inline: 0;
   padding-inline-start: var(--space-m);
-  border-inline-start: 2px solid var(--cool);
+  border-inline-start: 2px solid var(--link);
   color: var(--fg-muted);
 }
 

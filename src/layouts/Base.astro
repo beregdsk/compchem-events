@@ -12,15 +12,6 @@ interface Props {
 const { title, description, path } = Astro.props;
 const canonical = new URL(path, site.url).href;
 const fullTitle = path === '/' ? `${site.name} — ${site.tagline}` : `${title} — ${site.name}`;
-
-const nav = [
-  { href: '/', label: 'Events' },
-  { href: '/deadlines/', label: 'Deadlines' },
-  { href: '/archive/', label: 'Archive' },
-  { href: '/submit/', label: 'Add an event' },
-  { href: '/policy/', label: 'Policy' },
-  { href: '/about/', label: 'About' },
-];
 ---
 
 <!doctype html>
@@ -54,13 +45,7 @@ const nav = [
         <a class="site-head__name" href="/">
           {site.name}
         </a>
-        <nav class="site-nav" aria-label="Main">
-          {nav.map((item) => (
-            <a href={item.href} aria-current={item.href === path ? 'page' : undefined}>
-              {item.label}
-            </a>
-          ))}
-        </nav>
+        <p class="site-head__tagline mono">{site.tagline}</p>
       </div>
     </header>
 
@@ -70,13 +55,51 @@ const nav = [
 
     <footer class="site-foot">
       <div class="site-foot__inner">
-        <p class="muted">
-          Community-maintained. Listings follow the <a href="/policy/">curation policy</a>.
-        </p>
-        <p class="muted">
-          <a href="/events.ics">Calendar</a> · <a href="/feed.xml">Feed</a> ·
-          <a href="/events.json">JSON</a> · <a href={site.repoUrl}>Source</a>
-        </p>
+        <section class="site-foot__col">
+          <h2 class="site-foot__head mono">About</h2>
+          <p>
+            A community-maintained calendar of conferences, workshops and schools in computational
+            and theoretical chemistry. No accounts, no cookies, no tracking.
+          </p>
+          <p>
+            <a href="/about/">About this site</a>
+          </p>
+        </section>
+
+        <section class="site-foot__col">
+          <h2 class="site-foot__head mono">Contribute</h2>
+          <ul>
+            <li>
+              <a href="/submit/">Add an event</a>
+            </li>
+            <li>
+              <a href="/about/#curation-policy">Curation policy</a>
+            </li>
+            <li>
+              <a href={site.repoUrl} rel="noopener">
+                Source
+              </a>
+            </li>
+          </ul>
+        </section>
+
+        <section class="site-foot__col">
+          <h2 class="site-foot__head mono">Feeds</h2>
+          <ul>
+            <li>
+              <a href="/events.ics">Events calendar</a>
+            </li>
+            <li>
+              <a href="/deadlines.ics">Deadlines calendar</a>
+            </li>
+            <li>
+              <a href="/feed.xml">Atom feed</a>
+            </li>
+            <li>
+              <a href="/events.json">JSON export</a>
+            </li>
+          </ul>
+        </section>
       </div>
     </footer>
   </body>

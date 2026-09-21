@@ -188,3 +188,47 @@ after the element, rather than rewriting the `<time>` element's own text. This
 follows spec §6 directly: the server-rendered date remains complete and
 correct on its own, so a reader with JavaScript disabled loses only the
 relative phrase, never the date itself.
+
+## 2026-09-21 — The `/deadlines/` page is removed; deadline data stays everywhere else
+
+The redesign makes the upcoming-events list the whole front of the site, so the
+standalone index of deadlines goes. Every other surface that carries deadline
+information stays: `/deadlines.ics`, the deadline pill on each event row, the
+deadline table on each event page, the countdown island and the "has an open
+deadline" filter. No event data and no schema field changed.
+
+## 2026-09-21 — The filter island says "event" directly
+
+`src/scripts/filters.ts` read `data-noun-singular`, `data-noun-plural` and
+`data-empty-adjective` off `#result-count` so the `/deadlines/` page could say
+"open deadlines". With that page deleted, no caller sets those attributes and
+the branch was configuration for a fixed value, so it and its regression test
+were removed with the page.
+
+## 2026-09-21 — `/policy/` is merged into `/about/`
+
+With the top navigation bar gone, the footer would otherwise point at two
+long-form pages. `docs/curation-policy.md` now renders inside `/about/` and
+`/policy/` no longer exists; inbound links became `/about/#curation-policy`.
+The markdown file remains the single source of the text.
+
+Its headings were demoted one level in the file itself (`# Curation policy`
+became `## Curation policy`) so they nest under the about page's `<h1>`. The
+alternative was a build-time heading transform, which Astro 7 only exposes
+through the Sätteri processor's `hastPlugins`, requiring an import from a
+package the project does not depend on directly. A one-time text edit to the
+document costs nothing and keeps `astro.config.ts` empty of pipeline code; the
+file still reads correctly on GitHub, starting at a level-two heading. The
+anchor is the heading's own generated id, so the page has no duplicate ids.
+
+## 2026-09-21 — Dark-only palette built on the two orbital phase lobes
+
+The 2026-09-20 spec's section 8 specified dark-first with a warm-paper light
+mode. The redesign drops the light mode: the site's visual metaphor is a
+rendered isosurface on a dark ground, and a second theme that contradicts it
+costs more to maintain than it returns. Tokens are now `--lobe-neg` (blue,
+aliased as `--link`) and `--lobe-pos` (red, aliased as `--time`), with a new
+`--control` token for interactive borders because the old `--rule-strong`
+missed WCAG 1.4.11's 3:1 boundary requirement. `tests/styles/contrast.test.ts`
+asserts every ratio against the shipped values, so a future colour edit that
+breaks AA fails the suite.
