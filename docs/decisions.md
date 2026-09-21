@@ -79,17 +79,21 @@ here because the plan's dependency-justification text names specific
 ecosystem behaviour (e.g. js-yaml vs yaml) that predates these majors; nothing
 in that reasoning changes with the newer versions.
 
-## 2026-09-20 — Repository default branch is `master`, not `main`
+## 2026-09-20 — Repository default branch renamed from `master` to `main`
 
-The task brief and its CI workflow (`.github/workflows/ci.yml`, `push:
-branches: [main]`) assume the default branch is `main`. The actual local
-repository default branch is `master`. The CI workflow content is kept
-verbatim from the plan (`branches: [main]`) rather than silently rewritten to
-`master`, since renaming the default branch — or retargeting CI — is a
-one-line call for the maintainer to make once a GitHub remote exists, and
-guessing wrong here is cheap to get wrong twice. Flagged for the maintainer to
-resolve before first push: either rename the default branch to `main` or
-change the workflow's `branches` list to `master`.
+The repository was initialised with `master` as its default branch, which did
+not match the plan's merge steps, the design spec, or the already-committed
+CI workflow (`.github/workflows/ci.yml`, `push: branches: [main]`) — all of
+which name `main`. Rather than retarget the CI workflow to `master`, the
+local default branch was renamed to `main` during Task 1, immediately after
+this entry was first written. The repository is local-only with no remote
+configured, so the rename had no push, PR or collaborator to coordinate
+around.
+
+**Closed 2026-09-20.** `git branch -a` lists only `main` and the
+`feat/phase-*` branches; no `master` branch exists. `ci.yml`'s
+`branches: [main]` has named the correct branch ever since the rename. No
+maintainer action is required.
 
 ## 2026-09-20 — Three seed events take `location.city` from a CECAM node page, not the event page
 
