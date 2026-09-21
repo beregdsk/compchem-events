@@ -144,3 +144,9 @@ together.
 Reverse this once phase 3 ships the endpoints: restore the "Feeds and exports"
 section on `/about/` listing all four, and the footer's links become live at
 the same time.
+
+**Closed 2026-09-21.** Task 16 shipped `/events.ics` and `/deadlines.ics`; this
+task ships `/feed.xml` and `/events.json`, the last two of the four. All four
+endpoints now exist, so the condition above is met: the "Feeds and exports"
+section is restored on `/about/` listing all four, and the footer's
+previously-dead `/feed.xml` and `/events.json` links are now live.
