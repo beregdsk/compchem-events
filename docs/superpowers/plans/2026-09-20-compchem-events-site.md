@@ -5487,6 +5487,9 @@ export function atomFeed(events: LoadedEvent[], generatedAt: Date): string {
     `  <link href="${xml(site.url)}"/>`,
     `  <id>${xml(new URL('/', site.url).href)}</id>`,
     `  <updated>${generatedAt.toISOString().replace(/\.\d{3}Z$/, 'Z')}</updated>`,
+    '  <author>',
+    `    <name>${xml(site.name)}</name>`,
+    '  </author>',
     entries,
     '</feed>',
     '',
@@ -5567,10 +5570,10 @@ describe('atomFeed', () => {
 
   it('escapes special characters in titles', () => {
     const escaped = atomFeed(
-      [{ ...events[0]!, title: 'A & B <tag>' }],
+      [{ ...events[0]!, title: 'A & B <tag> "quoted"' }],
       at,
     );
-    expect(escaped).toContain('A &amp; B &lt;tag&gt;');
+    expect(escaped).toContain('A &amp; B &lt;tag&gt; &quot;quoted&quot;');
   });
 });
 
