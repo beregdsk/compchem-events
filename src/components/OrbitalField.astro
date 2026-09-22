@@ -1,14 +1,18 @@
 ---
-// The page substrate: a Monte-Carlo point cloud of a real 3d(z²) orbital.
+// The masthead plate: a Monte-Carlo point cloud of a real 3d(z²) orbital.
 //
 // Astro renders this at build time, so the visitor gets static markup and the
 // sampling never runs in a browser. The dots take their colour from the two
-// phase tokens, which is why the field is inline SVG rather than a background
+// phase tokens, which is why the plate is inline SVG rather than a background
 // image: an external file could not follow the theme.
 import { FIELD_SIZE, orbitalLayers } from '../lib/orbital';
 
-/** Dense enough to read as a cloud, light enough to stay under 10 kB gzipped. */
-const DOT_COUNT = 2400;
+/**
+ * Tuned against the size the plate actually draws at. Fewer and the lobes stop
+ * reading as lobes; many more and the masthead costs more than the page it
+ * heads. See docs/decisions.md for the measurements.
+ */
+const DOT_COUNT = 2600;
 
 const layers = orbitalLayers(DOT_COUNT);
 ---
@@ -16,7 +20,7 @@ const layers = orbitalLayers(DOT_COUNT);
 <svg
   class="field"
   viewBox={`0 0 ${FIELD_SIZE} ${FIELD_SIZE}`}
-  preserveAspectRatio="xMidYMid slice"
+  preserveAspectRatio="xMaxYMid meet"
   aria-hidden="true"
   focusable="false"
 >

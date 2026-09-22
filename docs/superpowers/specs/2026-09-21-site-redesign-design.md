@@ -142,9 +142,11 @@ gives the ground depth rather than a flat vignette.
 
 **Superseded:** the gradient field was replaced with a Monte-Carlo point cloud sampled from
 |ψ|² of a 3d(z²) orbital, generated at build time and emitted as inline SVG
-(`src/lib/orbital.ts`, `src/components/OrbitalField.astro`). `body` keeps one soft wash
-behind it. This motif is therefore no longer pure CSS, and no longer free: it adds about
-10 kB gzipped per page, still with no requests.
+(`src/lib/orbital.ts`, `src/components/OrbitalField.astro`). It is a plate in the masthead,
+not a wash behind the page — measured in a browser, a full-page cloud is either illegible
+or in the way of the event list. `body` keeps one soft wash. This motif is therefore no
+longer pure CSS, and no longer free: it adds about 11 kB gzipped per page, still with no
+requests. The masthead grew to `clamp(11rem, 22vw, 20rem)` to hold it.
 
 **Contour substrate.** The masthead carries two layers: a 1px lattice
 (`repeating-linear-gradient` on both axes, at a spacing that reads as a plotting grid) and a

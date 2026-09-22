@@ -1,10 +1,10 @@
 // Monte-Carlo point cloud of a real hydrogenic 3d(z²) orbital.
 //
-// This is the site's background substrate. It is not decoration standing in for
-// chemistry: the dots are samples drawn from |ψ|² by rejection sampling, the
-// same construction the poster art it borrows from uses, and the two colours
-// the renderer gives them are the two signs of ψ — the phase lobes the palette
-// is already named after.
+// This is the plate in the site's masthead. It is not decoration standing in
+// for chemistry: the dots are samples drawn from |ψ|² by rejection sampling,
+// the same construction the poster art it borrows from uses, and the two
+// colours the renderer gives them are the two signs of ψ — the phase lobes the
+// palette is already named after.
 //
 // Everything here runs at build time inside an Astro component, so the cost is
 // paid once and the browser receives plain markup: no canvas, no runtime JS.
@@ -18,12 +18,14 @@ export const FIELD_SIZE = 1000;
  * Density tiers, faintest first. Rejection sampling already places more dots
  * where |ψ|² is large; the tiers additionally draw those dots heavier, which is
  * what gives the cloud a hot core and a dusty fringe instead of a flat spray.
- * `upTo` is a fraction of the peak density.
+ * `upTo` is a fraction of the peak density. Widths are viewBox units, sized so
+ * that at the scale the masthead plate draws at they land between one and three
+ * device pixels — below that a dot renders as a grey smudge rather than a mark.
  */
 export const TIERS = [
-  { upTo: 0.04, width: 1.3, opacity: 0.45 },
-  { upTo: 0.3, width: 1.9, opacity: 0.7 },
-  { upTo: Infinity, width: 2.6, opacity: 1 },
+  { upTo: 0.04, width: 4.5, opacity: 0.5 },
+  { upTo: 0.3, width: 6.5, opacity: 0.75 },
+  { upTo: Infinity, width: 9, opacity: 1 },
 ] as const;
 
 export interface Dot {
@@ -46,6 +48,18 @@ export interface Layer {
 
 /** Radius of the sampling ball, in Bohr radii. Beyond it |ψ|² is under 0.3% of peak. */
 const EXTENT = 20;
+
+/**
+ * Half-width of the plot window, in Bohr radii — the projection's scale, and
+ * therefore how much of the frame the cloud fills.
+ *
+ * It is deliberately far smaller than the sampling ball. |ψ|² peaks at r = 6 a₀
+ * and the bulk of the density sits well inside it, so scaling the frame to the
+ * ball would draw the whole orbital into the middle third and leave it reading
+ * as dust. Samples that land outside the window are dropped, exactly as a plot
+ * clipped to its axes drops them.
+ */
+const WINDOW = 15;
 
 /** Tilt of the orbital's z axis towards the viewer, so the torus reads as an ellipse. */
 const TILT = 0.35;
@@ -85,7 +99,7 @@ function mulberry32(seed: number): () => number {
  */
 export function sampleOrbital(count: number): Dot[] {
   const random = mulberry32(SEED);
-  const scale = FIELD_SIZE / 2 / EXTENT;
+  const scale = FIELD_SIZE / 2 / WINDOW;
   const centre = FIELD_SIZE / 2;
   const dots: Dot[] = [];
 
@@ -103,9 +117,13 @@ export function sampleOrbital(count: number): Dot[] {
     // Rotate about the horizontal screen axis, then project. The orbital's z
     // axis stays vertical; the equatorial plane opens up by sin(TILT).
     const depth = z * Math.cos(TILT) + y * Math.sin(TILT);
+    const px = round(centre + x * scale);
+    const py = round(centre - depth * scale);
+    if (px < 0 || px > FIELD_SIZE || py < 0 || py > FIELD_SIZE) continue;
+
     dots.push({
-      x: round(centre + x * scale),
-      y: round(centre - depth * scale),
+      x: px,
+      y: py,
       phase: psi >= 0 ? 1 : -1,
       tier: TIERS.findIndex((tier) => density / PEAK_DENSITY <= tier.upTo),
     });

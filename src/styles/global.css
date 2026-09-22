@@ -48,8 +48,8 @@
   --lobe-pos: #ff7a68;
   --lobe-pos-soft: #2e100c;
 
-  /* How loud the orbital point cloud behind the page is allowed to be. */
-  --field-opacity: 0.32;
+  /* How loud the orbital plate in the masthead is allowed to be. */
+  --field-opacity: 0.55;
 
   --link: var(--lobe-neg);
   --time: var(--lobe-pos);
@@ -78,7 +78,7 @@
     --lobe-pos: #a3301d;
     --lobe-pos-soft: #f8e5e0;
 
-    --field-opacity: 0.2;
+    --field-opacity: 0.42;
   }
 }
 
@@ -98,7 +98,7 @@
   --lobe-pos: #a3301d;
   --lobe-pos-soft: #f8e5e0;
 
-  --field-opacity: 0.2;
+  --field-opacity: 0.42;
 }
 
 *,
@@ -129,16 +129,20 @@ body {
   background-repeat: no-repeat;
 }
 
-/* The Monte-Carlo point cloud from components/OrbitalField.astro: a fixed
-   layer behind every page, sized to cover the viewport and cropped rather than
-   squashed. Decorative, so it is hidden from assistive technology and takes no
-   pointer events. */
+/* The Monte-Carlo point cloud from components/OrbitalField.astro. It is a plate
+   in the masthead rather than a wash behind the whole page: at page scale the
+   cloud is too thin to read as an orbital, and dense enough to read it competes
+   with the event text. In the band it is large, legible and out of the way.
+   Decorative, so it is hidden from assistive technology and takes no pointer
+   events. */
 .field {
-  position: fixed;
-  inset: 0;
+  position: absolute;
+  inset-block: var(--space-s);
+  /* Right edge of the plate lines up with the right edge of the content
+     column, so the band shares the page's measure. */
+  inset-inline-end: max(1rem, calc(50% - 39rem + 1rem));
   z-index: -1;
-  width: 100%;
-  height: 100%;
+  width: var(--plate-width);
   opacity: var(--field-opacity);
   pointer-events: none;
 }
@@ -261,6 +265,18 @@ a:hover {
   position: relative;
   isolation: isolate;
   overflow: hidden;
+  /* Room for the orbital plate, with the masthead type centred against it. */
+  min-height: clamp(11rem, 22vw, 20rem);
+  display: flex;
+  align-items: center;
+  /* One source of truth for the plate's width: the masthead type is kept out
+     of exactly this strip, so the two can never overlap. */
+  --plate-width: min(44%, 26rem);
+}
+
+/* Wordmark and tagline, held clear of the plate. */
+.site-head__id {
+  max-width: calc(100% - var(--plate-width) - var(--space-m));
 }
 
 /* The theme toggle joins the instrument-panel layer: mono, tracked, underscored
@@ -268,6 +284,9 @@ a:hover {
    scripts/theme.ts unhides it, so a reader without JavaScript is never offered
    a control that cannot work — their system preference still decides. */
 .theme-toggle {
+  position: absolute;
+  inset-block-start: var(--space-m);
+  inset-inline-end: max(1rem, calc(50% - 39rem + 1rem));
   font: inherit;
   font-family: var(--font-mono);
   font-size: var(--step--1);

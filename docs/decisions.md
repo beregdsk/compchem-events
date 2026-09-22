@@ -233,7 +233,7 @@ missed WCAG 1.4.11's 3:1 boundary requirement. `tests/styles/contrast.test.ts`
 asserts every ratio against the shipped values, so a future colour edit that
 breaks AA fails the suite.
 
-## 2026-09-21 — Light theme restored behind a toggle, on a sampled orbital field
+## 2026-09-21 — Light theme restored behind a toggle, and a sampled orbital plate
 
 This reverses the dark-only decision recorded above, on the same day, at the
 maintainer's request. Two things changed the calculus. The first is reader
@@ -247,10 +247,27 @@ isosurface. `src/lib/orbital.ts` draws a Monte-Carlo sample of |ψ|² for a real
 hydrogenic 3d(z²) orbital, the same construction the poster art this borrows
 from uses, and `src/components/OrbitalField.astro` emits it as inline SVG at
 build time. Because the dots take their colour from `--lobe-pos` and
-`--lobe-neg`, the field repaints with the theme, which a background image could
-not do — that is why it is inline markup rather than a cached asset. It costs
-about 10 kB gzipped per page and no requests; `DOT_COUNT` in the component is
-the dial if that ever stops being worth it.
+`--lobe-neg`, the plate repaints with the theme, which a background image could
+not do — that is why it is inline markup rather than a cached asset.
+
+It lives in the masthead rather than behind the whole page, which the browser
+decided rather than the plan. Three measured attempts at a full-page wash: thin
+enough to sit under the event list, it reads as speckle and not as an orbital;
+dense enough to read (9000 dots) it textures the body copy and costs 39 kB
+gzipped a page; dense and masked away from the text, it is invisible again. A
+whole-page cloud can be legible, quiet or cheap — not all three, because the
+listing leaves no empty region for a picture to occupy. The masthead has one.
+
+Two numbers govern how the plate is drawn, and both were wrong in the first
+attempt. The sampling ball runs to 20 a₀ so the dusty tail survives, but |ψ|²
+peaks at 6 a₀, so scaling the frame to the ball drew the orbital into the
+middle third and left it reading as dust; the frame is scaled to a 15 a₀ plot
+window instead and samples outside it are dropped, as a plot clipped to its
+axes drops them. And stroke widths are viewport-relative: at the plate's scale
+the original 1.3–2.6 viewBox units rendered under half a device pixel, so every
+dot came out a grey smudge. They are 4.5–9 now. The plate costs about 11 kB
+gzipped; 1900 dots saves 3 kB and visibly thins the lobes, so `DOT_COUNT` stays
+at 2600.
 
 Tiers are cut against the orbital's global peak density, so the equatorial torus
 never reaches the top tier — the axial lobes really are denser, and the render
