@@ -49,6 +49,12 @@ export function robotsAllows(robotsTxt: string, path: string): boolean {
   return !disallowed.some((prefix) => path.startsWith(prefix));
 }
 
+/**
+ * A fetch failure (thrown error or non-ok response) returns '' (allow-all)
+ * for this call only — it is never written into `hostState.robotsTxt`, so a
+ * transient network blip during one cron run doesn't permanently disable
+ * robots.txt enforcement for that host in the persisted state.
+ */
 async function ensureRobots(
   host: string,
   options: FetchOptions,
@@ -60,11 +66,12 @@ async function ensureRobots(
     const res = await fetchImpl(`https://${host}/robots.txt`, {
       headers: { 'User-Agent': options.userAgent },
     });
-    hostState.robotsTxt = res.ok ? await res.text() : '';
+    if (!res.ok) return '';
+    hostState.robotsTxt = await res.text();
+    return hostState.robotsTxt;
   } catch {
-    hostState.robotsTxt = '';
+    return '';
   }
-  return hostState.robotsTxt;
 }
 
 /** Fetches one URL politely: robots.txt-aware, per-host rate-limited, conditional on ETag/content hash. */
@@ -101,7 +108,10 @@ export async function politeFetch(url: string, options: FetchOptions): Promise<F
   }
   hostState.lastRequestAt = now().toISOString();
 
-  if (response.status === 304) return { status: 'unchanged' };
+  if (response.status === 304) {
+    if (cached) state.pages[url] = { ...cached, fetchedAt: now().toISOString() };
+    return { status: 'unchanged' };
+  }
   if (!response.ok) {
     return { status: 'error', error: `${response.status} ${response.statusText}` };
   }

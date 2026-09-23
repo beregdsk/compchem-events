@@ -139,4 +139,60 @@ describe('politeFetch', () => {
     const result = await politeFetch('https://example.org/page', baseOptions({ fetchImpl: impl }));
     expect(result.status).toBe('fetched');
   });
+
+  it('does not cache a robots.txt fetch failure, retrying it on the next call', async () => {
+    const state = emptyState();
+    let robotsCalls = 0;
+    const impl = (async (input: RequestInfo | URL) => {
+      const u = String(input);
+      if (u.endsWith('/robots.txt')) {
+        robotsCalls += 1;
+        if (robotsCalls === 1) throw new Error('network down');
+        return new Response('User-agent: *\nDisallow: /private/\n', { status: 200 });
+      }
+      return new Response('ok', { status: 200 });
+    }) as typeof fetch;
+
+    const first = await politeFetch(
+      'https://example.org/page',
+      baseOptions({ fetchImpl: impl, state }),
+    );
+    expect(first.status).toBe('fetched');
+    expect(state.hosts['example.org']?.robotsTxt).toBeUndefined();
+
+    const second = await politeFetch(
+      'https://example.org/private/page',
+      baseOptions({ fetchImpl: impl, state }),
+    );
+    expect(second).toEqual({ status: 'skipped', reason: 'robots-disallowed' });
+    expect(robotsCalls).toBe(2);
+  });
+
+  it('returns unchanged on a 304 response and refreshes fetchedAt', async () => {
+    const state = emptyState();
+    const url = 'https://example.org/page';
+    state.pages[url] = {
+      etag: 'W/"abc"',
+      contentHash: 'deadbeef',
+      fetchedAt: '2026-09-01T00:00:00.000Z',
+    };
+    const impl = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const u = String(input);
+      if (u.endsWith('/robots.txt')) return new Response('', { status: 200 });
+      if (u === url) {
+        const headers = new Headers(init?.headers);
+        expect(headers.get('If-None-Match')).toBe('W/"abc"');
+        return new Response(null, { status: 304 });
+      }
+      throw new Error(`unstubbed url: ${u}`);
+    }) as typeof fetch;
+
+    const result = await politeFetch(url, baseOptions({ fetchImpl: impl, state }));
+    expect(result).toEqual({ status: 'unchanged' });
+    expect(state.pages[url]).toEqual({
+      etag: 'W/"abc"',
+      contentHash: 'deadbeef',
+      fetchedAt: '2026-09-23T00:00:00.000Z',
+    });
+  });
 });
