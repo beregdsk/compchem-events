@@ -10,7 +10,7 @@ import { regionOf } from './regions';
 import type { RawEvent, Topic } from './types';
 
 /** Lowercase, strip punctuation, collapse whitespace — for duplicate detection. */
-function normaliseTitle(title: string): string {
+export function normaliseTitle(title: string): string {
   return title
     .toLowerCase()
     .replace(/[^\p{L}\p{N}\s]/gu, ' ')
@@ -26,7 +26,7 @@ function hostOf(url: string): string {
   }
 }
 
-function isBlocked(url: string, blocked: ReadonlySet<string>): boolean {
+export function isBlocked(url: string, blocked: ReadonlySet<string>): boolean {
   const host = hostOf(url);
   if (!host) return false;
   for (const domain of blocked) {

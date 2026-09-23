@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { loadValidationContext, validateEvent } from '../../src/lib/validation';
+import {
+  isBlocked,
+  loadValidationContext,
+  normaliseTitle,
+  validateEvent,
+} from '../../src/lib/validation';
 
 const ctx = loadValidationContext('.', '2026-09-20');
 
@@ -63,5 +68,29 @@ describe('validateEvent schema layer', () => {
     void title;
     const r = validateEvent({ file, data: withoutTitle }, ctx);
     expect(r.errors.some((e) => e.field.includes('title'))).toBe(true);
+  });
+});
+
+describe('normaliseTitle', () => {
+  it('lowercases, strips punctuation, and collapses whitespace', () => {
+    expect(normaliseTitle('  The DFT & ML Workshop!!  ')).toBe('the dft ml workshop');
+  });
+});
+
+describe('isBlocked', () => {
+  it('matches an exact blocked host', () => {
+    expect(
+      isBlocked('https://predatory-example.com/event/', new Set(['predatory-example.com'])),
+    ).toBe(true);
+  });
+
+  it('matches a subdomain of a blocked host', () => {
+    expect(
+      isBlocked('https://sub.predatory-example.com/event/', new Set(['predatory-example.com'])),
+    ).toBe(true);
+  });
+
+  it('does not match an unrelated host', () => {
+    expect(isBlocked('https://example.org/event/', new Set(['predatory-example.com']))).toBe(false);
   });
 });
