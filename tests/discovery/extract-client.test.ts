@@ -77,6 +77,31 @@ describe('extractEvent', () => {
     expect(Object.hasOwn(result as object, 'organizer')).toBe(false);
   });
 
+  it('accepts a null event.url without throwing (Fix D)', async () => {
+    const { impl } = stubFetch(
+      200,
+      completionWith({
+        found: true,
+        event: {
+          title: 'No Canonical Url Workshop',
+          type: 'workshop',
+          start_date: '2027-06-01',
+          end_date: '2027-06-02',
+          format: 'online',
+          location: null,
+          url: null,
+          organizer: null,
+          topics: ['molecular-dynamics'],
+          description: 'A workshop with no stated canonical URL.',
+          confidence: 0.7,
+        },
+      }),
+    );
+    const result = await extractEvent('page text', { ...options, fetchImpl: impl });
+    expect(result).not.toBeNull();
+    expect(result!.url).toBeNull();
+  });
+
   it('throws on a non-2xx response', async () => {
     const { impl } = stubFetch(401, { error: 'bad key' }, 'Unauthorized');
     await expect(extractEvent('text', { ...options, fetchImpl: impl })).rejects.toThrow(/401/);

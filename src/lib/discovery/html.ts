@@ -34,9 +34,22 @@ export function extractLinks(doc: ReturnType<typeof parseHTML>, baseUrl: string)
   return [...links];
 }
 
+/**
+ * Block-level elements a real (often minified) page commonly has no literal
+ * whitespace between — `textContent` alone would run their text together
+ * (`<h1>Title</h1><p>12–14 May</p>` -> "Title12–14 May"). Not an exhaustive
+ * block-element taxonomy, just a broadly-covering list.
+ */
+const BLOCK_SEPARATOR_SELECTOR = 'h1, h2, h3, h4, h5, h6, p, div, li, tr, br, section, article';
+
 /** Visible text only: scripts and styles removed, whitespace collapsed. */
 export function htmlToText(doc: ReturnType<typeof parseHTML>): string {
   for (const el of doc.querySelectorAll('script, style')) el.remove();
+  // Insert a newline after each block-level element so adjacent blocks
+  // stay separated once their text is read via `textContent` below.
+  for (const el of [...doc.querySelectorAll(BLOCK_SEPARATOR_SELECTOR)]) {
+    el.insertAdjacentText('afterend', '\n');
+  }
   const text = doc.body?.textContent ?? doc.textContent ?? '';
   return text
     .replace(/[ \t]+/g, ' ')

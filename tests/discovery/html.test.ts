@@ -38,6 +38,13 @@ describe('htmlToText', () => {
     expect(text).not.toContain('color: red');
     expect(text).not.toContain('alert');
   });
+
+  it('separates adjacent block elements with no whitespace between their tags (Fix G)', () => {
+    const html = '<html><body><h1>Title</h1><p>Details.</p></body></html>';
+    const text = htmlToText(parseHTML(html));
+    expect(text).not.toContain('TitleDetails.');
+    expect(text.split(/\s+/)).toEqual(expect.arrayContaining(['Title', 'Details.']));
+  });
 });
 
 describe('splitTelegramPosts', () => {

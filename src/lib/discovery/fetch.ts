@@ -32,45 +32,73 @@ function hashOf(body: string): string {
  * multi-agent precedence parser is not needed to serve them.
  */
 export function robotsAllows(robotsTxt: string, path: string): boolean {
-  const lines = robotsTxt.split(/\r?\n/).map((l) => l.trim());
+  // Comments run from `#` to end of line per the informal robots.txt
+  // convention, and must be stripped before a line's key/value is parsed —
+  // otherwise a trailing comment on a Disallow line becomes part of the
+  // path and never matches anything.
+  const lines = robotsTxt.split(/\r?\n/).map((l) => l.replace(/#.*$/, '').trim());
   const disallowed: string[] = [];
   let inWildcardGroup = false;
+  // Consecutive `User-agent:` lines with no Allow/Disallow between them
+  // belong to the SAME rule group per the robots.txt convention (e.g.
+  // `User-agent: *` immediately followed by `User-agent: SomeBot` is one
+  // group covering both agents). Only a `User-agent:` line that follows a
+  // non-agent directive starts a genuinely new group.
+  let stackingUserAgent = false;
   for (const line of lines) {
+    if (!line) continue;
     const colon = line.indexOf(':');
     if (colon === -1) continue;
     const key = line.slice(0, colon).trim().toLowerCase();
     const value = line.slice(colon + 1).trim();
     if (key === 'user-agent') {
-      inWildcardGroup = value === '*';
+      if (!stackingUserAgent) inWildcardGroup = false;
+      if (value === '*') inWildcardGroup = true;
+      stackingUserAgent = true;
       continue;
     }
+    stackingUserAgent = false;
     if (key === 'disallow' && inWildcardGroup && value) disallowed.push(value);
   }
   return !disallowed.some((prefix) => path.startsWith(prefix));
 }
 
+const ROBOTS_TTL_MS = 24 * 60 * 60 * 1000;
+
 /**
- * A fetch failure (thrown error or non-ok response) returns '' (allow-all)
- * for this call only — it is never written into `hostState.robotsTxt`, so a
- * transient network blip during one cron run doesn't permanently disable
- * robots.txt enforcement for that host in the persisted state.
+ * A fetch failure (thrown error or non-ok response) falls back to whatever
+ * robots.txt is already cached for this host (or '' — allow-all — if
+ * nothing was ever cached) for this call only; a fresh failure/non-ok
+ * result is never written into `hostState.robotsTxt`, so a transient
+ * network blip during one cron run doesn't permanently disable robots.txt
+ * enforcement for that host in the persisted state, and doesn't discard a
+ * still-usable (if stale) cached copy either.
+ *
+ * The cached copy is treated as stale — and re-fetched — once it is more
+ * than 24h old (`robotsFetchedAt`), so a site that adds new Disallow rules
+ * is eventually honoured instead of being cached forever.
  */
 async function ensureRobots(
   host: string,
   options: FetchOptions,
   fetchImpl: typeof fetch,
+  now: () => Date,
 ): Promise<string> {
   const hostState = (options.state.hosts[host] ??= {});
-  if (hostState.robotsTxt !== undefined) return hostState.robotsTxt;
+  if (hostState.robotsTxt !== undefined && hostState.robotsFetchedAt !== undefined) {
+    const age = now().getTime() - new Date(hostState.robotsFetchedAt).getTime();
+    if (age < ROBOTS_TTL_MS) return hostState.robotsTxt;
+  }
   try {
     const res = await fetchImpl(`https://${host}/robots.txt`, {
       headers: { 'User-Agent': options.userAgent },
     });
-    if (!res.ok) return '';
+    if (!res.ok) return hostState.robotsTxt ?? '';
     hostState.robotsTxt = await res.text();
+    hostState.robotsFetchedAt = now().toISOString();
     return hostState.robotsTxt;
   } catch {
-    return '';
+    return hostState.robotsTxt ?? '';
   }
 }
 
@@ -84,7 +112,7 @@ export async function politeFetch(url: string, options: FetchOptions): Promise<F
   const { state } = options;
   const hostState = (state.hosts[host] ??= {});
 
-  const robotsTxt = await ensureRobots(host, options, fetchImpl);
+  const robotsTxt = await ensureRobots(host, options, fetchImpl, now);
   const path = new URL(url).pathname;
   if (!robotsAllows(robotsTxt, path)) {
     return { status: 'skipped', reason: 'robots-disallowed' };

@@ -3,6 +3,8 @@ import { dirname } from 'node:path';
 
 export interface HostState {
   robotsTxt?: string;
+  /** When `robotsTxt` was fetched; used to treat it as stale after 24h (see `ensureRobots` in `fetch.ts`). */
+  robotsFetchedAt?: string;
   lastRequestAt?: string;
 }
 

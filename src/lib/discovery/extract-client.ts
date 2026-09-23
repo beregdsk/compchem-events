@@ -14,7 +14,8 @@ export interface ExtractedFields {
   end_date: string;
   format: EventFormat;
   location?: ExtractedLocation;
-  url: string;
+  /** `null` when no canonical event URL was stated in the text — never fabricated. */
+  url: string | null;
   organizer?: string;
   topics: string[];
   description: string;
@@ -64,7 +65,7 @@ const EVENT_SCHEMA = {
         venue: { type: ['string', 'null'] },
       },
     },
-    url: { type: 'string' },
+    url: { type: ['string', 'null'] },
     organizer: { type: ['string', 'null'] },
     topics: { type: 'array', items: { type: 'string' } },
     description: { type: 'string' },
@@ -90,8 +91,8 @@ function systemPrompt(topics: readonly string[]): string {
     'If it does not, or you are not confident, set "found" to false and "event" to null.',
     'If it does, set "found" to true and fill "event". Write "description" in your own words, summarizing rather than copying, 280 characters maximum.',
     `Choose every "topics" entry only from this exact vocabulary: ${topics.join(', ')}.`,
-    '"url" is the canonical page for the event itself, taken from the text if present.',
-    'Dates are ISO 8601 calendar dates, YYYY-MM-DD.',
+    '"url" is the canonical page for the event itself, taken from the text if present. Set "url" to null when no canonical event URL is stated in the text — never invent one.',
+    'Dates are ISO 8601 calendar dates, YYYY-MM-DD. If the event\'s start_date or end_date cannot be determined from the text, set "found" to false rather than guessing a date.',
     'location.country, when location is given, is the ISO 3166-1 alpha-2 code, uppercase (e.g. DE, US, GB). Set location to null when the event is online or no location is stated.',
     'Set organizer to null when no organiser is identifiable, and location.venue to null when no venue is stated.',
   ].join(' ');
@@ -110,7 +111,7 @@ interface RawExtractedEvent {
   end_date: string;
   format: string;
   location: RawExtractedLocation | null;
-  url: string;
+  url: string | null;
   organizer: string | null;
   topics: string[];
   description: string;
@@ -146,7 +147,7 @@ function isRawResponse(value: unknown): value is RawResponse {
     typeof e.end_date === 'string' &&
     (EVENT_FORMATS as readonly string[]).includes(e.format as string) &&
     (e.location === null || isRawLocation(e.location)) &&
-    typeof e.url === 'string' &&
+    (e.url === null || typeof e.url === 'string') &&
     (e.organizer === null || typeof e.organizer === 'string') &&
     Array.isArray(e.topics) &&
     e.topics.every((t) => typeof t === 'string') &&

@@ -42,6 +42,16 @@ describe('robotsAllows', () => {
     const robots = 'User-agent: SomeOtherBot\nDisallow: /everything\n';
     expect(robotsAllows(robots, '/everything')).toBe(true);
   });
+
+  it('strips an inline comment before matching a Disallow value (Fix I.1)', () => {
+    const robots = 'User-agent: *\nDisallow: /private/ # internal note\n';
+    expect(robotsAllows(robots, '/private/page')).toBe(false);
+  });
+
+  it('keeps a wildcard group current through consecutive User-agent lines (Fix I.2)', () => {
+    const robots = 'User-agent: *\nUser-agent: SomeBot\nDisallow: /x\n';
+    expect(robotsAllows(robots, '/x')).toBe(false);
+  });
 });
 
 describe('politeFetch', () => {
@@ -194,5 +204,54 @@ describe('politeFetch', () => {
       contentHash: 'deadbeef',
       fetchedAt: '2026-09-23T00:00:00.000Z',
     });
+  });
+
+  it('re-fetches robots.txt when the cached copy is more than 24 hours old (Fix H)', async () => {
+    const state = emptyState();
+    state.hosts['example.org'] = {
+      robotsTxt: 'User-agent: *\nDisallow: /old/\n',
+      robotsFetchedAt: '2026-09-21T00:00:00.000Z',
+    };
+    let robotsCalls = 0;
+    const impl = (async (input: RequestInfo | URL) => {
+      const u = String(input);
+      if (u.endsWith('/robots.txt')) {
+        robotsCalls += 1;
+        return new Response('User-agent: *\nDisallow: /new/\n', { status: 200 });
+      }
+      return new Response('ok', { status: 200 });
+    }) as typeof fetch;
+
+    const result = await politeFetch(
+      'https://example.org/new/page',
+      baseOptions({ fetchImpl: impl, state, now: () => new Date('2026-09-23T00:00:00.000Z') }),
+    );
+    expect(robotsCalls).toBe(1);
+    expect(result).toEqual({ status: 'skipped', reason: 'robots-disallowed' });
+    expect(state.hosts['example.org']!.robotsTxt).toBe('User-agent: *\nDisallow: /new/\n');
+  });
+
+  it('does not re-fetch robots.txt when the cached copy is recent (Fix H)', async () => {
+    const state = emptyState();
+    state.hosts['example.org'] = {
+      robotsTxt: 'User-agent: *\nDisallow: /old/\n',
+      robotsFetchedAt: '2026-09-22T23:00:00.000Z',
+    };
+    let robotsCalls = 0;
+    const impl = (async (input: RequestInfo | URL) => {
+      const u = String(input);
+      if (u.endsWith('/robots.txt')) {
+        robotsCalls += 1;
+        return new Response('', { status: 200 });
+      }
+      return new Response('ok', { status: 200 });
+    }) as typeof fetch;
+
+    const result = await politeFetch(
+      'https://example.org/other/page',
+      baseOptions({ fetchImpl: impl, state, now: () => new Date('2026-09-23T00:00:00.000Z') }),
+    );
+    expect(robotsCalls).toBe(0);
+    expect(result).toEqual({ status: 'fetched', body: 'ok' });
   });
 });

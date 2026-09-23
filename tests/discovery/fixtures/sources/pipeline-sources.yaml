@@ -13,3 +13,15 @@
 - name: Broken Source
   url: https://broken.example/page
   kind: event-page
+
+- name: Sample RSS Feed
+  url: https://example.org/feed.xml
+  kind: rss
+
+- name: Sample Telegram Channel
+  url: https://example.org/telegram
+  kind: telegram-channel
+
+- name: Sample No URL Page
+  url: https://example.org/no-url
+  kind: event-page

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { runPipeline, type PipelineOptions } from '../../src/lib/discovery/pipeline';
@@ -22,8 +22,27 @@ const listingBody = '<html><body><a href="/listing/child">Child Event</a></body>
 const listingChildBody =
   '<html><body><h1>Listing Child Workshop</h1>\n<p>Details.</p></body></html>';
 const brokenPageBody = '<html><body><h1>Broken Page</h1></body></html>';
+const noUrlPageBody = '<html><body><h1>No Url Workshop</h1>\n<p>Details.</p></body></html>';
 
-function extractedFor(title: string) {
+// The description is deliberately HTML markup (Fix B): the pipeline test
+// only needs to prove the run completes and produces a candidate — the
+// plain-text conversion itself is covered in detail by
+// tests/discovery/parsers/rss.test.ts.
+const rssBody = `<?xml version="1.0"?>
+<rss version="2.0"><channel>
+  <item>
+    <title>RSS Feed Workshop</title>
+    <description>&lt;p&gt;Details in Testville.&lt;/p&gt;</description>
+    <link>https://example.org/rss-workshop</link>
+  </item>
+</channel></rss>`;
+
+const telegramBody = `
+  <div class="tgme_widget_message" data-post="samplechannel/1">
+    <div class="tgme_widget_message_text">Telegram Workshop Announcement</div>
+  </div>`;
+
+function extractedFor(title: string, url: string | null = 'https://example.org/extracted-event') {
   return {
     found: true,
     event: {
@@ -33,7 +52,7 @@ function extractedFor(title: string) {
       end_date: '2027-05-03',
       format: 'online',
       location: null,
-      url: 'https://example.org/extracted-event',
+      url,
       organizer: null,
       topics: ['molecular-dynamics'],
       description: `A workshop: ${title}.`,
@@ -51,6 +70,9 @@ function stubPageFetch() {
     'https://example.org/listing': { status: 200, body: listingBody },
     'https://example.org/listing/child': { status: 200, body: listingChildBody },
     'https://broken.example/page': { status: 200, body: brokenPageBody },
+    'https://example.org/feed.xml': { status: 200, body: rssBody },
+    'https://example.org/telegram': { status: 200, body: telegramBody },
+    'https://example.org/no-url': { status: 200, body: noUrlPageBody },
   };
   return (async (input: RequestInfo | URL) => {
     const url = String(input);
@@ -63,8 +85,9 @@ function stubPageFetch() {
 /**
  * Every input gets a canned "found" response, except the one from the
  * broken page: that one returns a non-JSON completion body, so
- * `extractEvent` throws and the pipeline's per-source error isolation
- * (not the fetch layer's) is what's under test.
+ * `extractEvent` throws. Since Fix A, that failure is caught and logged by
+ * `processInput` itself — it no longer propagates to `PipelineResult.errors`
+ * or aborts any other source.
  */
 function stubExtractFetch() {
   return (async (_input: RequestInfo | URL, init?: RequestInit) => {
@@ -75,6 +98,16 @@ function stubExtractFetch() {
     if (userText.startsWith('Broken Page')) {
       return new Response(
         JSON.stringify({ choices: [{ message: { content: 'not valid json' } }] }),
+        { status: 200 },
+      );
+    }
+    if (userText.startsWith('No Url Workshop')) {
+      return new Response(
+        JSON.stringify({
+          choices: [
+            { message: { content: JSON.stringify(extractedFor('No Url Workshop', null)) } },
+          ],
+        }),
         { status: 200 },
       );
     }
@@ -94,8 +127,15 @@ function tmpStatePath(): { path: string; cleanup: () => void } {
   };
 }
 
+function tmpSourcesFile(yaml: string): { path: string; cleanup: () => void } {
+  const dir = mkdtempSync(join(tmpdir(), 'discovery-pipeline-src-'));
+  const path = join(dir, 'sources.yaml');
+  writeFileSync(path, yaml);
+  return { path, cleanup: () => rmSync(dir, { recursive: true, force: true }) };
+}
+
 describe('runPipeline', () => {
-  it('produces validated candidates for every non-LLM and LLM-backed source, drops an ical candidate that fails schema validation, and isolates one source failing', async () => {
+  it('produces validated candidates for every non-LLM and LLM-backed source, drops an ical candidate that fails schema validation, and logs one source-item extraction failure without recording it as an error', async () => {
     const { path: statePath, cleanup } = tmpStatePath();
     const logs: string[] = [];
     try {
@@ -123,7 +163,15 @@ describe('runPipeline', () => {
       // discarded and logged with the reason"). It must never reach
       // `candidates`; only its drop is observable, via the log callback.
       const titles = result.candidates.map((c) => c.title).sort();
-      expect(titles).toEqual(['Event Page Workshop', 'Listing Child Workshop'].sort());
+      expect(titles).toEqual(
+        [
+          'Event Page Workshop',
+          'Listing Child Workshop',
+          'RSS Feed Workshop',
+          'Telegram Workshop Announcement',
+          'No Url Workshop',
+        ].sort(),
+      );
       expect(result.candidates.some((c) => c.title === 'Online Workshop From Ical')).toBe(false);
       expect(
         logs.some((line) =>
@@ -138,8 +186,25 @@ describe('runPipeline', () => {
       const listingCandidate = result.candidates.find((c) => c.title === 'Listing Child Workshop')!;
       expect(listingCandidate.source_url).toBe('https://example.org/listing/child');
 
-      expect(result.errors).toHaveLength(1);
-      expect(result.errors[0]!.source).toBe('https://broken.example/page');
+      // Fix E: rss and telegram-channel are exercised end-to-end.
+      const rssCandidate = result.candidates.find((c) => c.title === 'RSS Feed Workshop')!;
+      expect(rssCandidate.source_url).toBe('https://example.org/rss-workshop');
+
+      const telegramCandidate = result.candidates.find(
+        (c) => c.title === 'Telegram Workshop Announcement',
+      )!;
+      expect(telegramCandidate.source_url).toBe('https://t.me/samplechannel/1');
+
+      // Fix D: a null extracted url falls back to the input's own source URL.
+      const noUrlCandidate = result.candidates.find((c) => c.title === 'No Url Workshop')!;
+      expect(noUrlCandidate.url).toBe('https://example.org/no-url');
+
+      // Fix A: the broken page's extraction failure is caught and logged,
+      // never recorded as a pipeline error.
+      expect(result.errors).toHaveLength(0);
+      expect(
+        logs.some((line) => line.includes('extraction failed for https://broken.example/page')),
+      ).toBe(true);
     } finally {
       cleanup();
     }
@@ -162,6 +227,126 @@ describe('runPipeline', () => {
       expect(result.candidates.length).toBeLessThanOrEqual(1);
     } finally {
       cleanup();
+    }
+  });
+
+  it('recovers a single item extraction failure without losing sibling items, and retries the failed item on the next run (Fix A)', async () => {
+    const { path: statePath, cleanup: cleanupState } = tmpStatePath();
+    const { path: sourcesPath, cleanup: cleanupSources } = tmpSourcesFile(
+      `- name: Two Item Feed\n  url: https://example.org/two-item-feed.xml\n  kind: rss\n`,
+    );
+    const feedUrl = 'https://example.org/two-item-feed.xml';
+    const feedBody = `<?xml version="1.0"?>
+<rss version="2.0"><channel>
+  <item><title>First Item</title><link>https://example.org/first-item</link></item>
+  <item><title>Second Item</title><link>https://example.org/second-item</link></item>
+</channel></rss>`;
+
+    const pageFetch = (async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url === 'https://example.org/robots.txt') return new Response('', { status: 200 });
+      if (url === feedUrl) return new Response(feedBody, { status: 200 });
+      throw new Error(`unstubbed url: ${url}`);
+    }) as typeof fetch;
+
+    let firstItemShouldFail = true;
+    const extractFetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+      const body = JSON.parse((init?.body as string) ?? '{}') as {
+        messages: Array<{ content: string }>;
+      };
+      const userText = body.messages[1]!.content;
+      if (userText.startsWith('First Item') && firstItemShouldFail) {
+        return new Response(
+          JSON.stringify({ choices: [{ message: { content: 'not valid json' } }] }),
+          { status: 200 },
+        );
+      }
+      const title = userText.split('\n')[0]!;
+      return new Response(
+        JSON.stringify({
+          choices: [{ message: { content: JSON.stringify(extractedFor(title)) } }],
+        }),
+        { status: 200 },
+      );
+    }) as typeof fetch;
+
+    const baseOptions = (log?: (message: string) => void): PipelineOptions => ({
+      sourcesPath,
+      statePath,
+      userAgent: 'Test Agent (+https://example.org)',
+      maxPages: 50,
+      today: '2026-09-23',
+      fetchImpl: pageFetch,
+      sleepImpl: async () => {},
+      extract: { apiKey: 'sk-test', model: 'test-extract-model', fetchImpl: extractFetch },
+      log,
+    });
+
+    try {
+      const logs1: string[] = [];
+      const result1 = await runPipeline(baseOptions((m) => logs1.push(m)));
+
+      expect(result1.candidates.map((c) => c.title)).toEqual(['Second Item']);
+      expect(result1.errors).toHaveLength(0);
+      expect(
+        logs1.some((l) => l.includes('extraction failed for https://example.org/first-item')),
+      ).toBe(true);
+
+      firstItemShouldFail = false;
+      const result2 = await runPipeline(baseOptions());
+      expect(result2.candidates.map((c) => c.title).sort()).toEqual(['First Item', 'Second Item']);
+    } finally {
+      cleanupState();
+      cleanupSources();
+    }
+  });
+
+  it('truncates extraction input text to the 8000-character cap before calling the extraction endpoint (Fix F)', async () => {
+    const { path: statePath, cleanup: cleanupState } = tmpStatePath();
+    const longPageUrl = 'https://example.org/long-page';
+    const { path: sourcesPath, cleanup: cleanupSources } = tmpSourcesFile(
+      `- name: Long Page\n  url: ${longPageUrl}\n  kind: event-page\n`,
+    );
+    const longBody = `<html><body><h1>Long Page</h1><p>${'A'.repeat(9000)}</p></body></html>`;
+
+    const pageFetch = (async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url === 'https://example.org/robots.txt') return new Response('', { status: 200 });
+      if (url === longPageUrl) return new Response(longBody, { status: 200 });
+      throw new Error(`unstubbed url: ${url}`);
+    }) as typeof fetch;
+
+    const calls: string[] = [];
+    const extractFetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+      const body = JSON.parse((init?.body as string) ?? '{}') as {
+        messages: Array<{ content: string }>;
+      };
+      calls.push(body.messages[1]!.content);
+      return new Response(
+        JSON.stringify({
+          choices: [{ message: { content: JSON.stringify({ found: false, event: null }) } }],
+        }),
+        { status: 200 },
+      );
+    }) as typeof fetch;
+
+    try {
+      const result = await runPipeline({
+        sourcesPath,
+        statePath,
+        userAgent: 'Test Agent (+https://example.org)',
+        maxPages: 50,
+        today: '2026-09-23',
+        fetchImpl: pageFetch,
+        sleepImpl: async () => {},
+        extract: { apiKey: 'sk-test', model: 'test-extract-model', fetchImpl: extractFetch },
+      });
+      expect(result.errors).toHaveLength(0);
+      expect(calls).toHaveLength(1);
+      expect(calls[0]!.length).toBe(8000);
+    } finally {
+      cleanupState();
+      cleanupSources();
     }
   });
 });

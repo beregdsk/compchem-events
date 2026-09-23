@@ -336,7 +336,7 @@ into the fetch/extract/PR pipeline remains a separate, later task.
 ## 2026-09-23 — Discovery source parsing: `source_url` is never requested from the extraction model
 
 `docs/superpowers/specs/2026-09-23-discovery-source-parsing-design.md`'s
-*Extraction* section listed `source_url` among the fields the LLM's JSON
+_Extraction_ section listed `source_url` among the fields the LLM's JSON
 schema returns, mirroring `docs/discovery-agent.md`'s step 4 wording ("plus
 ... the exact `source_url`"). The implementation
 (`src/lib/discovery/extract-client.ts`) does not ask the model for it: the
@@ -345,3 +345,15 @@ which URL a given extraction input came from — it just fetched it — so
 asking the model to reproduce that value would only open a channel for
 prompt-injected text to misattribute a candidate's source. `source_url` is
 set directly from the fetch, never from model output.
+
+**Amendment (final fix wave):** for `rss`/Atom items specifically, "set
+directly from the fetch" is narrower than it sounds: the pipeline never
+independently fetches each item's own page, only the feed itself.
+`source_url` there is derived from the feed's own per-item `<link>`
+(resolved against the feed's URL and validated as http/https, falling back
+to the feed's own URL when that resolution fails or isn't http(s) — see
+`parseFeedItems` in `src/lib/discovery/parsers/rss.ts`) rather than from an
+independent pipeline fetch of that exact URL. This is a narrower provenance
+guarantee than for `event-page`/`listing-page`/`ical`/`telegram-channel`,
+where `source_url` is always the URL the pipeline itself just fetched —
+worth stating accurately rather than overclaiming.

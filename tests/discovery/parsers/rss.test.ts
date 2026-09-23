@@ -45,4 +45,63 @@ describe('parseFeedItems', () => {
     const feed = `<rss><channel><item><description>No title here.</description></item></channel></rss>`;
     expect(parseFeedItems(feed, 'https://example.org/feed.xml')).toEqual([]);
   });
+
+  it('converts an HTML description to plain text (Fix B)', () => {
+    const feed = `<rss><channel><item>
+      <title>HTML Description Item</title>
+      <description>&lt;p&gt;Details &lt;a href="https://example.org/x"&gt;here&lt;/a&gt;.&lt;/p&gt;</description>
+      <link>https://example.org/html-desc</link>
+    </item></channel></rss>`;
+    const inputs = parseFeedItems(feed, 'https://example.org/feed.xml');
+    expect(inputs).toHaveLength(1);
+    expect(inputs[0]!.text).toContain('Details');
+    expect(inputs[0]!.text).toContain('here');
+    expect(inputs[0]!.text).not.toContain('<p>');
+    expect(inputs[0]!.text).not.toContain('<a href');
+  });
+
+  it('resolves a relative Atom link href against the feed URL (Fix C)', () => {
+    const feed = `<feed xmlns="http://www.w3.org/2005/Atom">
+      <entry>
+        <title>Relative Link Entry</title>
+        <link href="/events/x"/>
+      </entry>
+    </feed>`;
+    const inputs = parseFeedItems(feed, 'https://example.org/feeds/feed.xml');
+    expect(inputs).toHaveLength(1);
+    expect(inputs[0]!.sourceUrl).toBe('https://example.org/events/x');
+  });
+
+  it('falls back to the feed URL when the link value cannot be parsed as a URL (Fix C)', () => {
+    const feed = `<rss><channel><item>
+      <title>Malformed Link Item</title>
+      <link>http://[invalid</link>
+    </item></channel></rss>`;
+    const inputs = parseFeedItems(feed, 'https://example.org/feed.xml');
+    expect(inputs).toHaveLength(1);
+    expect(inputs[0]!.sourceUrl).toBe('https://example.org/feed.xml');
+  });
+
+  it('falls back to the feed URL when the resolved link is not http(s) (Fix C)', () => {
+    const feed = `<rss><channel><item>
+      <title>Mailto Link Item</title>
+      <link>mailto:someone@example.org</link>
+    </item></channel></rss>`;
+    const inputs = parseFeedItems(feed, 'https://example.org/feed.xml');
+    expect(inputs).toHaveLength(1);
+    expect(inputs[0]!.sourceUrl).toBe('https://example.org/feed.xml');
+  });
+
+  it('prefers a rel="alternate" link over a rel="self" link in an Atom entry (Fix C)', () => {
+    const feed = `<feed xmlns="http://www.w3.org/2005/Atom">
+      <entry>
+        <title>Multi Link Entry</title>
+        <link rel="self" href="https://example.org/feed.xml"/>
+        <link rel="alternate" href="https://example.org/the-actual-event"/>
+      </entry>
+    </feed>`;
+    const inputs = parseFeedItems(feed, 'https://example.org/feed.xml');
+    expect(inputs).toHaveLength(1);
+    expect(inputs[0]!.sourceUrl).toBe('https://example.org/the-actual-event');
+  });
 });
