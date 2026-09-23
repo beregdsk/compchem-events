@@ -89,7 +89,12 @@ Any mechanical skip returns immediately with no jev call and no cost.
 
 One request to the OpenRouter Decisions API (`POST
 https://openrouter.ai/api/alpha/decisions`), four `noul` questions in the
-same call:
+same call. `state` holds one candidate: jev has no batch mode, and an
+array `state` means structured context for a single evaluation, not
+multiple candidates each getting their own answer — the response always
+carries one `answers` object per request. So `classifyCandidate()`
+classifies exactly one candidate per call; a future pipeline loops this
+call over its list of candidates rather than batching them.
 
 | Key | Question | Grounded in |
 |---|---|---|
