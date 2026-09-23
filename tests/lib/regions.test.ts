@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { COUNTRY_REGIONS, REGIONS, regionOf } from '../../src/lib/regions';
+import { COUNTRY_REGIONS, REGIONS, nameOf, regionOf } from '../../src/lib/regions';
 
 describe('regionOf', () => {
   it('maps European codes', () => {
@@ -34,6 +34,35 @@ describe('regionOf', () => {
 
   it('does not silently accept lowercase', () => {
     expect(regionOf('de')).toBeUndefined();
+  });
+});
+
+describe('nameOf', () => {
+  it('spells out the country codes the seed data uses', () => {
+    expect(nameOf('DE')).toBe('Germany');
+    expect(nameOf('CH')).toBe('Switzerland');
+    expect(nameOf('NL')).toBe('Netherlands');
+    expect(nameOf('US')).toBe('United States');
+    expect(nameOf('TW')).toBe('Taiwan');
+  });
+
+  it('returns undefined for a code outside the region table', () => {
+    // `ZZ` is not a country; `AQ` is real but deliberately unsupported, and
+    // must not slip through just because Intl can name it.
+    expect(nameOf('ZZ')).toBeUndefined();
+    expect(nameOf('AQ')).toBeUndefined();
+  });
+
+  it('does not silently accept lowercase, matching regionOf', () => {
+    expect(nameOf('de')).toBeUndefined();
+  });
+
+  it('names every supported country as something other than its code', () => {
+    for (const code of Object.keys(COUNTRY_REGIONS)) {
+      const name = nameOf(code);
+      expect(name).toBeDefined();
+      expect(name).not.toBe(code);
+    }
   });
 });
 

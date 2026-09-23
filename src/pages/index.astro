@@ -5,7 +5,7 @@ import PageActions from '../components/PageActions.astro';
 import { loadEvents, upcomingEvents } from '../lib/events';
 import { todayUTC } from '../lib/dates';
 import { EVENT_FORMATS, EVENT_TYPES, type Topic } from '../lib/types';
-import { REGIONS } from '../lib/regions';
+import { nameOf, REGIONS } from '../lib/regions';
 import { readFileSync } from 'node:fs';
 import { parse } from 'yaml';
 
@@ -15,7 +15,12 @@ const topics = (parse(readFileSync('data/topics.yaml', 'utf8')) as Topic[]) ?? [
 
 // Only offer options the data actually contains.
 const usedTopics = new Set(events.flatMap((e) => e.topics));
-const countries = [...new Set(events.map((e) => e.location?.country).filter(Boolean))].sort();
+// Options carry the ISO code as their value, so `?country=DE` links and the
+// rows' `data-country` attribute stay as they were; only the label spells the
+// country out. Sorted by that label, since sorting by code would scramble it.
+const countries = [...new Set(events.flatMap((e) => (e.location ? [e.location.country] : [])))]
+  .map((code) => ({ code, name: nameOf(code) ?? code }))
+  .sort((a, b) => a.name.localeCompare(b.name, 'en'));
 const regions = REGIONS.filter((r) => events.some((e) => e.region === r));
 const hasOnline = events.some((e) => e.region === 'Online');
 ---
@@ -26,10 +31,6 @@ const hasOnline = events.some((e) => e.region === 'Online');
   path="/"
 >
   <h1>Upcoming events</h1>
-  <p class="muted">
-    Conferences, workshops and schools in computational and theoretical chemistry. Listings follow
-    the <a href="/about/#curation-policy">curation policy</a>.
-  </p>
 
   <noscript>
     <p class="warn">
@@ -75,7 +76,7 @@ const hasOnline = events.some((e) => e.region === 'Online');
         <select id="f-country" name="country">
           <option value="">Any</option>
           {countries.map((c) => (
-            <option value={c}>{c}</option>
+            <option value={c.code}>{c.name}</option>
           ))}
         </select>
       </div>

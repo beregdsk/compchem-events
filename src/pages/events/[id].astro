@@ -3,6 +3,7 @@ import Base from '../../layouts/Base.astro';
 import DeadlineList from '../../components/DeadlineList.astro';
 import { isStale, loadEvents } from '../../lib/events';
 import { formatDate, formatDateRange, todayUTC } from '../../lib/dates';
+import { nameOf } from '../../lib/regions';
 import { site } from '../../../site.config';
 import type { LoadedEvent } from '../../lib/types';
 
@@ -34,10 +35,14 @@ const correctionUrl = (() => {
   return u.href;
 })();
 
+// The detail page has room to spell the country out; the compact list rows
+// keep the code. The JSON-LD below deliberately keeps the code either way,
+// which is what schema.org's `addressCountry` expects.
+const country = event.location?.country;
 const place =
   event.format === 'online'
     ? 'Online'
-    : [event.location?.venue, event.location?.city, event.location?.country]
+    : [event.location?.venue, event.location?.city, country && (nameOf(country) ?? country)]
         .filter(Boolean)
         .join(', ');
 

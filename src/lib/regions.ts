@@ -123,3 +123,24 @@ export const COUNTRY_REGIONS: Readonly<Record<string, Region>> = {
 export function regionOf(country: string): Region | undefined {
   return COUNTRY_REGIONS[country];
 }
+
+/**
+ * English country names come from ICU rather than a hand-written table: one
+ * table stays the single source of truth for which countries the site
+ * supports, and there is no second list of ~80 names to typo or let drift.
+ *
+ * Built once at module scope — constructing `Intl.DisplayNames` per call is
+ * needless work in a loop over every event.
+ */
+const COUNTRY_NAMES = new Intl.DisplayNames(['en'], { type: 'region' });
+
+/**
+ * English display name for a supported country, or undefined if the table
+ * lacks the code. Gated on `COUNTRY_REGIONS` membership, and case-sensitive,
+ * so it accepts exactly what `regionOf` accepts: ICU would happily name real
+ * countries this site has deliberately not taken a position on.
+ */
+export function nameOf(country: string): string | undefined {
+  if (!(country in COUNTRY_REGIONS)) return undefined;
+  return COUNTRY_NAMES.of(country);
+}
