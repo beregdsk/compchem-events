@@ -43,8 +43,16 @@ describe('saveState / loadState round trip', () => {
   it('creates parent directories and round-trips the state', () => {
     const path = tmpPath('nested/deep/state.json');
     const state = {
-      hosts: { 'example.org': { robotsTxt: 'User-agent: *\n', lastRequestAt: '2026-09-23T00:00:00.000Z' } },
-      pages: { 'https://example.org/a': { etag: 'W/"x"', contentHash: 'abc', fetchedAt: '2026-09-23T00:00:00.000Z' } },
+      hosts: {
+        'example.org': { robotsTxt: 'User-agent: *\n', lastRequestAt: '2026-09-23T00:00:00.000Z' },
+      },
+      pages: {
+        'https://example.org/a': {
+          etag: 'W/"x"',
+          contentHash: 'abc',
+          fetchedAt: '2026-09-23T00:00:00.000Z',
+        },
+      },
     };
     saveState(path, state);
     expect(loadState(path)).toEqual(state);

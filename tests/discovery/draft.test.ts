@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { draftFilePath, slugifyTitle, synthesizeDraft, type DraftInput } from '../../src/lib/discovery/draft';
+import {
+  draftFilePath,
+  slugifyTitle,
+  synthesizeDraft,
+  type DraftInput,
+} from '../../src/lib/discovery/draft';
 import { loadValidationContext, validateEvent } from '../../src/lib/validation';
 
 describe('slugifyTitle', () => {
