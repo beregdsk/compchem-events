@@ -332,3 +332,16 @@ design spec. `ADD_THRESHOLD` is `0.5`, a single named constant in
 
 This ships only the classification step, the spec's stated scope. Wiring it
 into the fetch/extract/PR pipeline remains a separate, later task.
+
+## 2026-09-23 — Discovery source parsing: `source_url` is never requested from the extraction model
+
+`docs/superpowers/specs/2026-09-23-discovery-source-parsing-design.md`'s
+*Extraction* section listed `source_url` among the fields the LLM's JSON
+schema returns, mirroring `docs/discovery-agent.md`'s step 4 wording ("plus
+... the exact `source_url`"). The implementation
+(`src/lib/discovery/extract-client.ts`) does not ask the model for it: the
+pipeline (`src/lib/discovery/pipeline.ts`) already knows, with certainty,
+which URL a given extraction input came from — it just fetched it — so
+asking the model to reproduce that value would only open a channel for
+prompt-injected text to misattribute a candidate's source. `source_url` is
+set directly from the fetch, never from model output.
