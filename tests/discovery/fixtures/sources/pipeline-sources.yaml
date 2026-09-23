@@ -1,0 +1,15 @@
+- name: Sample Ical
+  url: https://example.org/calendar.ics
+  kind: ical
+
+- name: Sample Event Page
+  url: https://example.org/event
+  kind: event-page
+
+- name: Sample Listing
+  url: https://example.org/listing
+  kind: listing-page
+
+- name: Broken Source
+  url: https://broken.example/page
+  kind: event-page
