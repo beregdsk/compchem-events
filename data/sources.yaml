@@ -1,0 +1,211 @@
+# Sources the discovery agent watches.
+#
+# This file is data for `docs/discovery-agent.md` (phase 5). No code reads it
+# yet. It exists so the agent, when it is built, starts from a checked list
+# instead of searching the open web on every run.
+#
+# Format:
+#   - name: CECAM
+#     url: https://www.cecam.org/program
+#     kind: listing-page
+#     added: 2026-09-23
+#     last_checked: 2026-09-23
+#     notes: One line on what the page holds and how to treat it.
+#
+# kind:
+#   listing-page           index of many events; follow links to event pages
+#   event-page             one recurring event with a stable URL
+#   rss                    feed; parse the feed, not the page
+#   ical                   iCalendar feed; parse directly, no LLM needed
+#   mailing-list-archive   public web archive of a list
+#   mailbox                a list we are subscribed to, read over IMAP
+#                          (see "Mailing lists" in docs/discovery-agent.md;
+#                          not implemented — no mailbox entries yet)
+#
+# Rules:
+#   - Every url below returned HTTP 200 and was read by a human or agent on
+#     its `last_checked` date. Nothing goes in from memory (AGENTS.md rule 1).
+#   - Unverified or unusable candidates live in the commented block at the
+#     bottom, never as live entries.
+#   - A source is a starting point, not a warrant. Everything found through
+#     one is still screened against docs/curation-policy.md.
+#   - Re-check `last_checked` when the agent runs; three of the URLs the
+#     original spec suggested were already dead when this list was compiled.
+
+- name: CECAM
+  url: https://www.cecam.org/program?type=all&month=all&location=all
+  kind: listing-page
+  added: 2026-09-23
+  last_checked: 2026-09-23
+  notes: >-
+    The single highest-value source: flagship and node workshops, schools and
+    conferences, filterable by type and month. robots.txt allows everything.
+    Event pages are at /workshop-details/<id>.
+
+- name: CCL conference announcements
+  url: https://server.ccl.net/chemistry/announcements/conferences/index.shtml
+  kind: listing-page
+  added: 2026-09-23
+  last_checked: 2026-09-23
+  notes: >-
+    The public web face of the CCL mailing list, ordered by date as YY.MM.DD.
+    No robots.txt and no login. Submissions are user-supplied and, in CCL's
+    own words, not reviewed for scientific content; manual approval only
+    filters spam. Screen hard and expect stale rows.
+
+- name: Psi-k announcements feed
+  url: https://psi-k.net/feed/
+  kind: rss
+  added: 2026-09-23
+  last_checked: 2026-09-23
+  notes: >-
+    Carries some workshop and conference announcements, but thin and slow —
+    the newest item on 2026-09-23 was dated 2025-11-16. The Psi-k mailing
+    list itself holds far more; its forum archive is login-gated, so that
+    traffic is only reachable by mailbox. See the candidates block.
+
+- name: Gordon Research Conferences
+  url: https://www.grc.org/find-a-conference/
+  kind: listing-page
+  added: 2026-09-23
+  last_checked: 2026-09-23
+  notes: >-
+    All disciplines, so filter hard on title and topic. Relevant series
+    include Computational Materials Science and Engineering. Listings run two
+    years ahead.
+
+- name: Telluride Science events
+  url: https://telluridescience.org/events/
+  kind: listing-page
+  added: 2026-09-23
+  last_checked: 2026-09-23
+  notes: >-
+    WordPress "The Events Calendar". A REST endpoint also exists at
+    /wp-json/tribe/events/v1/ if the HTML proves awkward.
+
+- name: Telluride Science calendar feed
+  url: https://telluridescience.org/events/?ical=1
+  kind: ical
+  added: 2026-09-23
+  last_checked: 2026-09-23
+  notes: >-
+    Structured mirror of the listing above. Parse it with ical.js and skip
+    the LLM entirely — dates and titles arrive already typed. Only held one
+    VEVENT when checked, so treat it as a supplement, not a replacement.
+
+- name: MolSSI workshops
+  url: https://molssi.org/workshops/
+  kind: listing-page
+  added: 2026-09-23
+  last_checked: 2026-09-23
+  notes: >-
+    Community software workshops in the molecular sciences. /newsevents/ is
+    the broader news page if this one runs dry.
+
+- name: CCP5
+  url: https://www.ccp5.ac.uk/events/
+  kind: listing-page
+  added: 2026-09-23
+  last_checked: 2026-09-23
+  notes: >-
+    UK molecular simulation: the annual summer school and associated
+    meetings.
+
+- name: CCPBioSim
+  url: https://www.ccpbiosim.org/events/upcoming-events
+  kind: listing-page
+  added: 2026-09-23
+  last_checked: 2026-09-23
+  notes: >-
+    Biomolecular simulation training and workshops. Note the domain: the
+    older ccpbiosim.ac.uk redirects here.
+
+- name: EuChemS Division of Computational and Theoretical Chemistry
+  url: https://www.euchems.eu/divisions/computational-chemistry-2/conferences/
+  kind: listing-page
+  added: 2026-09-23
+  last_checked: 2026-09-23
+  notes: >-
+    Small, curated and directly on topic. The best precision-per-fetch of any
+    source here.
+
+- name: EuChemS events calendar
+  url: https://www.euchems.eu/events-overview/euchems-events-calendar/
+  kind: listing-page
+  added: 2026-09-23
+  last_checked: 2026-09-23
+  notes: >-
+    All of chemistry across Europe, so low precision. Worth a pass for
+    recognised events the division page misses.
+
+- name: NCCR MARVEL
+  url: https://www.marvel-nccr.ch/events
+  kind: listing-page
+  added: 2026-09-23
+  last_checked: 2026-09-23
+  notes: >-
+    Computational materials design; overlaps CECAM heavily, so expect the
+    deduplication step to earn its keep here.
+
+- name: Lorentz Center
+  url: https://www.lorentzcenter.nl/program.html
+  kind: listing-page
+  added: 2026-09-23
+  last_checked: 2026-09-23
+  notes: >-
+    All scientific disciplines; filter hard. Drop the PHPSESSID query
+    parameter the site appends to its own links.
+
+- name: ICTP (Indico)
+  url: https://indico.ictp.it/
+  kind: listing-page
+  added: 2026-09-23
+  last_checked: 2026-09-23
+  notes: >-
+    Enter through Indico, not www.ictp.it, which refused our user agent
+    outright. The relevant category is Condensed Matter and Statistical
+    Physics. Indico instances also expose a JSON export API.
+
+- name: ESQC
+  url: https://www.esqc.org/
+  kind: event-page
+  added: 2026-09-23
+  last_checked: 2026-09-23
+  notes: >-
+    European Summerschool in Quantum Chemistry, biennial. One stable URL, so
+    a cheap check with a high hit rate in its years.
+
+- name: WATOC
+  url: https://www.watoc.net/
+  kind: listing-page
+  added: 2026-09-23
+  last_checked: 2026-09-23
+  notes: >-
+    Only really announces its own triennial congress, and the site was slow
+    to update when checked. Low volume, high relevance.
+
+# ---------------------------------------------------------------------------
+# Candidates: checked and NOT usable as sources. Kept so nobody re-derives
+# these findings. Each was checked on 2026-09-23.
+#
+# Psi-k forum event board — https://psi-k.net/wps-forums/events/
+#   The mailing list is mirrored here, but posts are login-gated: the sitemap
+#   advertises thousands of /wps_forum_subs/ URLs and every one of them
+#   returns HTTP 200 serving the *homepage* to an anonymous fetch. This is
+#   the case that justifies mailbox ingestion.
+#
+# ICTP scientific calendar — https://www.ictp.it/home/scientific-calendar
+#   www.ictp.it refuses a scripted user agent (connection closed, no status).
+#   Use indico.ictp.it above instead.
+#
+# ACS Division of Computers in Chemistry — acscomp.org
+#   Does not resolve over http or https. If the division has moved, find the
+#   new home before adding it.
+#
+# CECAM workshop-list / MolSSI events — /workshop-list, /events/
+#   Both 404. They are the URLs a plausible guess produces, which is why this
+#   file requires a fetch before an entry.
+#
+# labinitio.org and other aggregators
+#   Coverage comparison only. Do not scrape or republish another site's
+#   curation (docs/discovery-agent.md).

@@ -36,18 +36,34 @@ Web pages are hostile input. The extraction step must be unable to do anything e
 
 All configuration by environment variables: `LLM_API_KEY`, `LLM_BASE_URL` (so requests can be routed through a proxy if the provider restricts the host's region), `LLM_MODEL`, `GITHUB_TOKEN`, `GITHUB_REPO`, `MAX_PAGES`, `MAX_TOKENS`, `MAX_PRS`, `STATE_PATH`. Fail fast with a clear message if any required value is missing.
 
-## Seed sources for `data/sources.yaml`
+## Sources
 
-Starting points, to be checked and extended by the implementing agent (verify each URL and its terms of use before adding):
+`data/sources.yaml` holds them. Sixteen entries were compiled and fetched on 2026-09-23; that file documents its own format and keeps checked-but-unusable candidates in a commented block at the bottom.
 
-- CECAM: https://www.cecam.org/
-- Psi-k: https://psi-k.net/
-- CCL.net (conference announcements): https://ccl.net/
-- Gordon Research Conferences: https://www.grc.org/
-- EuChemS Division of Computational and Theoretical Chemistry conference list: https://www.euchems.eu/divisions/computational-chemistry-2/conferences/
-- Society and network pages to locate: WATOC, MolSSI, ICTP calendar, Telluride Science, relevant ACS and RSC divisions.
+Three of the URLs this document originally suggested were already dead when the list was compiled (`cecam.org/workshop-list`, `molssi.org/events/`, `acscomp.org`), and `www.ictp.it` refuses a scripted user agent. Hence the rule in that file: every entry is fetched before it is added, and `last_checked` says when.
+
+Two source kinds were added beyond the four listed under *Pipeline* above:
+
+- `ical` — a calendar feed, parsed directly. No LLM call is needed at all, since dates and titles arrive already typed. Telluride Science publishes one.
+- `mailbox` — a list we are subscribed to, read over IMAP. See below. Not implemented; no entries yet.
 
 Existing aggregators such as https://labinitio.org/ are for **coverage comparison only**. Do not scrape or republish another site's curation.
+
+## Mailing lists
+
+Much of this field's event traffic moves by mailing list rather than by web page. Where a list has an open web archive, it is an ordinary source and needs nothing special: CCL's conference announcements are a plain public page and are listed as `listing-page`.
+
+Where it does not, the archive is useless to us. Psi-k is the case that decided this. It mirrors its list to a forum at `psi-k.net/wps-forums/events/`, and the sitemap advertises thousands of post URLs — but every one of them returns HTTP 200 serving the *homepage* to an anonymous fetch. The posts are login-gated. Its public RSS feed carries a fraction of the traffic and was ten months stale when checked.
+
+So for lists like Psi-k, **subscribe and read the mail**:
+
+- A dedicated address subscribed to the lists, never the maintainer's personal mailbox. One account, one purpose, revocable.
+- Read-only IMAP. The agent never sends, replies, deletes or marks. Credentials by environment variable (`IMAP_HOST`, `IMAP_USER`, `IMAP_PASSWORD`), alongside the others, and an app password rather than the account password where the provider offers one.
+- **A message body is exactly as hostile as a web page.** It goes into the same extraction step, as clearly delimited data, with no tools and no ability to act — see *Security model*. Mail is in fact worse than a page: anyone can send to a list, and the `From` header is not evidence. Attachments and HTML parts are not fetched or rendered; take `text/plain` and fall back to stripped HTML.
+- Deduplicate on `Message-ID`, and keep the same state file as the web sources. A list that cross-posts a CECAM workshop must not produce a second candidate.
+- Everything else is unchanged: schema validation, blocklist, curation screening, one pull request for human review.
+
+This is deliberately cheap to add because it is only another text source feeding the same extract → validate → screen → PR pipeline. Build it with the rest of the agent, not before: there is nothing for it to feed yet.
 
 ## Human review checklist (goes in the PR template for `needs-review` PRs)
 

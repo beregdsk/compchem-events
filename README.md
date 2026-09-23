@@ -30,6 +30,7 @@ npm run preview      # serve the production build
 
 ## Documentation
 
+- [Repository map](METADATA.md) — what every file and folder is for
 - [Data schema](docs/data-schema.md)
 - [Curation policy](docs/curation-policy.md)
 - [Discovery agent spec](docs/discovery-agent.md) (planned follow-up)

@@ -4,22 +4,18 @@
 
 A static, community-maintained website listing conferences, workshops and schools in computational chemistry. Events are YAML files in `data/events/`, validated against `schema/event.schema.json`, built with Astro into static files and hosted on Cloudflare Pages. There is no backend and no database. Quality and trust matter more than volume: a stale or predatory listing costs more than a missing one.
 
-## Planned layout
+## Layout
 
-```
-data/
-  events/<start-year>/<id>.yaml   one file per event (source of truth)
-  topics.yaml                     controlled vocabulary
-  blocklist.yaml                  organiser domains that must not be listed, with evidence
-  sources.yaml                    pages the discovery agent watches (follow-up phase)
-schema/event.schema.json
-scripts/validate.ts               schema + semantic checks, usable as a library
-src/lib/events.ts                 the single data loader
-src/pages/                        routes, feeds, exports
-tests/                            unit tests, fixtures/valid, fixtures/invalid
-docs/                             data-schema, curation-policy, discovery-agent, decisions
-site.config.ts                    all site-specific settings (name, URLs, form links)
-```
+Every file and folder is described in [`METADATA.md`](METADATA.md). Read it
+before going looking for where something lives, and add a line to it when you
+add a file.
+
+The four things worth knowing up front:
+
+- `data/events/<start-year>/<id>.yaml` is the source of truth, one file per event.
+- `scripts/validate.ts` and `src/lib/validation.ts` gate the build and are importable as a library.
+- `src/lib/events.ts` is the single data loader. Pages stay thin.
+- `site.config.ts` holds every site-specific value. Nowhere else.
 
 ## Commands
 

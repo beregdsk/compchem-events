@@ -284,3 +284,29 @@ The toggle in the masthead writes `localStorage.theme` and is unhidden by
 `src/scripts/theme.ts`, so it never appears when it could not work. A small
 inline script in `<head>` applies a stored choice before first paint. With
 JavaScript off, the system preference still decides.
+
+## 2026-09-23 — Discovery sources verified by fetch; `METADATA.md` owns the layout
+
+`data/sources.yaml` now exists with sixteen entries, each fetched and read
+before it was added, per AGENTS.md rule 1. Three URLs suggested in
+`docs/discovery-agent.md` were already dead (`cecam.org/workshop-list`,
+`molssi.org/events/`, `acscomp.org`) and `www.ictp.it` refuses a scripted user
+agent, so a list written from memory would have shipped four broken sources out
+of twenty. Checked-but-unusable candidates stay in a commented block in that
+file so the finding is not re-derived.
+
+Two source kinds were added to the four the spec listed. `ical` earns its place
+because a calendar feed needs no LLM call at all, and `mailbox` because Psi-k
+forced the question: it mirrors its mailing list to a forum whose post URLs all
+return HTTP 200 serving the homepage to an anonymous fetch, and whose public RSS
+was ten months stale when checked. Its traffic is unreachable except by
+subscribing. The IMAP path is specified in `docs/discovery-agent.md` and
+deliberately not built — the agent it would feed does not exist yet, and mail is
+just another text source into the same pipeline.
+
+No validator or CI check for `sources.yaml`. Nothing reads the file yet;
+validating it would be scaffolding for an absent consumer.
+
+`METADATA.md` describes every file and folder and is now the single place that
+does. The layout block in `AGENTS.md` shrank to a pointer and `README.md` links
+it, so the three copies that would have drifted are one.
