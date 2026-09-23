@@ -1,6 +1,6 @@
 # Discovery agent (follow-up, phase 5)
 
-**Status: specification only. Not part of the v1 task.** Read this so v1 leaves the right hooks, and implement it as a separate task once v1 is live.
+**Status: specification for the whole agent. Steps 6-7 (deduplicate, screen) are implemented as a standalone classifier — see below. The rest (fetch, extract, PR-opening) is not part of the v1 task.** Read this so v1 leaves the right hooks, and implement the remaining pieces as a separate task once v1 is live.
 
 ## Purpose
 
@@ -17,8 +17,8 @@ A small VDS owned by the maintainer, as a scheduled job (daily or weekly cron). 
 3. **Find candidates**: extract links to event pages from listing pages, then fetch each new event page once.
 4. **Extract**: send the page text to the LLM with a fixed prompt asking for JSON matching the event schema, plus a `confidence` value and the exact `source_url`. Use structured output or JSON mode where available.
 5. **Validate**: run the output through `validateEvent` from `scripts/validate.ts`. Discard anything that fails, and log why.
-6. **Deduplicate** against existing events and blocklist (same URL, or same title plus start date, or fuzzy title match on the same dates).
-7. **Screen** against `docs/curation-policy.md`: apply the blocklist, and flag events with red-flag signals for the reviewer instead of silently dropping them.
+6. **Deduplicate** against existing events and blocklist (same URL, or same title plus start date, or fuzzy title match on the same dates). Implemented in `src/lib/discovery/classify-candidate.ts`; see `docs/superpowers/specs/2026-09-23-discovery-event-classifier-design.md`.
+7. **Screen** against `docs/curation-policy.md`: apply the blocklist, and flag events with red-flag signals for the reviewer instead of silently dropping them. Implemented in `src/lib/discovery/classify-candidate.ts`; see `docs/superpowers/specs/2026-09-23-discovery-event-classifier-design.md`.
 8. **Open a PR** on a branch named `discovery/YYYY-MM-DD`, one YAML file per candidate event, with a body listing for each event the source URL, confidence and any flags. Add the label `needs-review`. Set `added` and `last_verified` to the run date and note that the reviewer must confirm them.
 
 ## Security model

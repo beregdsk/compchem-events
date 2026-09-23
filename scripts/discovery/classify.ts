@@ -21,7 +21,7 @@ async function main(): Promise<void> {
   }
 
   const candidate = readCandidate(path);
-  const existingEvents = loadEvents();
+  const existingEvents = loadEvents({ includeFixtures: false });
   const ctx = loadValidationContext();
 
   const result = await classifyCandidate(candidate, {
