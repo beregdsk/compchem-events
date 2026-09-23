@@ -38,14 +38,15 @@ All configuration by environment variables: `LLM_API_KEY`, `LLM_BASE_URL` (so re
 
 ## Sources
 
-`data/sources.yaml` holds them. Sixteen entries were compiled and fetched on 2026-09-23; that file documents its own format and keeps checked-but-unusable candidates in a commented block at the bottom.
+`data/sources.yaml` holds them. Seventeen entries were compiled and fetched on 2026-09-23; that file documents its own format and keeps checked-but-unusable candidates in a commented block at the bottom.
 
 Three of the URLs this document originally suggested were already dead when the list was compiled (`cecam.org/workshop-list`, `molssi.org/events/`, `acscomp.org`), and `www.ictp.it` refuses a scripted user agent. Hence the rule in that file: every entry is fetched before it is added, and `last_checked` says when.
 
-Two source kinds were added beyond the four listed under *Pipeline* above:
+Three source kinds were added beyond the four listed under *Pipeline* above:
 
 - `ical` — a calendar feed, parsed directly. No LLM call is needed at all, since dates and titles arrive already typed. Telluride Science publishes one.
 - `mailbox` — a list we are subscribed to, read over IMAP. See below. Not implemented; no entries yet.
+- `telegram-channel` — a public channel, fetched at its anonymous web-preview path (`t.me/s/<channel>`, not `t.me/<channel>`, which redirects to the app). No login or bot token needed. Treat it like a listing-page: low precision, screen every post against `docs/curation-policy.md`. A post is exactly as hostile as a web page — same extraction pipeline in *Security model*, no exceptions. `data/sources.yaml` has a live example.
 
 Existing aggregators such as https://labinitio.org/ are for **coverage comparison only**. Do not scrape or republish another site's curation.
 

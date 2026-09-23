@@ -21,6 +21,11 @@
 #   mailbox                a list we are subscribed to, read over IMAP
 #                          (see "Mailing lists" in docs/discovery-agent.md;
 #                          not implemented — no mailbox entries yet)
+#   telegram-channel       public channel; fetch the anonymous web preview at
+#                          t.me/s/<channel>, not t.me/<channel> (the latter
+#                          redirects to the app). No login needed. Posts are
+#                          exactly as hostile as a web page or mailing-list
+#                          message — same extraction pipeline, no exceptions.
 #
 # Rules:
 #   - Every url below returned HTTP 200 and was read by a human or agent on
@@ -183,6 +188,18 @@
   notes: >-
     Only really announces its own triennial congress, and the site was slow
     to update when checked. Low volume, high relevance.
+
+- name: Quantum Chemistry And Stuff (Telegram)
+  url: https://t.me/s/quant_chem_and_stuff
+  kind: telegram-channel
+  added: 2026-09-23
+  last_checked: 2026-09-23
+  notes: >-
+    Russian-language channel (~1,080 subscribers) mixing quantum/computational
+    chemistry news, conference and PhD-position announcements, and general
+    commentary. Low precision — most posts are not events — but a live
+    example of the kind. Fetch the /s/ web-preview path, which serves recent
+    posts over plain HTTP with no login.
 
 # ---------------------------------------------------------------------------
 # Candidates: checked and NOT usable as sources. Kept so nobody re-derives
