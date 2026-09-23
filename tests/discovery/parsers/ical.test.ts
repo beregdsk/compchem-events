@@ -40,6 +40,28 @@ LOCATION:Somewhere Nice
 END:VEVENT
 END:VCALENDAR`;
 
+const timedSingleDayFeed = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Test//Test//EN
+BEGIN:VEVENT
+UID:timed-single-1@example.org
+DTSTART:20270301T090000Z
+DTEND:20270301T170000Z
+SUMMARY:Timed Single-Day Webinar
+END:VEVENT
+END:VCALENDAR`;
+
+const timedMultiDayFeed = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Test//Test//EN
+BEGIN:VEVENT
+UID:timed-multi-1@example.org
+DTSTART:20270301T090000Z
+DTEND:20270303T170000Z
+SUMMARY:Timed Multi-Day Webinar
+END:VEVENT
+END:VCALENDAR`;
+
 describe('parseICalFeed', () => {
   it('maps an online VEVENT with no LOCATION to format online and end_date inclusive', () => {
     const drafts = parseICalFeed(onlineFeed, 'https://example.org/calendar.ics', '2026-09-23');
@@ -77,5 +99,33 @@ describe('parseICalFeed', () => {
     expect(
       parseICalFeed('not an ics file', 'https://example.org/calendar.ics', '2026-09-23'),
     ).toEqual([]);
+  });
+
+  it('returns an empty array for empty or blank feed text rather than throwing', () => {
+    expect(parseICalFeed('', 'https://example.org/calendar.ics', '2026-09-23')).toEqual([]);
+    expect(parseICalFeed('   ', 'https://example.org/calendar.ics', '2026-09-23')).toEqual([]);
+    expect(parseICalFeed('\n', 'https://example.org/calendar.ics', '2026-09-23')).toEqual([]);
+  });
+
+  it('does not subtract a day from a timed (DATE-TIME) single-day VEVENT', () => {
+    const drafts = parseICalFeed(
+      timedSingleDayFeed,
+      'https://example.org/calendar.ics',
+      '2026-09-23',
+    );
+    expect(drafts).toHaveLength(1);
+    expect(drafts[0]!.start_date).toBe('2027-03-01');
+    expect(drafts[0]!.end_date).toBe('2027-03-01');
+  });
+
+  it('does not subtract a day from a timed (DATE-TIME) multi-day VEVENT', () => {
+    const drafts = parseICalFeed(
+      timedMultiDayFeed,
+      'https://example.org/calendar.ics',
+      '2026-09-23',
+    );
+    expect(drafts).toHaveLength(1);
+    expect(drafts[0]!.start_date).toBe('2027-03-01');
+    expect(drafts[0]!.end_date).toBe('2027-03-03');
   });
 });
