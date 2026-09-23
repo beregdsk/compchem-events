@@ -59,7 +59,9 @@ describe('extractEvent', () => {
       }),
     );
     const result = await extractEvent('page text', { ...options, fetchImpl: impl });
-    expect(result).toEqual({
+    // toStrictEqual (unlike toEqual) treats a key present with value `undefined` as different
+    // from an absent key — this is the exact contract synthesizeDraft (Task 5) depends on.
+    expect(result).toStrictEqual({
       title: 'MD Summer School',
       type: 'school',
       start_date: '2027-07-01',
@@ -71,6 +73,8 @@ describe('extractEvent', () => {
       description: 'A summer school on molecular dynamics.',
       confidence: 0.9,
     });
+    expect('location' in (result as object)).toBe(true);
+    expect(Object.hasOwn(result as object, 'organizer')).toBe(false);
   });
 
   it('throws on a non-2xx response', async () => {
@@ -87,6 +91,32 @@ describe('extractEvent', () => {
 
   it('throws when the found event does not match the expected shape', async () => {
     const { impl } = stubFetch(200, completionWith({ found: true, event: { title: 'X' } }));
+    await expect(extractEvent('text', { ...options, fetchImpl: impl })).rejects.toThrow(
+      /expected shape/,
+    );
+  });
+
+  it('throws when a well-formed event carries a malformed nested location', async () => {
+    const { impl } = stubFetch(
+      200,
+      completionWith({
+        found: true,
+        event: {
+          title: 'MD Summer School',
+          type: 'school',
+          start_date: '2027-07-01',
+          end_date: '2027-07-05',
+          format: 'in-person',
+          // country is missing and venue is a number, not string | null — both invalid.
+          location: { city: 'Testville', venue: 123 },
+          url: 'https://example.org/md-school',
+          organizer: null,
+          topics: ['molecular-dynamics'],
+          description: 'A summer school on molecular dynamics.',
+          confidence: 0.9,
+        },
+      }),
+    );
     await expect(extractEvent('text', { ...options, fetchImpl: impl })).rejects.toThrow(
       /expected shape/,
     );
