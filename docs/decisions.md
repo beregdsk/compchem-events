@@ -310,3 +310,25 @@ validating it would be scaffolding for an absent consumer.
 `METADATA.md` describes every file and folder and is now the single place that
 does. The layout block in `AGENTS.md` shrank to a pointer and `README.md` links
 it, so the three copies that would have drifted are one.
+
+## 2026-09-23 — Discovery candidate classifier: bigram-Dice fuzzy title match, jev-latest, threshold 0.5
+
+`docs/superpowers/specs/2026-09-23-discovery-event-classifier-design.md` left
+the fuzzy-title-match algorithm as an open follow-up. It is implemented as a
+Sørensen-Dice coefficient over character bigrams of `normaliseTitle()`'s
+output (`src/lib/discovery/classify-candidate.ts`, `titleSimilarity()`),
+threshold `0.8`: dependency-free, and it reuses the same normalisation
+`src/lib/validation.ts` already applies for the build-time exact
+title-plus-date duplicate check, so the two dedupe passes cannot disagree
+about what "the same title" means.
+
+`normaliseTitle` and `isBlocked` were exported from `src/lib/validation.ts`
+(previously private) so the classifier reuses the build validator's own
+duplicate-detection and blocklist logic rather than re-implementing it.
+
+jev is called as `~typesafe/jev-latest` rather than a pinned version, per the
+design spec. `ADD_THRESHOLD` is `0.5`, a single named constant in
+`classify-candidate.ts`, tunable without a design change.
+
+This ships only the classification step, the spec's stated scope. Wiring it
+into the fetch/extract/PR pipeline remains a separate, later task.

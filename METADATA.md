@@ -67,6 +67,7 @@ publishing workflow.
 | Path | What it is |
 | --- | --- |
 | `scripts/validate.ts` | CLI entry point for `npm run validate`. Walks `data/events/`, reports problems and exits non-zero on any error. Thin: the logic is in `src/lib/validation.ts` so the discovery agent can import it as a library. |
+| `scripts/discovery/classify.ts` | CLI: reads one candidate event file (YAML or JSON), classifies it against `data/events/` and `data/blocklist.yaml` via `src/lib/discovery/classify-candidate.ts`, prints the verdict as JSON. Standalone ahead of the rest of the phase-5 pipeline. |
 
 ## `src/lib/` — pure logic, unit tested
 
@@ -78,6 +79,8 @@ behaviour lives and where tests point.
 | `dates.ts` | The only place dates are parsed. ISO `YYYY-MM-DD` strings handled as UTC calendar dates, never through the local timezone. Parsing, arithmetic, comparison, formatting. |
 | `events.ts` | The single data loader. Reads and parses the YAML tree, derives each event's status, and splits upcoming from past. Also computes upcoming deadlines and staleness. |
 | `validation.ts` | Schema validation (Ajv) plus the semantic rules the schema cannot express — end before start, deadline after end, unknown topic or country, `added` after `last_verified`, id/filename/folder agreement. Exported as `validateEvent` for reuse. |
+| `discovery/jev-client.ts` | Thin client for OpenRouter's Decisions API (the `jev` model): builds the request, checks for a 2xx response and an `answers` field, otherwise throws. |
+| `discovery/classify-candidate.ts` | Decides add/skip for one candidate event: a mechanical dedupe/blocklist pre-filter, then a single jev call scoring relevance, credibility and red flags. Never publishes anything — produces a verdict for the not-yet-built PR-opening step. See `docs/superpowers/specs/2026-09-23-discovery-event-classifier-design.md`. |
 | `types.ts` | The shared vocabulary: event types, formats, deadline types, statuses, and the loaded-event shape. |
 | `filter.ts` | Filter state and matching. Parses and serialises the query string, and decides whether a row matches. Shared verbatim between the server render and the browser so both agree. |
 | `regions.ts` | Country-to-region mapping and country display names. |
@@ -143,6 +146,8 @@ Vitest. Run with `npm test`.
 | `tests/scripts/filters.test.ts` | Client-side filtering behaviour. |
 | `tests/styles/contrast.test.ts` | Every WCAG contrast pair in both themes, and that the duplicated palettes agree. |
 | `tests/cli/validate-guard.test.ts` | The validator CLI exits non-zero on bad data. |
+| `tests/discovery/*.test.ts` | The candidate classifier: the jev HTTP client, the mechanical pre-filter and jev-backed verdict, and the CLI's file parsing. The jev call is always stubbed; CI never calls the real API. |
+| `tests/discovery/fixtures/candidates/` | Candidate events covering a clean add, each mechanical skip reason, and an adversarial prompt-injection attempt. |
 | `tests/smoke.test.ts` | Build-level sanity. |
 | `tests/fixtures/valid/` | Events that must pass, covering the minimal, full and cancelled shapes. |
 | `tests/fixtures/invalid/` | One file per rule that must fail, named for the rule it breaks. Add a file here whenever you add a rule. |
