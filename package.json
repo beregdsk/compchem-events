@@ -14,7 +14,8 @@
     "format": "prettier --write .",
     "typecheck": "astro check",
     "test": "vitest run",
-    "validate": "tsx scripts/validate.ts"
+    "validate": "tsx scripts/validate.ts",
+    "discover": "tsx scripts/discovery/parse-sources.ts"
   },
   "dependencies": {
     "ajv": "^8.20.0",
