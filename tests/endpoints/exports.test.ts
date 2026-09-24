@@ -20,9 +20,11 @@ function withAdded(added: string, id: string): LoadedEvent {
 /** Entry ids in feed order, extracted from `<id>.../events/<id>/</id>` —
  * distinct from the feed-level `<id>` element, which has no `/events/`. */
 function entryIdOrder(feed: string): string[] {
-  return [...feed.matchAll(/<id>https:\/\/placeholder\.example\/events\/([^/]+)\/<\/id>/g)].map(
-    (m) => m[1]!,
-  );
+  return [
+    ...feed.matchAll(
+      /<id>https:\/\/compchem-events\.beregdsk\.workers\.dev\/events\/([^/]+)\/<\/id>/g,
+    ),
+  ].map((m) => m[1]!);
 }
 
 describe('atomFeed', () => {
@@ -41,7 +43,7 @@ describe('atomFeed', () => {
 
   it('carries a self link and a feed id', () => {
     expect(feed).toContain('rel="self"');
-    expect(feed).toContain('<id>https://placeholder.example/</id>');
+    expect(feed).toContain('<id>https://compchem-events.beregdsk.workers.dev/</id>');
   });
 
   it('carries a feed-level author (RFC 4287 §4.1.1)', () => {

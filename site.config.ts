@@ -21,9 +21,9 @@ export interface SiteConfig {
 export const site: SiteConfig = {
   name: 'CompChem Events',
   tagline: 'Conferences, workshops and schools in computational chemistry',
-  url: 'https://placeholder.example',
+  url: 'https://compchem-events.beregdsk.workers.dev',
   contactEmail: 'placeholder@example.org',
-  repoUrl: 'https://github.com/PLACEHOLDER-OWNER/PLACEHOLDER-REPO',
+  repoUrl: 'https://github.com/beregdsk/compchem-events',
   reportForm: {
     url: 'https://placeholder.example/report',
     eventIdParam: 'event_id',

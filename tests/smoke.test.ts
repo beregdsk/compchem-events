@@ -3,7 +3,7 @@ import { site, siteDomain } from '../site.config';
 
 describe('site config', () => {
   it('exposes a parseable production URL', () => {
-    expect(siteDomain).toBe('placeholder.example');
+    expect(siteDomain).toBe('compchem-events.beregdsk.workers.dev');
   });
 
   it('carries both report-form parameter names', () => {

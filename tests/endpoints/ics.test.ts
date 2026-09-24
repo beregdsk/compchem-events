@@ -23,7 +23,7 @@ describe('events.ics', () => {
   it('gives every entry a unique UID on the site domain', () => {
     const uids = vevents(ics).map((v) => String(new ICAL.Event(v).uid));
     expect(new Set(uids).size).toBe(uids.length);
-    for (const uid of uids) expect(uid).toContain('@placeholder.example');
+    for (const uid of uids) expect(uid).toContain('@compchem-events.beregdsk.workers.dev');
   });
 
   it('sets DTEND to exactly one day after the event’s last day', () => {
