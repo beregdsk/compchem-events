@@ -170,6 +170,7 @@ Vitest. Run with `npm test`.
 | Path | What it is |
 | --- | --- |
 | `.github/workflows/ci.yml` | Lint, typecheck, validate, test, build on every push and pull request. |
+| `.github/workflows/rebuild.yml` | Daily cron (and manual `workflow_dispatch`) that POSTs to the Cloudflare deploy hook in the `CF_DEPLOY_HOOK` secret, so events roll from upcoming to past without a commit. Skips with a log message if the secret isn't set. |
 | `.github/pull_request_template.md` | The checklist a pull request must satisfy. |
 
 ## Not in the repository

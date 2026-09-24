@@ -357,3 +357,18 @@ independent pipeline fetch of that exact URL. This is a narrower provenance
 guarantee than for `event-page`/`listing-page`/`ical`/`telegram-channel`,
 where `source_url` is always the URL the pipeline itself just fetched —
 worth stating accurately rather than overclaiming.
+
+## 2026-09-25 — Rebuild cron implemented (deferred piece of Phase 4)
+
+The GitHub repository and a Cloudflare deploy hook now exist (see the
+2026-09-20 "v1 covers phases 0-3 only" entry, which deferred this exact piece
+for that reason). Added `.github/workflows/rebuild.yml`: daily cron plus a
+manual `workflow_dispatch` (needed to verify the secret and hook actually
+work without waiting for the schedule), POSTing to `CF_DEPLOY_HOOK` and
+skipping with a log message when that secret is absent. The site's
+deployment is a git-connected Cloudflare Worker with static assets (see
+`wrangler.jsonc`), not classic Pages; Cloudflare's deploy-hook feature
+(originally Pages-only) now covers Workers Builds the same way, so the
+mechanism TASK.md specified applies unchanged. The rest of Phase 4
+(link-check cron, duplicate-detection CI, issue forms, Playwright smoke
+test) remains deferred.

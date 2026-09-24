@@ -1,0 +1,20 @@
+name: Rebuild
+
+# Events have no code or data change when they cross from upcoming to past —
+# status is derived from the build date (see src/lib/events.ts). This cron
+# retriggers a Cloudflare build daily so that transition actually happens.
+on:
+  schedule:
+    - cron: '17 4 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Cloudflare rebuild
+        if: ${{ secrets.CF_DEPLOY_HOOK != '' }}
+        run: curl -fsS -X POST "${{ secrets.CF_DEPLOY_HOOK }}"
+      - name: Skip (no deploy hook configured)
+        if: ${{ secrets.CF_DEPLOY_HOOK == '' }}
+        run: echo "CF_DEPLOY_HOOK secret is not set; skipping rebuild trigger."
