@@ -11,10 +11,14 @@ on:
 jobs:
   rebuild:
     runs-on: ubuntu-latest
+    env:
+      # `secrets.*` isn't readable from `if:` conditionals directly, so route
+      # it through `env` first to check whether it's set.
+      CF_DEPLOY_HOOK: ${{ secrets.CF_DEPLOY_HOOK }}
     steps:
       - name: Trigger Cloudflare rebuild
-        if: ${{ secrets.CF_DEPLOY_HOOK != '' }}
-        run: curl -fsS -X POST "${{ secrets.CF_DEPLOY_HOOK }}"
+        if: ${{ env.CF_DEPLOY_HOOK != '' }}
+        run: curl -fsS -X POST "$CF_DEPLOY_HOOK"
       - name: Skip (no deploy hook configured)
-        if: ${{ secrets.CF_DEPLOY_HOOK == '' }}
+        if: ${{ env.CF_DEPLOY_HOOK == '' }}
         run: echo "CF_DEPLOY_HOOK secret is not set; skipping rebuild trigger."
