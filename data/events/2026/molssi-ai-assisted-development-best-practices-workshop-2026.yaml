@@ -8,11 +8,11 @@ url: https://molssi.org/newsevents/
 source_url: https://molssi.org/newsevents/
 topics:
   - software-hpc
+  - ml-chemistry
   - education-training
 description: Two-day online workshop by MolSSI on AI-assisted software
-  development best practices, focusing on using LLMs for code. Held Oct 15–16,
-  2026, 2–5pm ET each day; aimed at researchers and software engineers in
-  molecular sciences.
+  development best practices for scientific coding; sessions Oct 15–16, 2026,
+  2–5 PM ET each day.
 added: 2026-09-25
 last_verified: 2026-09-25
 organizer: Molecular Sciences Software Institute (MolSSI)
