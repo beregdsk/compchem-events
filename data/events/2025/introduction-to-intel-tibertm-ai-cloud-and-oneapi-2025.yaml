@@ -8,12 +8,11 @@ url: https://molssi.org/introduction-to-intel-tiber-ai-cloud-and-oneapi-03-07-20
 source_url: https://molssi.org/introduction-to-intel-tiber-ai-cloud-and-oneapi-03-07-2025/
 topics:
   - software-hpc
-  - ml-chemistry
   - education-training
-description: "One-hour virtual hands-on workshop (Mar 7, 2025) from MolSSI and
-  Intel introducing Intel oneAPI and the Tiber AI Cloud, covering registration,
-  resources, and a JupyterLab hands-on running a DeepSeek-R1 conversational app.
-  Recommended: Bash/Python/Jupyter familiarity."
+description: MolSSI and Intel host a virtual hands-on workshop on 2025-03-07
+  covering Intel oneAPI and the Tiber AI Cloud, registration and usage,
+  available resources, and a Jupyter Lab demo running a conversational app based
+  on the DeepSeek-R1 LLM.
 added: 2026-09-25
 last_verified: 2026-09-25
 organizer: Molecular Sciences Software Institute (MolSSI) and Intel
