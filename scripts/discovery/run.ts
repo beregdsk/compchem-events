@@ -6,6 +6,7 @@ import { loadValidationContext } from '../../src/lib/validation';
 import { DEFAULT_JEV_MODEL } from '../../src/lib/discovery/classify-candidate';
 import { DEFAULT_EXTRACT_BASE_URL } from '../../src/lib/discovery/extract-client';
 import { DEFAULT_JEV_BASE_URL } from '../../src/lib/discovery/jev-client';
+import { fetchWithBrowser } from '../../src/lib/discovery/browser-fetch';
 import { runDiscoveryRun, type OrchestratorOptions } from '../../src/lib/discovery/orchestrator';
 import { runPipeline, type PipelineOptions } from '../../src/lib/discovery/pipeline';
 
@@ -101,6 +102,7 @@ async function main(): Promise<void> {
     maxPagesPerSource: cfg.maxPagesPerSource,
     maxTokens: cfg.maxTokens,
     extract: cfg.extract,
+    browserFetchImpl: fetchWithBrowser,
     log,
   };
   const pipelineResult = await runPipeline(pipelineOptions);

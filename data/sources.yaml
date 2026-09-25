@@ -228,6 +228,24 @@
     itself is a promotional landing page with no dates; this sub-page is
     the actual listing.
 
+- name: ACS browse all events
+  url: https://www.acs.org/events/all-events.html
+  kind: listing-page
+  added: 2026-09-26
+  last_checked: 2026-09-26
+  notes: >-
+    Only reachable through the browser-render fallback (see
+    src/lib/discovery/browser-fetch.ts): a plain fetch gets an Incapsula
+    challenge shell, but a real browser renders the actual page — confirmed
+    live, 474 events. Two known limitations, not fixed here: events load
+    behind a "Load 6 More Events" button with no auto-scroll trigger, so
+    each render only surfaces the first ~6 (most-imminent) events, not the
+    full catalog; and robots.txt itself returned an Incapsula shell even
+    under a real browser in one check while the events page rendered fine
+    in the same session, so ACS's actual crawl policy could not be
+    verified either way. Broad across all of chemistry (webinars,
+    publications workshops, division events), so filter hard on topic.
+
 # ---------------------------------------------------------------------------
 # Candidates: checked and NOT usable as sources. Kept so nobody re-derives
 # these findings. Each was checked on 2026-09-23.

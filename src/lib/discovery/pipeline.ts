@@ -72,6 +72,8 @@ export interface PipelineOptions {
   maxPagesPerSource?: number;
   today?: ISODate;
   fetchImpl?: typeof fetch;
+  /** See `FetchOptions.browserFetchImpl` — undefined in tests, so nothing launches a real browser. */
+  browserFetchImpl?: (url: string, userAgent: string) => Promise<string>;
   sleepImpl?: (ms: number) => Promise<void>;
   now?: () => Date;
   extract: Omit<ExtractOptions, 'topics'>;
@@ -111,6 +113,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
     state,
     userAgent: options.userAgent,
     fetchImpl: options.fetchImpl,
+    browserFetchImpl: options.browserFetchImpl,
     sleepImpl: options.sleepImpl,
     now: options.now,
   };
