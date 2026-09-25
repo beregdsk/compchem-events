@@ -159,6 +159,22 @@ describe('classifyCandidate — jev verdict', () => {
     expect(usages).toEqual([400]);
   });
 
+  it('does not throw and reports 0 usage when the response has no usage field', async () => {
+    const { usage: _drop, ...responseWithoutUsage } = cleanResponse;
+    void _drop;
+    const { impl } = stubFetch(responseWithoutUsage);
+    const usages: number[] = [];
+    const result = await classifyCandidate(loadCandidate('clean-add'), {
+      existingEvents,
+      blockedHosts,
+      apiKey: 'sk-test',
+      fetchImpl: impl,
+      onUsage: (tokens) => usages.push(tokens),
+    });
+    expect(result.verdict).toBe('add');
+    expect(usages).toEqual([0]);
+  });
+
   it('does not call onUsage on a mechanical skip', async () => {
     const { impl, calls } = stubFetch(cleanResponse);
     const usages: number[] = [];

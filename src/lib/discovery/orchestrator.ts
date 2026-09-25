@@ -96,6 +96,11 @@ export async function runDiscoveryRun(options: OrchestratorOptions): Promise<Orc
   let prsOpened = 0;
   let prsUpdated = 0;
   const skipped: Array<{ id: string; reason: string }> = [];
+  // Candidates that errored out (GitHub or classification failure) — these
+  // are otherwise only ever logged to a cron job's stderr, so they're
+  // folded into the same tracking issue as pipeline-level source errors,
+  // the one place a human actually sees them.
+  const orchestratorErrors: Array<{ source: string; message: string }> = [];
 
   // Resolved lazily, on the first candidate that actually needs to create a
   // branch, and memoized after that — never fetched at all for a run where
@@ -147,22 +152,33 @@ export async function runDiscoveryRun(options: OrchestratorOptions): Promise<Orc
       const body = buildPrBody(candidate, classification);
       const message = `Add candidate event: ${candidate.title}`;
 
-      if (status.exists && status.openPr === undefined) {
-        skipped.push({ id: candidate.id, reason: 'already reviewed' });
-        log(`skipping ${candidate.id}: branch exists with no open PR (already reviewed)`);
-        continue;
-      }
-
       if (status.exists && status.openPr !== undefined) {
+        // Refresh content and body, and re-assert the label in case an
+        // earlier run's addLabel call itself failed after opening the PR.
         await putFile(branch, path, serializeDraft(candidate), message, options.github);
         await updatePrBody(status.openPr, body, options.github);
+        await addLabel(status.openPr, 'needs-review', options.github);
         prsUpdated += 1;
         log(`updated PR #${status.openPr} for ${candidate.id}`);
         continue;
       }
 
+      if (status.exists && status.everHadPr) {
+        // A PR existed and is now closed or merged — a human already
+        // reviewed this candidate. Never reopen it.
+        skipped.push({ id: candidate.id, reason: 'already reviewed' });
+        log(`skipping ${candidate.id}: branch exists with a closed/merged PR (already reviewed)`);
+        continue;
+      }
+
+      // Either the branch doesn't exist yet, or it does but no PR was ever
+      // opened for it (a prior run crashed between createBranch and
+      // openPr) — both resume from here rather than being permanently
+      // mistaken for "already reviewed".
       const branchInfo = await ensureDefaultBranch();
-      await createBranch(branch, branchInfo.sha, options.github);
+      if (!status.exists) {
+        await createBranch(branch, branchInfo.sha, options.github);
+      }
       await putFile(branch, path, serializeDraft(candidate), message, options.github);
       const pr = await openPr(branch, branchInfo.name, candidate.title, body, options.github);
       await addLabel(pr.number, 'needs-review', options.github);
@@ -175,11 +191,12 @@ export async function runDiscoveryRun(options: OrchestratorOptions): Promise<Orc
       // per source.
       const messageText = err instanceof Error ? err.message : String(err);
       skipped.push({ id: candidate.id, reason: `error: ${messageText}` });
+      orchestratorErrors.push({ source: candidate.id, message: messageText });
       log(`error processing ${candidate.id}: ${messageText}`);
     }
   }
 
-  await syncFailureIssue(options.sourceErrors, options.github);
+  await syncFailureIssue([...options.sourceErrors, ...orchestratorErrors], options.github);
 
   return { prsOpened, prsUpdated, skipped, tokensUsed };
 }

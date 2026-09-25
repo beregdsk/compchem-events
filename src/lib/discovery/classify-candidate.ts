@@ -188,7 +188,7 @@ export async function classifyCandidate(
     },
   );
 
-  options.onUsage?.(response.usage.input_tokens + response.usage.output_tokens);
+  options.onUsage?.((response.usage?.input_tokens ?? 0) + (response.usage?.output_tokens ?? 0));
 
   const confidence = requireNoul(response, 'add');
   const criteria = {

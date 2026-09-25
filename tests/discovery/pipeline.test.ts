@@ -3,6 +3,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { runPipeline, type PipelineOptions } from '../../src/lib/discovery/pipeline';
+import { loadState } from '../../src/lib/discovery/state';
 
 const icalBody = `BEGIN:VCALENDAR
 VERSION:2.0
@@ -398,6 +399,12 @@ describe('runPipeline', () => {
       expect(extractCalls).toBe(1);
       expect(result.tokensUsed).toBe(1000);
       expect(result.candidates).toHaveLength(1);
+      // The second page was fetched but never extracted (budget exhausted).
+      // Its page state must not be committed, or a future run would see it
+      // as "unchanged" and skip it forever, silently losing the event.
+      const state = loadState(statePath);
+      expect(state.pages['https://example.org/event-2']).toBeUndefined();
+      expect(state.pages['https://example.org/event']).toBeDefined();
     } finally {
       cleanupState();
       cleanupSources();

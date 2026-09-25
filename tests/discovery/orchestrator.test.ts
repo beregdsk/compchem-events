@@ -184,13 +184,14 @@ describe('runDiscoveryRun', () => {
         status: 200,
         body: { object: { sha: 'sha-branch' } },
       },
-      'GET /repos/acme/compchem-events/pulls?state=open&head=acme:discovery/excited-states-symposium-2027':
-        { status: 200, body: [{ number: 5 }] },
+      'GET /repos/acme/compchem-events/pulls?state=all&head=acme:discovery/excited-states-symposium-2027':
+        { status: 200, body: [{ number: 5, state: 'open' }] },
       'GET /repos/acme/compchem-events/contents/data/events/2027/excited-states-symposium-2027.yaml?ref=discovery/excited-states-symposium-2027':
         { status: 200, body: { sha: 'file-sha' } },
       'PUT /repos/acme/compchem-events/contents/data/events/2027/excited-states-symposium-2027.yaml':
         { status: 200, body: {} },
       'PATCH /repos/acme/compchem-events/pulls/5': { status: 200, body: {} },
+      'POST /repos/acme/compchem-events/issues/5/labels': { status: 200, body: {} },
       'GET /repos/acme/compchem-events/issues?state=open&labels=discovery-failures': {
         status: 200,
         body: [],
@@ -208,15 +209,15 @@ describe('runDiscoveryRun', () => {
     expect(result.prsUpdated).toBe(1);
   });
 
-  it('skips a candidate whose branch exists with no open PR (already reviewed)', async () => {
+  it('skips a candidate whose branch has a closed or merged PR (already reviewed)', async () => {
     const { impl, calls } = stubGitHub({
       ...DEFAULT_BRANCH_STUBS,
       'GET /repos/acme/compchem-events/git/ref/heads/discovery/excited-states-symposium-2027': {
         status: 200,
         body: { object: { sha: 'sha-branch' } },
       },
-      'GET /repos/acme/compchem-events/pulls?state=open&head=acme:discovery/excited-states-symposium-2027':
-        { status: 200, body: [] },
+      'GET /repos/acme/compchem-events/pulls?state=all&head=acme:discovery/excited-states-symposium-2027':
+        { status: 200, body: [{ number: 5, state: 'closed' }] },
       'GET /repos/acme/compchem-events/issues?state=open&labels=discovery-failures': {
         status: 200,
         body: [],
@@ -236,6 +237,44 @@ describe('runDiscoveryRun', () => {
       { id: 'excited-states-symposium-2027', reason: 'already reviewed' },
     ]);
     expect(calls.some((c) => c.method === 'PUT')).toBe(false);
+  });
+
+  // C1 from the final review: a prior run can crash after createBranch but
+  // before openPr (rate limit, network error, process killed). The branch
+  // then exists with no PR at all — everHadPr: false — which must resume,
+  // not be mistaken for "a human already closed/merged this".
+  it('resumes an orphaned branch that was created but never got a PR opened', async () => {
+    const { impl, calls } = stubGitHub({
+      ...DEFAULT_BRANCH_STUBS,
+      'GET /repos/acme/compchem-events/git/ref/heads/discovery/excited-states-symposium-2027': {
+        status: 200,
+        body: { object: { sha: 'sha-branch' } },
+      },
+      'GET /repos/acme/compchem-events/pulls?state=all&head=acme:discovery/excited-states-symposium-2027':
+        { status: 200, body: [] },
+      'GET /repos/acme/compchem-events/contents/data/events/2027/excited-states-symposium-2027.yaml?ref=discovery/excited-states-symposium-2027':
+        { status: 404 },
+      'PUT /repos/acme/compchem-events/contents/data/events/2027/excited-states-symposium-2027.yaml':
+        { status: 201, body: {} },
+      'POST /repos/acme/compchem-events/pulls': { status: 201, body: { number: 12 } },
+      'POST /repos/acme/compchem-events/issues/12/labels': { status: 200, body: {} },
+      'GET /repos/acme/compchem-events/issues?state=open&labels=discovery-failures': {
+        status: 200,
+        body: [],
+      },
+    });
+
+    const result = await runDiscoveryRun(
+      baseOptions({
+        candidates: [candidateEvent()],
+        github: { token: 'gh-test', repo: 'acme/compchem-events', fetchImpl: impl },
+      }),
+    );
+
+    expect(result.prsOpened).toBe(1);
+    expect(result.skipped).toEqual([]);
+    expect(calls.some((c) => c.method === 'POST' && c.url.endsWith('/git/refs'))).toBe(false);
+    expect(calls.some((c) => c.method === 'POST' && c.url.endsWith('/pulls'))).toBe(true);
   });
 
   it('skips a mechanically-duplicate candidate without any GitHub branch calls', async () => {
@@ -321,28 +360,55 @@ describe('runDiscoveryRun', () => {
   });
 
   it('isolates one candidate erroring from the rest of the run', async () => {
-    const failingImpl: typeof fetch = async () => {
-      throw new Error('network down');
-    };
-    const { impl: issueImpl } = stubGitHub({
+    // Only the first candidate's branch calls fail; everything the second
+    // candidate needs is stubbed normally, so a real PR can be asserted for
+    // it — proving the run actually continues, not just that it doesn't
+    // throw.
+    const { impl: workingImpl, calls } = stubGitHub({
+      ...DEFAULT_BRANCH_STUBS,
+      'GET /repos/acme/compchem-events/git/ref/heads/discovery/second-2027': { status: 404 },
+      'POST /repos/acme/compchem-events/git/refs': { status: 201, body: {} },
+      'GET /repos/acme/compchem-events/contents/data/events/2027/second-2027.yaml?ref=discovery/second-2027':
+        { status: 404 },
+      'PUT /repos/acme/compchem-events/contents/data/events/2027/second-2027.yaml': {
+        status: 201,
+        body: {},
+      },
+      'POST /repos/acme/compchem-events/pulls': { status: 201, body: { number: 21 } },
+      'POST /repos/acme/compchem-events/issues/21/labels': { status: 200, body: {} },
       'GET /repos/acme/compchem-events/issues?state=open&labels=discovery-failures': {
         status: 200,
         body: [],
       },
+      'POST /repos/acme/compchem-events/issues': { status: 201, body: { number: 30 } },
     });
     const combined: typeof fetch = (input, init) => {
       const url = String(input);
-      return url.includes('/issues?state=open') ? issueImpl(input, init) : failingImpl(input, init);
+      if (url.includes('discovery/first-2027')) throw new Error('network down');
+      return workingImpl(input, init);
     };
     const result = await runDiscoveryRun(
       baseOptions({
-        candidates: [candidateEvent()],
+        candidates: [
+          candidateEvent({
+            id: 'first-2027',
+            title: 'First Event',
+            url: 'https://example.org/first',
+          }),
+          candidateEvent({
+            id: 'second-2027',
+            title: 'Second Event',
+            url: 'https://example.org/second',
+          }),
+        ],
         github: { token: 'gh-test', repo: 'acme/compchem-events', fetchImpl: combined },
       }),
     );
-    expect(result.prsOpened).toBe(0);
-    expect(result.skipped).toHaveLength(1);
-    expect(result.skipped[0]?.reason).toContain('network down');
+    expect(result.prsOpened).toBe(1);
+    expect(result.skipped).toEqual([
+      { id: 'first-2027', reason: expect.stringContaining('network down') },
+    ]);
+    expect(calls.some((c) => c.method === 'POST' && c.url.endsWith('/pulls'))).toBe(true);
   });
 
   it('makes no branch or PR calls and still syncs the failure issue when there are zero candidates', async () => {
@@ -363,5 +429,38 @@ describe('runDiscoveryRun', () => {
     expect(result.prsOpened).toBe(0);
     expect(calls).toHaveLength(2); // list + close, nothing else
     expect(calls.some((c) => c.method === 'PATCH')).toBe(true);
+  });
+
+  // I1 from the final review: a candidate that errors out (GitHub call
+  // failure, classification failure) is otherwise only ever logged to
+  // stderr of a cron job nobody reads — the tracking issue is the one
+  // place a human would actually see it.
+  it('surfaces a per-candidate error in the failure-tracking issue alongside source errors', async () => {
+    const failingImpl: typeof fetch = async () => {
+      throw new Error('network down');
+    };
+    const { impl: issueImpl, calls } = stubGitHub({
+      'GET /repos/acme/compchem-events/issues?state=open&labels=discovery-failures': {
+        status: 200,
+        body: [],
+      },
+      'POST /repos/acme/compchem-events/issues': { status: 201, body: { number: 9 } },
+    });
+    const combined: typeof fetch = (input, init) => {
+      const url = String(input);
+      return url.includes('/issues') ? issueImpl(input, init) : failingImpl(input, init);
+    };
+    await runDiscoveryRun(
+      baseOptions({
+        candidates: [candidateEvent()],
+        sourceErrors: [{ source: 'https://example.org/dead', message: 'HTTP 500' }],
+        github: { token: 'gh-test', repo: 'acme/compchem-events', fetchImpl: combined },
+      }),
+    );
+    const created = calls.find((c) => c.method === 'POST' && c.url.endsWith('/issues'));
+    const body = (created?.body as { body: string } | undefined)?.body ?? '';
+    expect(body).toContain('https://example.org/dead');
+    expect(body).toContain('excited-states-symposium-2027');
+    expect(body).toContain('network down');
   });
 });

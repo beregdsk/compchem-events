@@ -67,7 +67,7 @@ export function buildConfig(env: Record<string, string | undefined>): ConfigResu
       },
       classify: {
         apiKey,
-        baseUrl: env.LLM_BASE_URL ?? DEFAULT_JEV_BASE_URL,
+        baseUrl: env.LLM_BASE_URL_CLASSIFY ?? DEFAULT_JEV_BASE_URL,
         model: env.LLM_MODEL ?? DEFAULT_JEV_MODEL,
       },
       github: { token: githubToken, repo: githubRepo },

@@ -71,28 +71,48 @@ describe('getBranchStatus', () => {
         status: 200,
         body: { object: { sha: 'def456' } },
       },
-      'GET /repos/acme/compchem-events/pulls?state=open&head=acme:discovery/some-event-2027': {
+      'GET /repos/acme/compchem-events/pulls?state=all&head=acme:discovery/some-event-2027': {
         status: 200,
-        body: [{ number: 42 }],
+        body: [{ number: 42, state: 'open' }],
       },
     });
     const result = await getBranchStatus('discovery/some-event-2027', options(impl));
-    expect(result).toEqual({ exists: true, openPr: 42 });
+    expect(result).toEqual({ exists: true, openPr: 42, everHadPr: true });
   });
 
-  it('reports a branch that exists with no open PR', async () => {
+  // Distinguishes "this branch was created but a PR was never opened for it"
+  // (e.g. a prior run crashed between createBranch and openPr — resumable)
+  // from "a PR was opened and is now closed or merged" (a human already
+  // reviewed it — never reopen). Both look identical under a `state=open`
+  // query; only `state=all` tells them apart.
+  it('reports an orphaned branch that never had a PR opened for it', async () => {
     const { impl } = stubGitHub({
       'GET /repos/acme/compchem-events/git/ref/heads/discovery/some-event-2027': {
         status: 200,
         body: { object: { sha: 'def456' } },
       },
-      'GET /repos/acme/compchem-events/pulls?state=open&head=acme:discovery/some-event-2027': {
+      'GET /repos/acme/compchem-events/pulls?state=all&head=acme:discovery/some-event-2027': {
         status: 200,
         body: [],
       },
     });
     const result = await getBranchStatus('discovery/some-event-2027', options(impl));
-    expect(result).toEqual({ exists: true, openPr: undefined });
+    expect(result).toEqual({ exists: true, openPr: undefined, everHadPr: false });
+  });
+
+  it('reports a branch whose only PR is closed or merged', async () => {
+    const { impl } = stubGitHub({
+      'GET /repos/acme/compchem-events/git/ref/heads/discovery/some-event-2027': {
+        status: 200,
+        body: { object: { sha: 'def456' } },
+      },
+      'GET /repos/acme/compchem-events/pulls?state=all&head=acme:discovery/some-event-2027': {
+        status: 200,
+        body: [{ number: 7, state: 'closed' }],
+      },
+    });
+    const result = await getBranchStatus('discovery/some-event-2027', options(impl));
+    expect(result).toEqual({ exists: true, openPr: undefined, everHadPr: true });
   });
 });
 
@@ -164,6 +184,30 @@ describe('putFile', () => {
     );
     const put = calls.find((c) => c.method === 'PUT');
     expect(put?.body).toMatchObject({ sha: 'file-sha-1' });
+  });
+
+  // I4 from the final review: without this, a rerun that re-extracts the
+  // same unchanged candidate commits an identical file every time, and
+  // resets `added`/`last_verified` over a reviewer's own edits to the PR.
+  it('skips the commit entirely when the existing content already matches', async () => {
+    const { impl, calls } = stubGitHub({
+      'GET /repos/acme/compchem-events/contents/data/events/2027/some-event-2027.yaml?ref=discovery/some-event-2027':
+        {
+          status: 200,
+          body: {
+            sha: 'file-sha-1',
+            content: Buffer.from('title: Some Event\n', 'utf8').toString('base64'),
+          },
+        },
+    });
+    await putFile(
+      'discovery/some-event-2027',
+      'data/events/2027/some-event-2027.yaml',
+      'title: Some Event\n',
+      'Update candidate event: Some Event',
+      options(impl),
+    );
+    expect(calls.some((c) => c.method === 'PUT')).toBe(false);
   });
 });
 

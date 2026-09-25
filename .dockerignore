@@ -1,4 +1,9 @@
-node_modules
+**/node_modules
 .git
 dist
 .astro
+.claude
+.superpowers
+.env
+.env.*
+*.log

@@ -114,7 +114,11 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
   async function processInput(input: ExtractionInput): Promise<boolean> {
     if (tokensUsed >= options.maxTokens) {
       log(`max tokens (${options.maxTokens}) reached, skipping ${input.sourceUrl}`);
-      return true;
+      // Unlike "no event found" or "dropped by validation", this item was
+      // never actually looked at — its page state must not commit, or a
+      // future run sees the page as unchanged and never retries it,
+      // silently losing the event. See fetchAndProcess's doc comment.
+      return false;
     }
     try {
       const fields = await extractEvent(truncateForExtraction(input.text), extractOptions);

@@ -57,4 +57,27 @@ describe('buildConfig', () => {
       error: 'MAX_PRS must be a positive number, got "0"',
     });
   });
+
+  // I7 from the final review: extraction (chat-completions) and
+  // classification (Decisions API) are different endpoints. A single
+  // LLM_BASE_URL applied to both breaks whichever one the operator wasn't
+  // trying to proxy, so each needs its own override.
+  it('keeps LLM_BASE_URL (extraction) and LLM_BASE_URL_CLASSIFY independent', () => {
+    const result = buildConfig({
+      ...validEnv,
+      LLM_BASE_URL: 'https://proxy.example/extract',
+      LLM_BASE_URL_CLASSIFY: 'https://proxy.example/classify',
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error('expected ok');
+    expect(result.config.extract.baseUrl).toBe('https://proxy.example/extract');
+    expect(result.config.classify.baseUrl).toBe('https://proxy.example/classify');
+  });
+
+  it('does not let LLM_BASE_URL leak into the classify endpoint', () => {
+    const result = buildConfig({ ...validEnv, LLM_BASE_URL: 'https://proxy.example/extract' });
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error('expected ok');
+    expect(result.config.classify.baseUrl).not.toBe('https://proxy.example/extract');
+  });
 });

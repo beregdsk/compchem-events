@@ -1,6 +1,6 @@
 # Discovery agent (follow-up, phase 5)
 
-**Status: specification for the whole agent. Steps 6-7 (deduplicate, screen) are implemented as a standalone classifier — see below. The rest (fetch, extract, PR-opening) is not part of the v1 task.** Read this so v1 leaves the right hooks, and implement the remaining pieces as a separate task once v1 is live.
+**Status: implemented.** All steps (load sources, fetch, extract, validate, deduplicate/screen, open a PR) exist: fetch/extract/validate is `src/lib/discovery/pipeline.ts`, deduplicate/screen is `src/lib/discovery/classify-candidate.ts`, and PR-opening is `src/lib/discovery/orchestrator.ts`, composed by the cron entrypoint `scripts/discovery/run.ts` — see *Deployment* below. Mailbox/IMAP ingestion (see *Mailing lists*) remains unimplemented.
 
 ## Purpose
 
@@ -29,12 +29,26 @@ Web pages are hostile input. The extraction step must be unable to do anything e
 - Never execute, evaluate or render fetched content. Fetch text only.
 - Output is accepted only if it validates against the schema. Free-text fields are length-limited and stripped of markup.
 - Run the job as an unprivileged user or in a container with no other credentials on the machine.
-- **Credentials:** the LLM API key must have a spending cap set in the provider console. The GitHub token must be fine-grained, limited to this one repository, with only the permissions needed to push a branch and open a PR (contents write, pull requests write). It must not be able to merge or change settings. Store both as environment variables or a root-only file, never in the repo.
+- **Credentials:** the LLM API key must have a spending cap set in the provider console. The GitHub token must be fine-grained, limited to this one repository, with only the permissions needed to push a branch, open a PR and file the failure-tracking issue (contents write, pull requests write, issues write). It must not be able to merge or change settings. Store both as environment variables or a root-only file, never in the repo.
 - **Caps per run:** maximum pages fetched, maximum tokens, maximum PRs opened. The job stops and logs when any cap is hit.
 
 ## Configuration
 
-All configuration by environment variables: `LLM_API_KEY`, `LLM_BASE_URL` (so requests can be routed through a proxy if the provider restricts the host's region), `LLM_MODEL`, `GITHUB_TOKEN`, `GITHUB_REPO`, `MAX_PAGES`, `MAX_TOKENS`, `MAX_PRS`, `STATE_PATH`. Fail fast with a clear message if any required value is missing.
+All configuration by environment variables, validated by `scripts/discovery/run.ts`'s `buildConfig`, which fails fast with a clear message if any required value is missing or malformed:
+
+| Variable | Required | Default |
+|---|---|---|
+| `LLM_API_KEY` | yes | — |
+| `LLM_MODEL_EXTRACT` | yes | — |
+| `STATE_PATH` | yes | — |
+| `GITHUB_TOKEN` | yes | — |
+| `GITHUB_REPO` | yes (`owner/repo`) | — |
+| `LLM_BASE_URL` | no | extraction (chat-completions) endpoint's default |
+| `LLM_BASE_URL_CLASSIFY` | no | classification (Decisions API) endpoint's default — a different endpoint from `LLM_BASE_URL`, so proxying one does not proxy the other |
+| `LLM_MODEL` | no | the classifier's own default model |
+| `MAX_PAGES` | no | 200 |
+| `MAX_TOKENS` | no | 500000 |
+| `MAX_PRS` | no | 20 |
 
 ## Sources
 
@@ -99,14 +113,27 @@ no credentials baked in — everything comes from the environment at
 
 ```
 docker build -f Dockerfile.discovery -t discovery-agent .
-docker run --rm --env-file /etc/discovery-agent.env discovery-agent
+mkdir -p /var/lib/discovery-agent
+docker run --rm \
+  --env-file /etc/discovery-agent.env \
+  -v /var/lib/discovery-agent:/state \
+  discovery-agent
 ```
 
+The `-v` mount is required, not optional: `--rm` discards the container's
+own filesystem on exit, so without it `STATE_PATH` (below) would reset on
+every run — no page would ever look "unchanged", so every run would
+re-extract and re-spend tokens on every source, and push a redundant
+update commit to every open PR.
+
 `/etc/discovery-agent.env` (root-only, never in the repo) holds
-`LLM_API_KEY`, `LLM_MODEL_EXTRACT`, `STATE_PATH` (a path inside a mounted
-volume, so state survives between runs), `GITHUB_TOKEN`, `GITHUB_REPO`, and
-optionally `LLM_BASE_URL`, `LLM_MODEL`, `MAX_PAGES`, `MAX_TOKENS`, `MAX_PRS`
-— see *Configuration* above for what each does and its default.
+`LLM_API_KEY`, `LLM_MODEL_EXTRACT`, `STATE_PATH=/state/state.json` (inside
+the mounted volume above, so state survives between runs), `GITHUB_TOKEN`,
+`GITHUB_REPO`, and optionally `LLM_BASE_URL` (extraction only),
+`LLM_BASE_URL_CLASSIFY` (classification only — these are two different
+endpoints and must be set independently when proxying either one),
+`LLM_MODEL`, `MAX_PAGES`, `MAX_TOKENS`, `MAX_PRS` — see *Configuration*
+above for what each does and its default.
 
 Two credentials stay human-only operational steps, per this document's
 *Security model*:
@@ -114,8 +141,10 @@ Two credentials stay human-only operational steps, per this document's
 - Set a spending cap on the LLM API key in the provider's console before
   the first run.
 - Mint `GITHUB_TOKEN` as a fine-grained personal access token scoped to
-  this one repository only, with **contents: write** and
-  **pull requests: write** — never admin, never merge.
+  this one repository only, with **contents: write**,
+  **pull requests: write** and **issues: write** (the last one is needed
+  to file and close the source-failure tracking issue) — never admin,
+  never merge.
 
 The cron entry itself (e.g. a daily line in the `discovery` user's
 crontab running the `docker run` command above) is set up on the VDS by

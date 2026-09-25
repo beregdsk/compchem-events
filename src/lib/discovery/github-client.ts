@@ -68,12 +68,21 @@ export async function getDefaultBranch(options: GitHubOptions): Promise<DefaultB
   return { name, sha: refRes.data.object.sha };
 }
 
-export type BranchStatus = { exists: false } | { exists: true; openPr: number | undefined };
+export type BranchStatus =
+  { exists: false } | { exists: true; openPr: number | undefined; everHadPr: boolean };
 
 interface PullSummary {
   number: number;
+  state: string;
 }
 
+/**
+ * `everHadPr` distinguishes an orphaned branch (created by a prior run that
+ * then crashed before `openPr` — resumable) from a branch whose PR is now
+ * closed or merged (a human already reviewed it — never reopen). Both have
+ * `openPr: undefined`; only querying `state=all` instead of `state=open`
+ * tells them apart.
+ */
 export async function getBranchStatus(
   branch: string,
   options: GitHubOptions,
@@ -87,12 +96,13 @@ export async function getBranchStatus(
   const pullsRes = await githubRequest<PullSummary[]>(
     options,
     'GET',
-    `/pulls?state=open&head=${owner}:${branch}`,
+    `/pulls?state=all&head=${owner}:${branch}`,
   );
   if (pullsRes.status !== 200) {
     throw new Error(`failed to list pull requests for branch "${branch}": HTTP ${pullsRes.status}`);
   }
-  return { exists: true, openPr: pullsRes.data[0]?.number };
+  const openPr = pullsRes.data.find((pr) => pr.state === 'open')?.number;
+  return { exists: true, openPr, everHadPr: pullsRes.data.length > 0 };
 }
 
 export async function createBranch(
@@ -111,8 +121,18 @@ export async function createBranch(
 
 interface ContentsInfo {
   sha: string;
+  content?: string;
 }
 
+/**
+ * Skips the commit entirely when the branch already has this exact content
+ * at this path — otherwise a rerun that re-extracts an unchanged candidate
+ * would commit an identical file every time and reset `added`/
+ * `last_verified` over whatever a reviewer already edited on the PR (final
+ * review finding I4). GitHub's Contents API returns `content` base64-
+ * encoded with embedded newlines every ~60 characters, hence the strip
+ * before decoding.
+ */
 export async function putFile(
   branch: string,
   path: string,
@@ -126,6 +146,13 @@ export async function putFile(
     `/contents/${path}?ref=${branch}`,
   );
   const sha = existing.status === 200 ? existing.data.sha : undefined;
+  if (
+    existing.status === 200 &&
+    typeof existing.data.content === 'string' &&
+    Buffer.from(existing.data.content.replace(/\s/g, ''), 'base64').toString('utf8') === content
+  ) {
+    return;
+  }
   const res = await githubRequest(options, 'PUT', `/contents/${path}`, {
     message,
     content: Buffer.from(content, 'utf8').toString('base64'),
