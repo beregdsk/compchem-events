@@ -86,3 +86,37 @@ This is deliberately cheap to add because it is only another text source feeding
 - One source failing must not stop the run. Log the error and continue.
 - Repeated failures on a source produce a single tracking issue, not a new one each run.
 - The job exits non-zero only on configuration errors, so a cron wrapper can alert on real problems and ignore transient network noise.
+
+## Deployment
+
+The pipeline (`src/lib/discovery/pipeline.ts`), the classifier
+(`src/lib/discovery/classify-candidate.ts`) and the PR-opening orchestrator
+(`src/lib/discovery/orchestrator.ts`) are composed by
+`scripts/discovery/run.ts`, the actual cron entrypoint. `Dockerfile.discovery`
+builds it into an image that runs as the unprivileged `discovery` user with
+no credentials baked in — everything comes from the environment at
+`docker run` time:
+
+```
+docker build -f Dockerfile.discovery -t discovery-agent .
+docker run --rm --env-file /etc/discovery-agent.env discovery-agent
+```
+
+`/etc/discovery-agent.env` (root-only, never in the repo) holds
+`LLM_API_KEY`, `LLM_MODEL_EXTRACT`, `STATE_PATH` (a path inside a mounted
+volume, so state survives between runs), `GITHUB_TOKEN`, `GITHUB_REPO`, and
+optionally `LLM_BASE_URL`, `LLM_MODEL`, `MAX_PAGES`, `MAX_TOKENS`, `MAX_PRS`
+— see *Configuration* above for what each does and its default.
+
+Two credentials stay human-only operational steps, per this document's
+*Security model*:
+
+- Set a spending cap on the LLM API key in the provider's console before
+  the first run.
+- Mint `GITHUB_TOKEN` as a fine-grained personal access token scoped to
+  this one repository only, with **contents: write** and
+  **pull requests: write** — never admin, never merge.
+
+The cron entry itself (e.g. a daily line in the `discovery` user's
+crontab running the `docker run` command above) is set up on the VDS by
+the maintainer; it is infrastructure outside this repository.
