@@ -1,0 +1,21 @@
+id: mopac-user-groups-2023
+title: MOPAC User Groups
+type: webinar
+start_date: 2023-06-07
+end_date: 2023-06-07
+format: online
+url: https://molssi.org/molssi-user-groups/
+source_url: https://molssi.org/molssi-user-groups/
+topics:
+  - electronic-structure
+  - excited-states
+  - ml-chemistry
+  - software-hpc
+  - education-training
+description: "Virtual MolSSI User Group (June 7, 2023) focused on MOPAC: talks
+  and discussions with the MOPAC creator and developers on semiempirical
+  methods, excited states, ML approaches, HPC acceleration, integration, and
+  educational use."
+added: 2026-09-25
+last_verified: 2026-09-25
+organizer: Molecular Sciences Software Institute (MolSSI)
