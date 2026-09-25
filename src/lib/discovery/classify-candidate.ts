@@ -1,4 +1,5 @@
 import { isBlocked, normaliseTitle } from '../validation';
+import { daysBetween } from '../dates';
 import type { RawEvent } from '../types';
 import {
   callJev,
@@ -16,6 +17,14 @@ export type CandidateEvent = Pick<
 export const DEFAULT_JEV_MODEL = '~typesafe/jev-latest';
 export const ADD_THRESHOLD = 0.5;
 export const FUZZY_TITLE_THRESHOLD = 0.8;
+export const CONTAINMENT_THRESHOLD = 0.9;
+/**
+ * Same-event candidates from different sources don't always agree on the
+ * exact day (extraction imprecision, timezone rounding) — but a genuinely
+ * different year's instance of a recurring series must stay distinct, so
+ * this stays a narrow window, not a loose one.
+ */
+export const FUZZY_DATE_WINDOW_DAYS = 3;
 
 export type MechanicalSkipReason =
   'duplicate-url' | 'duplicate-title-date' | 'duplicate-fuzzy' | 'blocklisted';
@@ -55,18 +64,36 @@ function bigramCounts(s: string): Map<string, number> {
  * Sørensen-Dice coefficient over character bigrams of the normalised titles.
  * 0 means nothing shared, 1 means identical after normalisation.
  */
-export function titleSimilarity(a: string, b: string): number {
+function bigramOverlap(a: string, b: string): { overlap: number; totalA: number; totalB: number } {
   const countsA = bigramCounts(normaliseTitle(a));
   const countsB = bigramCounts(normaliseTitle(b));
   const totalA = [...countsA.values()].reduce((sum, n) => sum + n, 0);
   const totalB = [...countsB.values()].reduce((sum, n) => sum + n, 0);
-  if (totalA === 0 || totalB === 0) return totalA === totalB ? 1 : 0;
-
   let overlap = 0;
   for (const [gram, countA] of countsA) {
     overlap += Math.min(countA, countsB.get(gram) ?? 0);
   }
+  return { overlap, totalA, totalB };
+}
+
+export function titleSimilarity(a: string, b: string): number {
+  const { overlap, totalA, totalB } = bigramOverlap(a, b);
+  if (totalA === 0 || totalB === 0) return totalA === totalB ? 1 : 0;
   return (2 * overlap) / (totalA + totalB);
+}
+
+/**
+ * How much of the SHORTER title's bigrams appear in the longer one — 1
+ * means the shorter title is (almost) entirely a prefix/suffix/substring
+ * of the longer, catching "X" vs "X, extra details" or "The X" vs "X"
+ * duplicates that titleSimilarity's symmetric score misses, since it
+ * penalises the longer title's extra length against the whole comparison.
+ */
+export function titleContainment(a: string, b: string): number {
+  const { overlap, totalA, totalB } = bigramOverlap(a, b);
+  const shorter = Math.min(totalA, totalB);
+  if (shorter === 0) return totalA === totalB ? 1 : 0;
+  return overlap / shorter;
 }
 
 function mechanicalSkip(
@@ -85,9 +112,12 @@ function mechanicalSkip(
   }
 
   for (const existing of existingEvents) {
+    if (Math.abs(daysBetween(existing.start_date, candidate.start_date)) > FUZZY_DATE_WINDOW_DAYS) {
+      continue;
+    }
     if (
-      existing.start_date === candidate.start_date &&
-      titleSimilarity(candidate.title, existing.title) >= FUZZY_TITLE_THRESHOLD
+      titleSimilarity(candidate.title, existing.title) >= FUZZY_TITLE_THRESHOLD ||
+      titleContainment(candidate.title, existing.title) >= CONTAINMENT_THRESHOLD
     ) {
       return 'duplicate-fuzzy';
     }

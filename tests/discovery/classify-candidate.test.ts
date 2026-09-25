@@ -3,8 +3,10 @@ import { readFileSync } from 'node:fs';
 import { parse } from 'yaml';
 import {
   ADD_THRESHOLD,
+  CONTAINMENT_THRESHOLD,
   FUZZY_TITLE_THRESHOLD,
   classifyCandidate,
+  titleContainment,
   titleSimilarity,
   type CandidateEvent,
   type ClassificationResult,
@@ -80,6 +82,36 @@ describe('titleSimilarity', () => {
   });
 });
 
+describe('titleContainment', () => {
+  it('is 1 for identical titles', () => {
+    expect(titleContainment('DFT Summer School', 'DFT Summer School')).toBe(1);
+  });
+
+  it('is high when the shorter title is a prefix of the longer one', () => {
+    expect(
+      titleContainment('DL_POLY Training London', 'DL_POLY Training London, 10-11 January 2024'),
+    ).toBeGreaterThanOrEqual(CONTAINMENT_THRESHOLD);
+  });
+
+  it('is high when the shorter title is the longer one with a prefix dropped', () => {
+    expect(
+      titleContainment(
+        'AI-Assisted Development Best Practices Workshop',
+        'MolSSI AI-Assisted Development Best Practices Workshop',
+      ),
+    ).toBeGreaterThanOrEqual(CONTAINMENT_THRESHOLD);
+  });
+
+  it('is low for unrelated titles', () => {
+    expect(
+      titleContainment(
+        'Baseline Conference on Molecular Simulation',
+        'New Symposium on Excited-State Photochemistry',
+      ),
+    ).toBeLessThan(CONTAINMENT_THRESHOLD);
+  });
+});
+
 describe('classifyCandidate — mechanical pre-filter', () => {
   it('skips an exact URL duplicate without calling jev', async () => {
     const { impl, calls } = stubFetch(cleanResponse);
@@ -115,6 +147,75 @@ describe('classifyCandidate — mechanical pre-filter', () => {
     });
     expect(result).toEqual({ verdict: 'skip', mechanicalReason: 'duplicate-fuzzy' });
     expect(calls).toHaveLength(0);
+  });
+
+  it('skips a title that is the existing one plus extra suffix text, within the date window', async () => {
+    const { impl, calls } = stubFetch(cleanResponse);
+    const candidate: CandidateEvent = {
+      title: 'Baseline Conference on Molecular Simulation, Extended Program Details',
+      // Two days after the existing event's 2027-04-10 — not an exact
+      // match, but within the widened window.
+      start_date: '2027-04-12',
+      end_date: '2027-04-12',
+      format: 'in-person',
+      url: 'https://alt-listing.example.net/baseline-extended/',
+      topics: ['molecular-dynamics'],
+      description: 'A differently-worded listing of the same event.',
+    };
+    const result = await classifyCandidate(candidate, {
+      existingEvents,
+      blockedHosts,
+      apiKey: 'sk-test',
+      fetchImpl: impl,
+    });
+    expect(result).toEqual({ verdict: 'skip', mechanicalReason: 'duplicate-fuzzy' });
+    expect(calls).toHaveLength(0);
+  });
+
+  it('skips a near-identical title when the date is off by a few days', async () => {
+    const { impl, calls } = stubFetch(cleanResponse);
+    const candidate: CandidateEvent = {
+      title: 'The Baseline Conference on Molecular Simulations',
+      // Two days before the existing event's 2027-04-10 — extraction
+      // imprecision, not the same day.
+      start_date: '2027-04-08',
+      end_date: '2027-04-08',
+      format: 'in-person',
+      url: 'https://alt-listing.example.net/baseline-alt-date/',
+      topics: ['molecular-dynamics'],
+      description: 'A near-identical title with a slightly different extracted date.',
+    };
+    const result = await classifyCandidate(candidate, {
+      existingEvents,
+      blockedHosts,
+      apiKey: 'sk-test',
+      fetchImpl: impl,
+    });
+    expect(result).toEqual({ verdict: 'skip', mechanicalReason: 'duplicate-fuzzy' });
+    expect(calls).toHaveLength(0);
+  });
+
+  it('does not merge similar titles a year apart, even with a plausible date', async () => {
+    const { impl, calls } = stubFetch(cleanResponse);
+    const candidate: CandidateEvent = {
+      title: 'The Baseline Conference on Molecular Simulations',
+      // A different year's instance of what could be a recurring series —
+      // outside the 3-day window, so it must not be mechanically merged.
+      start_date: '2028-04-10',
+      end_date: '2028-04-12',
+      format: 'in-person',
+      url: 'https://alt-listing.example.net/baseline-next-year/',
+      topics: ['molecular-dynamics'],
+      description: "Next year's instance, a genuinely different event.",
+    };
+    const result = await classifyCandidate(candidate, {
+      existingEvents,
+      blockedHosts,
+      apiKey: 'sk-test',
+      fetchImpl: impl,
+    });
+    expect(calls.length).toBeGreaterThan(0);
+    expect(result).not.toEqual({ verdict: 'skip', mechanicalReason: 'duplicate-fuzzy' });
   });
 
   it('skips a blocklisted domain without calling jev', async () => {
