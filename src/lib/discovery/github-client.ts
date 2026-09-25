@@ -173,3 +173,69 @@ export async function addLabel(
     throw new Error(`failed to label pull request #${prNumber}: HTTP ${res.status}`);
   }
 }
+
+const FAILURE_ISSUE_TITLE = 'Discovery agent source failures';
+const FAILURE_ISSUE_LABEL = 'discovery-failures';
+
+interface IssueSummary {
+  number: number;
+  title: string;
+}
+
+/**
+ * Find-or-create-and-update-or-close, same shape as .github/workflows/links.yml's
+ * tracking issue for dead links — the issue never multiplies across runs,
+ * it just reflects the latest run's failures.
+ */
+export async function syncFailureIssue(
+  errors: readonly { source: string; message: string }[],
+  options: GitHubOptions,
+): Promise<void> {
+  const listRes = await githubRequest<IssueSummary[]>(
+    options,
+    'GET',
+    `/issues?state=open&labels=${FAILURE_ISSUE_LABEL}`,
+  );
+  if (listRes.status !== 200) {
+    throw new Error(`failed to list open issues: HTTP ${listRes.status}`);
+  }
+  const existing = listRes.data.find((issue) => issue.title === FAILURE_ISSUE_TITLE);
+
+  if (errors.length === 0) {
+    if (!existing) return;
+    const res = await githubRequest(options, 'PATCH', `/issues/${existing.number}`, {
+      state: 'closed',
+      body: 'All sources fetched successfully on the latest run. Closing.',
+    });
+    if (res.status !== 200) {
+      throw new Error(`failed to close issue #${existing.number}: HTTP ${res.status}`);
+    }
+    return;
+  }
+
+  const body = [
+    `The latest discovery run found ${errors.length} source(s) failing to fetch or extract:`,
+    '',
+    ...errors.map((e) => `- \`${e.source}\`: ${e.message}`),
+  ].join('\n');
+
+  if (existing) {
+    const res = await githubRequest(options, 'PATCH', `/issues/${existing.number}`, {
+      body,
+      state: 'open',
+    });
+    if (res.status !== 200) {
+      throw new Error(`failed to update issue #${existing.number}: HTTP ${res.status}`);
+    }
+    return;
+  }
+
+  const res = await githubRequest(options, 'POST', '/issues', {
+    title: FAILURE_ISSUE_TITLE,
+    body,
+    labels: [FAILURE_ISSUE_LABEL],
+  });
+  if (res.status !== 201) {
+    throw new Error(`failed to create the failure-tracking issue: HTTP ${res.status}`);
+  }
+}

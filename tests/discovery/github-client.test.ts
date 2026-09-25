@@ -200,3 +200,67 @@ describe('openPr, updatePrBody, addLabel', () => {
     expect(calls[0]?.body).toEqual({ labels: ['needs-review'] });
   });
 });
+
+describe('syncFailureIssue', () => {
+  it('creates a new issue when there are errors and none exists yet', async () => {
+    const { impl, calls } = stubGitHub({
+      'GET /repos/acme/compchem-events/issues?state=open&labels=discovery-failures': {
+        status: 200,
+        body: [],
+      },
+      'POST /repos/acme/compchem-events/issues': { status: 201, body: { number: 9 } },
+    });
+    await syncFailureIssue(
+      [{ source: 'https://example.org/dead', message: 'HTTP 500' }],
+      options(impl),
+    );
+    const created = calls.find((c) => c.method === 'POST');
+    expect(created?.body).toMatchObject({
+      title: 'Discovery agent source failures',
+      labels: ['discovery-failures'],
+    });
+    expect((created?.body as { body: string }).body).toContain('https://example.org/dead');
+    expect((created?.body as { body: string }).body).toContain('HTTP 500');
+  });
+
+  it('updates the existing issue instead of creating a second one', async () => {
+    const { impl, calls } = stubGitHub({
+      'GET /repos/acme/compchem-events/issues?state=open&labels=discovery-failures': {
+        status: 200,
+        body: [{ number: 9, title: 'Discovery agent source failures' }],
+      },
+      'PATCH /repos/acme/compchem-events/issues/9': { status: 200, body: {} },
+    });
+    await syncFailureIssue(
+      [{ source: 'https://example.org/dead', message: 'HTTP 500' }],
+      options(impl),
+    );
+    expect(calls.filter((c) => c.method === 'POST')).toHaveLength(0);
+    const updated = calls.find((c) => c.method === 'PATCH');
+    expect(updated?.body).toMatchObject({ state: 'open' });
+  });
+
+  it('closes the existing issue when there are no errors', async () => {
+    const { impl, calls } = stubGitHub({
+      'GET /repos/acme/compchem-events/issues?state=open&labels=discovery-failures': {
+        status: 200,
+        body: [{ number: 9, title: 'Discovery agent source failures' }],
+      },
+      'PATCH /repos/acme/compchem-events/issues/9': { status: 200, body: {} },
+    });
+    await syncFailureIssue([], options(impl));
+    const updated = calls.find((c) => c.method === 'PATCH');
+    expect(updated?.body).toMatchObject({ state: 'closed' });
+  });
+
+  it('does nothing when there are no errors and no open issue', async () => {
+    const { impl, calls } = stubGitHub({
+      'GET /repos/acme/compchem-events/issues?state=open&labels=discovery-failures': {
+        status: 200,
+        body: [],
+      },
+    });
+    await syncFailureIssue([], options(impl));
+    expect(calls).toHaveLength(1);
+  });
+});
