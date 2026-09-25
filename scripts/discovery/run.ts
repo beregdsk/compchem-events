@@ -12,6 +12,7 @@ import { runPipeline, type PipelineOptions } from '../../src/lib/discovery/pipel
 export interface ResolvedConfig {
   statePath: string;
   maxPages: number;
+  maxPagesPerSource: number;
   maxTokens: number;
   maxPrs: number;
   userAgent: string;
@@ -43,6 +44,13 @@ export function buildConfig(env: Record<string, string | undefined>): ConfigResu
   if (!Number.isFinite(maxPages) || maxPages <= 0) {
     return { ok: false, error: `MAX_PAGES must be a positive number, got "${env.MAX_PAGES}"` };
   }
+  const maxPagesPerSource = env.MAX_PAGES_PER_SOURCE ? Number(env.MAX_PAGES_PER_SOURCE) : 40;
+  if (!Number.isFinite(maxPagesPerSource) || maxPagesPerSource <= 0) {
+    return {
+      ok: false,
+      error: `MAX_PAGES_PER_SOURCE must be a positive number, got "${env.MAX_PAGES_PER_SOURCE}"`,
+    };
+  }
   const maxTokens = env.MAX_TOKENS ? Number(env.MAX_TOKENS) : 500_000;
   if (!Number.isFinite(maxTokens) || maxTokens <= 0) {
     return { ok: false, error: `MAX_TOKENS must be a positive number, got "${env.MAX_TOKENS}"` };
@@ -57,6 +65,7 @@ export function buildConfig(env: Record<string, string | undefined>): ConfigResu
     config: {
       statePath,
       maxPages,
+      maxPagesPerSource,
       maxTokens,
       maxPrs,
       userAgent: `${site.name} Discovery Agent (+${site.repoUrl}; ${site.contactEmail})`,
@@ -89,6 +98,7 @@ async function main(): Promise<void> {
     statePath: cfg.statePath,
     userAgent: cfg.userAgent,
     maxPages: cfg.maxPages,
+    maxPagesPerSource: cfg.maxPagesPerSource,
     maxTokens: cfg.maxTokens,
     extract: cfg.extract,
     log,
