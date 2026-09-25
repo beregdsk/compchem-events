@@ -56,4 +56,19 @@ describe('buildConfig', () => {
     expect(result.config.maxPages).toBe(10);
     expect(result.config.extract.baseUrl).toBe('https://proxy.example/chat');
   });
+
+  it('defaults MAX_TOKENS to 500000', () => {
+    const result = buildConfig(validEnv);
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error('expected ok');
+    expect(result.config.maxTokens).toBe(500_000);
+  });
+
+  it('rejects a non-numeric MAX_TOKENS', () => {
+    const result = buildConfig({ ...validEnv, MAX_TOKENS: 'lots' });
+    expect(result).toEqual({
+      ok: false,
+      error: 'MAX_TOKENS must be a positive number, got "lots"',
+    });
+  });
 });

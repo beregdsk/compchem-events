@@ -1,0 +1,23 @@
+# Runs the discovery agent (docs/discovery-agent.md) as a scheduled batch
+# job on the maintainer's VDS. Unrelated to the site itself, which deploys
+# as a static Cloudflare Worker — see wrangler.jsonc.
+FROM node:26-slim
+
+# Fixed UID/GID (not the default useradd-assigned one) so a bind-mounted
+# host directory's ownership is predictable — see docs/discovery-agent.md's
+# Deployment section for the matching `docker run -v` example.
+RUN groupadd --system --gid 10001 discovery && \
+    useradd --system --uid 10001 --gid discovery --create-home discovery
+
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+
+# STATE_PATH must point inside this directory (or another mounted volume) —
+# /app itself is owned by root, since COPY runs before USER below.
+RUN mkdir -p /state && chown discovery:discovery /state
+
+USER discovery
+
+CMD ["node_modules/.bin/tsx", "scripts/discovery/run.ts"]

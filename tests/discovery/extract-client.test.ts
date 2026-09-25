@@ -121,6 +121,31 @@ describe('extractEvent', () => {
     );
   });
 
+  it('reports token usage via onUsage', async () => {
+    const usages: number[] = [];
+    const { impl } = stubFetch(200, {
+      ...completionWith({ found: false, event: null }),
+      usage: { total_tokens: 321 },
+    });
+    await extractEvent('some text', {
+      ...options,
+      fetchImpl: impl,
+      onUsage: (tokens) => usages.push(tokens),
+    });
+    expect(usages).toEqual([321]);
+  });
+
+  it('reports 0 usage when the response has no usage field', async () => {
+    const usages: number[] = [];
+    const { impl } = stubFetch(200, completionWith({ found: false, event: null }));
+    await extractEvent('some text', {
+      ...options,
+      fetchImpl: impl,
+      onUsage: (tokens) => usages.push(tokens),
+    });
+    expect(usages).toEqual([0]);
+  });
+
   it('throws when a well-formed event carries a malformed nested location', async () => {
     const { impl } = stubFetch(
       200,

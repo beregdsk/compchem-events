@@ -35,6 +35,7 @@ export interface ClassifyOptions {
   baseUrl?: string;
   model?: string;
   fetchImpl?: typeof fetch;
+  onUsage?: (tokens: number) => void;
 }
 
 function normalisedUrl(url: string): string {
@@ -186,6 +187,8 @@ export async function classifyCandidate(
       fetchImpl: options.fetchImpl,
     },
   );
+
+  options.onUsage?.((response.usage?.input_tokens ?? 0) + (response.usage?.output_tokens ?? 0));
 
   const confidence = requireNoul(response, 'add');
   const criteria = {

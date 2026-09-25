@@ -7,6 +7,7 @@ import { runPipeline, type PipelineOptions } from '../../src/lib/discovery/pipel
 export interface ResolvedConfig {
   statePath: string;
   maxPages: number;
+  maxTokens: number;
   userAgent: string;
   extract: { apiKey: string; baseUrl: string; model: string };
 }
@@ -25,12 +26,17 @@ export function buildConfig(env: Record<string, string | undefined>): ConfigResu
   if (!Number.isFinite(maxPages) || maxPages <= 0) {
     return { ok: false, error: `MAX_PAGES must be a positive number, got "${env.MAX_PAGES}"` };
   }
+  const maxTokens = env.MAX_TOKENS ? Number(env.MAX_TOKENS) : 500_000;
+  if (!Number.isFinite(maxTokens) || maxTokens <= 0) {
+    return { ok: false, error: `MAX_TOKENS must be a positive number, got "${env.MAX_TOKENS}"` };
+  }
 
   return {
     ok: true,
     config: {
       statePath,
       maxPages,
+      maxTokens,
       userAgent: `${site.name} Discovery Agent (+${site.repoUrl}; ${site.contactEmail})`,
       extract: {
         apiKey,
@@ -53,6 +59,7 @@ async function main(): Promise<void> {
     statePath: resolved.config.statePath,
     userAgent: resolved.config.userAgent,
     maxPages: resolved.config.maxPages,
+    maxTokens: resolved.config.maxTokens,
     extract: resolved.config.extract,
     log: (message: string) => console.error(message),
   };
