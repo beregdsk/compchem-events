@@ -1,0 +1,18 @@
+id: the-molssi-ai-assisted-development-best-practices-workshop-2026
+title: The MolSSI AI-Assisted Development Best Practices Workshop
+type: workshop
+start_date: 2026-07-27
+end_date: 2026-07-28
+format: online
+url: https://molssi.org/
+source_url: https://molssi.org/
+topics:
+  - software-hpc
+  - education-training
+description: Online hands-on MolSSI workshop on AI-assisted software development
+  (LLMs/agents). Covers containerized agent execution, requirements-based
+  workflows, static and LLM code analysis, and strategies for managing technical
+  debt. Basic programming and Git recommended.
+added: 2026-09-25
+last_verified: 2026-09-25
+organizer: MolSSI (Molecular Sciences Software Institute)
