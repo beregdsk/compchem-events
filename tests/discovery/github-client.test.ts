@@ -115,9 +115,9 @@ describe('createBranch', () => {
     const { impl } = stubGitHub({
       'POST /repos/acme/compchem-events/git/refs': { status: 422, body: { message: 'exists' } },
     });
-    await expect(createBranch('discovery/some-event-2027', 'abc123', options(impl))).rejects.toThrow(
-      'HTTP 422',
-    );
+    await expect(
+      createBranch('discovery/some-event-2027', 'abc123', options(impl)),
+    ).rejects.toThrow('HTTP 422');
   });
 });
 
@@ -126,8 +126,10 @@ describe('putFile', () => {
     const { impl, calls } = stubGitHub({
       'GET /repos/acme/compchem-events/contents/data/events/2027/some-event-2027.yaml?ref=discovery/some-event-2027':
         { status: 404 },
-      'PUT /repos/acme/compchem-events/contents/data/events/2027/some-event-2027.yaml':
-        { status: 201, body: {} },
+      'PUT /repos/acme/compchem-events/contents/data/events/2027/some-event-2027.yaml': {
+        status: 201,
+        body: {},
+      },
     });
     await putFile(
       'discovery/some-event-2027',
@@ -148,8 +150,10 @@ describe('putFile', () => {
     const { impl, calls } = stubGitHub({
       'GET /repos/acme/compchem-events/contents/data/events/2027/some-event-2027.yaml?ref=discovery/some-event-2027':
         { status: 200, body: { sha: 'file-sha-1' } },
-      'PUT /repos/acme/compchem-events/contents/data/events/2027/some-event-2027.yaml':
-        { status: 200, body: {} },
+      'PUT /repos/acme/compchem-events/contents/data/events/2027/some-event-2027.yaml': {
+        status: 200,
+        body: {},
+      },
     });
     await putFile(
       'discovery/some-event-2027',

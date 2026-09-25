@@ -26,15 +26,18 @@ async function githubRequest<T>(
   body?: unknown,
 ): Promise<ApiResult<T>> {
   const fetchImpl = options.fetchImpl ?? fetch;
-  const response = await fetchImpl(`${options.baseUrl ?? GITHUB_API}/repos/${options.repo}${path}`, {
-    method,
-    headers: {
-      Authorization: `Bearer ${options.token}`,
-      Accept: 'application/vnd.github+json',
-      ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+  const response = await fetchImpl(
+    `${options.baseUrl ?? GITHUB_API}/repos/${options.repo}${path}`,
+    {
+      method,
+      headers: {
+        Authorization: `Bearer ${options.token}`,
+        Accept: 'application/vnd.github+json',
+        ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+      },
+      body: body !== undefined ? JSON.stringify(body) : undefined,
     },
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  });
+  );
   const text = await response.text();
   return { status: response.status, data: (text ? JSON.parse(text) : undefined) as T };
 }
@@ -71,7 +74,10 @@ interface PullSummary {
   number: number;
 }
 
-export async function getBranchStatus(branch: string, options: GitHubOptions): Promise<BranchStatus> {
+export async function getBranchStatus(
+  branch: string,
+  options: GitHubOptions,
+): Promise<BranchStatus> {
   const refRes = await githubRequest<unknown>(options, 'GET', `/git/ref/heads/${branch}`);
   if (refRes.status === 404) return { exists: false };
   if (refRes.status !== 200) {

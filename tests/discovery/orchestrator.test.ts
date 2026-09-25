@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { buildPrBody, runDiscoveryRun, type OrchestratorOptions } from '../../src/lib/discovery/orchestrator';
+import {
+  buildPrBody,
+  runDiscoveryRun,
+  type OrchestratorOptions,
+} from '../../src/lib/discovery/orchestrator';
 import type { RawEvent } from '../../src/lib/types';
 
 const candidate: RawEvent = {
@@ -32,7 +36,9 @@ describe('buildPrBody', () => {
     expect(body).toContain('0.91');
     expect(body).toContain('0.87');
     expect(body).toContain('0.03');
-    expect(body).toContain('Opened the official page and confirmed title, dates, location and format.');
+    expect(body).toContain(
+      'Opened the official page and confirmed title, dates, location and format.',
+    );
     expect(body).toContain('Set `last_verified` to the date you checked');
   });
 
@@ -61,7 +67,11 @@ function stubGitHub(responses: Record<string, StubResponse>) {
     const method = init?.method ?? 'GET';
     const path = String(input).replace('https://api.github.com', '');
     const key = `${method} ${path}`;
-    calls.push({ method, url: String(input), body: init?.body ? JSON.parse(String(init.body)) : undefined });
+    calls.push({
+      method,
+      url: String(input),
+      body: init?.body ? JSON.parse(String(init.body)) : undefined,
+    });
     const stub = responses[key];
     if (!stub) throw new Error(`unstubbed request: ${key}`);
     return new Response(stub.body === undefined ? '' : JSON.stringify(stub.body), {
@@ -92,7 +102,10 @@ function stubClassifyAdd() {
 
 const DEFAULT_BRANCH_STUBS = {
   'GET /repos/acme/compchem-events': { status: 200, body: { default_branch: 'main' } },
-  'GET /repos/acme/compchem-events/git/ref/heads/main': { status: 200, body: { object: { sha: 'sha-main' } } },
+  'GET /repos/acme/compchem-events/git/ref/heads/main': {
+    status: 200,
+    body: { object: { sha: 'sha-main' } },
+  },
 };
 
 function baseOptions(overrides: Partial<OrchestratorOptions> = {}): OrchestratorOptions {
@@ -150,7 +163,10 @@ describe('runDiscoveryRun', () => {
     });
 
     const result = await runDiscoveryRun(
-      baseOptions({ candidates: [candidateEvent()], github: { token: 'gh-test', repo: 'acme/compchem-events', fetchImpl: impl } }),
+      baseOptions({
+        candidates: [candidateEvent()],
+        github: { token: 'gh-test', repo: 'acme/compchem-events', fetchImpl: impl },
+      }),
     );
 
     expect(result.prsOpened).toBe(1);
@@ -182,7 +198,10 @@ describe('runDiscoveryRun', () => {
     });
 
     const result = await runDiscoveryRun(
-      baseOptions({ candidates: [candidateEvent()], github: { token: 'gh-test', repo: 'acme/compchem-events', fetchImpl: impl } }),
+      baseOptions({
+        candidates: [candidateEvent()],
+        github: { token: 'gh-test', repo: 'acme/compchem-events', fetchImpl: impl },
+      }),
     );
 
     expect(result.prsOpened).toBe(0);
@@ -205,12 +224,17 @@ describe('runDiscoveryRun', () => {
     });
 
     const result = await runDiscoveryRun(
-      baseOptions({ candidates: [candidateEvent()], github: { token: 'gh-test', repo: 'acme/compchem-events', fetchImpl: impl } }),
+      baseOptions({
+        candidates: [candidateEvent()],
+        github: { token: 'gh-test', repo: 'acme/compchem-events', fetchImpl: impl },
+      }),
     );
 
     expect(result.prsOpened).toBe(0);
     expect(result.prsUpdated).toBe(0);
-    expect(result.skipped).toEqual([{ id: 'excited-states-symposium-2027', reason: 'already reviewed' }]);
+    expect(result.skipped).toEqual([
+      { id: 'excited-states-symposium-2027', reason: 'already reviewed' },
+    ]);
     expect(calls.some((c) => c.method === 'PUT')).toBe(false);
   });
 
@@ -229,7 +253,9 @@ describe('runDiscoveryRun', () => {
         github: { token: 'gh-test', repo: 'acme/compchem-events', fetchImpl: impl },
       }),
     );
-    expect(result.skipped).toEqual([{ id: 'excited-states-symposium-2027', reason: 'duplicate-url' }]);
+    expect(result.skipped).toEqual([
+      { id: 'excited-states-symposium-2027', reason: 'duplicate-url' },
+    ]);
     expect(calls.some((c) => c.url.includes('/git/refs') || c.url.includes('/pulls'))).toBe(false);
   });
 
@@ -240,7 +266,10 @@ describe('runDiscoveryRun', () => {
       'POST /repos/acme/compchem-events/git/refs': { status: 201, body: {} },
       'GET /repos/acme/compchem-events/contents/data/events/2027/first-2027.yaml?ref=discovery/first-2027':
         { status: 404 },
-      'PUT /repos/acme/compchem-events/contents/data/events/2027/first-2027.yaml': { status: 201, body: {} },
+      'PUT /repos/acme/compchem-events/contents/data/events/2027/first-2027.yaml': {
+        status: 201,
+        body: {},
+      },
       'POST /repos/acme/compchem-events/pulls': { status: 201, body: { number: 1 } },
       'POST /repos/acme/compchem-events/issues/1/labels': { status: 200, body: {} },
       'GET /repos/acme/compchem-events/issues?state=open&labels=discovery-failures': {
@@ -251,8 +280,16 @@ describe('runDiscoveryRun', () => {
     const result = await runDiscoveryRun(
       baseOptions({
         candidates: [
-          candidateEvent({ id: 'first-2027', title: 'First Event', url: 'https://example.org/first' }),
-          candidateEvent({ id: 'second-2027', title: 'Second Event', url: 'https://example.org/second' }),
+          candidateEvent({
+            id: 'first-2027',
+            title: 'First Event',
+            url: 'https://example.org/first',
+          }),
+          candidateEvent({
+            id: 'second-2027',
+            title: 'Second Event',
+            url: 'https://example.org/second',
+          }),
         ],
         maxPrs: 1,
         github: { token: 'gh-test', repo: 'acme/compchem-events', fetchImpl: impl },

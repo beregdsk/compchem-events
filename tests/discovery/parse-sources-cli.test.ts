@@ -66,6 +66,9 @@ describe('buildConfig', () => {
 
   it('rejects a non-numeric MAX_TOKENS', () => {
     const result = buildConfig({ ...validEnv, MAX_TOKENS: 'lots' });
-    expect(result).toEqual({ ok: false, error: 'MAX_TOKENS must be a positive number, got "lots"' });
+    expect(result).toEqual({
+      ok: false,
+      error: 'MAX_TOKENS must be a positive number, got "lots"',
+    });
   });
 });

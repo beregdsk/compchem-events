@@ -366,7 +366,9 @@ describe('runPipeline', () => {
         extractCalls += 1;
         return new Response(
           JSON.stringify({
-            choices: [{ message: { content: JSON.stringify(extractedFor('Event Page Workshop')) } }],
+            choices: [
+              { message: { content: JSON.stringify(extractedFor('Event Page Workshop')) } },
+            ],
             usage: { total_tokens: 1000 },
           }),
           { status: 200 },
