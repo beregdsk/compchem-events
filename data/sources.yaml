@@ -201,6 +201,33 @@
     example of the kind. Fetch the /s/ web-preview path, which serves recent
     posts over plain HTTP with no login.
 
+- name: IUPAC events calendar
+  url: https://iupac.org/events/?ical=1
+  kind: ical
+  added: 2026-09-25
+  last_checked: 2026-09-25
+  notes: >-
+    IUPAC-endorsed conferences, workshops and webinars across all of
+    chemistry — 16 VEVENTs when checked, so filter hard on topic. Same
+    "The Events Calendar" WordPress plugin as Telluride Science, so the
+    ical feed carries every field the HTML listing at /events/ would;
+    skip the HTML page and the LLM entirely. robots.txt allows /events
+    with Crawl-delay: 10.
+
+- name: ECS upcoming meetings
+  url: https://www.electrochem.org/upcoming-meetings
+  kind: listing-page
+  added: 2026-09-25
+  last_checked: 2026-09-25
+  notes: >-
+    The Electrochemical Society's biannual meetings plus a couple of
+    sponsored international ones (chemical sensors, solid oxide fuel
+    cells). All of electrochemistry and solid-state science, so filter
+    hard for computational/materials-modeling-relevant content — most of
+    each meeting's programme is experimental. www.electrochem.org/meetings
+    itself is a promotional landing page with no dates; this sub-page is
+    the actual listing.
+
 # ---------------------------------------------------------------------------
 # Candidates: checked and NOT usable as sources. Kept so nobody re-derives
 # these findings. Each was checked on 2026-09-23.
@@ -226,3 +253,16 @@
 # labinitio.org and other aggregators
 #   Coverage comparison only. Do not scrape or republish another site's
 #   curation (docs/discovery-agent.md).
+#
+# RSC (Royal Society of Chemistry) events — https://www.rsc.org/events
+#   Checked 2026-09-25. HTTP 403 from a WAF/bot-protection layer, both with
+#   an identified bot user agent and a spoofed browser one — robots.txt
+#   itself allows the path, so this is not a robots.txt block. Same class
+#   of failure as ICTP's www.ictp.it above.
+#
+# ACS meetings calendar — https://www.acs.org/meetings/events-calendar.html
+# and https://www.acs.org/events/acs-meetings/future-meetings.html
+#   Checked 2026-09-25. HTTP 200, but the body is an Incapsula bot-challenge
+#   iframe, not the page — no static fetch will ever see real content here.
+#   Distinct from the already-dead acscomp.org entry above (division site,
+#   different URL, different failure: that one doesn't resolve at all).
