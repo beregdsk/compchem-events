@@ -358,6 +358,16 @@ guarantee than for `event-page`/`listing-page`/`ical`/`telegram-channel`,
 where `source_url` is always the URL the pipeline itself just fetched —
 worth stating accurately rather than overclaiming.
 
+## 2026-09-25 — Licence chosen: MIT for code, CC0 1.0 for event data
+
+TASK.md item 5 (Human-only steps) asked the maintainer to choose licences
+before `LICENSE` files could be added. The maintainer chose MIT for the code
+(matching TASK.md's suggestion) and CC0 1.0 Universal, not CC BY 4.0, for the
+event data in `data/` — no attribution requirement on reuse, which fits a
+dataset meant to be mirrored and republished freely. `LICENSE` (root, MIT)
+and `data/LICENSE` (CC0) are separate files because the two grants apply to
+disjoint parts of the repository; each cross-references the other.
+
 ## 2026-09-25 — Rebuild cron implemented (deferred piece of Phase 4)
 
 The GitHub repository and a Cloudflare deploy hook now exist (see the
@@ -372,3 +382,80 @@ deployment is a git-connected Cloudflare Worker with static assets (see
 mechanism TASK.md specified applies unchanged. The rest of Phase 4
 (link-check cron, duplicate-detection CI, issue forms, Playwright smoke
 test) remains deferred.
+
+## 2026-09-25 — Remainder of Phase 4 shipped
+
+The four pieces the previous entry deferred:
+
+- **Duplicate detection** turned out already done: `src/lib/validation.ts`
+  rejects a matching `id`, `url`, or normalised title plus start date, and
+  runs on every PR through `npm run validate` in `ci.yml`. TASK.md §4 phase 4
+  lists it as if it were a separate check; it needed no new job, just this
+  note.
+- **Link checking** is one script, `scripts/check-links.ts`, used two ways.
+  `.github/workflows/links.yml` runs it weekly (and on `workflow_dispatch`)
+  over every `url`/`source_url` in `data/events/` and files or updates a
+  single issue (title "Dead links in event data", label `dead-links`) listing
+  what didn't resolve, closing it once everything resolves again. A new
+  `link-check` job in `ci.yml` runs the same script against only the
+  `data/events/` files a pull request changed, warning-only by design — the
+  script always exits 0, so a dead link is visible in the job's log without
+  blocking the merge. Identical URLs across events are fetched once, HEAD
+  first with a GET fallback for servers that reject HEAD, 10s timeout.
+- **Issue forms**: `.github/ISSUE_TEMPLATE/event-submission.yml` and
+  `correction.yml`, both referenced already from `CONTRIBUTING.md` and
+  `src/pages/submit.astro` (`?labels=event-submission`) before either file
+  existed. Fields mirror `docs/data-schema.md`; nothing is validated
+  server-side since these feed a human turning the issue into a pull request,
+  not the build.
+- **Playwright smoke test**: `@playwright/test` added as a devDependency,
+  `playwright.config.ts` runs `npm run preview` against a production build
+  (so fixtures are excluded, matching what ships), and
+  `tests/e2e/smoke.spec.ts` covers the acceptance text exactly — home page
+  loads, choosing a topic reduces the list, the URL updates — plus asserts
+  the displayed count, since the app already renders one and a test that
+  never reads it would miss a mismatch. It walks the topic checkboxes
+  looking for one that actually narrows the list rather than asserting on a
+  hard-coded topic slug, so it does not need updating as seed data changes.
+  New `npm run test:e2e` script; not part of `npm test` or the main `check`
+  CI job, since it needs a browser binary (`npx playwright install
+--with-deps chromium`) and a full build first — it runs as its own `e2e`
+  job in `ci.yml`.
+
+One correction made while writing the smoke test: the URL's query parameter
+for topics is `topics` (plural, comma-joined — see `src/lib/filter.ts`), not
+`topic` (the singular `name` on each checkbox `<input>`). An earlier draft of
+the test asserted `topic=`, which never matched and would have masked a real
+regression by always taking the "not reduced yet" branch until it either
+found a checkbox whose value happened to also appear as a substring of some
+other topic's slug or exhausted the list and failed outright. Caught by
+running the test against the real build rather than trusting it after
+writing it.
+
+TASK.md §5 phase 4's acceptance criterion — "CI, link-check and rebuild
+workflows run" — is now met by all three workflows existing and passing
+locally (`npm run lint && npm run typecheck && npm run validate && npm test
+&& npm run build && npm run test:e2e` all green). Only the human-only steps
+in TASK.md §6 remain: a report form, a submission form, and the custom
+domain / Cloudflare Pages-vs-Workers connection is already resolved (see the
+"Rebuild cron implemented" entry above).
+
+## 2026-09-25 — Report and submission forms: Tally
+
+TASK.md item 3 (Human-only steps) is resolved. The maintainer created two
+Tally forms and `site.config.ts` now points at them instead of
+`placeholder.example`:
+
+- `reportForm.url` is `https://tally.so/r/ODvo7M` ("Report an event": reason
+  dropdown, details, optional email). Its two hidden fields are named
+  `event_id` and `event_url` to match `reportForm.eventIdParam` /
+  `eventUrlParam` exactly, so no code change was needed beyond the URL — Tally
+  passes a query parameter straight into a hidden field of the same name.
+  Confirmed against a production build: `src/pages/events/[id].astro`'s
+  generated links carry both parameters correctly.
+- `submissionFormUrl` is `https://tally.so/r/RGpV04` ("Add an event"), fields
+  matching `docs/data-schema.md`.
+
+Only two human-only items remain open: a custom domain (the site still
+serves from `compchem-events.beregdsk.workers.dev`) and `contactEmail` in
+`site.config.ts`, still `placeholder@example.org`.

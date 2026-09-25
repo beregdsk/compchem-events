@@ -14,7 +14,9 @@
     "format": "prettier --write .",
     "typecheck": "astro check",
     "test": "vitest run",
+    "test:e2e": "playwright test",
     "validate": "tsx scripts/validate.ts",
+    "check-links": "tsx scripts/check-links.ts",
     "discover": "tsx scripts/discovery/parse-sources.ts"
   },
   "dependencies": {
@@ -28,6 +30,7 @@
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.63.0",
     "@types/node": "^26.6.2",
     "eslint": "^10.11.0",
     "eslint-plugin-astro": "^3.2.1",

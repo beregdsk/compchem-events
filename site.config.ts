@@ -25,11 +25,11 @@ export const site: SiteConfig = {
   contactEmail: 'placeholder@example.org',
   repoUrl: 'https://github.com/beregdsk/compchem-events',
   reportForm: {
-    url: 'https://placeholder.example/report',
+    url: 'https://tally.so/r/ODvo7M',
     eventIdParam: 'event_id',
     eventUrlParam: 'event_url',
   },
-  submissionFormUrl: 'https://placeholder.example/submit',
+  submissionFormUrl: 'https://tally.so/r/RGpV04',
 };
 
 /** Host portion of the production URL, used for iCalendar UIDs. */

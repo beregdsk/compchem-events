@@ -20,3 +20,43 @@ jobs:
       - run: npm run validate
       - run: npm test
       - run: npm run build
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+
+  # Duplicate detection (same url, or same title and start date) is a
+  # semantic rule in src/lib/validation.ts and already runs above as part of
+  # `npm run validate` — no separate job needed for it.
+  link-check:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - run: npm ci
+      - name: Check links in changed event files
+        # Warning only: reports dead links on the files this PR touches but
+        # never fails the job, since npm run check-links always exits 0.
+        run: |
+          changed=$(git diff --name-only --diff-filter=d \
+            "${{ github.event.pull_request.base.sha }}" "${{ github.sha }}" -- data/events)
+          if [ -z "$changed" ]; then
+            echo "No changed event files."
+          else
+            npm run check-links -- $changed
+          fi

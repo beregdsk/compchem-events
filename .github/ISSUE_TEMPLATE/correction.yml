@@ -1,0 +1,38 @@
+name: Correction
+description: Report a wrong date, link, deadline or other detail on a listed event.
+title: '[Correction] '
+labels: [correction]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For a suspicious or predatory listing, use "Report this event" on the event page instead — those reports go to the maintainers privately.
+  - type: input
+    id: event
+    attributes:
+      label: Event
+      description: The event's id (from its YAML file name) or a link to its page on the site.
+      placeholder: euchems-compchem-2027 or https://<site>/events/euchems-compchem-2027/
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What's wrong
+      description: Which field is incorrect, and what it currently says.
+    validations:
+      required: true
+  - type: textarea
+    id: correct
+    attributes:
+      label: Correct information
+      description: What it should say instead.
+    validations:
+      required: true
+  - type: input
+    id: evidence
+    attributes:
+      label: Source
+      description: A link to the organiser's official page confirming the correct information.
+    validations:
+      required: true

@@ -1,0 +1,81 @@
+name: Link check
+
+# Weekly check of every url/source_url in data/events/. Never fails the
+# build — dead links are tracked in a single issue, not enforced in CI.
+on:
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch: {}
+
+permissions:
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - run: npm ci
+      - name: Check every event link
+        run: npm run check-links -- --json > links.json
+      - name: Create or update the tracking issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const { checked, dead } = JSON.parse(fs.readFileSync('links.json', 'utf8'));
+            const title = 'Dead links in event data';
+
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'dead-links',
+            });
+            const existing = issues.find((i) => i.title === title);
+            const today = new Date().toISOString().slice(0, 10);
+
+            if (dead.length === 0) {
+              console.log(`All ${checked} link(s) resolved.`);
+              if (existing) {
+                await github.rest.issues.update({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: existing.number,
+                  state: 'closed',
+                  body: `All ${checked} checked link(s) resolved as of ${today}. Closing.`,
+                });
+              }
+              return;
+            }
+
+            const lines = dead.map((d) => `- \`${d.file}\` (\`${d.field}\`): ${d.url} — ${d.detail}`);
+            const body = [
+              `Weekly link check (${today}) found ${dead.length} of ${checked} link(s) not resolving:`,
+              '',
+              ...lines,
+              '',
+              'A link here may be a real dead page, or a server that blocks scripted requests — check by hand before editing the event.',
+            ].join('\n');
+
+            if (existing) {
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing.number,
+                body,
+                state: 'open',
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ['dead-links'],
+              });
+            }

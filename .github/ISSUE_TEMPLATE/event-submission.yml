@@ -1,0 +1,91 @@
+name: Event submission
+description: Suggest a computational or theoretical chemistry event to add to the calendar.
+title: '[Event] '
+labels: [event-submission]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        No GitHub or coding experience needed — fill in what you know from the organiser's official page and a maintainer will turn it into a pull request. See the [curation policy](../../docs/curation-policy.md) for what gets listed.
+  - type: input
+    id: title
+    attributes:
+      label: Event title
+      description: The official name of the event.
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: Official event page
+      description: The organiser's own page for the event, not a news article or aggregator.
+      placeholder: https://example.org/the-event-2027/
+    validations:
+      required: true
+  - type: input
+    id: organizer
+    attributes:
+      label: Organiser
+      description: The organising body, institute or society.
+  - type: dropdown
+    id: type
+    attributes:
+      label: Type
+      options:
+        - conference
+        - workshop
+        - school
+        - symposium
+        - webinar
+        - hackathon
+    validations:
+      required: true
+  - type: dropdown
+    id: format
+    attributes:
+      label: Format
+      options:
+        - in-person
+        - hybrid
+        - online
+    validations:
+      required: true
+  - type: input
+    id: dates
+    attributes:
+      label: Dates
+      description: Start and end date (YYYY-MM-DD). Same day for a one-day event.
+      placeholder: 2027-03-08 to 2027-03-10
+    validations:
+      required: true
+  - type: input
+    id: location
+    attributes:
+      label: Location
+      description: City and country, if not fully online.
+      placeholder: Utrecht, Netherlands
+  - type: input
+    id: topics
+    attributes:
+      label: Topics
+      description: One or more from data/topics.yaml — best guess is fine, a maintainer will map them.
+      placeholder: electronic-structure, machine-learning
+  - type: textarea
+    id: deadlines
+    attributes:
+      label: Deadlines
+      description: Abstract, registration, early-bird, travel-grant, poster or application deadlines you know of, with dates and timezone.
+  - type: textarea
+    id: description
+    attributes:
+      label: Short description
+      description: A sentence or two, in your own words — not copied from the event page.
+    validations:
+      required: true
+  - type: input
+    id: verified
+    attributes:
+      label: Date you checked the official page
+      placeholder: '2026-09-25'
+    validations:
+      required: true

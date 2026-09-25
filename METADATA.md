@@ -30,6 +30,7 @@ data/events/*.yaml  →  scripts/validate.ts  (gate: build fails on invalid data
 | --- | --- |
 | `README.md` | Front door: what the project is, how to run it, where the docs are. |
 | `METADATA.md` | This file. |
+| `LICENSE` | MIT, for the code. |
 | `AGENTS.md` | Rules for coding agents: ground rules, code style, definition of done. Read it before changing anything. |
 | `CLAUDE.md` | Frontend aesthetic instructions applied to this repo. |
 | `CONTRIBUTING.md` | How a human contributor adds or corrects an event. |
@@ -38,11 +39,12 @@ data/events/*.yaml  →  scripts/validate.ts  (gate: build fails on invalid data
 | `astro.config.ts` | Astro build configuration. |
 | `tsconfig.json` | TypeScript configuration (strict). |
 | `vitest.config.ts` | Test runner configuration. |
+| `playwright.config.ts` | Config for the one browser-driven smoke test. Builds against a production build via `npm run preview`. |
 | `eslint.config.js` | Lint rules. |
 | `.prettierrc.json` / `.prettierignore` | Formatting rules, and the pre-existing docs exempted from them. |
 | `.nvmrc` | The Node version the project is built and tested against. |
 | `package.json` | Scripts and dependencies. `npm run` targets are listed in `README.md`. |
-| `.gitignore` | Ignores `node_modules/`, `dist/`, `.astro/`, `.env*`, logs and `.superpowers/`. |
+| `.gitignore` | Ignores `node_modules/`, `dist/`, `.astro/`, `.env*`, logs, `.superpowers/`, and the Playwright run artifacts (`test-results/`, `playwright-report/`). |
 
 ## `data/` — the source of truth
 
@@ -55,6 +57,7 @@ publishing workflow.
 | `data/topics.yaml` | Controlled vocabulary of topic slugs and labels. Adding a slug is a schema-level change. |
 | `data/blocklist.yaml` | Organiser domains that must never be listed, each with public evidence. Intentionally empty until there is something to add. Matches a registrable host and its subdomains. |
 | `data/sources.yaml` | Pages and feeds the discovery agent will watch, each verified by fetch. No code reads it yet — it is data for phase 5. Unusable candidates are kept in a commented block at the bottom so nobody re-checks them. |
+| `data/LICENSE` | CC0 1.0, for the event data in this directory. |
 
 ## `schema/`
 
@@ -68,6 +71,7 @@ publishing workflow.
 | --- | --- |
 | `scripts/validate.ts` | CLI entry point for `npm run validate`. Walks `data/events/`, reports problems and exits non-zero on any error. Thin: the logic is in `src/lib/validation.ts` so the discovery agent can import it as a library. |
 | `scripts/discovery/classify.ts` | CLI: reads one candidate event file (YAML or JSON), classifies it against `data/events/` and `data/blocklist.yaml` via `src/lib/discovery/classify-candidate.ts`, prints the verdict as JSON. Standalone ahead of the rest of the phase-5 pipeline. |
+| `scripts/check-links.ts` | CLI: fetches every `url`/`source_url` (or just the files given on the command line) and reports which don't resolve. Never fails — used both by the weekly link-check workflow and the pull-request check on changed files. |
 
 ## `src/lib/` — pure logic, unit tested
 
@@ -148,7 +152,8 @@ Vitest. Run with `npm test`.
 | `tests/cli/validate-guard.test.ts` | The validator CLI exits non-zero on bad data. |
 | `tests/discovery/*.test.ts` | The candidate classifier: the jev HTTP client, the mechanical pre-filter and jev-backed verdict, and the CLI's file parsing. The jev call is always stubbed; CI never calls the real API. |
 | `tests/discovery/fixtures/candidates/` | Candidate events covering a clean add, each mechanical skip reason, and an adversarial prompt-injection attempt. |
-| `tests/smoke.test.ts` | Build-level sanity. |
+| `tests/smoke.test.ts` | `site.config.ts` sanity (Vitest, not a browser). |
+| `tests/e2e/smoke.spec.ts` | The one Playwright smoke test: the home page loads, choosing a topic reduces the list, and the URL updates. Run with `npm run test:e2e`; not part of `npm test`. |
 | `tests/fixtures/valid/` | Events that must pass, covering the minimal, full and cancelled shapes. |
 | `tests/fixtures/invalid/` | One file per rule that must fail, named for the rule it breaks. Add a file here whenever you add a rule. |
 | `tests/fixtures/warnings/` | Events that pass but should warn, such as a stale `last_verified`. |
@@ -169,9 +174,12 @@ Vitest. Run with `npm test`.
 
 | Path | What it is |
 | --- | --- |
-| `.github/workflows/ci.yml` | Lint, typecheck, validate, test, build on every push and pull request. |
+| `.github/workflows/ci.yml` | Lint, typecheck, validate, test, build and the Playwright e2e test on every push and pull request; a pull request also gets a warning-only link check of the event files it touches. Duplicate detection (same `url`, or same title and start date) is a semantic rule inside `npm run validate`, not a separate job. |
+| `.github/workflows/links.yml` | Weekly cron (and manual `workflow_dispatch`) that fetches every `url`/`source_url` in `data/events/` and files or updates one tracking issue listing the dead ones. Never fails the workflow. |
 | `.github/workflows/rebuild.yml` | Daily cron (and manual `workflow_dispatch`) that POSTs to the Cloudflare deploy hook in the `CF_DEPLOY_HOOK` secret, so events roll from upcoming to past without a commit. Skips with a log message if the secret isn't set. |
 | `.github/pull_request_template.md` | The checklist a pull request must satisfy. |
+| `.github/ISSUE_TEMPLATE/event-submission.yml` | Issue form for suggesting an event with no GitHub/coding experience — route 2 in `CONTRIBUTING.md`. |
+| `.github/ISSUE_TEMPLATE/correction.yml` | Issue form for reporting a wrong field on a listed event. |
 
 ## Not in the repository
 

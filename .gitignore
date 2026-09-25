@@ -5,3 +5,7 @@ dist/
 .env.*
 *.log
 .superpowers/
+test-results/
+playwright-report/
+blob-report/
+links.json
