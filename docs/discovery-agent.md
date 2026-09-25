@@ -149,3 +149,43 @@ Two credentials stay human-only operational steps, per this document's
 The cron entry itself (e.g. a daily line in the `discovery` user's
 crontab running the `docker run` command above) is set up on the VDS by
 the maintainer; it is infrastructure outside this repository.
+
+### Running without Docker
+
+If the VDS has no Docker (and no root to install it), run `run.ts`
+directly under a dedicated, non-root system account instead — the same
+unprivileged-execution requirement, without a container:
+
+```
+mkdir -p ~/discovery-agent && chmod 700 ~/discovery-agent
+```
+
+Put the same variables from *Configuration* into `~/discovery-agent/.env`
+(`chmod 600`, never committed), with `STATE_PATH=~/discovery-agent/state.json`.
+A small wrapper script loads it and runs the agent, since plain `cron` has
+no `--env-file` equivalent:
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+AGENT_DIR="$HOME/discovery-agent"
+REPO_DIR="$HOME/agg"          # path to this repo's checkout
+
+set -a
+source "$AGENT_DIR/.env"
+set +a
+
+cd "$REPO_DIR"
+echo "=== $(date -u +%Y-%m-%dT%H:%M:%SZ) ===" >> "$AGENT_DIR/run.log"
+./node_modules/.bin/tsx scripts/discovery/run.ts >> "$AGENT_DIR/run.log" 2>&1 \
+  || echo "discovery agent exited non-zero: $?" >> "$AGENT_DIR/run.log"
+```
+
+`chmod 700` that script, then add one crontab line (`crontab -e`) pointing
+at it, at whatever cadence *Where it runs* calls for. **Caution:** `buildConfig`
+only checks that each required variable is non-empty, not that it holds a
+real credential — a still-placeholder `.env` will make each run genuinely
+fetch every source and fail every extraction call with a 401, rather than
+failing fast before touching the network. Fill in real secrets before the
+first scheduled fire, or run the script once by hand to confirm it fails
+the way you expect.
