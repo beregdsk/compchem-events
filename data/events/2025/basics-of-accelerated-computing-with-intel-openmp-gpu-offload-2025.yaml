@@ -8,10 +8,11 @@ url: https://molssi.org/basics-of-accelerated-computing-with-intel-openmp-gpu-of
 source_url: https://molssi.org/basics-of-accelerated-computing-with-intel-openmp-gpu-offload-03-07-2025/
 topics:
   - software-hpc
-  - electronic-structure
-description: Virtual hands-on workshop (Mar 7, 2025) covering OpenMP CPU
-  parallelization, offloading OpenMP codes to GPUs, host-device data management,
-  best practices, and an Intel OpenMP/NWChem real-world example.
+  - education-training
+description: Virtual hands-on workshop on Intel OpenMP GPU offload to accelerate
+  scientific codes (e.g., NWChem). Covers OpenMP CPU parallelization, offloading
+  to GPUs, data transfer management, and best practices. Mar 7, 2025,
+  13:00–17:00 ET.
 added: 2026-09-25
 last_verified: 2026-09-25
 organizer: Molecular Sciences Software Institute (MolSSI) and Intel
