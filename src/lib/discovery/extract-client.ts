@@ -28,6 +28,7 @@ export interface ExtractOptions {
   model: string;
   fetchImpl?: typeof fetch;
   topics: readonly string[];
+  onUsage?: (tokens: number) => void;
 }
 
 /** OpenRouter's chat-completions endpoint. */
@@ -179,6 +180,7 @@ function normalize(raw: RawExtractedEvent): ExtractedFields {
 
 interface ChatCompletionResponse {
   choices?: Array<{ message?: { content?: string } }>;
+  usage?: { total_tokens?: number };
 }
 
 function isChatCompletionResponse(data: unknown): data is ChatCompletionResponse {
@@ -223,6 +225,7 @@ export async function extractEvent(
   if (!isChatCompletionResponse(data)) {
     throw new Error(`extract response missing "choices": ${JSON.stringify(data)}`);
   }
+  options.onUsage?.(data.usage?.total_tokens ?? 0);
   const content = data.choices?.[0]?.message?.content;
   if (!content) throw new Error('extract response had no message content');
 

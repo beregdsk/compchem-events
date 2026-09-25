@@ -31,6 +31,7 @@ export interface PipelineOptions {
   statePath: string;
   userAgent: string;
   maxPages: number;
+  maxTokens: number;
   today?: ISODate;
   fetchImpl?: typeof fetch;
   sleepImpl?: (ms: number) => Promise<void>;
@@ -42,6 +43,7 @@ export interface PipelineOptions {
 export interface PipelineResult {
   candidates: RawEvent[];
   errors: Array<{ source: string; message: string }>;
+  tokensUsed: number;
 }
 
 /** Fetches every source in data/sources.yaml, extracts and validates candidates. Never opens a PR. */
@@ -51,7 +53,14 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
   const today = options.today ?? todayUTC();
   const ctx: ValidationContext = loadValidationContext('.', today);
   const log = options.log ?? (() => {});
-  const extractOptions: ExtractOptions = { ...options.extract, topics: [...ctx.topics] };
+  let tokensUsed = 0;
+  const extractOptions: ExtractOptions = {
+    ...options.extract,
+    topics: [...ctx.topics],
+    onUsage: (tokens) => {
+      tokensUsed += tokens;
+    },
+  };
 
   const candidates: RawEvent[] = [];
   const errors: Array<{ source: string; message: string }> = [];
@@ -103,6 +112,10 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
    * commit this fetch's page state.
    */
   async function processInput(input: ExtractionInput): Promise<boolean> {
+    if (tokensUsed >= options.maxTokens) {
+      log(`max tokens (${options.maxTokens}) reached, skipping ${input.sourceUrl}`);
+      return true;
+    }
     try {
       const fields = await extractEvent(truncateForExtraction(input.text), extractOptions);
       if (!fields) return true;
@@ -244,5 +257,5 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
   }
 
   saveState(options.statePath, state);
-  return { candidates, errors };
+  return { candidates, errors, tokensUsed };
 }

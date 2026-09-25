@@ -144,6 +144,7 @@ describe('runPipeline', () => {
         statePath,
         userAgent: 'Test Agent (+https://example.org)',
         maxPages: 50,
+        maxTokens: 500_000,
         today: '2026-09-23',
         fetchImpl: stubPageFetch(),
         sleepImpl: async () => {},
@@ -218,6 +219,7 @@ describe('runPipeline', () => {
         statePath,
         userAgent: 'Test Agent (+https://example.org)',
         maxPages: 1,
+        maxTokens: 500_000,
         today: '2026-09-23',
         fetchImpl: stubPageFetch(),
         sleepImpl: async () => {},
@@ -275,6 +277,7 @@ describe('runPipeline', () => {
       statePath,
       userAgent: 'Test Agent (+https://example.org)',
       maxPages: 50,
+      maxTokens: 500_000,
       today: '2026-09-23',
       fetchImpl: pageFetch,
       sleepImpl: async () => {},
@@ -336,6 +339,7 @@ describe('runPipeline', () => {
         statePath,
         userAgent: 'Test Agent (+https://example.org)',
         maxPages: 50,
+        maxTokens: 500_000,
         today: '2026-09-23',
         fetchImpl: pageFetch,
         sleepImpl: async () => {},
@@ -344,6 +348,54 @@ describe('runPipeline', () => {
       expect(result.errors).toHaveLength(0);
       expect(calls).toHaveLength(1);
       expect(calls[0]!.length).toBe(8000);
+    } finally {
+      cleanupState();
+      cleanupSources();
+    }
+  });
+
+  it('stops extracting once maxTokens is reached, and reports tokensUsed', async () => {
+    const { path: statePath, cleanup: cleanupState } = tmpStatePath();
+    const { path: sourcesPath, cleanup: cleanupSources } = tmpSourcesFile(
+      '- name: Event Page One\n  url: https://example.org/event\n  kind: event-page\n' +
+        '- name: Event Page Two\n  url: https://example.org/event-2\n  kind: event-page\n',
+    );
+    try {
+      let extractCalls = 0;
+      const extractFetch: typeof fetch = async () => {
+        extractCalls += 1;
+        return new Response(
+          JSON.stringify({
+            choices: [{ message: { content: JSON.stringify(extractedFor('Event Page Workshop')) } }],
+            usage: { total_tokens: 1000 },
+          }),
+          { status: 200 },
+        );
+      };
+      const pageResponses: Record<string, { status: number; body: string }> = {
+        'https://example.org/robots.txt': { status: 200, body: '' },
+        'https://example.org/event': { status: 200, body: eventPageBody },
+        'https://example.org/event-2': { status: 200, body: eventPageBody },
+      };
+      const pageFetch: typeof fetch = async (input) => {
+        const stub = pageResponses[String(input)];
+        if (!stub) throw new Error(`unstubbed: ${String(input)}`);
+        return new Response(stub.body, { status: stub.status });
+      };
+
+      const result = await runPipeline({
+        sourcesPath,
+        statePath,
+        userAgent: 'Test Agent (+https://example.org)',
+        maxPages: 200,
+        maxTokens: 1000,
+        fetchImpl: pageFetch,
+        extract: { apiKey: 'sk-test', model: 'test-model', fetchImpl: extractFetch },
+      });
+
+      expect(extractCalls).toBe(1);
+      expect(result.tokensUsed).toBe(1000);
+      expect(result.candidates).toHaveLength(1);
     } finally {
       cleanupState();
       cleanupSources();

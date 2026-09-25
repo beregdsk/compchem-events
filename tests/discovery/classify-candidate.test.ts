@@ -146,6 +146,33 @@ describe('classifyCandidate — jev verdict', () => {
     });
   });
 
+  it('reports combined input+output token usage via onUsage', async () => {
+    const { impl } = stubFetch(cleanResponse);
+    const usages: number[] = [];
+    await classifyCandidate(loadCandidate('clean-add'), {
+      existingEvents,
+      blockedHosts,
+      apiKey: 'sk-test',
+      fetchImpl: impl,
+      onUsage: (tokens) => usages.push(tokens),
+    });
+    expect(usages).toEqual([400]);
+  });
+
+  it('does not call onUsage on a mechanical skip', async () => {
+    const { impl, calls } = stubFetch(cleanResponse);
+    const usages: number[] = [];
+    await classifyCandidate(loadCandidate('duplicate-url'), {
+      existingEvents,
+      blockedHosts,
+      apiKey: 'sk-test',
+      fetchImpl: impl,
+      onUsage: (tokens) => usages.push(tokens),
+    });
+    expect(calls).toHaveLength(0);
+    expect(usages).toEqual([]);
+  });
+
   it('returns a skip verdict when confidence is below the threshold', async () => {
     const lowResponse = {
       ...cleanResponse,
