@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import { parse } from 'yaml';
 import {
   draftFilePath,
+  serializeDraft,
   slugifyTitle,
   synthesizeDraft,
   type DraftInput,
@@ -61,6 +63,14 @@ describe('draftFilePath', () => {
     expect(draftFilePath(draft)).toBe(
       'data/events/2027/new-symposium-on-excited-state-photochemistry-2027.yaml',
     );
+  });
+});
+
+describe('serializeDraft', () => {
+  it('produces YAML that round-trips through the yaml parser', () => {
+    const draft = synthesizeDraft(fullInput, '2026-09-23');
+    const yamlText = serializeDraft(draft);
+    expect(parse(yamlText)).toEqual(draft);
   });
 });
 

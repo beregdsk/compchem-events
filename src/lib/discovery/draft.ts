@@ -1,3 +1,4 @@
+import { stringify } from 'yaml';
 import type { ISODate } from '../dates';
 import type { RawEvent } from '../types';
 
@@ -62,4 +63,9 @@ export function synthesizeDraft(input: DraftInput, today: ISODate): RawEvent {
  */
 export function draftFilePath(draft: RawEvent): string {
   return `data/events/${draft.start_date.slice(0, 4)}/${draft.id}.yaml`;
+}
+
+/** Renders a draft as the YAML text a PR would commit at `draftFilePath(draft)`. */
+export function serializeDraft(draft: RawEvent): string {
+  return stringify(draft);
 }
