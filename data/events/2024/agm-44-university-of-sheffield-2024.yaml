@@ -1,5 +1,5 @@
 id: agm-44-university-of-sheffield-2024
-title: AGM 44 University of Sheffield.
+title: AGM 44 — University of Sheffield
 type: conference
 start_date: 2024-09-04
 end_date: 2024-09-06
@@ -8,12 +8,10 @@ url: https://agm44.ccp5.ac.uk/
 source_url: https://www.ccp5.ac.uk/events/agm-44-university-of-sheffield/
 topics:
   - materials-modeling
-  - molecular-dynamics
   - software-hpc
 description: CCP5 Annual General Meeting (AGM 44) in Sheffield, 4–6 Sep 2024.
-  Conference on molecular and materials modelling with invited speakers; call
-  for talks/posters (deadline 21 Jun). Registration/details on the event
-  website.
+  Meeting on molecular and materials modelling with invited speakers;
+  applications open for talks and posters (deadline 21 Jun).
 added: 2026-09-25
 last_verified: 2026-09-25
 location:
