@@ -8,13 +8,13 @@ url: https://psi-k.net/defects-in-solids-for-quantum-technologies-2024/
 source_url: https://psi-k.net/defects-in-solids-for-quantum-technologies-2024/
 topics:
   - electronic-structure
+  - dft
   - materials-modeling
-  - quantum-computing-chemistry
   - spectroscopy
-description: Second conference on first-principles calculations of defect
-  qubits’ magneto-optical and spin properties, bringing theory and experiment
-  together. Held 10–14 June 2024 at Eötvös Loránd University (ELTE), Budapest;
-  154 participants from 28 countries.
+  - quantum-computing-chemistry
+description: Conference on first-principles calculations of defect qubits,
+  focusing on magneto-optical and spin properties for quantum technologies;
+  theory and experiment met at ELTE in Budapest (10–14 June 2024).
 added: 2026-09-25
 last_verified: 2026-09-25
 location:
