@@ -1,0 +1,16 @@
+# Runs the discovery agent (docs/discovery-agent.md) as a scheduled batch
+# job on the maintainer's VDS. Unrelated to the site itself, which deploys
+# as a static Cloudflare Worker — see wrangler.jsonc.
+FROM node:26-slim
+
+RUN groupadd --system discovery && \
+    useradd --system --gid discovery --create-home discovery
+
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+
+USER discovery
+
+CMD ["node_modules/.bin/tsx", "scripts/discovery/run.ts"]

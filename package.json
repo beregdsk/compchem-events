@@ -15,7 +15,8 @@
     "typecheck": "astro check",
     "test": "vitest run",
     "validate": "tsx scripts/validate.ts",
-    "discover": "tsx scripts/discovery/parse-sources.ts"
+    "discover": "tsx scripts/discovery/parse-sources.ts",
+    "discover:run": "tsx scripts/discovery/run.ts"
   },
   "dependencies": {
     "ajv": "^8.20.0",
