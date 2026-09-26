@@ -14,6 +14,38 @@ export interface FetchOptions {
   minHostIntervalMs?: number;
   sleepImpl?: (ms: number) => Promise<void>;
   now?: () => Date;
+  /**
+   * Renders a page with a real browser when `looksLikeBotChallenge`
+   * matches — see `browser-fetch.ts`. Optional and undefined in tests, so
+   * nothing in the test suite ever launches a real browser: the fallback
+   * simply doesn't trigger and the plain-fetch result (an error, usually)
+   * is returned as before.
+   */
+  browserFetchImpl?: (url: string, userAgent: string) => Promise<string>;
+}
+
+/**
+ * A small body carrying one of these signatures is a bot-challenge shell,
+ * not real content — confirmed live for ACS (Incapsula, 200 status) and
+ * RSC/similar WAF blocks (403, empty body). A plain fetch never executes
+ * the JS that would otherwise pass the challenge or render the real page.
+ * A large body is never treated as a challenge regardless of content, on
+ * the theory that a real challenge shell is always small.
+ */
+const BOT_CHALLENGE_SIGNATURES = [
+  'incapsula',
+  'just a moment',
+  'checking your browser',
+  'cf-browser-verification',
+  'captcha',
+];
+const BOT_CHALLENGE_BODY_LIMIT = 4000;
+
+export function looksLikeBotChallenge(status: number, body: string): boolean {
+  if (status === 403) return true;
+  if (body.length > BOT_CHALLENGE_BODY_LIMIT) return false;
+  const lower = body.toLowerCase();
+  return BOT_CHALLENGE_SIGNATURES.some((signature) => lower.includes(signature));
 }
 
 const DEFAULT_MIN_HOST_INTERVAL_MS = 3000;
@@ -140,22 +172,43 @@ export async function politeFetch(url: string, options: FetchOptions): Promise<F
     if (cached) state.pages[url] = { ...cached, fetchedAt: now().toISOString() };
     return { status: 'unchanged' };
   }
+
+  function finalize(body: string, etag: string | undefined): FetchResult {
+    const contentHash = hashOf(body);
+    const fetchedAt = now().toISOString();
+    if (cached?.contentHash === contentHash) {
+      state.pages[url] = { ...cached, fetchedAt };
+      return { status: 'unchanged' };
+    }
+    state.pages[url] = { etag, contentHash, fetchedAt };
+    return { status: 'fetched', body };
+  }
+
+  async function viaBrowserFallback(): Promise<FetchResult | undefined> {
+    if (!options.browserFetchImpl) return undefined;
+    try {
+      const rendered = await options.browserFetchImpl(url, options.userAgent);
+      // Never cache under the ETag of the challenge response we just
+      // discarded — it describes the shell, not the rendered content.
+      return finalize(rendered, undefined);
+    } catch (err) {
+      return { status: 'error', error: err instanceof Error ? err.message : String(err) };
+    }
+  }
+
   if (!response.ok) {
+    const errorBody = await response.text().catch(() => '');
+    if (looksLikeBotChallenge(response.status, errorBody)) {
+      const fallback = await viaBrowserFallback();
+      if (fallback) return fallback;
+    }
     return { status: 'error', error: `${response.status} ${response.statusText}` };
   }
 
   const body = await response.text();
-  const contentHash = hashOf(body);
-  const fetchedAt = now().toISOString();
-  if (cached?.contentHash === contentHash) {
-    state.pages[url] = { ...cached, fetchedAt };
-    return { status: 'unchanged' };
+  if (looksLikeBotChallenge(response.status, body)) {
+    const fallback = await viaBrowserFallback();
+    if (fallback) return fallback;
   }
-
-  state.pages[url] = {
-    etag: response.headers.get('etag') ?? undefined,
-    contentHash,
-    fetchedAt,
-  };
-  return { status: 'fetched', body };
+  return finalize(body, response.headers.get('etag') ?? undefined);
 }
