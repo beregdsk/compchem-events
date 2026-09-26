@@ -80,14 +80,25 @@ So for lists like Psi-k, **subscribe and read the mail**:
 
 This is deliberately cheap to add because it is only another text source feeding the same extract → validate → screen → PR pipeline. Build it with the rest of the agent, not before: there is nothing for it to feed yet.
 
-## Human review checklist (goes in the PR template for `needs-review` PRs)
+## Human review
 
-- Opened the official page and confirmed title, dates, location and format.
-- Confirmed the organiser and committee are identifiable and the event fits `docs/curation-policy.md`.
-- Description is in our words and 280 characters or fewer.
-- Deadlines match the official page, with the right timezone.
-- Topics are sensible and within the vocabulary.
-- Set `last_verified` to the date you checked, and adjust `added` if needed.
+Every discovered PR gets the `needs-review` label. Its body is the raw
+candidate fields plus the classifier's confidence and per-criterion scores —
+no separate checklist, since one would only restate the fields already shown
+above it. A reviewer checks those fields against the event's official page
+and `docs/curation-policy.md` directly before merging.
+
+After each run, a separate pass (`auto-approve.ts`) revisits every currently
+open discovery PR — not just this run's candidates, since CI on a PR opened
+days ago finishes long after that run has exited — and adds a
+`high-confidence` label plus an explanatory comment on any whose recorded
+confidence is at least 0.90 and whose `check`/`e2e` CI jobs both passed.
+It's a comment, not a formal GitHub approval: GitHub rejects an actor
+approving its own PR, and the same token opens every discovery PR. This
+never merges anything and never replaces review: **automatically discovered
+events are still never published without a human clicking merge.** It only
+lets a maintainer skim straight to the highest-confidence PRs instead of
+re-deriving that judgement by hand.
 
 ## Testing
 
