@@ -9,10 +9,10 @@ source_url: https://molssi.org/the-molssi-ai-assisted-development-best-practices
 topics:
   - software-hpc
   - education-training
-description: "Two half-day hands-on MolSSI workshop (1–5pm ET) on AI-assisted
+description: 'Two half-day hands-on MolSSI workshop (1–5pm ET) on AI-assisted
   software development: secure agent execution, requirements-driven workflows,
   LLM/static code analysis, and strategies to manage AI-driven technical debt
-  for scientific software teams."
+  for scientific software teams.'
 added: 2026-09-25
 last_verified: 2026-09-25
 location:
