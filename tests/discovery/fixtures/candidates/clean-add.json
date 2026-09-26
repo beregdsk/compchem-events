@@ -6,6 +6,7 @@
   "location": { "city": "Example City", "country": "FR" },
   "url": "https://organiser.example.org/excited-states-symposium-2027/",
   "organizer": "Example Photochemistry Society",
+  "cost": "Free, registration required",
   "topics": ["photochemistry", "excited-states"],
   "description": "A three-day symposium on excited-state photochemistry methods and applications."
 }

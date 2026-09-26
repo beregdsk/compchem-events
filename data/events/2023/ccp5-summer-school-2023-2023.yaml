@@ -1,0 +1,20 @@
+id: ccp5-summer-school-2023-2023
+title: CCP5 Summer School 2023
+type: school
+start_date: 2023-07-17
+end_date: 2023-07-28
+format: online
+url: https://summer2023.ccp5.ac.uk/
+source_url: https://www.ccp5.ac.uk/events/ccp5-summer-school-2023/
+topics:
+  - electronic-structure
+  - dft
+  - wavefunction-methods
+  - software-hpc
+  - education-training
+description: Two-week CCP5 Summer School (17–28 Jul 2023), daily sessions
+  09:00–14:00. Registration open; organized by CCP5 for training in
+  computational chemistry methods and software.
+added: 2026-09-25
+last_verified: 2026-09-25
+organizer: CCP5
