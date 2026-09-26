@@ -9,10 +9,10 @@ source_url: https://molssi.org/the-molssi-ai-assisted-development-best-practices
 topics:
   - software-hpc
   - education-training
-description: "Two-day online MolSSI workshop (Oct 15–16, 2026) on AI-assisted
+description: 'Two-day online MolSSI workshop (Oct 15–16, 2026) on AI-assisted
   software development best practices: secure agent execution,
   requirements-driven workflows, LLM/static code analysis, and managing
-  AI-driven technical debt. Hands-on; programming and Git recommended."
+  AI-driven technical debt. Hands-on; programming and Git recommended.'
 added: 2026-09-25
 last_verified: 2026-09-25
 organizer: MolSSI
