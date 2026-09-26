@@ -26,6 +26,7 @@
     "astro": "^7.3.3",
     "ical.js": "^2.2.1",
     "linkedom": "^0.18.13",
+    "playwright": "^1.63.0",
     "yaml": "^2.9.1"
   },
   "devDependencies": {

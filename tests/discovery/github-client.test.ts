@@ -3,8 +3,11 @@ import {
   addLabel,
   createBranch,
   getBranchStatus,
+  getCheckRunConclusions,
   getDefaultBranch,
+  listOpenDiscoveryPrs,
   openPr,
+  postReview,
   putFile,
   syncFailureIssue,
   updatePrBody,
@@ -310,5 +313,96 @@ describe('syncFailureIssue', () => {
     });
     await syncFailureIssue([], options(impl));
     expect(calls).toHaveLength(1);
+  });
+});
+
+describe('listOpenDiscoveryPrs', () => {
+  it('returns only PRs on discovery/* branches, never a human-authored PR', async () => {
+    const { impl } = stubGitHub({
+      'GET /repos/acme/compchem-events/pulls?state=open&per_page=100': {
+        status: 200,
+        body: [
+          {
+            number: 5,
+            body: 'Confidence: 0.93',
+            head: { ref: 'discovery/some-event-2027', sha: 'sha-5' },
+            labels: [{ name: 'needs-review' }],
+          },
+          {
+            number: 6,
+            body: 'A hand-written PR, unrelated to discovery',
+            head: { ref: 'fix-typo', sha: 'sha-6' },
+            labels: [],
+          },
+        ],
+      },
+    });
+    const prs = await listOpenDiscoveryPrs(options(impl));
+    expect(prs).toEqual([
+      {
+        number: 5,
+        headRef: 'discovery/some-event-2027',
+        headSha: 'sha-5',
+        body: 'Confidence: 0.93',
+        labels: ['needs-review'],
+      },
+    ]);
+  });
+
+  it('treats a null body as an empty string', async () => {
+    const { impl } = stubGitHub({
+      'GET /repos/acme/compchem-events/pulls?state=open&per_page=100': {
+        status: 200,
+        body: [
+          {
+            number: 5,
+            body: null,
+            head: { ref: 'discovery/some-event-2027', sha: 'sha-5' },
+            labels: [],
+          },
+        ],
+      },
+    });
+    const prs = await listOpenDiscoveryPrs(options(impl));
+    expect(prs[0]!.body).toBe('');
+  });
+});
+
+describe('getCheckRunConclusions', () => {
+  it('maps each check run name to its conclusion', async () => {
+    const { impl } = stubGitHub({
+      'GET /repos/acme/compchem-events/commits/sha-5/check-runs?per_page=100': {
+        status: 200,
+        body: {
+          check_runs: [
+            { name: 'check', status: 'completed', conclusion: 'success' },
+            { name: 'e2e', status: 'completed', conclusion: 'success' },
+            { name: 'Workers Builds: compchem-events', status: 'completed', conclusion: 'failure' },
+          ],
+        },
+      },
+    });
+    const conclusions = await getCheckRunConclusions('sha-5', options(impl));
+    expect(conclusions.get('check')).toBe('success');
+    expect(conclusions.get('e2e')).toBe('success');
+    expect(conclusions.get('Workers Builds: compchem-events')).toBe('failure');
+    expect(conclusions.get('never-ran')).toBeUndefined();
+  });
+});
+
+describe('postReview', () => {
+  it('POSTs a review of the given event type and body', async () => {
+    const { impl, calls } = stubGitHub({
+      'POST /repos/acme/compchem-events/pulls/5/reviews': { status: 200, body: {} },
+    });
+    await postReview(5, 'COMMENT', 'Auto-flagged: confidence 0.93.', options(impl));
+    expect(calls[0]!.body).toEqual({ event: 'COMMENT', body: 'Auto-flagged: confidence 0.93.' });
+  });
+
+  it('throws on a non-200 response', async () => {
+    const { impl } = stubGitHub({
+      'POST /repos/acme/compchem-events/pulls/5/reviews': { status: 422, body: {} },
+    });
+    await expect(postReview(5, 'COMMENT', 'body', options(impl))).rejects.toThrow(/422/);
   });
 });

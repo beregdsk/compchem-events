@@ -6,4 +6,11 @@
     "directory": "./dist",
     "not_found_handling": "404-page",
   },
+  // Required by `npx wrangler preview` (the deploy command Cloudflare's
+  // Workers Builds runs for every non-production branch) — without it, the
+  // build step succeeds but the deploy step fails outright on every PR
+  // branch: "Your Wrangler configuration is missing a `previews` block".
+  // Empty because this Worker has no bindings that need preview-only
+  // values — see https://developers.cloudflare.com/workers/previews/configuration/.
+  "previews": {},
 }

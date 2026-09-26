@@ -1,0 +1,22 @@
+id: dl-poly-training-london-10-11-january-2024-2024
+title: DL_POLY Training London, 10-11 January 2024
+type: school
+start_date: 2024-01-10
+end_date: 2024-01-11
+format: in-person
+url: https://www.ccp5.ac.uk/dl_poly_registration/
+source_url: https://www.ccp5.ac.uk/events/dl_poly-training-london-10-11-january-2024/
+topics:
+  - molecular-dynamics
+  - software-hpc
+description: Two-day hands-on training (10–11 Jan 2024) on atomistic modelling
+  using the DL_POLY MD package and DL_FIELD force-field builder. Includes
+  exercises and problem sessions; free but registration required by 2024-01-01.
+  In-person at Queen Mary University of London.
+added: 2026-09-25
+last_verified: 2026-09-25
+location:
+  city: London
+  country: GB
+  venue: G.O. Jones Building, Queen Mary University of London
+organizer: CCP5
