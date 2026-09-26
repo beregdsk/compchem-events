@@ -26,14 +26,54 @@ function truncateForExtraction(text: string): string {
   return text.length > EXTRACTION_TEXT_LIMIT ? text.slice(0, EXTRACTION_TEXT_LIMIT) : text;
 }
 
+/**
+ * Generic anchor terms beyond data/topics.yaml's own vocabulary — a
+ * prolific listing source (GRC's find-a-conference page covers every
+ * discipline it runs, not just chemistry) can otherwise send hundreds of
+ * pages with zero on-topic content to the extraction model. Kept
+ * deliberately broad: a false negative here silently drops a page before
+ * any human ever sees it, which is worse than an occasional wasted call
+ * the model itself would have rejected anyway.
+ */
+const RELEVANCE_GENERIC_TERMS = [
+  'computational chemistry',
+  'theoretical chemistry',
+  'quantum chemistry',
+  'molecular simulation',
+  'ab initio',
+  'first principles',
+  'first-principles',
+  'chemistry',
+  'chemical',
+];
+
+function relevanceKeywords(topicSlugs: readonly string[]): string[] {
+  return [...RELEVANCE_GENERIC_TERMS, ...topicSlugs.map((slug) => slug.replace(/-/g, ' '))];
+}
+
+function looksRelevant(text: string, keywords: readonly string[]): boolean {
+  const lower = text.toLowerCase();
+  return keywords.some((keyword) => lower.includes(keyword));
+}
+
 export interface PipelineOptions {
   sourcesPath?: string;
   statePath: string;
   userAgent: string;
   maxPages: number;
   maxTokens: number;
+  /**
+   * Caps pages fetched from any single top-level source — a prolific
+   * listing page (GRC's find-a-conference page discovered hundreds of
+   * unrelated-discipline links in one run) must not be able to consume the
+   * whole shared `maxPages` budget and starve every source after it.
+   * Optional so existing callers don't need updating; defaults to 40.
+   */
+  maxPagesPerSource?: number;
   today?: ISODate;
   fetchImpl?: typeof fetch;
+  /** See `FetchOptions.browserFetchImpl` — undefined in tests, so nothing launches a real browser. */
+  browserFetchImpl?: (url: string, userAgent: string) => Promise<string>;
   sleepImpl?: (ms: number) => Promise<void>;
   now?: () => Date;
   extract: Omit<ExtractOptions, 'topics'>;
@@ -53,6 +93,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
   const today = options.today ?? todayUTC();
   const ctx: ValidationContext = loadValidationContext('.', today);
   const log = options.log ?? (() => {});
+  const keywords = relevanceKeywords([...ctx.topics]);
   let tokensUsed = 0;
   const extractOptions: ExtractOptions = {
     ...options.extract,
@@ -65,11 +106,14 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
   const candidates: RawEvent[] = [];
   const errors: Array<{ source: string; message: string }> = [];
   let pagesFetched = 0;
+  let pagesFetchedForSource = 0;
+  const maxPagesPerSource = options.maxPagesPerSource ?? 40;
 
   const fetchOpts: FetchOptions = {
     state,
     userAgent: options.userAgent,
     fetchImpl: options.fetchImpl,
+    browserFetchImpl: options.browserFetchImpl,
     sleepImpl: options.sleepImpl,
     now: options.now,
   };
@@ -79,9 +123,14 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
       log(`max pages (${options.maxPages}) reached, skipping ${url}`);
       return undefined;
     }
+    if (pagesFetchedForSource >= maxPagesPerSource) {
+      log(`max pages per source (${maxPagesPerSource}) reached, skipping ${url}`);
+      return undefined;
+    }
     const result = await politeFetch(url, fetchOpts);
     if (result.status === 'fetched') {
       pagesFetched += 1;
+      pagesFetchedForSource += 1;
       return result.body;
     }
     if (result.status === 'unchanged') log(`unchanged: ${url}`);
@@ -120,6 +169,12 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
       // silently losing the event. See fetchAndProcess's doc comment.
       return false;
     }
+    if (!looksRelevant(input.text, keywords)) {
+      log(`skipping (off-topic): ${input.sourceUrl}`);
+      // A genuine "nothing here" outcome, same as "no event found" from
+      // the model itself — the page state commits normally.
+      return true;
+    }
     try {
       const fields = await extractEvent(truncateForExtraction(input.text), extractOptions);
       if (!fields) return true;
@@ -138,6 +193,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
           url: fields.url ?? input.sourceUrl,
           source_url: input.sourceUrl,
           organizer: fields.organizer,
+          cost: fields.cost,
           topics: fields.topics,
           description: fields.description,
         },
@@ -250,6 +306,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
   }
 
   for (const source of sources) {
+    pagesFetchedForSource = 0;
     try {
       await processSource(source);
     } catch (err) {
