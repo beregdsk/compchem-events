@@ -52,6 +52,7 @@ describe('extractEvent', () => {
           location: { city: 'Testville', country: 'DE', venue: null },
           url: 'https://example.org/md-school',
           organizer: null,
+          cost: null,
           topics: ['molecular-dynamics'],
           description: 'A summer school on molecular dynamics.',
           confidence: 0.9,
@@ -75,6 +76,32 @@ describe('extractEvent', () => {
     });
     expect('location' in (result as object)).toBe(true);
     expect(Object.hasOwn(result as object, 'organizer')).toBe(false);
+    expect(Object.hasOwn(result as object, 'cost')).toBe(false);
+  });
+
+  it('normalizes a stated cost, and omits the key entirely when cost is null', async () => {
+    const { impl } = stubFetch(
+      200,
+      completionWith({
+        found: true,
+        event: {
+          title: 'MD Summer School',
+          type: 'school',
+          start_date: '2027-07-01',
+          end_date: '2027-07-05',
+          format: 'in-person',
+          location: null,
+          url: 'https://example.org/md-school',
+          organizer: null,
+          cost: 'Free',
+          topics: ['molecular-dynamics'],
+          description: 'A summer school on molecular dynamics.',
+          confidence: 0.9,
+        },
+      }),
+    );
+    const result = await extractEvent('page text', { ...options, fetchImpl: impl });
+    expect(result?.cost).toBe('Free');
   });
 
   it('accepts a null event.url without throwing (Fix D)', async () => {
@@ -91,6 +118,7 @@ describe('extractEvent', () => {
           location: null,
           url: null,
           organizer: null,
+          cost: null,
           topics: ['molecular-dynamics'],
           description: 'A workshop with no stated canonical URL.',
           confidence: 0.7,
@@ -161,6 +189,7 @@ describe('extractEvent', () => {
           location: { city: 'Testville', venue: 123 },
           url: 'https://example.org/md-school',
           organizer: null,
+          cost: null,
           topics: ['molecular-dynamics'],
           description: 'A summer school on molecular dynamics.',
           confidence: 0.9,
