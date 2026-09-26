@@ -22,6 +22,7 @@ export interface DraftInput {
   url: string;
   source_url: string;
   organizer?: string;
+  cost?: string;
   topics: string[];
   description: string;
 }
@@ -51,6 +52,7 @@ export function synthesizeDraft(input: DraftInput, today: ISODate): RawEvent {
   };
   if (input.location) draft.location = input.location;
   if (input.organizer) draft.organizer = input.organizer;
+  if (input.cost) draft.cost = input.cost;
   return draft;
 }
 
@@ -65,7 +67,16 @@ export function draftFilePath(draft: RawEvent): string {
   return `data/events/${draft.start_date.slice(0, 4)}/${draft.id}.yaml`;
 }
 
-/** Renders a draft as the YAML text a PR would commit at `draftFilePath(draft)`. */
+/**
+ * Renders a draft as the YAML text a PR would commit at `draftFilePath(draft)`.
+ *
+ * `singleQuote: true` matches the repo's Prettier config (`.prettierrc.json`).
+ * Without it, `yaml`'s own default (double quotes) disagrees with Prettier
+ * for any description that needs quoting but contains no apostrophe — which
+ * is most of them, since descriptions are LLM-written prose long enough to
+ * wrap — so a generated draft would fail `npm run lint`'s `prettier --check`
+ * in CI on every such PR.
+ */
 export function serializeDraft(draft: RawEvent): string {
-  return stringify(draft);
+  return stringify(draft, { singleQuote: true });
 }
