@@ -9,6 +9,7 @@ import { DEFAULT_JEV_BASE_URL } from '../../src/lib/discovery/jev-client';
 import { fetchWithBrowser } from '../../src/lib/discovery/browser-fetch';
 import { runDiscoveryRun, type OrchestratorOptions } from '../../src/lib/discovery/orchestrator';
 import { runPipeline, type PipelineOptions } from '../../src/lib/discovery/pipeline';
+import { autoApproveHighConfidencePrs } from '../../src/lib/discovery/auto-approve';
 
 export interface ResolvedConfig {
   statePath: string;
@@ -123,7 +124,14 @@ async function main(): Promise<void> {
   };
   const result = await runDiscoveryRun(orchestratorOptions);
 
-  console.log(JSON.stringify(result, null, 2));
+  // A separate phase, deliberately run after and independent of the loop
+  // above: it revisits *all* currently-open discovery PRs (not just this
+  // run's candidates), since CI on a PR opened days ago finishes long after
+  // the run that opened it has exited. Never merges — only fast-tracks
+  // human review for PRs that already look done. See auto-approve.ts.
+  const autoApprove = await autoApproveHighConfidencePrs({ ...cfg.github, log });
+
+  console.log(JSON.stringify({ ...result, autoApprove }, null, 2));
 }
 
 // Only run when invoked directly — see scripts/discovery/parse-sources.ts for
