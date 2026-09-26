@@ -12,7 +12,7 @@ export type CandidateEvent = Pick<
   RawEvent,
   'title' | 'start_date' | 'end_date' | 'format' | 'url' | 'topics' | 'description'
 > &
-  Partial<Pick<RawEvent, 'location' | 'source_url' | 'organizer'>>;
+  Partial<Pick<RawEvent, 'location' | 'source_url' | 'organizer' | 'cost'>>;
 
 export const DEFAULT_JEV_MODEL = '~typesafe/jev-latest';
 export const ADD_THRESHOLD = 0.5;
@@ -34,8 +34,23 @@ export type ClassificationResult =
   | {
       verdict: 'add' | 'skip';
       confidence: number;
-      criteria: { relevant: number; credible: number; red_flag: number };
+      criteria: CriteriaScores;
     };
+
+/**
+ * `credible` used to be one noul question ANDing organiser, programme and
+ * cost together — but the extraction pipeline never fed it any cost
+ * evidence at all, so it defaulted low on almost every candidate regardless
+ * of how credible the event actually was. Split into three independently
+ * scored, independently evidenced criteria instead.
+ */
+export interface CriteriaScores {
+  relevant: number;
+  organiser: number;
+  programme: number;
+  cost: number;
+  red_flag: number;
+}
 
 export interface ClassifyOptions {
   existingEvents: readonly RawEvent[];
@@ -129,7 +144,10 @@ function mechanicalSkip(
   return undefined;
 }
 
-const QUESTIONS: Record<'add' | 'relevant' | 'credible' | 'red_flag', NoulQuestion> = {
+const QUESTIONS: Record<
+  'add' | 'relevant' | 'organiser' | 'programme' | 'cost' | 'red_flag',
+  NoulQuestion
+> = {
   add: {
     type: 'noul',
     instructions:
@@ -150,14 +168,34 @@ const QUESTIONS: Record<'add' | 'relevant' | 'credible' | 'red_flag', NoulQuesti
         'Computational or theoretical chemistry is at most one tag among many unrelated topics, or is absent.',
     },
   },
-  credible: {
+  // credible used to be one question ANDing these three together — split so
+  // each gets its own evidence and its own score, and a reviewer can see
+  // exactly which one is weak instead of a single opaque number.
+  organiser: {
     type: 'noul',
     instructions:
-      'Does the event have an identifiable official organiser or committee, a named scientific programme (invited speakers, a topical scope, or a published call for abstracts), and transparent costs (fees stated or clearly obtainable)?',
+      'Does the event have an identifiable official organiser or committee — a university, institute, society, network or company a reader could verify?',
     criteria: {
-      true: 'A named organiser or committee, a real programme, and clear costs are all present.',
-      false:
-        'One or more of organiser, programme, or transparent costs is missing or unverifiable.',
+      true: 'A named organiser or committee is stated and identifiable.',
+      false: 'No organiser or committee is named, or it cannot be identified.',
+    },
+  },
+  programme: {
+    type: 'noul',
+    instructions:
+      'Does the event have a named scientific programme: invited speakers, a stated topical scope, or a published call for abstracts?',
+    criteria: {
+      true: 'A real programme (speakers, topical scope, or call for abstracts) is described.',
+      false: 'No programme detail is given beyond a bare title and date.',
+    },
+  },
+  cost: {
+    type: 'noul',
+    instructions:
+      "Is the event's registration cost transparent: is a fee stated, or is the event stated to be free?",
+    criteria: {
+      true: 'A fee is stated, or the event is described as free.',
+      false: 'No fee and no "free" status is stated.',
     },
   },
   red_flag: {
@@ -180,6 +218,7 @@ function candidateState(candidate: CandidateEvent): Record<string, unknown> {
     location: candidate.location,
     url: candidate.url,
     organizer: candidate.organizer,
+    cost: candidate.cost,
     topics: candidate.topics,
     description: candidate.description,
   };
@@ -221,9 +260,11 @@ export async function classifyCandidate(
   options.onUsage?.((response.usage?.input_tokens ?? 0) + (response.usage?.output_tokens ?? 0));
 
   const confidence = requireNoul(response, 'add');
-  const criteria = {
+  const criteria: CriteriaScores = {
     relevant: requireNoul(response, 'relevant'),
-    credible: requireNoul(response, 'credible'),
+    organiser: requireNoul(response, 'organiser'),
+    programme: requireNoul(response, 'programme'),
+    cost: requireNoul(response, 'cost'),
     red_flag: requireNoul(response, 'red_flag'),
   };
 

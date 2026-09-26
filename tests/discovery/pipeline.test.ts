@@ -60,6 +60,7 @@ function extractedFor(title: string, url: string | null = 'https://example.org/e
       location: null,
       url,
       organizer: null,
+      cost: null,
       topics: ['molecular-dynamics'],
       description: `A workshop: ${title}.`,
       confidence: 0.8,

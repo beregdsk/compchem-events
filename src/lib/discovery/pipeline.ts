@@ -193,6 +193,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
           url: fields.url ?? input.sourceUrl,
           source_url: input.sourceUrl,
           organizer: fields.organizer,
+          cost: fields.cost,
           topics: fields.topics,
           description: fields.description,
         },

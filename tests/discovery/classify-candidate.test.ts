@@ -52,7 +52,9 @@ const cleanResponse = {
   answers: {
     add: { type: 'noul', noul: 0.82 },
     relevant: { type: 'noul', noul: 0.91 },
-    credible: { type: 'noul', noul: 0.87 },
+    organiser: { type: 'noul', noul: 0.86 },
+    programme: { type: 'noul', noul: 0.79 },
+    cost: { type: 'noul', noul: 0.72 },
     red_flag: { type: 'noul', noul: 0.03 },
   },
   usage: { input_tokens: 400, output_tokens: 0, cost: 0.0000168 },
@@ -243,8 +245,24 @@ describe('classifyCandidate — jev verdict', () => {
     expect(result).toEqual({
       verdict: 'add',
       confidence: 0.82,
-      criteria: { relevant: 0.91, credible: 0.87, red_flag: 0.03 },
+      criteria: { relevant: 0.91, organiser: 0.86, programme: 0.79, cost: 0.72, red_flag: 0.03 },
     });
+  });
+
+  // Regression test for the low-credible-score bug: the old single
+  // `credible` question always scored low because nothing in `state` ever
+  // carried cost evidence — the extraction pipeline never produced a cost
+  // field at all. Now that it does, the `cost` criterion must actually see it.
+  it("passes the candidate's cost through to jev as state, for the cost criterion", async () => {
+    const { impl, calls } = stubFetch(cleanResponse);
+    await classifyCandidate(loadCandidate('clean-add'), {
+      existingEvents,
+      blockedHosts,
+      apiKey: 'sk-test',
+      fetchImpl: impl,
+    });
+    const body = JSON.parse(calls[0]!.init.body as string) as { state: { cost?: string } };
+    expect(body.state.cost).toBe('Free, registration required');
   });
 
   it('reports combined input+output token usage via onUsage', async () => {
