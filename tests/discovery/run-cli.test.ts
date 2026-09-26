@@ -80,4 +80,18 @@ describe('buildConfig', () => {
     if (!result.ok) throw new Error('expected ok');
     expect(result.config.classify.baseUrl).not.toBe('https://proxy.example/extract');
   });
+
+  it('defaults MAX_PAGES_PER_SOURCE to 40', () => {
+    const result = buildConfig(validEnv);
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error('expected ok');
+    expect(result.config.maxPagesPerSource).toBe(40);
+  });
+
+  it('rejects a non-positive MAX_PAGES_PER_SOURCE', () => {
+    expect(buildConfig({ ...validEnv, MAX_PAGES_PER_SOURCE: '0' })).toEqual({
+      ok: false,
+      error: 'MAX_PAGES_PER_SOURCE must be a positive number, got "0"',
+    });
+  });
 });
