@@ -1,0 +1,19 @@
+id: ccpbiosim-training-week-2026
+title: CCPBioSim Training Week
+type: workshop
+start_date: 2026-09-28
+end_date: 2026-10-02
+format: in-person
+url: https://www.ccpbiosim.org/
+source_url: https://www.ccpbiosim.org/
+topics:
+  - biomolecular-simulation
+  - education-training
+description: Annual training week introducing basic methods and concepts for
+  beginners in biomolecular simulation, held in Sheffield, UK.
+added: 2026-09-26
+last_verified: 2026-09-26
+location:
+  city: Sheffield
+  country: GB
+organizer: CCPBioSim
