@@ -6,12 +6,15 @@ import { loadValidationContext } from '../../src/lib/validation';
 import { DEFAULT_JEV_MODEL } from '../../src/lib/discovery/classify-candidate';
 import { DEFAULT_EXTRACT_BASE_URL } from '../../src/lib/discovery/extract-client';
 import { DEFAULT_JEV_BASE_URL } from '../../src/lib/discovery/jev-client';
+import { fetchWithBrowser } from '../../src/lib/discovery/browser-fetch';
 import { runDiscoveryRun, type OrchestratorOptions } from '../../src/lib/discovery/orchestrator';
 import { runPipeline, type PipelineOptions } from '../../src/lib/discovery/pipeline';
+import { autoApproveHighConfidencePrs } from '../../src/lib/discovery/auto-approve';
 
 export interface ResolvedConfig {
   statePath: string;
   maxPages: number;
+  maxPagesPerSource: number;
   maxTokens: number;
   maxPrs: number;
   userAgent: string;
@@ -43,6 +46,13 @@ export function buildConfig(env: Record<string, string | undefined>): ConfigResu
   if (!Number.isFinite(maxPages) || maxPages <= 0) {
     return { ok: false, error: `MAX_PAGES must be a positive number, got "${env.MAX_PAGES}"` };
   }
+  const maxPagesPerSource = env.MAX_PAGES_PER_SOURCE ? Number(env.MAX_PAGES_PER_SOURCE) : 40;
+  if (!Number.isFinite(maxPagesPerSource) || maxPagesPerSource <= 0) {
+    return {
+      ok: false,
+      error: `MAX_PAGES_PER_SOURCE must be a positive number, got "${env.MAX_PAGES_PER_SOURCE}"`,
+    };
+  }
   const maxTokens = env.MAX_TOKENS ? Number(env.MAX_TOKENS) : 500_000;
   if (!Number.isFinite(maxTokens) || maxTokens <= 0) {
     return { ok: false, error: `MAX_TOKENS must be a positive number, got "${env.MAX_TOKENS}"` };
@@ -57,6 +67,7 @@ export function buildConfig(env: Record<string, string | undefined>): ConfigResu
     config: {
       statePath,
       maxPages,
+      maxPagesPerSource,
       maxTokens,
       maxPrs,
       userAgent: `${site.name} Discovery Agent (+${site.repoUrl}; ${site.contactEmail})`,
@@ -89,8 +100,10 @@ async function main(): Promise<void> {
     statePath: cfg.statePath,
     userAgent: cfg.userAgent,
     maxPages: cfg.maxPages,
+    maxPagesPerSource: cfg.maxPagesPerSource,
     maxTokens: cfg.maxTokens,
     extract: cfg.extract,
+    browserFetchImpl: fetchWithBrowser,
     log,
   };
   const pipelineResult = await runPipeline(pipelineOptions);
@@ -111,7 +124,14 @@ async function main(): Promise<void> {
   };
   const result = await runDiscoveryRun(orchestratorOptions);
 
-  console.log(JSON.stringify(result, null, 2));
+  // A separate phase, deliberately run after and independent of the loop
+  // above: it revisits *all* currently-open discovery PRs (not just this
+  // run's candidates), since CI on a PR opened days ago finishes long after
+  // the run that opened it has exited. Never merges — only fast-tracks
+  // human review for PRs that already look done. See auto-approve.ts.
+  const autoApprove = await autoApproveHighConfidencePrs({ ...cfg.github, log });
+
+  console.log(JSON.stringify({ ...result, autoApprove }, null, 2));
 }
 
 // Only run when invoked directly — see scripts/discovery/parse-sources.ts for
