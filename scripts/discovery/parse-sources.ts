@@ -2,6 +2,7 @@
 import { pathToFileURL } from 'node:url';
 import { site } from '../../site.config';
 import { DEFAULT_EXTRACT_BASE_URL } from '../../src/lib/discovery/extract-client';
+import { fetchWithBrowser } from '../../src/lib/discovery/browser-fetch';
 import { runPipeline, type PipelineOptions } from '../../src/lib/discovery/pipeline';
 
 export interface ResolvedConfig {
@@ -61,6 +62,7 @@ async function main(): Promise<void> {
     maxPages: resolved.config.maxPages,
     maxTokens: resolved.config.maxTokens,
     extract: resolved.config.extract,
+    browserFetchImpl: fetchWithBrowser,
     log: (message: string) => console.error(message),
   };
   const result = await runPipeline(options);

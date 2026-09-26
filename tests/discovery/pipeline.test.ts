@@ -17,13 +17,18 @@ URL:https://example.org/ical-workshop
 END:VEVENT
 END:VCALENDAR`;
 
+// All extraction-bound bodies below mention "chemistry" so they clear the
+// relevance pre-filter and still exercise the extraction path they're
+// meant to test — see the dedicated off-topic test for the filter itself.
 const eventPageBody =
-  '<html><body><h1>Event Page Workshop</h1>\n<p>Details in Testville.</p></body></html>';
+  '<html><body><h1>Event Page Workshop</h1>\n<p>A computational chemistry event in Testville.</p></body></html>';
 const listingBody = '<html><body><a href="/listing/child">Child Event</a></body></html>';
 const listingChildBody =
-  '<html><body><h1>Listing Child Workshop</h1>\n<p>Details.</p></body></html>';
-const brokenPageBody = '<html><body><h1>Broken Page</h1></body></html>';
-const noUrlPageBody = '<html><body><h1>No Url Workshop</h1>\n<p>Details.</p></body></html>';
+  '<html><body><h1>Listing Child Workshop</h1>\n<p>A computational chemistry event.</p></body></html>';
+const brokenPageBody =
+  '<html><body><h1>Broken Page</h1><p>A computational chemistry event.</p></body></html>';
+const noUrlPageBody =
+  '<html><body><h1>No Url Workshop</h1>\n<p>A computational chemistry event.</p></body></html>';
 
 // The description is deliberately HTML markup (Fix B): the pipeline test
 // only needs to prove the run completes and produces a candidate — the
@@ -33,14 +38,14 @@ const rssBody = `<?xml version="1.0"?>
 <rss version="2.0"><channel>
   <item>
     <title>RSS Feed Workshop</title>
-    <description>&lt;p&gt;Details in Testville.&lt;/p&gt;</description>
+    <description>&lt;p&gt;A computational chemistry event in Testville.&lt;/p&gt;</description>
     <link>https://example.org/rss-workshop</link>
   </item>
 </channel></rss>`;
 
 const telegramBody = `
   <div class="tgme_widget_message" data-post="samplechannel/1">
-    <div class="tgme_widget_message_text">Telegram Workshop Announcement</div>
+    <div class="tgme_widget_message_text">Telegram Computational Chemistry Workshop Announcement</div>
   </div>`;
 
 function extractedFor(title: string, url: string | null = 'https://example.org/extracted-event') {
@@ -55,6 +60,7 @@ function extractedFor(title: string, url: string | null = 'https://example.org/e
       location: null,
       url,
       organizer: null,
+      cost: null,
       topics: ['molecular-dynamics'],
       description: `A workshop: ${title}.`,
       confidence: 0.8,
@@ -170,7 +176,7 @@ describe('runPipeline', () => {
           'Event Page Workshop',
           'Listing Child Workshop',
           'RSS Feed Workshop',
-          'Telegram Workshop Announcement',
+          'Telegram Computational Chemistry Workshop Announcement',
           'No Url Workshop',
         ].sort(),
       );
@@ -193,7 +199,7 @@ describe('runPipeline', () => {
       expect(rssCandidate.source_url).toBe('https://example.org/rss-workshop');
 
       const telegramCandidate = result.candidates.find(
-        (c) => c.title === 'Telegram Workshop Announcement',
+        (c) => c.title === 'Telegram Computational Chemistry Workshop Announcement',
       )!;
       expect(telegramCandidate.source_url).toBe('https://t.me/samplechannel/1');
 
@@ -241,8 +247,8 @@ describe('runPipeline', () => {
     const feedUrl = 'https://example.org/two-item-feed.xml';
     const feedBody = `<?xml version="1.0"?>
 <rss version="2.0"><channel>
-  <item><title>First Item</title><link>https://example.org/first-item</link></item>
-  <item><title>Second Item</title><link>https://example.org/second-item</link></item>
+  <item><title>First Item</title><description>A computational chemistry event.</description><link>https://example.org/first-item</link></item>
+  <item><title>Second Item</title><description>A computational chemistry event.</description><link>https://example.org/second-item</link></item>
 </channel></rss>`;
 
     const pageFetch = (async (input: RequestInfo | URL) => {
@@ -311,7 +317,7 @@ describe('runPipeline', () => {
     const { path: sourcesPath, cleanup: cleanupSources } = tmpSourcesFile(
       `- name: Long Page\n  url: ${longPageUrl}\n  kind: event-page\n`,
     );
-    const longBody = `<html><body><h1>Long Page</h1><p>${'A'.repeat(9000)}</p></body></html>`;
+    const longBody = `<html><body><h1>Long Page on Computational Chemistry</h1><p>${'A'.repeat(9000)}</p></body></html>`;
 
     const pageFetch = (async (input: RequestInfo | URL) => {
       const url = String(input);
@@ -405,6 +411,127 @@ describe('runPipeline', () => {
       const state = loadState(statePath);
       expect(state.pages['https://example.org/event-2']).toBeUndefined();
       expect(state.pages['https://example.org/event']).toBeDefined();
+    } finally {
+      cleanupState();
+      cleanupSources();
+    }
+  });
+
+  // A single prolific listing-page source must not be able to consume the
+  // entire shared page budget — GRC's find-a-conference page discovered
+  // hundreds of unrelated-discipline links in one run, starving every
+  // source listed after it. maxPagesPerSource caps that per source, and
+  // each source gets a fresh budget rather than sharing one running total.
+  it('caps pages fetched from a single prolific source, leaving budget for the rest', async () => {
+    const { path: statePath, cleanup: cleanupState } = tmpStatePath();
+    const { path: sourcesPath, cleanup: cleanupSources } = tmpSourcesFile(
+      '- name: Prolific Listing\n  url: https://prolific.example/listing\n  kind: listing-page\n' +
+        '- name: Other Source\n  url: https://other.example/single\n  kind: event-page\n',
+    );
+    try {
+      const fetchedUrls: string[] = [];
+      const listingBody = [1, 2, 3, 4, 5]
+        .map((n) => `<a href="https://prolific.example/event-${n}">Event ${n}</a>`)
+        .join('\n');
+      const pageResponses: Record<string, { status: number; body: string }> = {
+        'https://prolific.example/robots.txt': { status: 200, body: '' },
+        'https://other.example/robots.txt': { status: 200, body: '' },
+        'https://prolific.example/listing': { status: 200, body: listingBody },
+        'https://other.example/single': { status: 200, body: eventPageBody },
+      };
+      for (const n of [1, 2, 3, 4, 5]) {
+        pageResponses[`https://prolific.example/event-${n}`] = { status: 200, body: eventPageBody };
+      }
+      const pageFetch: typeof fetch = async (input) => {
+        const url = String(input);
+        fetchedUrls.push(url);
+        const stub = pageResponses[url];
+        if (!stub) throw new Error(`unstubbed: ${url}`);
+        return new Response(stub.body, { status: stub.status });
+      };
+      const extractFetch: typeof fetch = async () =>
+        new Response(
+          JSON.stringify({
+            choices: [{ message: { content: JSON.stringify(extractedFor('Event')) } }],
+          }),
+          { status: 200 },
+        );
+
+      await runPipeline({
+        sourcesPath,
+        statePath,
+        userAgent: 'Test Agent (+https://example.org)',
+        maxPages: 200,
+        maxTokens: 500_000,
+        maxPagesPerSource: 2,
+        fetchImpl: pageFetch,
+        sleepImpl: async () => {},
+        extract: { apiKey: 'sk-test', model: 'test-model', fetchImpl: extractFetch },
+      });
+
+      const prolificFetches = fetchedUrls.filter(
+        (u) =>
+          u.startsWith('https://prolific.example/') && u !== 'https://prolific.example/robots.txt',
+      );
+      const otherFetches = fetchedUrls.filter(
+        (u) => u.startsWith('https://other.example/') && u !== 'https://other.example/robots.txt',
+      );
+      expect(prolificFetches).toHaveLength(2);
+      expect(otherFetches).toHaveLength(1);
+    } finally {
+      cleanupState();
+      cleanupSources();
+    }
+  });
+
+  // GRC's find-a-conference page pulls in event pages for every discipline
+  // it covers, not just chemistry — most of that text never mentions
+  // chemistry, computation or any topic in data/topics.yaml at all, so a
+  // cheap local keyword check can reject it before spending a token.
+  it('skips extraction for a page that matches no relevance keyword, without spending a token', async () => {
+    const { path: statePath, cleanup: cleanupState } = tmpStatePath();
+    const { path: sourcesPath, cleanup: cleanupSources } = tmpSourcesFile(
+      '- name: Off Topic\n  url: https://example.org/off-topic\n  kind: event-page\n',
+    );
+    try {
+      let extractCalls = 0;
+      const offTopicBody =
+        '<html><body><h1>Antibody Biology and Engineering Conference</h1>' +
+        '<p>A meeting on immunology, antibody structure and therapeutic engineering.</p></body></html>';
+      const pageFetch: typeof fetch = async (input) => {
+        const url = String(input);
+        if (url === 'https://example.org/robots.txt') return new Response('', { status: 200 });
+        if (url === 'https://example.org/off-topic')
+          return new Response(offTopicBody, { status: 200 });
+        throw new Error(`unstubbed: ${url}`);
+      };
+      const extractFetch: typeof fetch = async () => {
+        extractCalls += 1;
+        return new Response(
+          JSON.stringify({
+            choices: [{ message: { content: JSON.stringify(extractedFor('Event')) } }],
+          }),
+          { status: 200 },
+        );
+      };
+
+      const result = await runPipeline({
+        sourcesPath,
+        statePath,
+        userAgent: 'Test Agent (+https://example.org)',
+        maxPages: 200,
+        maxTokens: 500_000,
+        fetchImpl: pageFetch,
+        extract: { apiKey: 'sk-test', model: 'test-model', fetchImpl: extractFetch },
+      });
+
+      expect(extractCalls).toBe(0);
+      expect(result.candidates).toHaveLength(0);
+      // A genuine "nothing relevant here" outcome, same as "no event
+      // found" — the page state must still commit so an unchanged page
+      // isn't re-fetched and re-checked every single run.
+      const state = loadState(statePath);
+      expect(state.pages['https://example.org/off-topic']).toBeDefined();
     } finally {
       cleanupState();
       cleanupSources();

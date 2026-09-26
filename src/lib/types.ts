@@ -58,6 +58,8 @@ export interface RawEvent {
   url: string;
   source_url?: string;
   organizer?: string;
+  /** A short phrase for registration cost or fees, e.g. "Free" or "€200 early bird". */
+  cost?: string;
   topics: string[];
   description: string;
   deadlines?: Deadline[];

@@ -17,6 +17,13 @@ export interface ExtractedFields {
   /** `null` when no canonical event URL was stated in the text — never fabricated. */
   url: string | null;
   organizer?: string;
+  /**
+   * A short phrase describing registration cost, taken from the text
+   * (e.g. "Free", "€200 early bird, €300 after 1 May") — absent when the
+   * text says nothing about cost. Feeds `classify-candidate.ts`'s `cost`
+   * criterion with real evidence instead of leaving it to guess.
+   */
+  cost?: string;
   topics: string[];
   description: string;
   confidence: number;
@@ -46,6 +53,7 @@ const EVENT_SCHEMA = {
     'location',
     'url',
     'organizer',
+    'cost',
     'topics',
     'description',
     'confidence',
@@ -68,6 +76,7 @@ const EVENT_SCHEMA = {
     },
     url: { type: ['string', 'null'] },
     organizer: { type: ['string', 'null'] },
+    cost: { type: ['string', 'null'] },
     topics: { type: 'array', items: { type: 'string' } },
     description: { type: 'string' },
     confidence: { type: 'number' },
@@ -96,6 +105,7 @@ function systemPrompt(topics: readonly string[]): string {
     'Dates are ISO 8601 calendar dates, YYYY-MM-DD. If the event\'s start_date or end_date cannot be determined from the text, set "found" to false rather than guessing a date.',
     'location.country, when location is given, is the ISO 3166-1 alpha-2 code, uppercase (e.g. DE, US, GB). Set location to null when the event is online or no location is stated.',
     'Set organizer to null when no organiser is identifiable, and location.venue to null when no venue is stated.',
+    '"cost" is a short phrase for the registration cost or fees stated in the text, e.g. "Free" or "€200 early bird, €300 after 1 May" — quote or closely paraphrase the text\'s own figures, never estimate one. Set cost to null when the text says nothing about cost.',
   ].join(' ');
 }
 
@@ -114,6 +124,7 @@ interface RawExtractedEvent {
   location: RawExtractedLocation | null;
   url: string | null;
   organizer: string | null;
+  cost: string | null;
   topics: string[];
   description: string;
   confidence: number;
@@ -150,6 +161,7 @@ function isRawResponse(value: unknown): value is RawResponse {
     (e.location === null || isRawLocation(e.location)) &&
     (e.url === null || typeof e.url === 'string') &&
     (e.organizer === null || typeof e.organizer === 'string') &&
+    (e.cost === null || typeof e.cost === 'string') &&
     Array.isArray(e.topics) &&
     e.topics.every((t) => typeof t === 'string') &&
     typeof e.description === 'string' &&
@@ -175,6 +187,7 @@ function normalize(raw: RawExtractedEvent): ExtractedFields {
     fields.location = location;
   }
   if (raw.organizer) fields.organizer = raw.organizer;
+  if (raw.cost) fields.cost = raw.cost;
   return fields;
 }
 

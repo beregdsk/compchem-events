@@ -1,0 +1,22 @@
+id: camml-chemistry-and-materials-machine-learning-school-2026-2026
+title: CaMML – Chemistry and Materials Machine Learning School 2026
+type: school
+start_date: 2026-04-13
+end_date: 2026-04-17
+format: in-person
+url: https://www.ccp5.ac.uk/
+source_url: https://www.ccp5.ac.uk/
+topics:
+  - ml-chemistry
+  - materials-modeling
+  - education-training
+description: Five-day Chemistry and Materials Machine Learning School (13–17 Apr
+  2026) at Daresbury Laboratory, UK. CCP5-organised training for students and
+  researchers on applying ML techniques to chemistry and materials modelling.
+added: 2026-09-25
+last_verified: 2026-09-25
+location:
+  city: Daresbury
+  country: GB
+  venue: Daresbury Laboratory
+organizer: CCP5
