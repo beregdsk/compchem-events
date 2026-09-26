@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
+import prettier from 'prettier';
 import {
   draftFilePath,
   serializeDraft,
@@ -33,6 +34,7 @@ const fullInput: DraftInput = {
   url: 'https://organiser.example.org/symposium-2027/',
   source_url: 'https://organiser.example.org/symposium-2027/',
   organizer: 'Test Organiser',
+  cost: 'Free',
   topics: ['photochemistry', 'excited-states'],
   description: 'A symposium on excited-state photochemistry.',
 };
@@ -45,15 +47,18 @@ describe('synthesizeDraft', () => {
     expect(draft.last_verified).toBe('2026-09-23');
     expect(draft.location).toEqual({ city: 'Testville', country: 'DE' });
     expect(draft.organizer).toBe('Test Organiser');
+    expect(draft.cost).toBe('Free');
   });
 
-  it('omits location and organizer entirely when absent, never as undefined keys', () => {
-    const { location, organizer, ...rest } = fullInput;
+  it('omits location, organizer and cost entirely when absent, never as undefined keys', () => {
+    const { location, organizer, cost, ...rest } = fullInput;
     void location;
     void organizer;
+    void cost;
     const draft = synthesizeDraft(rest, '2026-09-23');
     expect('location' in draft).toBe(false);
     expect('organizer' in draft).toBe(false);
+    expect('cost' in draft).toBe(false);
   });
 });
 
@@ -71,6 +76,35 @@ describe('serializeDraft', () => {
     const draft = synthesizeDraft(fullInput, '2026-09-23');
     const yamlText = serializeDraft(draft);
     expect(parse(yamlText)).toEqual(draft);
+  });
+
+  // Regression test for a real CI failure: every generated draft is
+  // committed straight into a PR, so its YAML must already satisfy `npm run
+  // lint`'s `prettier --check`. A long, apostrophe-free description (the
+  // common case — LLM-written prose near the 280-char cap) needs Prettier's
+  // "fold across lines and quote" treatment, and `yaml`'s own default quote
+  // style (double) disagreed with this repo's `singleQuote: true`, so every
+  // such draft failed CI even though nothing else was wrong with it.
+  it('matches this repo’s Prettier formatting exactly, needing no --write', async () => {
+    const draft = synthesizeDraft(
+      {
+        ...fullInput,
+        // The colon-space forces YAML to quote this scalar at all (a plain
+        // scalar can't contain ": ") — and it has no apostrophe, so nothing
+        // forces double quotes specifically; that's what exposes a quote
+        // style disagreement with Prettier.
+        description:
+          'Symposium on excited state photochemistry: a two day event with invited ' +
+          'talks, a poster session and a panel discussion on open software for ' +
+          'computational spectroscopy.',
+      },
+      '2026-09-23',
+    );
+    const yamlText = serializeDraft(draft);
+    const filepath = draftFilePath(draft);
+    const config = await prettier.resolveConfig(filepath);
+    const formatted = await prettier.format(yamlText, { ...config, filepath });
+    expect(yamlText).toBe(formatted);
   });
 });
 
