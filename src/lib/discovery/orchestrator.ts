@@ -97,6 +97,16 @@ export async function runDiscoveryRun(options: OrchestratorOptions): Promise<Orc
   // the one place a human actually sees them.
   const orchestratorErrors: Array<{ source: string; message: string }> = [];
 
+  // Starts as a copy of the events already on main, then grows with every
+  // candidate this run itself accepts. Without this, two different sources
+  // describing the same real-world event — discovered in the same run, so
+  // neither is on main yet when either is classified — each get their own
+  // PR: classifyCandidate's mechanical dedupe only ever saw `existingEvents`
+  // as it stood at the start of the run. This is what actually happened
+  // with PRs #16 and #21 (merged): both opened in the same run, same event,
+  // same url, from two different sources.
+  const knownEvents: RawEvent[] = [...options.existingEvents];
+
   // Resolved lazily, on the first candidate that actually needs to create a
   // branch, and memoized after that — never fetched at all for a run where
   // every candidate is skipped or only updates an existing PR, and, just as
@@ -117,7 +127,7 @@ export async function runDiscoveryRun(options: OrchestratorOptions): Promise<Orc
       }
 
       const classification = await classifyCandidate(candidate, {
-        existingEvents: options.existingEvents,
+        existingEvents: knownEvents,
         blockedHosts: options.blockedHosts,
         apiKey: options.classify.apiKey,
         baseUrl: options.classify.baseUrl,
@@ -134,6 +144,12 @@ export async function runDiscoveryRun(options: OrchestratorOptions): Promise<Orc
         log(`skipping ${candidate.id}: ${reason}`);
         continue;
       }
+
+      // Makes this candidate visible to mechanicalSkip for every candidate
+      // still to come in this run — see knownEvents' own comment above.
+      // Before any MAX_PRS/GitHub step, so a later duplicate is still
+      // caught even if this one itself gets skipped by MAX_PRS.
+      knownEvents.push(candidate);
 
       if (prsOpened + prsUpdated >= options.maxPrs) {
         skipped.push({ id: candidate.id, reason: 'MAX_PRS reached' });

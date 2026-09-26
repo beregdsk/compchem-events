@@ -178,6 +178,51 @@ describe('runDiscoveryRun', () => {
     expect(calls.some((c) => c.method === 'POST' && c.url.endsWith('/labels'))).toBe(true);
   });
 
+  // Regression test for a real duplicate that reached main: two sources in
+  // the same run described the same event (same url), and both got their
+  // own PR — mechanicalSkip's dedupe only ever saw existingEvents as it
+  // stood at the start of the run, never the run's own prior candidates.
+  it('skips a same-run duplicate of an earlier candidate this run already accepted', async () => {
+    const { impl, calls } = stubGitHub({
+      ...DEFAULT_BRANCH_STUBS,
+      'GET /repos/acme/compchem-events/git/ref/heads/discovery/excited-states-symposium-2027': {
+        status: 404,
+      },
+      'POST /repos/acme/compchem-events/git/refs': { status: 201, body: {} },
+      'GET /repos/acme/compchem-events/contents/data/events/2027/excited-states-symposium-2027.yaml?ref=discovery/excited-states-symposium-2027':
+        { status: 404 },
+      'PUT /repos/acme/compchem-events/contents/data/events/2027/excited-states-symposium-2027.yaml':
+        { status: 201, body: {} },
+      'POST /repos/acme/compchem-events/pulls': { status: 201, body: { number: 11 } },
+      'POST /repos/acme/compchem-events/issues/11/labels': { status: 200, body: {} },
+      'GET /repos/acme/compchem-events/issues?state=open&labels=discovery-failures': {
+        status: 200,
+        body: [],
+      },
+    });
+
+    const first = candidateEvent();
+    // A different id/title, same url — exactly PRs #16 and #21's shape.
+    const second = candidateEvent({
+      id: 'excited-state-symposium-full-title-2027',
+      title: 'The Excited-State Symposium, Full Title With Dates',
+    });
+
+    const result = await runDiscoveryRun(
+      baseOptions({
+        candidates: [first, second],
+        github: { token: 'gh-test', repo: 'acme/compchem-events', fetchImpl: impl },
+      }),
+    );
+
+    expect(result.prsOpened).toBe(1);
+    expect(result.skipped).toEqual([
+      { id: 'excited-state-symposium-full-title-2027', reason: 'duplicate-url' },
+    ]);
+    // Only one PR ever opened — the second candidate never reached GitHub at all.
+    expect(calls.filter((c) => c.method === 'POST' && c.url.endsWith('/pulls'))).toHaveLength(1);
+  });
+
   it('updates the existing open PR when the branch already has one', async () => {
     const { impl } = stubGitHub({
       ...DEFAULT_BRANCH_STUBS,
