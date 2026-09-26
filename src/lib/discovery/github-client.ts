@@ -207,6 +207,94 @@ export async function addLabel(
   }
 }
 
+export interface OpenPrSummary {
+  number: number;
+  headRef: string;
+  headSha: string;
+  body: string;
+  labels: string[];
+}
+
+interface PullListItem {
+  number: number;
+  body: string | null;
+  head: { ref: string; sha: string };
+  labels: Array<{ name: string }>;
+}
+
+/**
+ * Open PRs on branches this agent itself creates (`discovery/*`) — never
+ * touches a human-authored PR, however it's labelled. 100 is GitHub's max
+ * page size; the discovery agent's own `MAX_PRS` cap keeps the open backlog
+ * well under that in practice, so a second page is never needed.
+ */
+export async function listOpenDiscoveryPrs(options: GitHubOptions): Promise<OpenPrSummary[]> {
+  const res = await githubRequest<PullListItem[]>(options, 'GET', '/pulls?state=open&per_page=100');
+  if (res.status !== 200) {
+    throw new Error(`failed to list open pull requests: HTTP ${res.status}`);
+  }
+  return res.data
+    .filter((pr) => pr.head.ref.startsWith('discovery/'))
+    .map((pr) => ({
+      number: pr.number,
+      headRef: pr.head.ref,
+      headSha: pr.head.sha,
+      body: pr.body ?? '',
+      labels: pr.labels.map((l) => l.name),
+    }));
+}
+
+interface CheckRun {
+  name: string;
+  status: string;
+  conclusion: string | null;
+}
+
+/**
+ * The check-run conclusions for one commit — `Map` keyed by check name, so
+ * a caller can ask "did *this specific* check pass" without caring about
+ * checks it doesn't gate on (e.g. the Cloudflare Workers Build preview, or
+ * the always-passing link-check job).
+ */
+export async function getCheckRunConclusions(
+  sha: string,
+  options: GitHubOptions,
+): Promise<Map<string, string | null>> {
+  const res = await githubRequest<{ check_runs: CheckRun[] }>(
+    options,
+    'GET',
+    `/commits/${sha}/check-runs?per_page=100`,
+  );
+  if (res.status !== 200) {
+    throw new Error(`failed to read check runs for ${sha}: HTTP ${res.status}`);
+  }
+  const conclusions = new Map<string, string | null>();
+  for (const run of res.data.check_runs) conclusions.set(run.name, run.conclusion);
+  return conclusions;
+}
+
+/**
+ * `event: 'APPROVE'` here always fails with HTTP 422 ("Can not approve your
+ * own pull request") — the same token opened every discovery PR, and
+ * GitHub blocks an actor from formally approving their own PR regardless of
+ * permissions. `'COMMENT'` is the closest event that actor is allowed to
+ * post, and is what auto-approve.ts actually uses.
+ */
+export async function postReview(
+  prNumber: number,
+  event: 'APPROVE' | 'COMMENT',
+  body: string,
+  options: GitHubOptions,
+): Promise<void> {
+  const res = await githubRequest(options, 'POST', `/pulls/${prNumber}/reviews`, {
+    event,
+    body,
+  });
+  if (res.status !== 200) {
+    throw new Error(`failed to post a review on pull request #${prNumber}: HTTP ${res.status}`);
+  }
+}
+
 const FAILURE_ISSUE_TITLE = 'Discovery agent source failures';
 const FAILURE_ISSUE_LABEL = 'discovery-failures';
 

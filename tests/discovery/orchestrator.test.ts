@@ -17,6 +17,7 @@ const candidate: RawEvent = {
   url: 'https://organiser.example.org/excited-states-symposium-2027/',
   source_url: 'https://organiser.example.org/excited-states-symposium-2027/',
   organizer: 'Example Photochemistry Society',
+  cost: 'Free, registration required',
   topics: ['photochemistry', 'excited-states'],
   description: 'A three-day symposium on excited-state photochemistry.',
   added: '2026-09-25',
@@ -25,21 +26,20 @@ const candidate: RawEvent = {
 
 const classification = {
   confidence: 0.82,
-  criteria: { relevant: 0.91, credible: 0.87, red_flag: 0.03 },
+  criteria: { relevant: 0.91, organiser: 0.86, programme: 0.79, cost: 0.72, red_flag: 0.03 },
 };
 
 describe('buildPrBody', () => {
-  it('includes the source URL, confidence, criteria and the review checklist', () => {
+  it('includes the source URL, confidence and criteria', () => {
     const body = buildPrBody(candidate, classification);
     expect(body).toContain(candidate.source_url as string);
+    expect(body).toContain(candidate.cost as string);
     expect(body).toContain('0.82');
     expect(body).toContain('0.91');
-    expect(body).toContain('0.87');
+    expect(body).toContain('0.86');
+    expect(body).toContain('0.79');
+    expect(body).toContain('0.72');
     expect(body).toContain('0.03');
-    expect(body).toContain(
-      'Opened the official page and confirmed title, dates, location and format.',
-    );
-    expect(body).toContain('Set `last_verified` to the date you checked');
   });
 
   it('never lets candidate-controlled text break out of its fenced block', () => {
@@ -52,7 +52,6 @@ describe('buildPrBody', () => {
     // backticks from the candidate's own text must have been neutralised,
     // so they can never open or close a second fence.
     expect(body.split('```')).toHaveLength(3);
-    expect(body).toContain('Set `last_verified` to the date you checked');
   });
 });
 
@@ -90,7 +89,9 @@ function stubClassifyAdd() {
         answers: {
           add: { type: 'noul', noul: 0.82 },
           relevant: { type: 'noul', noul: 0.91 },
-          credible: { type: 'noul', noul: 0.87 },
+          organiser: { type: 'noul', noul: 0.86 },
+          programme: { type: 'noul', noul: 0.79 },
+          cost: { type: 'noul', noul: 0.72 },
           red_flag: { type: 'noul', noul: 0.03 },
         },
         usage: { input_tokens: 400, output_tokens: 0, cost: 0.0000168 },

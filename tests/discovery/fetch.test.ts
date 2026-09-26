@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { politeFetch, robotsAllows, type FetchOptions } from '../../src/lib/discovery/fetch';
+import {
+  looksLikeBotChallenge,
+  politeFetch,
+  robotsAllows,
+  type FetchOptions,
+} from '../../src/lib/discovery/fetch';
 import { emptyState } from '../../src/lib/discovery/state';
 
 function stubFetch(
@@ -139,6 +144,95 @@ describe('politeFetch', () => {
       baseOptions({ fetchImpl: impl }),
     );
     expect(result).toEqual({ status: 'error', error: '404 ' });
+  });
+
+  it('falls back to a browser render when a 200 response is a bot-challenge shell', async () => {
+    // Confirmed live for ACS: Incapsula returns 200 with a tiny iframe
+    // shell for a plain fetch, but real content for a real browser.
+    const { impl } = stubFetch({
+      'https://example.org/robots.txt': { status: 200, body: '' },
+      'https://example.org/page': {
+        status: 200,
+        body: '<html><body><iframe src="/_Incapsula_Resource?..."></iframe></body></html>',
+      },
+    });
+    const browserCalls: string[] = [];
+    const browserFetchImpl = async (url: string) => {
+      browserCalls.push(url);
+      return '<html><body><h1>Real rendered content</h1></body></html>';
+    };
+    const result = await politeFetch(
+      'https://example.org/page',
+      baseOptions({ fetchImpl: impl, browserFetchImpl }),
+    );
+    expect(result).toEqual({
+      status: 'fetched',
+      body: '<html><body><h1>Real rendered content</h1></body></html>',
+    });
+    expect(browserCalls).toEqual(['https://example.org/page']);
+  });
+
+  it('falls back to a browser render on a 403 challenge response', async () => {
+    // Confirmed live for RSC-style WAF blocks: 403 with no body at all.
+    const { impl } = stubFetch({
+      'https://example.org/robots.txt': { status: 200, body: '' },
+      'https://example.org/page': { status: 403, body: '' },
+    });
+    const browserFetchImpl = async () => '<html><body><h1>Real content</h1></body></html>';
+    const result = await politeFetch(
+      'https://example.org/page',
+      baseOptions({ fetchImpl: impl, browserFetchImpl }),
+    );
+    expect(result).toEqual({
+      status: 'fetched',
+      body: '<html><body><h1>Real content</h1></body></html>',
+    });
+  });
+
+  it('reports the plain error when a challenge is detected but no browser fallback is configured', async () => {
+    const { impl } = stubFetch({
+      'https://example.org/robots.txt': { status: 200, body: '' },
+      'https://example.org/page': { status: 403, body: '' },
+    });
+    const result = await politeFetch('https://example.org/page', baseOptions({ fetchImpl: impl }));
+    expect(result).toEqual({ status: 'error', error: '403 ' });
+  });
+
+  it('does not invoke the browser fallback for an ordinary large page', async () => {
+    const { impl } = stubFetch({
+      'https://example.org/robots.txt': { status: 200, body: '' },
+      'https://example.org/page': { status: 200, body: '<html>real content</html>'.repeat(500) },
+    });
+    let browserCalled = false;
+    const browserFetchImpl = async () => {
+      browserCalled = true;
+      return 'should never be used';
+    };
+    const result = await politeFetch(
+      'https://example.org/page',
+      baseOptions({ fetchImpl: impl, browserFetchImpl }),
+    );
+    expect(result.status).toBe('fetched');
+    expect(browserCalled).toBe(false);
+  });
+});
+
+describe('looksLikeBotChallenge', () => {
+  it('treats a 403 as a challenge regardless of body', () => {
+    expect(looksLikeBotChallenge(403, '')).toBe(true);
+  });
+
+  it('treats a small body carrying a known challenge signature as a challenge', () => {
+    expect(looksLikeBotChallenge(200, 'Request blocked. Incapsula incident ID: 123')).toBe(true);
+    expect(looksLikeBotChallenge(200, '<title>Just a moment...</title>')).toBe(true);
+  });
+
+  it('does not treat an ordinary large page as a challenge', () => {
+    expect(looksLikeBotChallenge(200, '<html>real content</html>'.repeat(500))).toBe(false);
+  });
+
+  it('does not treat an ordinary small page with no signature as a challenge', () => {
+    expect(looksLikeBotChallenge(200, '<html><body>Not found</body></html>')).toBe(false);
   });
 
   it('treats a robots.txt fetch failure as allow-all', async () => {
