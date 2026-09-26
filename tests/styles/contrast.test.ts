@@ -24,7 +24,6 @@ function palette(selector: string): Record<string, string> {
 
 const DARK = palette(':root {');
 const LIGHT = palette(":root[data-theme='light'] {");
-const LIGHT_BY_SYSTEM = palette(":root:not([data-theme='dark']) {");
 
 function channel(value: number): number {
   const c = value / 255;
@@ -69,13 +68,6 @@ describe('themes', () => {
   it('ships both a dark and a light palette', () => {
     expect(Object.keys(DARK).length).toBeGreaterThan(0);
     expect(Object.keys(LIGHT).length).toBeGreaterThan(0);
-  });
-
-  // The light palette has to be declared twice: once for the system preference
-  // and once for the reader's explicit choice. Nothing in CSS keeps the copies
-  // in step, so this does.
-  it('declares the same light values for the system preference and the toggle', () => {
-    expect(LIGHT_BY_SYSTEM).toEqual(LIGHT);
   });
 
   it('repaints every colour token, leaving none inherited from the dark theme', () => {

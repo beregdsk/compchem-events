@@ -1,12 +1,9 @@
 /* Isosurface — dark-first editorial grid. Spec 2026-09-21 §5-6.
    System fonts only (spec D2). No webfonts, no external requests.
 
-   Two themes. Dark is the default and lives on :root; the light palette is
-   declared twice, once for readers whose system asks for it and once for
-   readers who picked it with the masthead toggle, because CSS offers no way to
-   share one block between a media query and an attribute selector. The two
-   copies are asserted identical in tests/styles/contrast.test.ts, so they
-   cannot drift apart. */
+   Two themes. Dark is the default and lives on :root, unconditionally — the
+   reader's OS preference is not consulted, only their explicit choice via the
+   masthead toggle. The light palette lives solely on `:root[data-theme='light']`. */
 
 :root {
   color-scheme: dark light;
@@ -60,28 +57,7 @@
 }
 
 /* Light theme — warm paper, never white, so the stipple has something to sit
-   on. Keep these two blocks byte-identical. */
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme='dark']) {
-    color-scheme: light;
-
-    --bg: #f4efe4;
-    --bg-raise: #fdfaf2;
-    --fg: #17202a;
-    --fg-muted: #586470;
-    --rule: #ded5c4;
-    --rule-strong: #bfb39c;
-    --control: #6f6552;
-
-    --lobe-neg: #15528f;
-    --lobe-neg-soft: #e4edf8;
-    --lobe-pos: #a3301d;
-    --lobe-pos-soft: #f8e5e0;
-
-    --field-opacity: 0.42;
-  }
-}
-
+   on. Only reachable via the masthead toggle's explicit choice. */
 :root[data-theme='light'] {
   color-scheme: light;
 

@@ -37,8 +37,8 @@ const fullTitle = path === '/' ? `${site.name} — ${site.tagline}` : `${title} 
     />
     <link rel="sitemap" href="/sitemap.xml" />
     {/* Applies a stored theme choice before first paint, so the page never
-    flashes the other theme. Without a stored choice the system preference
-    decides, in CSS. */}
+    flashes the other theme. Without a stored choice, dark is the default,
+    in CSS. */}
     <script is:inline>
       try {
         const choice = localStorage.getItem('theme');
