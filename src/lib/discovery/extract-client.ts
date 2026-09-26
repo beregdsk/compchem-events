@@ -1,5 +1,6 @@
 import { EVENT_FORMATS, EVENT_TYPES } from '../types';
 import type { EventFormat, EventType } from '../types';
+import { fetchWithTimeout } from './http';
 
 export interface ExtractedLocation {
   city: string;
@@ -208,7 +209,7 @@ export async function extractEvent(
   const fetchImpl = options.fetchImpl ?? fetch;
   const baseUrl = options.baseUrl ?? DEFAULT_EXTRACT_BASE_URL;
 
-  const response = await fetchImpl(baseUrl, {
+  const response = await fetchWithTimeout(fetchImpl, baseUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

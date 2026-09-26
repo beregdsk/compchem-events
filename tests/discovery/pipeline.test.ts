@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import type { MailboxCredentials, ParsedMailMessage } from '../../src/lib/discovery/mailbox-client';
 import { runPipeline, type PipelineOptions } from '../../src/lib/discovery/pipeline';
 import { loadState } from '../../src/lib/discovery/state';
 
@@ -536,5 +537,203 @@ describe('runPipeline', () => {
       cleanupState();
       cleanupSources();
     }
+  });
+
+  // The mailbox source kind has no real IMAP connection in tests — a fake
+  // `mailboxFetchImpl` stands in for `fetchNewMailboxMessages`, filtering by
+  // `alreadySeen` itself exactly as the real one is documented to (only new
+  // Message-IDs come back), so these tests exercise the pipeline's own
+  // per-message dedup/rollback wiring (`state.pages['mailbox:...']`), not
+  // the IMAP client.
+  describe('mailbox source', () => {
+    const dummyCredentials: MailboxCredentials = {
+      host: 'imap.example.org',
+      user: 'discovery@example.org',
+      password: 'unused-in-tests',
+    };
+    const allMessages: ParsedMailMessage[] = [
+      {
+        messageId: '<msg-a@list.example>',
+        text: 'First Chemistry Announcement\n\nA computational chemistry event.',
+      },
+      {
+        messageId: '<msg-b@list.example>',
+        text: 'Second Chemistry Announcement\n\nA computational chemistry event.',
+      },
+    ];
+
+    function fakeMailboxFetchImpl(
+      messages: ParsedMailMessage[],
+    ): (
+      credentials: MailboxCredentials,
+      folder: string,
+      alreadySeen: (messageId: string) => boolean,
+    ) => Promise<ParsedMailMessage[]> {
+      return async (_credentials, _folder, alreadySeen) =>
+        messages.filter((m) => !alreadySeen(m.messageId));
+    }
+
+    it("produces a candidate from a new message, using the source's own url as source_url, and does not reprocess it on a later run", async () => {
+      const { path: statePath, cleanup: cleanupState } = tmpStatePath();
+      const { path: sourcesPath, cleanup: cleanupSources } = tmpSourcesFile(
+        '- name: Psi-k\n  url: https://psi-k.example/mailing-list\n  kind: mailbox\n  folder: Psi-k\n',
+      );
+      try {
+        const baseOptions = (): PipelineOptions => ({
+          sourcesPath,
+          statePath,
+          userAgent: 'Test Agent (+https://example.org)',
+          maxPages: 50,
+          maxTokens: 500_000,
+          today: '2026-09-23',
+          sleepImpl: async () => {},
+          extract: {
+            apiKey: 'sk-test',
+            model: 'test-extract-model',
+            fetchImpl: stubExtractFetch(),
+          },
+          mailbox: dummyCredentials,
+          mailboxFetchImpl: fakeMailboxFetchImpl(allMessages),
+        });
+
+        const result1 = await runPipeline(baseOptions());
+        expect(result1.candidates.map((c) => c.title).sort()).toEqual([
+          'First Chemistry Announcement',
+          'Second Chemistry Announcement',
+        ]);
+        for (const candidate of result1.candidates) {
+          expect(candidate.source_url).toBe('https://psi-k.example/mailing-list');
+        }
+        const state = loadState(statePath);
+        expect(state.pages['mailbox:Psi-k:<msg-a@list.example>']).toBeDefined();
+        expect(state.pages['mailbox:Psi-k:<msg-b@list.example>']).toBeDefined();
+
+        // Same two messages come back from the fake every time (it doesn't
+        // remember what it returned before) — only the pipeline's own
+        // `state.pages` dedup, exercised through `alreadySeen`, is what
+        // must stop them reappearing as candidates.
+        const result2 = await runPipeline(baseOptions());
+        expect(result2.candidates).toHaveLength(0);
+      } finally {
+        cleanupState();
+        cleanupSources();
+      }
+    });
+
+    it('rolls back a message whose extraction fails, retrying it (and only it) on the next run', async () => {
+      const { path: statePath, cleanup: cleanupState } = tmpStatePath();
+      const { path: sourcesPath, cleanup: cleanupSources } = tmpSourcesFile(
+        '- name: Psi-k\n  url: https://psi-k.example/mailing-list\n  kind: mailbox\n',
+      );
+      try {
+        let firstMessageShouldFail = true;
+        const extractFetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+          const body = JSON.parse((init?.body as string) ?? '{}') as {
+            messages: Array<{ content: string }>;
+          };
+          const userText = body.messages[1]!.content;
+          if (userText.startsWith('First Chemistry Announcement') && firstMessageShouldFail) {
+            return new Response(
+              JSON.stringify({ choices: [{ message: { content: 'not valid json' } }] }),
+              { status: 200 },
+            );
+          }
+          const title = userText.split('\n')[0]!;
+          return new Response(
+            JSON.stringify({
+              choices: [{ message: { content: JSON.stringify(extractedFor(title)) } }],
+            }),
+            { status: 200 },
+          );
+        }) as typeof fetch;
+
+        const baseOptions = (): PipelineOptions => ({
+          sourcesPath,
+          statePath,
+          userAgent: 'Test Agent (+https://example.org)',
+          maxPages: 50,
+          maxTokens: 500_000,
+          today: '2026-09-23',
+          sleepImpl: async () => {},
+          extract: { apiKey: 'sk-test', model: 'test-extract-model', fetchImpl: extractFetch },
+          mailbox: dummyCredentials,
+          mailboxFetchImpl: fakeMailboxFetchImpl(allMessages),
+        });
+
+        const result1 = await runPipeline(baseOptions());
+        expect(result1.candidates.map((c) => c.title)).toEqual(['Second Chemistry Announcement']);
+        expect(result1.errors).toHaveLength(0);
+
+        firstMessageShouldFail = false;
+        const result2 = await runPipeline(baseOptions());
+        // Only the previously-failed message is retried — the accepted one
+        // stays durably seen and is not reprocessed.
+        expect(result2.candidates.map((c) => c.title)).toEqual(['First Chemistry Announcement']);
+      } finally {
+        cleanupState();
+        cleanupSources();
+      }
+    });
+
+    it('skips mailbox sources without recording an error when no IMAP credentials are configured', async () => {
+      const { path: statePath, cleanup: cleanupState } = tmpStatePath();
+      const { path: sourcesPath, cleanup: cleanupSources } = tmpSourcesFile(
+        '- name: Psi-k\n  url: https://psi-k.example/mailing-list\n  kind: mailbox\n',
+      );
+      const logs: string[] = [];
+      try {
+        const result = await runPipeline({
+          sourcesPath,
+          statePath,
+          userAgent: 'Test Agent (+https://example.org)',
+          maxPages: 50,
+          maxTokens: 500_000,
+          extract: {
+            apiKey: 'sk-test',
+            model: 'test-extract-model',
+            fetchImpl: stubExtractFetch(),
+          },
+          log: (message) => logs.push(message),
+        });
+        expect(result.candidates).toHaveLength(0);
+        expect(result.errors).toHaveLength(0);
+        expect(logs.some((l) => l.includes('no IMAP credentials configured'))).toBe(true);
+      } finally {
+        cleanupState();
+        cleanupSources();
+      }
+    });
+
+    it('records a source error, without throwing, when the mailbox connection itself fails', async () => {
+      const { path: statePath, cleanup: cleanupState } = tmpStatePath();
+      const { path: sourcesPath, cleanup: cleanupSources } = tmpSourcesFile(
+        '- name: Psi-k\n  url: https://psi-k.example/mailing-list\n  kind: mailbox\n',
+      );
+      try {
+        const result = await runPipeline({
+          sourcesPath,
+          statePath,
+          userAgent: 'Test Agent (+https://example.org)',
+          maxPages: 50,
+          maxTokens: 500_000,
+          extract: {
+            apiKey: 'sk-test',
+            model: 'test-extract-model',
+            fetchImpl: stubExtractFetch(),
+          },
+          mailbox: dummyCredentials,
+          mailboxFetchImpl: async () => {
+            throw new Error('ECONNREFUSED');
+          },
+        });
+        expect(result.candidates).toHaveLength(0);
+        expect(result.errors).toEqual([
+          { source: 'https://psi-k.example/mailing-list', message: 'ECONNREFUSED' },
+        ]);
+      } finally {
+        cleanupState();
+        cleanupSources();
+      }
+    });
   });
 });

@@ -4,7 +4,7 @@ import { loadSources, SOURCE_KINDS } from '../../src/lib/discovery/sources';
 describe('loadSources', () => {
   it('parses valid entries and skips malformed ones', () => {
     const sources = loadSources('tests/discovery/fixtures/sources/sample.yaml');
-    expect(sources).toHaveLength(2);
+    expect(sources).toHaveLength(3);
     expect(sources[0]).toEqual({
       name: 'Good Listing',
       url: 'https://example.org/events',
@@ -14,6 +14,22 @@ describe('loadSources', () => {
       notes: 'A sample listing page.',
     });
     expect(sources[1]!.kind).toBe('rss');
+  });
+
+  it('accepts an optional folder field, meaningful only for kind: mailbox', () => {
+    const sources = loadSources('tests/discovery/fixtures/sources/sample.yaml');
+    const mailbox = sources.find((s) => s.kind === 'mailbox');
+    expect(mailbox).toEqual({
+      name: 'Good Mailbox',
+      url: 'https://example.org/mailing-list',
+      kind: 'mailbox',
+      folder: 'Announcements',
+    });
+  });
+
+  it('rejects an entry whose folder is not a string', () => {
+    const sources = loadSources('tests/discovery/fixtures/sources/bad-folder.yaml');
+    expect(sources).toHaveLength(0);
   });
 
   it('loads the real data/sources.yaml with every entry a known kind', () => {

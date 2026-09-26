@@ -16,6 +16,8 @@ export interface Source {
   name: string;
   url: string;
   kind: SourceKind;
+  /** `kind: 'mailbox'` only: the IMAP folder to read. Defaults to `INBOX`. */
+  folder?: string;
   added?: string;
   last_checked?: string;
   notes?: string;
@@ -28,7 +30,9 @@ function isSourceKind(value: unknown): value is SourceKind {
 function isSource(entry: unknown): entry is Source {
   if (typeof entry !== 'object' || entry === null) return false;
   const e = entry as Record<string, unknown>;
-  return typeof e.name === 'string' && typeof e.url === 'string' && isSourceKind(e.kind);
+  if (typeof e.name !== 'string' || typeof e.url !== 'string' || !isSourceKind(e.kind))
+    return false;
+  return e.folder === undefined || typeof e.folder === 'string';
 }
 
 /** Loads and filters `data/sources.yaml`. Malformed entries are skipped, never thrown on. */

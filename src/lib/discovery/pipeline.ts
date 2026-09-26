@@ -10,6 +10,11 @@ import { findEventPageLinks } from './parsers/listing';
 import { parseFeedItems } from './parsers/rss';
 import { parseICalFeed } from './parsers/ical';
 import { extractionInputsFromChannel } from './parsers/telegram';
+import {
+  fetchNewMailboxMessages,
+  type MailboxCredentials,
+  type ParsedMailMessage,
+} from './mailbox-client';
 import { loadSources, type Source } from './sources';
 import { loadState, saveState, type PageState } from './state';
 
@@ -77,6 +82,17 @@ export interface PipelineOptions {
   sleepImpl?: (ms: number) => Promise<void>;
   now?: () => Date;
   extract: Omit<ExtractOptions, 'topics'>;
+  /** IMAP credentials for `kind: 'mailbox'` sources. Undefined disables them — see `case 'mailbox'` below. */
+  mailbox?: MailboxCredentials;
+  /**
+   * Defaults to the real `fetchNewMailboxMessages` (unlike `browserFetchImpl`,
+   * which has no internal default and is simply left unset in every test) —
+   * a mailbox source only ever runs when `mailbox` credentials are present,
+   * so there is no risk of a test accidentally dialing out; defaulting here
+   * means a real deployment can't silently no-op a configured mailbox by
+   * forgetting to pass this. Tests that do want to fake it override it.
+   */
+  mailboxFetchImpl?: typeof fetchNewMailboxMessages;
   log?: (message: string) => void;
 }
 
@@ -300,8 +316,54 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
         });
         return;
       }
-      case 'mailbox':
-        log(`mailbox source "${source.name}" is not implemented, skipping`);
+      case 'mailbox': {
+        if (!options.mailbox) {
+          log(`mailbox source "${source.name}" has no IMAP credentials configured, skipping`);
+          return;
+        }
+        const folder = source.folder ?? 'INBOX';
+        const fetchImpl = options.mailboxFetchImpl ?? fetchNewMailboxMessages;
+        const alreadySeen = (messageId: string) =>
+          state.pages[`mailbox:${folder}:${messageId}`] !== undefined;
+
+        let messages: ParsedMailMessage[];
+        try {
+          messages = await fetchImpl(options.mailbox, folder, alreadySeen);
+        } catch (err) {
+          errors.push({
+            source: source.url,
+            message: err instanceof Error ? err.message : String(err),
+          });
+          return;
+        }
+
+        // Each message is a synthetic "page" keyed by its Message-ID, reusing
+        // the same capture/restore idempotence as a real fetched page: a
+        // transient extraction failure rolls back and retries next run, but
+        // once fully handled (accepted, dropped, or off-topic) a message
+        // stays seen forever — Message-IDs are permanent, unlike page content.
+        for (const message of messages) {
+          const url = `mailbox:${folder}:${message.messageId}`;
+          const previous = capturePageState(url);
+          state.pages[url] = { fetchedAt: new Date().toISOString() };
+          let ok: boolean;
+          try {
+            // A mailing-list message is exactly as hostile as a web page —
+            // same extraction pipeline, no exceptions. `sourceUrl` is the
+            // source's own info page (not this message specifically): unlike
+            // every other kind, a post has no per-message URL of its own,
+            // and the schema requires source_url to be https://. This is
+            // safe because source_url is only used for the blocklist host
+            // check and PR-body display, never for dedup identity.
+            ok = await processInput({ text: message.text, sourceUrl: source.url });
+          } catch (err) {
+            restorePageState(url, previous);
+            throw err;
+          }
+          if (!ok) restorePageState(url, previous);
+        }
+        return;
+      }
     }
   }
 

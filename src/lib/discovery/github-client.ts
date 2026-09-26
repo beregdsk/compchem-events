@@ -1,3 +1,5 @@
+import { fetchWithTimeout } from './http';
+
 const GITHUB_API = 'https://api.github.com';
 
 export interface GitHubOptions {
@@ -26,7 +28,8 @@ async function githubRequest<T>(
   body?: unknown,
 ): Promise<ApiResult<T>> {
   const fetchImpl = options.fetchImpl ?? fetch;
-  const response = await fetchImpl(
+  const response = await fetchWithTimeout(
+    fetchImpl,
     `${options.baseUrl ?? GITHUB_API}/repos/${options.repo}${path}`,
     {
       method,

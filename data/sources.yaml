@@ -19,8 +19,12 @@
 #   ical                   iCalendar feed; parse directly, no LLM needed
 #   mailing-list-archive   public web archive of a list
 #   mailbox                a list we are subscribed to, read over IMAP
-#                          (see "Mailing lists" in docs/discovery-agent.md;
-#                          not implemented — no mailbox entries yet)
+#                          (see "Mailing lists" in docs/discovery-agent.md).
+#                          Optional `folder:` names the IMAP folder to read
+#                          (defaults to INBOX). Inert until IMAP_HOST/
+#                          IMAP_USER/IMAP_PASSWORD are set — no mailbox
+#                          entries yet, since no dedicated mailbox account
+#                          exists to subscribe it to a list.
 #   telegram-channel       public channel; fetch the anonymous web preview at
 #                          t.me/s/<channel>, not t.me/<channel> (the latter
 #                          redirects to the app). No login needed. Posts are
@@ -254,7 +258,19 @@
 #   The mailing list is mirrored here, but posts are login-gated: the sitemap
 #   advertises thousands of /wps_forum_subs/ URLs and every one of them
 #   returns HTTP 200 serving the *homepage* to an anonymous fetch. This is
-#   the case that justifies mailbox ingestion.
+#   the case that justifies mailbox ingestion. `kind: mailbox` is now
+#   implemented (src/lib/discovery/mailbox-client.ts) — what's still missing
+#   is the operational step, not code: a dedicated mailbox account,
+#   subscribed to Psi-k, with IMAP_HOST/IMAP_USER/IMAP_PASSWORD set (see
+#   "Mailing lists" in docs/discovery-agent.md). The list itself moved in
+#   2025 from this forum to JISCMail (psi-k.net/important-new-psi-k-mailing-list,
+#   checked 2026-09-26, HTTP 200; the JISCMail subscribe page itself returns
+#   403 to a scripted fetch, so cite the announcement instead). Once a
+#   mailbox account is subscribed there, add a live entry here, e.g.:
+#     - name: Psi-k
+#       url: https://psi-k.net/important-new-psi-k-mailing-list/
+#       kind: mailbox
+#       folder: INBOX
 #
 # ICTP scientific calendar — https://www.ictp.it/home/scientific-calendar
 #   www.ictp.it refuses a scripted user agent (connection closed, no status).

@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { fetchWithTimeout } from './http';
 import type { DiscoveryState } from './state';
 
 export type FetchResult =
@@ -122,7 +123,7 @@ async function ensureRobots(
     if (age < ROBOTS_TTL_MS) return hostState.robotsTxt;
   }
   try {
-    const res = await fetchImpl(`https://${host}/robots.txt`, {
+    const res = await fetchWithTimeout(fetchImpl, `https://${host}/robots.txt`, {
       headers: { 'User-Agent': options.userAgent },
     });
     if (!res.ok) return hostState.robotsTxt ?? '';
@@ -161,7 +162,7 @@ export async function politeFetch(url: string, options: FetchOptions): Promise<F
 
   let response: Response;
   try {
-    response = await fetchImpl(url, { headers });
+    response = await fetchWithTimeout(fetchImpl, url, { headers });
   } catch (err) {
     hostState.lastRequestAt = now().toISOString();
     return { status: 'error', error: err instanceof Error ? err.message : String(err) };

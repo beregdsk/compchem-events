@@ -1,3 +1,5 @@
+import { fetchWithTimeout } from './http';
+
 export interface NoulQuestion {
   type: 'noul';
   instructions: string;
@@ -47,7 +49,7 @@ export async function callJev(
   const fetchImpl = options.fetchImpl ?? fetch;
   const baseUrl = options.baseUrl ?? DEFAULT_JEV_BASE_URL;
 
-  const response = await fetchImpl(baseUrl, {
+  const response = await fetchWithTimeout(fetchImpl, baseUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

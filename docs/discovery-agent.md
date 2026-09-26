@@ -1,6 +1,6 @@
 # Discovery agent (follow-up, phase 5)
 
-**Status: implemented.** All steps (load sources, fetch, extract, validate, deduplicate/screen, open a PR) exist: fetch/extract/validate is `src/lib/discovery/pipeline.ts`, deduplicate/screen is `src/lib/discovery/classify-candidate.ts`, and PR-opening is `src/lib/discovery/orchestrator.ts`, composed by the cron entrypoint `scripts/discovery/run.ts` — see *Deployment* below. Mailbox/IMAP ingestion (see *Mailing lists*) remains unimplemented.
+**Status: implemented.** All steps (load sources, fetch, extract, validate, deduplicate/screen, open a PR) exist: fetch/extract/validate is `src/lib/discovery/pipeline.ts`, deduplicate/screen is `src/lib/discovery/classify-candidate.ts`, and PR-opening is `src/lib/discovery/orchestrator.ts`, composed by the cron entrypoint `scripts/discovery/run.ts` — see *Deployment* below. Mailbox/IMAP ingestion (see *Mailing lists*) is also implemented (`src/lib/discovery/mailbox-client.ts`), but stays inert — every `kind: mailbox` source is skipped — until a human sets up the one remaining piece: a dedicated mailbox account (see *Mailing lists*).
 
 ## Purpose
 
@@ -49,6 +49,13 @@ All configuration by environment variables, validated by `scripts/discovery/run.
 | `MAX_PAGES` | no | 200 |
 | `MAX_TOKENS` | no | 500000 |
 | `MAX_PRS` | no | 20 |
+| `IMAP_HOST` | no (all three or none — see below) | — |
+| `IMAP_USER` | no | — |
+| `IMAP_PASSWORD` | no | — |
+| `IMAP_PORT` | no | 993 |
+| `IMAP_SECURE` | no | `true` (anything but the literal string `false`) |
+
+`IMAP_HOST`/`IMAP_USER`/`IMAP_PASSWORD` must be set all together or not at all — setting only some fails fast (a likely typo), same as every other required-together value here. None set is the normal state until a dedicated mailbox account exists (see *Mailing lists*): every `kind: mailbox` source is then skipped with a log line, and nothing else about the run changes.
 
 ## Sources
 
@@ -68,7 +75,7 @@ Existing aggregators such as https://labinitio.org/ are for **coverage compariso
 
 Much of this field's event traffic moves by mailing list rather than by web page. Where a list has an open web archive, it is an ordinary source and needs nothing special: CCL's conference announcements are a plain public page and are listed as `listing-page`.
 
-Where it does not, the archive is useless to us. Psi-k is the case that decided this. It mirrors its list to a forum at `psi-k.net/wps-forums/events/`, and the sitemap advertises thousands of post URLs — but every one of them returns HTTP 200 serving the *homepage* to an anonymous fetch. The posts are login-gated. Its public RSS feed carries a fraction of the traffic and was ten months stale when checked.
+Where it does not, the archive is useless to us. Psi-k is the case that decided this. It used to mirror its list to a forum at `psi-k.net/wps-forums/events/`, and the sitemap advertised thousands of post URLs — but every one of them returned HTTP 200 serving the *homepage* to an anonymous fetch. The posts were login-gated, and the public RSS feed carried only a fraction of the traffic. (The list itself moved again in 2025, to JISCMail — see the commented note in `data/sources.yaml` — which changes nothing about the reasoning below: it is still an ordinary subscriber mailing list with no open archive.)
 
 So for lists like Psi-k, **subscribe and read the mail**:
 
@@ -78,7 +85,7 @@ So for lists like Psi-k, **subscribe and read the mail**:
 - Deduplicate on `Message-ID`, and keep the same state file as the web sources. A list that cross-posts a CECAM workshop must not produce a second candidate.
 - Everything else is unchanged: schema validation, blocklist, curation screening, one pull request for human review.
 
-This is deliberately cheap to add because it is only another text source feeding the same extract → validate → screen → PR pipeline. Build it with the rest of the agent, not before: there is nothing for it to feed yet.
+Implemented as `src/lib/discovery/mailbox-client.ts` (IMAP + MIME parsing), wired into the `kind: 'mailbox'` case in `pipeline.ts`. It was deliberately cheap to add: just another text source feeding the same extract → validate → screen → PR pipeline. What's left is not code but the operational step *Mailing lists* already called out above — a dedicated, subscribed mailbox account — and then a live entry in `data/sources.yaml` once one exists.
 
 ## Human review
 
@@ -111,6 +118,7 @@ re-deriving that judgement by hand.
 - One source failing must not stop the run. Log the error and continue.
 - Repeated failures on a source produce a single tracking issue, not a new one each run.
 - The job exits non-zero only on configuration errors, so a cron wrapper can alert on real problems and ignore transient network noise.
+- Every outbound HTTP call (page fetches, robots.txt, the extraction/classification/GitHub APIs) goes through `fetchWithTimeout` (`src/lib/discovery/http.ts`, 60s default) rather than a bare `fetch`. Plain `fetch` has no timeout of its own, so a server that accepts a connection and never responds hangs that call — and, with no timeout, the whole run — forever; this was observed live, not theoretical.
 
 ## Deployment
 
@@ -143,8 +151,10 @@ the mounted volume above, so state survives between runs), `GITHUB_TOKEN`,
 `GITHUB_REPO`, and optionally `LLM_BASE_URL` (extraction only),
 `LLM_BASE_URL_CLASSIFY` (classification only — these are two different
 endpoints and must be set independently when proxying either one),
-`LLM_MODEL`, `MAX_PAGES`, `MAX_TOKENS`, `MAX_PRS` — see *Configuration*
-above for what each does and its default.
+`LLM_MODEL`, `MAX_PAGES`, `MAX_TOKENS`, `MAX_PRS`, and — once a dedicated
+mailbox account exists (see *Mailing lists*) — `IMAP_HOST`, `IMAP_USER`,
+`IMAP_PASSWORD` and optionally `IMAP_PORT`/`IMAP_SECURE` — see
+*Configuration* above for what each does and its default.
 
 Two credentials stay human-only operational steps, per this document's
 *Security model*:
