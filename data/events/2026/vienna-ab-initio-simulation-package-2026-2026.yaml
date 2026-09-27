@@ -1,0 +1,19 @@
+id: vienna-ab-initio-simulation-package-2026-2026
+title: Vienna Ab-initio Simulation Package 2026
+type: conference
+start_date: 2026-11-04
+end_date: 2026-11-05
+format: online
+url: https://indico.hpc.uevora.pt/event/185/
+source_url: https://psi-k.net/important-new-psi-k-mailing-list/
+topics:
+  - electronic-structure
+  - dft
+  - software-hpc
+description: International online meeting on the Vienna Ab‑initio Simulation
+  Package (VASP) 2026, featuring expert talks on electronic‑structure methods,
+  DFT, and high‑performance computing, scheduled for 4‑5 November 2026,
+  organized by the HPC Chair at University of Évora and EuroCC3.
+added: 2026-09-27
+last_verified: 2026-09-27
+organizer: High Performance Computing Chair, University of Évora & EuroCC3
