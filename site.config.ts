@@ -16,6 +16,8 @@ export interface SiteConfig {
   repoUrl: string;
   reportForm: ReportFormConfig;
   submissionFormUrl: string;
+  /** Where the Donate page sends people. */
+  donateUrl: string;
 }
 
 export const site: SiteConfig = {
@@ -30,6 +32,7 @@ export const site: SiteConfig = {
     eventUrlParam: 'event_url',
   },
   submissionFormUrl: 'https://tally.so/r/RGpV04',
+  donateUrl: 'https://www.donationalerts.com/r/beregdsk',
 };
 
 /** Host portion of the production URL, used for iCalendar UIDs. */

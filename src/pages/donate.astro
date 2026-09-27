@@ -1,0 +1,44 @@
+---
+import Base from '../layouts/Base.astro';
+import { site } from '../../site.config';
+---
+
+<Base
+  title="Donate"
+  description="Help keep a free, ad-free, tracker-free calendar of computational chemistry events running."
+  path="/donate/"
+>
+  <div class="prose">
+    <h1>Donate</h1>
+    <p>
+      {site.name} is free to use, has no ads and records nothing about your visit. Hosting it and
+      running the automated checks of its <a href="/sources/">sources</a> still costs money.
+    </p>
+    <p>
+      If the calendar saves you time, a donation helps cover hosting and those checks, and keeps the
+      site independent.
+    </p>
+    <p>
+      <a href={site.donateUrl} rel="noopener">
+        Donate via DonationAlerts
+      </a>
+    </p>
+
+    <h2>Other ways to help</h2>
+    <ul>
+      <li>
+        <a href="/submit/">Add an event</a> you know about, or correct one that is wrong.
+      </li>
+      <li>
+        Suggest a <a href="/sources/">source</a> we should be checking.
+      </li>
+      <li>
+        Improve the{' '}
+        <a href={site.repoUrl} rel="noopener">
+          code
+        </a>{' '}
+        behind the site
+      </li>
+    </ul>
+  </div>
+</Base>
