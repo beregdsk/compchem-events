@@ -11,6 +11,8 @@ location:
   venue: Embassy Suites by Hilton
 url: https://sanibelsymposium.qtp.ufl.edu/
 organizer: Quantum Theory Project, University of Florida
+cost: '$699 ($599 early bird until 30 Nov 2026); graduate students $450'
+fee: paid
 topics: [electronic-structure, quantum-dynamics, ml-chemistry, quantum-computing-chemistry]
 description: >-
   The sixty-sixth edition of a theory meeting running since 1961, covering the
