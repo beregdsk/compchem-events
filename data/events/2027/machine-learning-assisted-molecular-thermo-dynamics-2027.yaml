@@ -1,0 +1,23 @@
+id: machine-learning-assisted-molecular-thermo-dynamics-2027
+title: Machine Learning Assisted Molecular (Thermo)Dynamics
+type: workshop
+start_date: 2027-03-03
+end_date: 2027-03-03
+format: in-person
+url: https://www.cecam.org/workshop-details/machine-learning-assisted-molecular-thermodynamics-1480
+source_url: https://www.cecam.org/workshop-details/machine-learning-assisted-molecular-thermodynamics-1480
+topics:
+  - molecular-dynamics
+  - ml-potentials
+  - ml-chemistry
+description: CECAM Flagship workshop on machine learning for molecular
+  simulations, discussing ML interatomic potentials, coarse-grained models,
+  generative models, and challenges in transferability, reliability, and
+  scalability.
+added: 2026-09-28
+last_verified: 2026-09-28
+location:
+  city: Lausanne
+  country: CH
+  venue: CECAM-HQ-EPFL
+organizer: Michele Ceriotti, Marylou Gabrié, Simon Olsson, Grant Rotskoff
