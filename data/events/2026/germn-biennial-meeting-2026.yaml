@@ -1,0 +1,21 @@
+id: germn-biennial-meeting-2026
+title: GERMN Biennial Meeting
+type: conference
+start_date: 2026-10-04
+end_date: 2026-10-07
+format: in-person
+url: https://rseq.org/evento/germn-biennial-meeting/
+source_url: https://rseq.org/eventos/?ical=1
+topics:
+  - spectroscopy
+description: The 13th GERMN Biennial NMR Meeting will take place in Ciudad Real,
+  Spain, from Oct 4 to 7, 2026. It will bring together scientists to share
+  advances in NMR spectroscopy, including biological systems and computational
+  methods.
+added: 2026-09-28
+last_verified: 2026-09-28
+location:
+  city: Ciudad Real
+  country: ES
+  venue: Universidad de Castilla-La Mancha, Campus de Ciudad Real
+organizer: Spanish Royal Society of Chemistry
