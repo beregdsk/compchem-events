@@ -1,84 +1,86 @@
+import { gzipSync } from 'node:zlib';
 import { describe, expect, it } from 'vitest';
-import { FIELD_SIZE, orbitalLayers, sampleOrbital, TIERS } from '../../src/lib/orbital';
+import { FIELD_SIZE, LEVELS, nodalLines, orbitalLayers } from '../../src/lib/orbital';
 
-describe('sampleOrbital', () => {
-  it('returns the requested number of dots', () => {
-    expect(sampleOrbital(300)).toHaveLength(300);
-  });
+function points(d: string): [number, number][] {
+  return [...d.matchAll(/(-?\d+) (-?\d+)/g)].map((m) => [Number(m[1]), Number(m[2])]);
+}
+
+function extent(d: string) {
+  const ps = points(d);
+  const xs = ps.map(([x]) => x);
+  const ys = ps.map(([, y]) => y);
+  return {
+    minX: Math.min(...xs),
+    maxX: Math.max(...xs),
+    minY: Math.min(...ys),
+    maxY: Math.max(...ys),
+  };
+}
+
+describe('orbitalLayers', () => {
+  const layers = orbitalLayers();
 
   it('is deterministic, so a rebuild produces an identical diff', () => {
-    expect(sampleOrbital(400)).toEqual(sampleOrbital(400));
+    expect(orbitalLayers()).toEqual(layers);
   });
 
-  it('keeps every dot finite and inside the viewBox', () => {
-    for (const dot of sampleOrbital(800)) {
-      expect(Number.isFinite(dot.x)).toBe(true);
-      expect(Number.isFinite(dot.y)).toBe(true);
-      expect(dot.x).toBeGreaterThanOrEqual(0);
-      expect(dot.x).toBeLessThanOrEqual(FIELD_SIZE);
-      expect(dot.y).toBeGreaterThanOrEqual(0);
-      expect(dot.y).toBeLessThanOrEqual(FIELD_SIZE);
+  it('draws both signs of the wavefunction', () => {
+    expect(new Set(layers.map((l) => l.phase))).toEqual(new Set([1, -1]));
+  });
+
+  it('emits closed, finite rings in whole viewBox units', () => {
+    for (const layer of layers) {
+      expect(layer.level).toBeGreaterThanOrEqual(0);
+      expect(layer.level).toBeLessThan(LEVELS.length);
+      expect(layer.d).toMatch(/^(M-?\d+ -?\d+(L-?\d+ -?\d+)+Z)+$/);
     }
   });
 
-  it('samples both phases of the wavefunction', () => {
-    const phases = new Set(sampleOrbital(800).map((d) => d.phase));
-    expect(phases).toEqual(new Set([1, -1]));
-  });
-
-  it('assigns every dot a defined density tier', () => {
-    for (const dot of sampleOrbital(600)) {
-      expect(dot.tier).toBeGreaterThanOrEqual(0);
-      expect(dot.tier).toBeLessThan(TIERS.length);
+  it('closes every contour inside the frame, so the plate never crops its orbital', () => {
+    const margin = FIELD_SIZE * 0.03;
+    for (const layer of layers) {
+      const box = extent(layer.d);
+      expect(box.minX).toBeGreaterThan(margin);
+      expect(box.minY).toBeGreaterThan(margin);
+      expect(box.maxX).toBeLessThan(FIELD_SIZE - margin);
+      expect(box.maxY).toBeLessThan(FIELD_SIZE - margin);
     }
   });
 
-  it('puts the positive lobes on the vertical axis and the negative torus around the waist', () => {
-    const dots = sampleOrbital(2000);
+  it('runs the positive lobes along z and the negative torus along x, centred on the origin', () => {
     const mid = FIELD_SIZE / 2;
-    const spread = (phase: 1 | -1) => {
-      const of = dots.filter((d) => d.phase === phase);
-      return {
-        x: of.reduce((s, d) => s + Math.abs(d.x - mid), 0) / of.length,
-        y: of.reduce((s, d) => s + Math.abs(d.y - mid), 0) / of.length,
-      };
-    };
-    // The d(z²) lobes run along z (drawn vertically); the torus is equatorial,
-    // so it reaches further sideways than up.
-    expect(spread(1).y).toBeGreaterThan(spread(1).x);
-    expect(spread(-1).x).toBeGreaterThan(spread(-1).y);
+    for (const layer of layers) {
+      const box = extent(layer.d);
+      const width = box.maxX - box.minX;
+      const height = box.maxY - box.minY;
+      if (layer.phase === 1) expect(height).toBeGreaterThan(width);
+      else expect(width).toBeGreaterThan(height);
+      expect(Math.abs((box.minX + box.maxX) / 2 - mid)).toBeLessThan(2);
+      expect(Math.abs((box.minY + box.maxY) / 2 - mid)).toBeLessThan(2);
+    }
+  });
+
+  it('gives the torus fewer rings than the lobes, since its peak |ψ| is half theirs', () => {
+    const count = (phase: 1 | -1) => layers.filter((l) => l.phase === phase).length;
+    expect(count(1)).toBe(LEVELS.length);
+    expect(count(-1)).toBe(LEVELS.filter((f) => f < 0.5).length);
+  });
+
+  it('stays under the point cloud it replaced, which cost about 11 kB gzipped', () => {
+    const markup = layers.map((l) => l.d).join('');
+    expect(gzipSync(markup).length).toBeLessThan(8_000);
   });
 });
 
-describe('orbitalLayers', () => {
-  it('emits only non-empty layers, each with usable path data', () => {
-    const layers = orbitalLayers(900);
-    expect(layers.length).toBeGreaterThan(0);
-    expect(layers.length).toBeLessThanOrEqual(2 * TIERS.length);
-    for (const layer of layers) {
-      expect(layer.d.startsWith('M')).toBe(true);
-      expect(layer.d).not.toMatch(/NaN|Infinity/);
-      expect(layer.width).toBeGreaterThan(0);
-    }
-  });
-
-  it('reserves the densest tier for the axial lobes, which outweigh the torus', () => {
-    const top = TIERS.length - 1;
-    const phases = orbitalLayers(2000)
-      .filter((layer) => layer.tier === top)
-      .map((layer) => layer.phase);
-    expect(phases).toEqual([1]);
-  });
-
-  it('draws every sampled dot exactly once', () => {
-    const layers = orbitalLayers(900);
-    const drawn = layers.reduce((total, layer) => total + layer.d.split('M').length - 1, 0);
-    expect(drawn).toBe(900);
-  });
-
-  it('rounds coordinates to whole units so the markup stays small', () => {
-    for (const layer of orbitalLayers(500)) {
-      expect(layer.d).toMatch(/^(M-?\d+ -?\d+h0)+$/);
+describe('nodalLines', () => {
+  it('crosses the frame through the centre at the 3d(z²) nodal angle', () => {
+    for (const [x1, y1, x2, y2] of nodalLines()) {
+      expect(x1).toBe(0);
+      expect(x2).toBe(FIELD_SIZE);
+      expect((y1 + y2) / 2).toBeCloseTo(FIELD_SIZE / 2, 0);
+      // ψ vanishes where 2z² = x², i.e. |z/x| = 1/√2.
+      expect(Math.abs(y2 - y1) / FIELD_SIZE).toBeCloseTo(Math.SQRT1_2, 2);
     }
   });
 });
