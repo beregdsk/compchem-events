@@ -39,7 +39,7 @@ All configuration by environment variables, validated by `scripts/discovery/run.
 | Variable | Required | Default |
 |---|---|---|
 | `LLM_API_KEY` | yes | — |
-| `LLM_MODEL_EXTRACT` | yes | — |
+| `LLM_MODEL_EXTRACT` | yes (e.g. `dots-studio/dots-3-note-preview:free`) | — |
 | `STATE_PATH` | yes | — |
 | `GITHUB_TOKEN` | yes | — |
 | `GITHUB_REPO` | yes (`owner/repo`) | — |
@@ -116,9 +116,12 @@ re-deriving that judgement by hand.
 ## Failure handling
 
 - One source failing must not stop the run. Log the error and continue.
+- Sources run four at a time (`SOURCE_CONCURRENCY` in `pipeline.ts`). Page budgets are reserved before each fetch, per-host politeness slots are reserved before each wait, and a URL is fetched at most once per run, so concurrency never overshoots `MAX_PAGES` or hits one host faster than the per-host interval. `MAX_TOKENS` is checked before each LLM call, so calls already in flight in other sources can overshoot it slightly.
+- Extraction retries a malformed response, a timeout, a dropped connection, a 5xx or a 429 up to three attempts; a 429 waits until the rate limit's stated reset (OpenRouter's free tier allows 20 requests a minute per account).
+- A listing page's links are followed only when they plausibly lead to one event: links in site chrome (nav, header, footer, sidebar, menus), downloads, site pages (about, contact, privacy, membership…), past-event pages and the listing's own or ancestor pages are skipped (`parsers/listing.ts`). The filter is structural only, never by topic — a missed event is worse than a wasted fetch.
 - Repeated failures on a source produce a single tracking issue, not a new one each run.
 - The job exits non-zero only on configuration errors, so a cron wrapper can alert on real problems and ignore transient network noise.
-- Every outbound HTTP call (page fetches, robots.txt, the extraction/classification/GitHub APIs) goes through `fetchWithTimeout` (`src/lib/discovery/http.ts`, 60s default) rather than a bare `fetch`. Plain `fetch` has no timeout of its own, so a server that accepts a connection and never responds hangs that call — and, with no timeout, the whole run — forever; this was observed live, not theoretical.
+- Every outbound HTTP call (page fetches, robots.txt, the extraction/classification/GitHub APIs) goes through `fetchWithTimeout` (`src/lib/discovery/http.ts`, 60s default, 90s for LLM calls) rather than a bare `fetch`. Plain `fetch` has no timeout of its own, so a server that accepts a connection and never responds hangs that call — and, with no timeout, the whole run — forever; this was observed live, not theoretical.
 
 ## Deployment
 

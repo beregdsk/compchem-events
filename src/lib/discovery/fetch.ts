@@ -151,10 +151,23 @@ export async function politeFetch(url: string, options: FetchOptions): Promise<F
     return { status: 'skipped', reason: 'robots-disallowed' };
   }
 
-  if (hostState.lastRequestAt) {
-    const elapsed = now().getTime() - new Date(hostState.lastRequestAt).getTime();
-    if (elapsed < minInterval) await sleepImpl(minInterval - elapsed);
-  }
+  // Reserve this request's slot before waiting for it, so concurrent
+  // callers for the same host (sources run in parallel) queue up one
+  // interval apart instead of all seeing the same last request and firing
+  // together.
+  const nowMs = now().getTime();
+  const lastMs = hostState.lastRequestAt ? new Date(hostState.lastRequestAt).getTime() : -Infinity;
+  const slotMs = Math.max(nowMs, lastMs + minInterval);
+  hostState.lastRequestAt = new Date(slotMs).toISOString();
+  if (slotMs > nowMs) await sleepImpl(slotMs - nowMs);
+  // A later caller may have reserved a slot after ours meanwhile; never move
+  // the host's last request back before it.
+  const markRequestDone = () => {
+    const doneMs = now().getTime();
+    if (doneMs > new Date(hostState.lastRequestAt!).getTime()) {
+      hostState.lastRequestAt = new Date(doneMs).toISOString();
+    }
+  };
 
   const cached = state.pages[url];
   const headers: Record<string, string> = { 'User-Agent': options.userAgent };
@@ -164,10 +177,10 @@ export async function politeFetch(url: string, options: FetchOptions): Promise<F
   try {
     response = await fetchWithTimeout(fetchImpl, url, { headers });
   } catch (err) {
-    hostState.lastRequestAt = now().toISOString();
+    markRequestDone();
     return { status: 'error', error: err instanceof Error ? err.message : String(err) };
   }
-  hostState.lastRequestAt = now().toISOString();
+  markRequestDone();
 
   if (response.status === 304) {
     if (cached) state.pages[url] = { ...cached, fetchedAt: now().toISOString() };

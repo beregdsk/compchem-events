@@ -14,7 +14,7 @@ import type { ExtractionInput } from './html';
 import { extractionInputFromPage } from './parsers/page';
 import { findEventPageLinks } from './parsers/listing';
 import { parseFeedItems } from './parsers/rss';
-import { parseICalFeed } from './parsers/ical';
+import { parseICalEvents, type ICalEvent } from './parsers/ical';
 import { extractionInputsFromChannel } from './parsers/telegram';
 import {
   fetchNewMailboxMessages,
@@ -32,6 +32,14 @@ import { loadState, saveState, type PageState } from './state';
  * page's readable content.
  */
 const EXTRACTION_TEXT_LIMIT = 8000;
+
+/**
+ * Sources processed at once. A run is mostly waiting — on the per-host
+ * politeness delay and on 20-60s LLM calls — so sources overlap well; kept
+ * small because OpenRouter's free tier allows 20 requests a minute per
+ * account, and extraction backs off on 429 rather than failing.
+ */
+const SOURCE_CONCURRENCY = 4;
 
 function truncateForExtraction(text: string): string {
   return text.length > EXTRACTION_TEXT_LIMIT ? text.slice(0, EXTRACTION_TEXT_LIMIT) : text;
@@ -64,15 +72,17 @@ function relevanceKeywords(topicSlugs: readonly string[]): string[] {
 
 /**
  * The text a calendar-feed event is re-extracted from when keywords alone
- * found no topic: every typed field the feed carried, title first.
+ * can't make a valid candidate of it: every field the feed carried, title
+ * first, including the free-text location the model can split into
+ * city/country.
  */
-function icalExtractionText(draft: RawEvent): string {
+function icalExtractionText({ draft, location, description }: ICalEvent): string {
   return [
     draft.title,
     `Dates: ${draft.start_date} to ${draft.end_date}`,
-    `Format: ${draft.format}`,
+    location ? `Location: ${location}` : 'Location: none given (online?)',
     `URL: ${draft.url}`,
-    draft.description,
+    description ?? draft.description,
   ].join('\n');
 }
 
@@ -116,6 +126,11 @@ export interface PipelineOptions {
   log?: (message: string) => void;
 }
 
+/** Pages one source has fetched so far, against `maxPagesPerSource`. */
+interface SourceBudget {
+  pagesFetched: number;
+}
+
 export interface PipelineResult {
   candidates: RawEvent[];
   errors: Array<{ source: string; message: string }>;
@@ -143,7 +158,8 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
   const candidates: RawEvent[] = [];
   const errors: Array<{ source: string; message: string }> = [];
   let pagesFetched = 0;
-  let pagesFetchedForSource = 0;
+  /** URLs already fetched (or being fetched) this run, by any source. */
+  const claimedUrls = new Set<string>();
   const maxPagesPerSource = options.maxPagesPerSource ?? 40;
 
   const fetchOpts: FetchOptions = {
@@ -155,31 +171,49 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
     now: options.now,
   };
 
-  async function fetchPage(url: string): Promise<string | undefined> {
+  /**
+   * Budgets are reserved before the fetch and released if it doesn't
+   * produce a page, so sources running concurrently can't all pass the
+   * check and overshoot `maxPages` together. A URL another source already
+   * fetched this run is skipped, as a second fetch would only have found
+   * it unchanged.
+   */
+  async function fetchPage(url: string, source: SourceBudget): Promise<string | undefined> {
+    if (claimedUrls.has(url)) {
+      log(`already fetched this run: ${url}`);
+      return undefined;
+    }
     if (pagesFetched >= options.maxPages) {
       log(`max pages (${options.maxPages}) reached, skipping ${url}`);
       return undefined;
     }
-    if (pagesFetchedForSource >= maxPagesPerSource) {
+    if (source.pagesFetched >= maxPagesPerSource) {
       log(`max pages per source (${maxPagesPerSource}) reached, skipping ${url}`);
       return undefined;
     }
+    claimedUrls.add(url);
+    pagesFetched += 1;
+    source.pagesFetched += 1;
     const result = await politeFetch(url, fetchOpts);
-    if (result.status === 'fetched') {
-      pagesFetched += 1;
-      pagesFetchedForSource += 1;
-      return result.body;
-    }
+    if (result.status === 'fetched') return result.body;
+    pagesFetched -= 1;
+    source.pagesFetched -= 1;
     if (result.status === 'unchanged') log(`unchanged: ${url}`);
     else if (result.status === 'skipped') log(`skipped (${result.reason}): ${url}`);
     else log(`error fetching ${url}: ${result.error}`);
     return undefined;
   }
 
+  function validationErrors(draft: RawEvent): string[] {
+    return validateEvent({ file: draftFilePath(draft), data: draft }, ctx).errors.map(
+      (e) => e.message,
+    );
+  }
+
   function acceptDraft(draft: RawEvent, sourceUrl: string): void {
-    const result = validateEvent({ file: draftFilePath(draft), data: draft }, ctx);
-    if (result.errors.length > 0) {
-      log(`dropped candidate from ${sourceUrl}: ${result.errors.map((e) => e.message).join('; ')}`);
+    const errors = validationErrors(draft);
+    if (errors.length > 0) {
+      log(`dropped candidate from ${sourceUrl}: ${errors.join('; ')}`);
       return;
     }
     candidates.push(draft);
@@ -277,10 +311,11 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
    */
   async function fetchAndProcess(
     url: string,
+    budget: SourceBudget,
     process: (body: string) => Promise<boolean>,
   ): Promise<void> {
     const previous = capturePageState(url);
-    const body = await fetchPage(url);
+    const body = await fetchPage(url, budget);
     if (body === undefined) return;
     let ok: boolean;
     try {
@@ -293,20 +328,26 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
   }
 
   async function processSource(source: Source): Promise<void> {
+    const budget: SourceBudget = { pagesFetched: 0 };
     switch (source.kind) {
       case 'ical': {
-        // A feed carries no topics, and the schema requires at least one.
-        // Keywords first — free, no LLM call; only an event they can't
-        // place goes to the model, as the same hostile-text extraction as
-        // any page (its own relevance pre-filter included).
-        await fetchAndProcess(source.url, async (body) => {
+        // A feed carries no topics, and the schema requires at least one;
+        // nor a structured location, which an in-person event requires.
+        // Keywords first — free, no LLM call. Only an event that still
+        // isn't a valid candidate goes to the model, as the same
+        // hostile-text extraction as any page (relevance pre-filter included).
+        await fetchAndProcess(source.url, budget, async (body) => {
           let allOk = true;
-          for (const draft of parseICalFeed(body, source.url, today)) {
-            const topics = keywordTopics(`${draft.title} ${draft.description}`, vocabulary);
-            if (topics.length > 0) {
-              acceptDraft({ ...draft, topics }, source.url);
+          for (const event of parseICalEvents(body, source.url, today)) {
+            const { draft } = event;
+            const keyed = {
+              ...draft,
+              topics: keywordTopics(`${draft.title} ${event.description ?? ''}`, vocabulary),
+            };
+            if (keyed.topics.length > 0 && validationErrors(keyed).length === 0) {
+              candidates.push(keyed);
             } else if (
-              !(await processInput({ text: icalExtractionText(draft), sourceUrl: source.url }))
+              !(await processInput({ text: icalExtractionText(event), sourceUrl: source.url }))
             ) {
               allOk = false;
             }
@@ -316,7 +357,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
         return;
       }
       case 'rss': {
-        await fetchAndProcess(source.url, async (body) => {
+        await fetchAndProcess(source.url, budget, async (body) => {
           let allOk = true;
           for (const input of parseFeedItems(body, source.url)) {
             if (!(await processInput(input))) allOk = false;
@@ -326,16 +367,16 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
         return;
       }
       case 'event-page': {
-        await fetchAndProcess(source.url, (body) =>
+        await fetchAndProcess(source.url, budget, (body) =>
           processInput(extractionInputFromPage(body, source.url)),
         );
         return;
       }
       case 'listing-page':
       case 'mailing-list-archive': {
-        await fetchAndProcess(source.url, async (body) => {
+        await fetchAndProcess(source.url, budget, async (body) => {
           for (const link of findEventPageLinks(body, source.url)) {
-            await fetchAndProcess(link, (pageBody) =>
+            await fetchAndProcess(link, budget, (pageBody) =>
               processInput(extractionInputFromPage(pageBody, link)),
             );
           }
@@ -347,7 +388,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
         return;
       }
       case 'telegram-channel': {
-        await fetchAndProcess(source.url, async (body) => {
+        await fetchAndProcess(source.url, budget, async (body) => {
           let allOk = true;
           for (const input of extractionInputsFromChannel(body)) {
             if (!(await processInput(input))) allOk = false;
@@ -411,17 +452,22 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
     }
   }
 
-  for (const source of sources) {
-    pagesFetchedForSource = 0;
-    try {
-      await processSource(source);
-    } catch (err) {
-      errors.push({
-        source: source.url,
-        message: err instanceof Error ? err.message : String(err),
-      });
+  // A fixed pool of workers pulling from one queue: at most
+  // SOURCE_CONCURRENCY sources in flight, each started as soon as a slot frees.
+  const queue = [...sources];
+  async function worker(): Promise<void> {
+    for (let source = queue.shift(); source; source = queue.shift()) {
+      try {
+        await processSource(source);
+      } catch (err) {
+        errors.push({
+          source: source.url,
+          message: err instanceof Error ? err.message : String(err),
+        });
+      }
     }
   }
+  await Promise.all(Array.from({ length: SOURCE_CONCURRENCY }, worker));
 
   saveState(options.statePath, state);
   return { candidates, errors, tokensUsed };

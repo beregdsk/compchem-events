@@ -1,6 +1,6 @@
 import { EVENT_FORMATS, EVENT_TYPES } from '../types';
 import type { EventFormat, EventType } from '../types';
-import { fetchWithTimeout } from './http';
+import { fetchWithTimeout, LLM_TIMEOUT_MS } from './http';
 import { MAX_TOPICS } from './keyword-topics';
 
 export interface ExtractedLocation {
@@ -38,6 +38,8 @@ export interface ExtractOptions {
   fetchImpl?: typeof fetch;
   topics: readonly string[];
   onUsage?: (tokens: number) => void;
+  /** Waits out a rate limit between attempts; injectable so tests don't really sleep. */
+  sleepImpl?: (ms: number) => Promise<void>;
 }
 
 /** OpenRouter's chat-completions endpoint. */
@@ -231,16 +233,56 @@ function isChatCompletionResponse(data: unknown): data is ChatCompletionResponse
 }
 
 /**
- * Total attempts per extraction. A router such as `openrouter/free` sends
- * each request to whichever model is free at the moment, and some of them
- * ignore `response_format` entirely — observed live: guard-model output
- * ("User Safety: safe"), prose, empty content, events missing required
- * fields, and 60s timeouts. A retry usually lands on a different model.
+ * Total attempts per extraction. Free models fail transiently and often —
+ * observed live: malformed output (guard-model text, prose, empty content,
+ * events missing required fields), timeouts, dropped connections, 5xx, and
+ * 429s from both OpenRouter's own free-tier limit (20 requests/minute per
+ * account) and the upstream provider.
  */
 export const EXTRACT_ATTEMPTS = 3;
 
-/** An error worth another attempt: malformed output, a timeout, 429 or 5xx — not a bad key or request. */
-class RetryableExtractError extends Error {}
+/** Wait before retrying a 429 that states no reset time. */
+const RATE_LIMIT_DEFAULT_WAIT_MS = 20_000;
+/** Never wait longer than this for a stated reset — OpenRouter's limit is per minute. */
+const RATE_LIMIT_MAX_WAIT_MS = 60_000;
+
+/** An error worth another attempt, and how long to wait before it. Never a bad key or request. */
+class RetryableExtractError extends Error {
+  constructor(
+    message: string,
+    readonly waitMs = 0,
+  ) {
+    super(message);
+  }
+}
+
+/**
+ * How long a 429 asks us to wait: OpenRouter's JSON error carries the
+ * limit's reset as epoch ms (`error.metadata.headers["X-RateLimit-Reset"]`);
+ * otherwise a standard `Retry-After` header in seconds; otherwise a default.
+ */
+function rateLimitWaitMs(response: Response, body: string, now = Date.now()): number {
+  let waitMs: number | undefined;
+  try {
+    const reset = Number(
+      (JSON.parse(body) as { error?: { metadata?: { headers?: Record<string, unknown> } } }).error
+        ?.metadata?.headers?.['X-RateLimit-Reset'],
+    );
+    if (Number.isFinite(reset) && reset > 0) waitMs = reset - now;
+  } catch {
+    // not JSON — fall through to the header
+  }
+  const retryAfter = Number(response.headers.get('retry-after'));
+  if (waitMs === undefined && Number.isFinite(retryAfter) && retryAfter > 0) {
+    waitMs = retryAfter * 1000;
+  }
+  return Math.min(Math.max(waitMs ?? RATE_LIMIT_DEFAULT_WAIT_MS, 1000), RATE_LIMIT_MAX_WAIT_MS);
+}
+
+/** A timeout, or a connection that failed or dropped mid-body ("fetch failed", "terminated"). */
+function isTransientNetworkError(err: unknown): boolean {
+  return err instanceof Error && (err.name === 'TimeoutError' || err instanceof TypeError);
+}
 
 /**
  * One extraction, retried up to `EXTRACT_ATTEMPTS` times on a malformed or
@@ -250,14 +292,16 @@ export async function extractEvent(
   text: string,
   options: ExtractOptions,
 ): Promise<ExtractedFields | null> {
+  const sleep = options.sleepImpl ?? ((ms: number) => new Promise((r) => setTimeout(r, ms)));
   let lastError: unknown;
   for (let attempt = 1; attempt <= EXTRACT_ATTEMPTS; attempt++) {
     try {
       return await extractOnce(text, options);
     } catch (err) {
-      const timedOut = err instanceof Error && err.name === 'TimeoutError';
-      if (!(err instanceof RetryableExtractError) && !timedOut) throw err;
+      if (!(err instanceof RetryableExtractError) && !isTransientNetworkError(err)) throw err;
       lastError = err;
+      const waitMs = err instanceof RetryableExtractError ? err.waitMs : 0;
+      if (waitMs > 0 && attempt < EXTRACT_ATTEMPTS) await sleep(waitMs);
     }
   }
   throw lastError;
@@ -267,36 +311,44 @@ async function extractOnce(text: string, options: ExtractOptions): Promise<Extra
   const fetchImpl = options.fetchImpl ?? fetch;
   const baseUrl = options.baseUrl ?? DEFAULT_EXTRACT_BASE_URL;
 
-  const response = await fetchWithTimeout(fetchImpl, baseUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${options.apiKey}`,
-    },
-    body: JSON.stringify({
-      model: options.model,
-      messages: [
-        { role: 'system', content: systemPrompt(options.topics) },
-        { role: 'user', content: text },
-      ],
-      response_format: {
-        type: 'json_schema',
-        json_schema: { name: 'candidate_event', strict: true, schema: RESPONSE_SCHEMA },
+  const response = await fetchWithTimeout(
+    fetchImpl,
+    baseUrl,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${options.apiKey}`,
       },
-    }),
-  });
+      body: JSON.stringify({
+        model: options.model,
+        messages: [
+          { role: 'system', content: systemPrompt(options.topics) },
+          { role: 'user', content: text },
+        ],
+        response_format: {
+          type: 'json_schema',
+          json_schema: { name: 'candidate_event', strict: true, schema: RESPONSE_SCHEMA },
+        },
+      }),
+    },
+    LLM_TIMEOUT_MS,
+  );
 
   if (!response.ok) {
     const body = await response.text().catch(() => '');
-    const retryable = response.status === 429 || response.status >= 500;
-    throw new (retryable ? RetryableExtractError : Error)(
-      `extract request failed: ${response.status} ${response.statusText}${body ? ` — ${body}` : ''}`,
-    );
+    const message = `extract request failed: ${response.status} ${response.statusText}${body ? ` — ${body}` : ''}`;
+    if (response.status === 429) {
+      throw new RetryableExtractError(message, rateLimitWaitMs(response, body));
+    }
+    if (response.status >= 500) throw new RetryableExtractError(message);
+    throw new Error(message);
   }
 
   const data: unknown = await response.json();
   if (!isChatCompletionResponse(data)) {
-    throw new Error(`extract response missing "choices": ${JSON.stringify(data)}`);
+    // Seen live as a 200 carrying only an upstream error object.
+    throw new RetryableExtractError(`extract response missing "choices": ${JSON.stringify(data)}`);
   }
   options.onUsage?.(data.usage?.total_tokens ?? 0);
   const content = data.choices?.[0]?.message?.content;

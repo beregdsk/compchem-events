@@ -13,11 +13,21 @@ export function parseXML(xml: string) {
   return new DOMParser().parseFromString(xml, 'text/xml');
 }
 
-/** Absolute, deduplicated, same-host http(s) links from every `<a href>` in `doc`. */
-export function extractLinks(doc: ReturnType<typeof parseHTML>, baseUrl: string): string[] {
+type Anchor = ReturnType<ReturnType<typeof parseHTML>['querySelectorAll']>[number];
+
+/**
+ * Absolute, deduplicated, same-host http(s) links from every `<a href>` in
+ * `doc`, minus any anchor `skip` rejects.
+ */
+export function extractLinks(
+  doc: ReturnType<typeof parseHTML>,
+  baseUrl: string,
+  skip: (a: Anchor) => boolean = () => false,
+): string[] {
   const base = new URL(baseUrl);
   const links = new Set<string>();
   for (const a of doc.querySelectorAll('a[href]')) {
+    if (skip(a)) continue;
     const href = a.getAttribute('href');
     if (!href || href.trim().startsWith('#')) continue;
     let resolved: URL;

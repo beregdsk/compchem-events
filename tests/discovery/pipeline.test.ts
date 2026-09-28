@@ -31,6 +31,14 @@ SUMMARY:OpenMolcas Developers Meeting
 DESCRIPTION:A quantum chemistry code meeting.
 URL:https://example.org/openmolcas
 END:VEVENT
+BEGIN:VEVENT
+UID:ical-4@example.org
+DTSTART;VALUE=DATE:20270601
+DTEND;VALUE=DATE:20270603
+SUMMARY:Enhanced Sampling Workshop
+LOCATION:Institut Henri Poincaré, Paris, France
+URL:https://example.org/sampling
+END:VEVENT
 END:VCALENDAR`;
 
 // All extraction-bound bodies below mention "chemistry" so they clear the
@@ -112,12 +120,13 @@ function stubPageFetch() {
  * `processInput` itself — it no longer propagates to `PipelineResult.errors`
  * or aborts any other source.
  */
-function stubExtractFetch() {
+function stubExtractFetch(seenTexts: string[] = []) {
   return (async (_input: RequestInfo | URL, init?: RequestInit) => {
     const body = JSON.parse((init?.body as string) ?? '{}') as {
       messages: Array<{ content: string }>;
     };
     const userText = body.messages[1]!.content;
+    seenTexts.push(userText);
     if (userText.startsWith('Broken Page')) {
       return new Response(
         JSON.stringify({ choices: [{ message: { content: 'not valid json' } }] }),
@@ -161,6 +170,7 @@ describe('runPipeline', () => {
   it('produces validated candidates for every non-LLM and LLM-backed source, and logs one source-item extraction failure without recording it as an error', async () => {
     const { path: statePath, cleanup } = tmpStatePath();
     const logs: string[] = [];
+    const extractTexts: string[] = [];
     try {
       const options: PipelineOptions = {
         sourcesPath: 'tests/discovery/fixtures/sources/pipeline-sources.yaml',
@@ -171,7 +181,11 @@ describe('runPipeline', () => {
         today: '2026-09-23',
         fetchImpl: stubPageFetch(),
         sleepImpl: async () => {},
-        extract: { apiKey: 'sk-test', model: 'test-extract-model', fetchImpl: stubExtractFetch() },
+        extract: {
+          apiKey: 'sk-test',
+          model: 'test-extract-model',
+          fetchImpl: stubExtractFetch(extractTexts),
+        },
         log: (message) => logs.push(message),
       };
       const result = await runPipeline(options);
@@ -189,6 +203,7 @@ describe('runPipeline', () => {
           'No Url Workshop',
           'Molecular Dynamics Winter School',
           'OpenMolcas Developers Meeting',
+          'Enhanced Sampling Workshop',
         ].sort(),
       );
       const mdSchool = result.candidates.find(
@@ -197,6 +212,14 @@ describe('runPipeline', () => {
       expect(mdSchool.topics).toEqual(['molecular-dynamics']);
       expect(mdSchool.url).toBe('https://example.org/md-school');
       expect(mdSchool.source_url).toBe('https://example.org/calendar.ics');
+      // Keywords place this one, but an in-person event needs a structured
+      // location the feed doesn't have, so it goes to the model — with the
+      // feed's free-text location, and the model's topics win.
+      const sampling = result.candidates.find((c) => c.title === 'Enhanced Sampling Workshop')!;
+      expect(sampling.topics).toEqual(['molecular-dynamics']);
+      expect(
+        extractTexts.some((t) => t.includes('Location: Institut Henri Poincaré, Paris, France')),
+      ).toBe(true);
       const molcas = result.candidates.find((c) => c.title === 'OpenMolcas Developers Meeting')!;
       expect(molcas.source_url).toBe('https://example.org/calendar.ics');
       expect(
@@ -382,12 +405,19 @@ describe('runPipeline', () => {
     }
   });
 
+  // Within one source items are extracted in turn, so the cap is exact
+  // there; across concurrently running sources a call already in flight
+  // still completes, so a run can overshoot by a few calls.
   it('stops extracting once maxTokens is reached, and reports tokensUsed', async () => {
     const { path: statePath, cleanup: cleanupState } = tmpStatePath();
     const { path: sourcesPath, cleanup: cleanupSources } = tmpSourcesFile(
-      '- name: Event Page One\n  url: https://example.org/event\n  kind: event-page\n' +
-        '- name: Event Page Two\n  url: https://example.org/event-2\n  kind: event-page\n',
+      '- name: Two Item Feed\n  url: https://example.org/two-items.xml\n  kind: rss\n',
     );
+    const twoItemFeed = `<?xml version="1.0"?>
+<rss version="2.0"><channel>
+  <item><title>First Item</title><description>A computational chemistry event.</description><link>https://example.org/first</link></item>
+  <item><title>Second Item</title><description>A computational chemistry event.</description><link>https://example.org/second</link></item>
+</channel></rss>`;
     try {
       let extractCalls = 0;
       const extractFetch: typeof fetch = async () => {
@@ -404,8 +434,7 @@ describe('runPipeline', () => {
       };
       const pageResponses: Record<string, { status: number; body: string }> = {
         'https://example.org/robots.txt': { status: 200, body: '' },
-        'https://example.org/event': { status: 200, body: eventPageBody },
-        'https://example.org/event-2': { status: 200, body: eventPageBody },
+        'https://example.org/two-items.xml': { status: 200, body: twoItemFeed },
       };
       const pageFetch: typeof fetch = async (input) => {
         const stub = pageResponses[String(input)];
@@ -426,12 +455,50 @@ describe('runPipeline', () => {
       expect(extractCalls).toBe(1);
       expect(result.tokensUsed).toBe(1000);
       expect(result.candidates).toHaveLength(1);
-      // The second page was fetched but never extracted (budget exhausted).
-      // Its page state must not be committed, or a future run would see it
-      // as "unchanged" and skip it forever, silently losing the event.
+      // The second item was fetched but never extracted (budget exhausted).
+      // The feed's page state must not be committed, or a future run would
+      // see it as "unchanged" and skip it forever, silently losing the event.
       const state = loadState(statePath);
-      expect(state.pages['https://example.org/event-2']).toBeUndefined();
-      expect(state.pages['https://example.org/event']).toBeDefined();
+      expect(state.pages['https://example.org/two-items.xml']).toBeUndefined();
+    } finally {
+      cleanupState();
+      cleanupSources();
+    }
+  });
+
+  it('runs sources concurrently without overshooting maxPages', async () => {
+    const { path: statePath, cleanup: cleanupState } = tmpStatePath();
+    const hosts = ['a', 'b', 'c', 'd', 'e'].map((h) => `${h}.example`);
+    const { path: sourcesPath, cleanup: cleanupSources } = tmpSourcesFile(
+      hosts.map((h) => `- name: ${h}\n  url: https://${h}/event\n  kind: event-page\n`).join(''),
+    );
+    try {
+      let inFlight = 0;
+      let maxInFlight = 0;
+      const pagesFetched: string[] = [];
+      const pageFetch: typeof fetch = async (input) => {
+        const url = String(input);
+        if (url.endsWith('/robots.txt')) return new Response('', { status: 200 });
+        pagesFetched.push(url);
+        inFlight += 1;
+        maxInFlight = Math.max(maxInFlight, inFlight);
+        await new Promise((r) => setTimeout(r, 10));
+        inFlight -= 1;
+        return new Response(eventPageBody, { status: 200 });
+      };
+      const result = await runPipeline({
+        sourcesPath,
+        statePath,
+        userAgent: 'Test Agent (+https://example.org)',
+        maxPages: 3,
+        maxTokens: 500_000,
+        sleepImpl: async () => {},
+        fetchImpl: pageFetch,
+        extract: { apiKey: 'sk-test', model: 'test-model', fetchImpl: stubExtractFetch() },
+      });
+      expect(maxInFlight).toBeGreaterThan(1);
+      expect(pagesFetched).toHaveLength(3);
+      expect(result.candidates).toHaveLength(3);
     } finally {
       cleanupState();
       cleanupSources();

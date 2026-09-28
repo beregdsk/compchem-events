@@ -25,6 +25,20 @@ function toISODate(value: unknown): ISODate | undefined {
   return /^\d{4}-\d{2}-\d{2}/.test(s) ? s.slice(0, 10) : undefined;
 }
 
+/** One feed event: the typed draft, plus the free text it couldn't type. */
+export interface ICalEvent {
+  draft: RawEvent;
+  /** LOCATION as written, e.g. "Miramar Palace, San Sebastián, Spain" — not split into city/country. */
+  location?: string;
+  /** DESCRIPTION in full; `draft.description` is cut to the schema's 280 characters. */
+  description?: string;
+}
+
+/** `parseICalEvents`, drafts only. */
+export function parseICalFeed(feedText: string, sourceUrl: string, today: ISODate): RawEvent[] {
+  return parseICalEvents(feedText, sourceUrl, today).map((e) => e.draft);
+}
+
 /**
  * Parses an iCalendar feed straight into candidate drafts, no LLM call.
  * For an all-day (`VALUE=DATE`) VEVENT, DTEND is exclusive per RFC 5545
@@ -33,10 +47,10 @@ function toISODate(value: unknown): ISODate | undefined {
  * is the literal end instant, not an exclusive day boundary, so its
  * calendar-date portion is used as-is.
  */
-export function parseICalFeed(feedText: string, sourceUrl: string, today: ISODate): RawEvent[] {
+export function parseICalEvents(feedText: string, sourceUrl: string, today: ISODate): ICalEvent[] {
   try {
     const root: unknown = ICAL.parse(feedText);
-    const drafts: RawEvent[] = [];
+    const events: ICalEvent[] = [];
     const comp = new ICAL.Component(root as never);
     for (const vevent of comp.getAllSubcomponents('vevent')) {
       const event = new ICAL.Event(vevent);
@@ -49,24 +63,23 @@ export function parseICalFeed(feedText: string, sourceUrl: string, today: ISODat
       const format: RawEvent['format'] = location ? 'in-person' : 'online';
       const eventUrl = (vevent.getFirstPropertyValue('url') as string | null) ?? sourceUrl;
 
-      drafts.push(
-        synthesizeDraft(
-          {
-            title: event.summary,
-            type: inferEventType(`${event.summary} ${event.description ?? ''}`),
-            start_date: start,
-            end_date: end,
-            format,
-            url: eventUrl,
-            source_url: sourceUrl,
-            topics: [],
-            description: (event.description || event.summary).slice(0, 280),
-          },
-          today,
-        ),
+      const draft = synthesizeDraft(
+        {
+          title: event.summary,
+          type: inferEventType(`${event.summary} ${event.description ?? ''}`),
+          start_date: start,
+          end_date: end,
+          format,
+          url: eventUrl,
+          source_url: sourceUrl,
+          topics: [],
+          description: (event.description || event.summary).slice(0, 280),
+        },
+        today,
       );
+      events.push({ draft, location, description: event.description || undefined });
     }
-    return drafts;
+    return events;
   } catch {
     return [];
   }

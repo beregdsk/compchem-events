@@ -1,4 +1,4 @@
-import { fetchWithTimeout } from './http';
+import { fetchWithTimeout, LLM_TIMEOUT_MS } from './http';
 
 export interface NoulQuestion {
   type: 'noul';
@@ -49,14 +49,19 @@ export async function callJev(
   const fetchImpl = options.fetchImpl ?? fetch;
   const baseUrl = options.baseUrl ?? DEFAULT_JEV_BASE_URL;
 
-  const response = await fetchWithTimeout(fetchImpl, baseUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${options.apiKey}`,
+  const response = await fetchWithTimeout(
+    fetchImpl,
+    baseUrl,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${options.apiKey}`,
+      },
+      body: JSON.stringify(request),
     },
-    body: JSON.stringify(request),
-  });
+    LLM_TIMEOUT_MS,
+  );
 
   if (!response.ok) {
     const body = await response.text().catch(() => '');

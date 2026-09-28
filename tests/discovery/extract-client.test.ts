@@ -228,17 +228,61 @@ describe('extractEvent', () => {
   });
 
   it('retries a 429 but not a 401', async () => {
+    const waits: number[] = [];
+    const sleepImpl = async (ms: number) => {
+      waits.push(ms);
+    };
     const rateLimited = stubFetch(429, { error: 'slow down' }, 'Too Many Requests');
-    await expect(extractEvent('text', { ...options, fetchImpl: rateLimited.impl })).rejects.toThrow(
-      /429/,
-    );
+    await expect(
+      extractEvent('text', { ...options, fetchImpl: rateLimited.impl, sleepImpl }),
+    ).rejects.toThrow(/429/);
     expect(rateLimited.calls).toHaveLength(EXTRACT_ATTEMPTS);
+    // No stated reset: the default wait, between attempts only.
+    expect(waits).toEqual([20_000, 20_000]);
 
     const unauthorized = stubFetch(401, { error: 'bad key' }, 'Unauthorized');
     await expect(
       extractEvent('text', { ...options, fetchImpl: unauthorized.impl }),
     ).rejects.toThrow(/401/);
     expect(unauthorized.calls).toHaveLength(1);
+  });
+
+  it("waits out a 429 until OpenRouter's stated reset, capped at a minute", async () => {
+    const waits: number[] = [];
+    let calls = 0;
+    const impl = (async () => {
+      calls++;
+      if (calls === 1) {
+        const reset = Date.now() + 12_000;
+        return new Response(
+          JSON.stringify({
+            error: { code: 429, metadata: { headers: { 'X-RateLimit-Reset': String(reset) } } },
+          }),
+          { status: 429 },
+        );
+      }
+      return new Response(JSON.stringify(completionWith({ found: false, event: null })));
+    }) as typeof fetch;
+    const sleepImpl = async (ms: number) => {
+      waits.push(ms);
+    };
+    await expect(
+      extractEvent('text', { ...options, fetchImpl: impl, sleepImpl }),
+    ).resolves.toBeNull();
+    expect(waits).toHaveLength(1);
+    expect(waits[0]).toBeGreaterThan(10_000);
+    expect(waits[0]).toBeLessThanOrEqual(12_000);
+  });
+
+  it('retries a dropped connection', async () => {
+    let calls = 0;
+    const impl = (async () => {
+      calls++;
+      if (calls === 1) throw new TypeError('fetch failed');
+      return new Response(JSON.stringify(completionWith({ found: false, event: null })));
+    }) as typeof fetch;
+    await expect(extractEvent('text', { ...options, fetchImpl: impl })).resolves.toBeNull();
+    expect(calls).toBe(2);
   });
 
   it('retries a timed-out call', async () => {

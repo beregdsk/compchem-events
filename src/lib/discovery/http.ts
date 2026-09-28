@@ -13,6 +13,13 @@
 export const DEFAULT_FETCH_TIMEOUT_MS = 60_000;
 
 /**
+ * Timeout for one LLM call (extraction, classification). Free models are
+ * slow; well-formed extractions were observed taking 20-35s, and 60s cut
+ * off calls that would have succeeded.
+ */
+export const LLM_TIMEOUT_MS = 90_000;
+
+/**
  * Calls `fetchImpl` with a hard timeout via `AbortSignal.timeout`. A caller
  * whose `init` already sets a `signal` is expected not to (none in this
  * directory do); this always wins so the timeout can never be silently
