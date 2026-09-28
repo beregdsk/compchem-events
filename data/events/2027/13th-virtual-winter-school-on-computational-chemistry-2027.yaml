@@ -6,6 +6,7 @@ end_date: 2027-01-29
 format: online
 url: https://winterschool.cc/
 source_url: https://winterschool.cc/
+fee: free
 topics:
   - biomolecular-simulation
   - catalysis
