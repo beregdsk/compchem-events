@@ -1,0 +1,22 @@
+id: multiscale-simulation-of-materials-for-roads-infrastructures-2026
+title: Multiscale Simulation of Materials for Roads Infrastructures
+type: workshop
+start_date: 2026-11-16
+end_date: 2026-11-18
+format: in-person
+url: https://www.cecam.org/workshop-details/multiscale-simulation-of-materials-for-roads-infrastructures-1534
+source_url: https://www.cecam.org/workshop-details/multiscale-simulation-of-materials-for-roads-infrastructures-1534
+topics:
+  - molecular-dynamics
+  - materials-modeling
+description: This CECAM workshop focuses on multiscale modeling and simulation
+  of road and building materials, bridging molecular dynamics, coarse-grained
+  models, and continuum mechanics to predict performance and aging of complex
+  composites.
+added: 2026-09-28
+last_verified: 2026-09-28
+location:
+  city: :null,
+  country: FR
+  venue: CECAM-FR-MOSER
+organizer: Majdi Hochlaf, Roberto LinguERRI, Simon Pouget
