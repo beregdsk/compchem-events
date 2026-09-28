@@ -1,4 +1,4 @@
-// Event type on the event map is carried by shape, not colour: the palette's
+// Event type on the graph view is carried by shape, not colour: the palette's
 // two accents already mean "interactive" and "time", and a rainbow of types
 // would dilute both. Paths are centred on the origin; the page translates them.
 import type { EventType } from './types';

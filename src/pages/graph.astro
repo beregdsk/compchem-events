@@ -1,8 +1,9 @@
 ---
-// The event map: events that share topics, a series or an organizer, drawn
+// The graph view: events that share topics, a series or an organizer, drawn
 // close together. Spec: docs/superpowers/specs/2026-09-28-event-graph-design.md.
 // Everything below renders at build time; src/scripts/graph.ts only enhances.
 import Base from '../layouts/Base.astro';
+import ViewSwitch from '../components/ViewSwitch.astro';
 import { loadEvents } from '../lib/events';
 import { formatDateRange } from '../lib/dates';
 import { buildEventGraph, clusters, shortLabel } from '../lib/event-graph';
@@ -23,11 +24,14 @@ const LEGEND = [
 ---
 
 <Base
-  title="Event map"
-  description="A map of computational chemistry events, linked by shared topics, series and organizers."
+  title="Graph view"
+  description="A graph of computational chemistry events, linked by shared topics, series and organizers."
   path="/graph/"
 >
-  <h1>Event map</h1>
+  <div class="page-head">
+    <h1>Graph view</h1>
+    <ViewSwitch current="graph" />
+  </div>
   <p class="muted">
     Events that share topics, a series or an organizer are linked; nearby events are similar.
   </p>

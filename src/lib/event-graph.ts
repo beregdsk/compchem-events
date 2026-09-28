@@ -1,4 +1,4 @@
-// Similarity between events, and the graph built from it, for the event map
+// Similarity between events, and the graph built from it, for the graph view
 // at /graph/. Pure: no DOM, no layout. Spec: docs/superpowers/specs/
 // 2026-09-28-event-graph-design.md.
 import { compareISO, type ISODate } from './dates';
@@ -155,7 +155,7 @@ export function relatedEvents(graph: EventGraph, id: string): string[] {
 
 /**
  * Connected components, largest first; within one, newest event first. The
- * event map lists these under the graph as its text equivalent.
+ * graph view lists these under the graph as its text equivalent.
  */
 export function clusters(graph: EventGraph): GraphNode[][] {
   const adjacent = new Map<string, string[]>(graph.nodes.map((n) => [n.id, []]));
