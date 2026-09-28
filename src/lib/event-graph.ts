@@ -140,6 +140,20 @@ export function buildEventGraph(events: LoadedEvent[]): EventGraph {
 }
 
 /**
+ * Ids of the events linked to `id` on the map, strongest link first, ties by
+ * title. Event pages list these as related events, so a page and the map
+ * never disagree about what is related.
+ */
+export function relatedEvents(graph: EventGraph, id: string): string[] {
+  const titles = new Map(graph.nodes.map((n) => [n.id, n.title]));
+  return graph.edges
+    .filter((e) => e.source === id || e.target === id)
+    .map((e) => ({ id: e.source === id ? e.target : e.source, weight: e.weight }))
+    .sort((a, b) => b.weight - a.weight || titles.get(a.id)!.localeCompare(titles.get(b.id)!))
+    .map((r) => r.id);
+}
+
+/**
  * Connected components, largest first; within one, newest event first. The
  * event map lists these under the graph as its text equivalent.
  */

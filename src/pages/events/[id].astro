@@ -3,19 +3,43 @@ import Base from '../../layouts/Base.astro';
 import DeadlineList from '../../components/DeadlineList.astro';
 import { isStale, loadEvents } from '../../lib/events';
 import { formatDate, formatDateRange, todayUTC } from '../../lib/dates';
+import { buildEventGraph, relatedEvents } from '../../lib/event-graph';
 import { nameOf } from '../../lib/regions';
 import { site } from '../../../site.config';
 import type { LoadedEvent } from '../../lib/types';
 
+// The graph is built once for every page: scoring is pairwise.
 export function getStaticPaths() {
-  return loadEvents().map((event) => ({ params: { id: event.id }, props: { event } }));
+  // Per group, so a well-connected event doesn't bury its page. Declared
+  // here because Astro runs getStaticPaths apart from the rest of the script.
+  const RELATED_MAX = 4;
+  const events = loadEvents();
+  const graph = buildEventGraph(events);
+  const byId = new Map(events.map((e) => [e.id, e]));
+  return events.map((event) => {
+    const related = relatedEvents(graph, event.id).map((id) => byId.get(id)!);
+    return {
+      params: { id: event.id },
+      props: {
+        event,
+        upcoming: related.filter((e) => e.status_derived !== 'past').slice(0, RELATED_MAX),
+        previous: related.filter((e) => e.status_derived === 'past').slice(0, RELATED_MAX),
+      },
+    };
+  });
 }
 
 interface Props {
   event: LoadedEvent;
+  upcoming: LoadedEvent[];
+  previous: LoadedEvent[];
 }
 
-const { event } = Astro.props;
+const { event, upcoming, previous } = Astro.props;
+const relatedGroups = [
+  { heading: 'Coming up', events: upcoming, past: false },
+  { heading: 'Previously', events: previous, past: true },
+].filter((g) => g.events.length > 0);
 const today = todayUTC();
 const path = `/events/${event.id}/`;
 const pageUrl = new URL(path, site.url).href;
@@ -147,6 +171,30 @@ const jsonLd = {
         <h2>Deadlines</h2>
         <DeadlineList deadlines={event.deadlines} />
       </>
+    )}
+
+    {relatedGroups.length > 0 && (
+      <section class="related" aria-labelledby="related-heading">
+        <h2 id="related-heading">Related events</h2>
+        {relatedGroups.map((group) => (
+          <>
+            <h3 class="related__heading">{group.heading}</h3>
+            <ul class:list={['related__list', { 'related__list--past': group.past }]}>
+              {group.events.map((r) => (
+                <li>
+                  <a href={`/events/${r.id}/`}>{r.title}</a>
+                  {r.status && r.status !== 'scheduled' && (
+                    <span class="pill pill--status">{r.status}</span>
+                  )}
+                  <time class="mono muted" datetime={r.start_date}>
+                    {formatDateRange(r.start_date, r.end_date)}
+                  </time>
+                </li>
+              ))}
+            </ul>
+          </>
+        ))}
+      </section>
     )}
 
     <hr class="rule" />

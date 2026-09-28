@@ -3,6 +3,7 @@ import {
   buildEventGraph,
   clusters,
   organizerKeys,
+  relatedEvents,
   shortLabel,
   similarity,
 } from '../../src/lib/event-graph';
@@ -197,5 +198,36 @@ describe('clusters', () => {
       ev('new', { start_date: '2027-01-01', end_date: '2027-01-02' }),
     ]);
     expect(clusters(g)[0]!.map((n) => n.id)).toEqual(['new', 'old']);
+  });
+});
+
+describe('relatedEvents', () => {
+  it('lists map neighbours, strongest link first', () => {
+    const g = buildEventGraph([
+      ev('a', { topics: ['dft', 'catalysis'] }),
+      ev('weak', { topics: ['dft', 'soft-matter'] }), // jaccard 1/3 → 0.2
+      ev('strong', { topics: ['dft', 'catalysis'] }), // identical → 0.6
+    ]);
+    expect(relatedEvents(g, 'a')).toEqual(['strong', 'weak']);
+  });
+
+  it('includes a below-threshold best link, as the map draws it', () => {
+    const g = buildEventGraph([
+      ev('a', { topics: ['dft', 'catalysis', 'spectroscopy'] }),
+      ev('b', { topics: ['dft', 'soft-matter', 'drug-design'] }), // 0.12
+    ]);
+    expect(relatedEvents(g, 'a')).toEqual(['b']);
+    expect(relatedEvents(g, 'b')).toEqual(['a']);
+  });
+
+  it('breaks ties by title', () => {
+    const g = buildEventGraph([ev('a'), ev('z', { title: 'Beta' }), ev('y', { title: 'Alpha' })]);
+    expect(relatedEvents(g, 'a')).toEqual(['y', 'z']);
+  });
+
+  it('is empty for an event sharing nothing, or an unknown id', () => {
+    const g = buildEventGraph([ev('a'), ev('b'), ev('lonely', { topics: ['catalysis'] })]);
+    expect(relatedEvents(g, 'lonely')).toEqual([]);
+    expect(relatedEvents(g, 'missing')).toEqual([]);
   });
 });
