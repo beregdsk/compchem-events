@@ -575,6 +575,8 @@ The domain is attached to the Worker as a Custom Domain in `wrangler.jsonc` (ape
 www), so Cloudflare manages DNS and certificates on deploy. `workers_dev` is false, which
 retires `compchem-events.beregdsk.workers.dev` at the maintainer's request. `preview_urls`
 is set explicitly to true because preview URLs otherwise follow the workers.dev setting,
-and Workers Builds gives every PR branch one. The Worker itself keeps the name
-`compchem-events`: Workers Builds fails a build whose `wrangler.jsonc` name differs from
-the Worker in the dashboard, and with workers.dev off the name is visible to no one.
+and Workers Builds gives every PR branch one. The Worker was renamed
+to `compchem-observer` the same day, through the API first and `wrangler.jsonc` straight
+after, because Workers Builds fails a build whose `wrangler.jsonc` name differs from the
+Worker in the dashboard. The custom domains and the build trigger are keyed to the
+Worker's immutable id, so they followed the rename.
