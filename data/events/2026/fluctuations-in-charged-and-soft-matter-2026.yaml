@@ -1,0 +1,25 @@
+id: fluctuations-in-charged-and-soft-matter-2026
+title: Fluctuations in charged and soft matter
+type: workshop
+start_date: 2026-10-05
+end_date: 2026-10-08
+format: in-person
+url: https://www.cecam.org/workshop-details/fluctuations-in-charged-and-soft-matter-1526
+source_url: https://www.cecam.org/workshop-details/fluctuations-in-charged-and-soft-matter-1526
+topics:
+  - soft-matter
+  - materials-modeling
+  - biomolecular-simulation
+  - ml-chemistry
+  - molecular-dynamics
+description: Workshop on fluctuations in charged and soft matter, covering
+  transport at small scales, nonequilibrium dynamics, and computational methods
+  including machine learning.
+added: 2026-09-28
+last_verified: 2026-09-28
+location:
+  city: Paris
+  country: FR
+  venue: Institut Henri Poincaré
+organizer: Pierre Illien (CNRS, Sorbonne Université); Ignacio Pagonabarraga
+  (University of Barcelona); Benjamin Rotenberg (CNRS and Sorbonne Université)
