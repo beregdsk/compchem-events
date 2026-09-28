@@ -1,0 +1,24 @@
+id: viii-all-russian-conference-on-structure-and-energetics-of-molecules-2026
+title: VIII All-Russian Conference on Structure and Energetics of Molecules
+type: conference
+start_date: 2026-11-16
+end_date: 2026-11-20
+format: in-person
+url: https://conf.isuct.ru/structchem8
+source_url: https://t.me/quant_chem_and_stuff/669
+topics:
+  - electronic-structure
+  - spectroscopy
+  - ml-chemistry
+  - molecular-dynamics
+description: The VIII All-Russian Conference on Structure and Energetics of
+  Molecules covers fundamental and applied topics on molecular structure,
+  thermochemistry, molecular dynamics, theoretical spectroscopy, and AI/machine
+  learning in chemistry. Held in Ivanovo, Russia.
+added: 2026-09-28
+last_verified: 2026-09-28
+location:
+  city: Ivanovo
+  country: RU
+  venue: Ivanovo State University of Chemistry and Technology
+cost: 10,000 RUB (5,000 RUB for PhD students, 3,000 RUB for students)
