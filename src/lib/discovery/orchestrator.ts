@@ -94,6 +94,13 @@ export interface OrchestratorResult {
   prsOpened: number;
   prsUpdated: number;
   skipped: Array<{ id: string; reason: string }>;
+  /**
+   * Ids skipped only because this run's MAX_TOKENS or MAX_PRS ran out —
+   * never judged, or judged `add` but never proposed. The caller must hand
+   * these back to the pipeline (`PipelineResult.requeue`), or the page or
+   * message they came from stays "seen" and they are never retried.
+   */
+  deferred: string[];
   tokensUsed: number;
 }
 
@@ -107,6 +114,7 @@ export async function runDiscoveryRun(options: OrchestratorOptions): Promise<Orc
   let prsOpened = 0;
   let prsUpdated = 0;
   const skipped: Array<{ id: string; reason: string }> = [];
+  const deferred: string[] = [];
   // Candidates that errored out (GitHub or classification failure) — these
   // are otherwise only ever logged to a cron job's stderr, so they're
   // folded into the same tracking issue as pipeline-level source errors,
@@ -138,6 +146,7 @@ export async function runDiscoveryRun(options: OrchestratorOptions): Promise<Orc
     try {
       if (tokensUsed >= options.maxTokens) {
         skipped.push({ id: candidate.id, reason: 'MAX_TOKENS reached' });
+        deferred.push(candidate.id);
         log(`skipping ${candidate.id}: MAX_TOKENS (${options.maxTokens}) reached`);
         continue;
       }
@@ -169,6 +178,7 @@ export async function runDiscoveryRun(options: OrchestratorOptions): Promise<Orc
 
       if (prsOpened + prsUpdated >= options.maxPrs) {
         skipped.push({ id: candidate.id, reason: 'MAX_PRS reached' });
+        deferred.push(candidate.id);
         log(`skipping ${candidate.id}: MAX_PRS (${options.maxPrs}) reached`);
         continue;
       }
@@ -225,5 +235,5 @@ export async function runDiscoveryRun(options: OrchestratorOptions): Promise<Orc
 
   await syncFailureIssue([...options.sourceErrors, ...orchestratorErrors], options.github);
 
-  return { prsOpened, prsUpdated, skipped, tokensUsed };
+  return { prsOpened, prsUpdated, skipped, deferred, tokensUsed };
 }

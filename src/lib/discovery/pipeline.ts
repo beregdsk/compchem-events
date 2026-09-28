@@ -171,6 +171,14 @@ export interface PipelineResult {
   candidates: RawEvent[];
   errors: Array<{ source: string; message: string }>;
   tokensUsed: number;
+  /**
+   * Rolls back, and saves, the state of every page or mailbox message the
+   * given candidates came from, so the next run fetches and extracts them
+   * again. For candidates a later step never got to handle (see
+   * `OrchestratorResult.deferred`): the state file is saved before that
+   * step runs, and would otherwise record them as done.
+   */
+  requeue(candidateIds: readonly string[]): void;
 }
 
 /** Fetches every source in data/sources.yaml, extracts and validates candidates. Never opens a PR. */
@@ -192,6 +200,10 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
   };
 
   const candidates: RawEvent[] = [];
+  /** Candidate id → the `state.pages` keys it was extracted from. */
+  const origins = new Map<string, Set<string>>();
+  /** `state.pages` key → its value before this run touched it, for `requeue`. */
+  const previousStates = new Map<string, PageState | undefined>();
   const errors: Array<{ source: string; message: string }> = [];
   let pagesFetched = 0;
   /** URLs already fetched (or being fetched) this run, by any source. */
@@ -246,7 +258,14 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
     );
   }
 
-  function acceptDraft(draft: RawEvent, sourceUrl: string): void {
+  function addCandidate(draft: RawEvent, origin: string): void {
+    candidates.push(draft);
+    const keys = origins.get(draft.id) ?? new Set<string>();
+    keys.add(origin);
+    origins.set(draft.id, keys);
+  }
+
+  function acceptDraft(draft: RawEvent, sourceUrl: string, origin: string): void {
     // The archive keeps past events, so validation allows them — but
     // discovery only proposes upcoming ones. Listings (CCL's especially)
     // still carry long-finished entries, and models extract them anyway.
@@ -259,7 +278,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
       log(`dropped candidate from ${sourceUrl}: ${errors.join('; ')}`);
       return;
     }
-    candidates.push(draft);
+    addCandidate(draft, origin);
   }
 
   function draftFromFields(fields: ExtractedFields, sourceUrl: string): RawEvent {
@@ -305,11 +324,15 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
    * `true`, same as success, so the caller knows whether it's safe to
    * commit this fetch's page state.
    *
+   * `origin` is the `state.pages` key whose fetch produced `input`, which
+   * may differ from `input.sourceUrl` (a feed item, a mailbox message).
+   *
    * `mode: 'listing'` treats the text as an inline listing: every event it
    * states is extracted in one call, and each becomes its own candidate.
    */
   async function processInput(
     input: ExtractionInput,
+    origin: string,
     mode: 'single' | 'listing' = 'single',
   ): Promise<boolean> {
     if (tokensUsed >= options.maxTokens) {
@@ -335,7 +358,9 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
               extractOptions,
             );
       for (const fields of found) {
-        if (fields) acceptDraft(draftFromFields(fields, input.sourceUrl), input.sourceUrl);
+        if (fields) {
+          acceptDraft(draftFromFields(fields, input.sourceUrl), input.sourceUrl, origin);
+        }
       }
       return true;
     } catch (err) {
@@ -377,6 +402,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
     const previous = capturePageState(url);
     const body = await fetchPage(url, budget);
     if (body === undefined) return;
+    previousStates.set(url, previous);
     let ok: boolean;
     try {
       ok = await process(body);
@@ -405,9 +431,12 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
               topics: keywordTopics(`${draft.title} ${event.description ?? ''}`, vocabulary),
             };
             if (keyed.topics.length > 0 && validationErrors(keyed).length === 0) {
-              candidates.push(keyed);
+              addCandidate(keyed, source.url);
             } else if (
-              !(await processInput({ text: icalExtractionText(event), sourceUrl: source.url }))
+              !(await processInput(
+                { text: icalExtractionText(event), sourceUrl: source.url },
+                source.url,
+              ))
             ) {
               allOk = false;
             }
@@ -420,7 +449,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
         await fetchAndProcess(source.url, budget, async (body) => {
           let allOk = true;
           for (const input of parseFeedItems(body, source.url)) {
-            if (!(await processInput(input))) allOk = false;
+            if (!(await processInput(input, source.url))) allOk = false;
           }
           return allOk;
         });
@@ -428,13 +457,13 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
       }
       case 'event-page': {
         await fetchAndProcess(source.url, budget, (body) =>
-          processInput(extractionInputFromPage(body, source.url)),
+          processInput(extractionInputFromPage(body, source.url), source.url),
         );
         return;
       }
       case 'inline-listing': {
         await fetchAndProcess(source.url, budget, (body) =>
-          processInput(extractionInputFromPage(body, source.url), 'listing'),
+          processInput(extractionInputFromPage(body, source.url), source.url, 'listing'),
         );
         return;
       }
@@ -447,10 +476,13 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
         for (const event of await fetchCecamEvents(options.userAgent, options.fetchImpl)) {
           const url = cecamEventUrl(event);
           await fetchAndProcess(url, budget, (body) =>
-            processInput({
-              text: `${cecamEventText(event)}\n\n${extractionInputFromPage(body, url).text}`,
-              sourceUrl: url,
-            }),
+            processInput(
+              {
+                text: `${cecamEventText(event)}\n\n${extractionInputFromPage(body, url).text}`,
+                sourceUrl: url,
+              },
+              url,
+            ),
           );
         }
         return;
@@ -467,7 +499,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
           await fetchAndProcess(current, budget, async (body) => {
             for (const link of findEventPageLinks(body, current)) {
               await fetchAndProcess(link, budget, (pageBody) =>
-                processInput(extractionInputFromPage(pageBody, link)),
+                processInput(extractionInputFromPage(pageBody, link), link),
               );
             }
             listingUrl = findNextListingPage(body, current);
@@ -483,7 +515,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
         await fetchAndProcess(source.url, budget, async (body) => {
           let allOk = true;
           for (const input of extractionInputsFromChannel(body)) {
-            if (!(await processInput(input))) allOk = false;
+            if (!(await processInput(input, source.url))) allOk = false;
           }
           return allOk;
         });
@@ -522,6 +554,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
         for (const message of messages) {
           const url = `mailbox:${folder}:${message.messageId}`;
           const previous = capturePageState(url);
+          previousStates.set(url, previous);
           state.pages[url] = { fetchedAt: new Date().toISOString() };
           let ok: boolean;
           try {
@@ -532,7 +565,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
             // and the schema requires source_url to be https://. This is
             // safe because source_url is only used for the blocklist host
             // check and PR-body display, never for dedup identity.
-            ok = await processInput({ text: message.text, sourceUrl: source.url });
+            ok = await processInput({ text: message.text, sourceUrl: source.url }, url);
           } catch (err) {
             restorePageState(url, previous);
             throw err;
@@ -562,5 +595,15 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
   await Promise.all(Array.from({ length: SOURCE_CONCURRENCY }, worker));
 
   saveState(options.statePath, state);
-  return { candidates, errors, tokensUsed };
+
+  function requeue(candidateIds: readonly string[]): void {
+    for (const id of candidateIds) {
+      for (const key of origins.get(id) ?? []) {
+        if (previousStates.has(key)) restorePageState(key, previousStates.get(key));
+      }
+    }
+    saveState(options.statePath, state);
+  }
+
+  return { candidates, errors, tokensUsed, requeue };
 }

@@ -402,6 +402,7 @@ describe('runDiscoveryRun', () => {
     );
     expect(result.prsOpened).toBe(1);
     expect(result.skipped).toEqual([{ id: 'second-2027', reason: 'MAX_PRS reached' }]);
+    expect(result.deferred).toEqual(['second-2027']);
   });
 
   it('stops classifying once MAX_TOKENS is reached, logging the rest as skipped', async () => {
@@ -422,6 +423,7 @@ describe('runDiscoveryRun', () => {
     expect(result.skipped).toEqual([
       { id: 'excited-states-symposium-2027', reason: 'MAX_TOKENS reached' },
     ]);
+    expect(result.deferred).toEqual(['excited-states-symposium-2027']);
     expect(result.tokensUsed).toBe(100);
   });
 

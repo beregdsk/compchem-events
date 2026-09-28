@@ -156,6 +156,10 @@ async function main(): Promise<void> {
     log,
   };
   const result = await runDiscoveryRun(orchestratorOptions);
+  // The pipeline saved its state before the orchestrator ran; without this,
+  // a candidate cut off by MAX_TOKENS/MAX_PRS would never be seen again.
+  pipelineResult.requeue(result.deferred);
+  if (result.deferred.length > 0) log(`requeued ${result.deferred.length} deferred candidate(s)`);
 
   // A separate phase, deliberately run after and independent of the loop
   // above: it revisits *all* currently-open discovery PRs (not just this
