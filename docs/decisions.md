@@ -525,3 +525,35 @@ is shown in the discovery PR body for the reviewer to check. An event with
 The home-page select appears only once some upcoming event has a `fee`, like
 every other option there. At the time of writing none does: existing events
 need their fees checked on the organisers' pages before any can be set.
+
+## 2026-09-28 — Masthead plate: contour plot replaces the point cloud
+
+The Monte-Carlo plate from 2026-09-21 is replaced by isovalue contours of the same
+3d(z²) orbital on the xz plane, traced at build time with `d3-contour`. The maintainer
+disliked the plate and the masthead ground; looking at the render, three things were
+wrong. The plate was cropped: an absolutely positioned SVG given a width takes its
+height from its aspect ratio and ignores the bottom inset, so the square plate ran past
+the masthead and the lower lobe was cut by the rule. Equal-sized dots gave no depth, so
+at a distance the cloud read as static. And the 34 px grid and the ring pattern behind it
+competed with the plate.
+
+Contours fix the reading without leaving the chemistry: they are the figure a quantum
+chemistry paper prints for a d orbital, the two colours are still the two signs of ψ,
+and the torus still gets fewer rings than the lobes because its peak |ψ| on the plane
+is half theirs. The nodal cones are drawn as dashed lines at ±35.3°. The grid and rings
+are gone. The plate is now sized by the masthead's height, and a test asserts every
+contour closes at least 3% inside the frame. The outermost level (4% of peak) was
+dropped because it ran off the frame at any window that kept the lobes a useful size.
+
+`d3-contour` over a hand-written marching-squares routine: it is the standard
+implementation, it runs only at build time so no bytes reach the browser, and it is the
+same family as the `d3-force` already in use. A 120-point grid with whole-unit
+coordinates costs about 7 kB gzipped, against 11 kB for the cloud. Strokes use
+`vector-effect: non-scaling-stroke`, so their widths are pixels whatever size the plate
+draws at, which removes the viewBox-unit tuning the dot widths needed.
+
+The page glow now pools behind the plate and scrolls with the page, rather than
+being fixed to the viewport, so the masthead rule crosses it instead of ending it. Its
+strength is a token (`--glow`), lower in the light theme because a blue wash turns
+paper grey. The wordmark moved up to `--step-2`, since at body size it was outranked
+by every page heading.

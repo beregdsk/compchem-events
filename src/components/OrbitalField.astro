@@ -1,20 +1,22 @@
 ---
-// The masthead plate: a Monte-Carlo point cloud of a real 3d(z²) orbital.
+// The masthead plate: a contour plot of a real 3d(z²) orbital.
 //
 // Astro renders this at build time, so the visitor gets static markup and the
-// sampling never runs in a browser. The dots take their colour from the two
-// phase tokens, which is why the plate is inline SVG rather than a background
-// image: an external file could not follow the theme.
-import { FIELD_SIZE, orbitalLayers } from '../lib/orbital';
+// field is never evaluated in a browser. The lines take their colour from the
+// two phase tokens, which is why the plate is inline SVG rather than a
+// background image: an external file could not follow the theme.
+import { FIELD_SIZE, LEVELS, WINDOW, nodalLines, orbitalLayers } from '../lib/orbital';
 
-/**
- * Tuned against the size the plate actually draws at. Fewer and the lobes stop
- * reading as lobes; many more and the masthead costs more than the page it
- * heads. See docs/decisions.md for the measurements.
- */
-const DOT_COUNT = 2600;
+const layers = orbitalLayers();
 
-const layers = orbitalLayers(DOT_COUNT);
+/** Axis ticks every 5 a₀, as viewBox offsets from the centre. */
+const TICK_STEP = 5;
+const ticks = Array.from({ length: 2 * Math.floor(WINDOW / TICK_STEP) + 1 }, (_, i) =>
+  Math.round(
+    FIELD_SIZE / 2 + ((i - Math.floor(WINDOW / TICK_STEP)) * TICK_STEP * FIELD_SIZE) / (2 * WINDOW),
+  ),
+);
+const TICK = 14;
 ---
 
 <svg
@@ -24,14 +26,34 @@ const layers = orbitalLayers(DOT_COUNT);
   aria-hidden="true"
   focusable="false"
 >
+  <g class="field__frame">
+    <path
+      d={ticks
+        .map(
+          (t) =>
+            `M${t} ${FIELD_SIZE}v${-TICK}M${t} 0v${TICK}M0 ${t}h${TICK}M${FIELD_SIZE} ${t}h${-TICK}`,
+        )
+        .join('')}
+    />
+    {nodalLines().map(([x1, y1, x2, y2]) => (
+      <line class="field__node" {x1} {y1} {x2} {y2} />
+    ))}
+    <text x={TICK * 2} y={TICK * 2 + 30}>
+      z
+    </text>
+    <text x={FIELD_SIZE - TICK * 2} y={FIELD_SIZE - TICK * 2} text-anchor="end">
+      x
+    </text>
+  </g>
   {layers.map((layer) => (
     <path
+      class="field__contour"
       d={layer.d}
-      fill="none"
+      pathLength="1"
       stroke={layer.phase === 1 ? 'var(--lobe-pos)' : 'var(--lobe-neg)'}
-      stroke-width={layer.width}
-      stroke-linecap="round"
-      opacity={layer.opacity}
+      stroke-width={0.8 + layer.level * 0.22}
+      opacity={0.45 + (0.55 * layer.level) / (LEVELS.length - 1)}
+      style={`--order: ${LEVELS.length - 1 - layer.level}`}
     />
   ))}
 </svg>

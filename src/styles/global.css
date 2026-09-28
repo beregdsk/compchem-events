@@ -46,7 +46,10 @@
   --lobe-pos-soft: #2e100c;
 
   /* How loud the orbital plate in the masthead is allowed to be. */
-  --field-opacity: 0.55;
+  --field-opacity: 0.8;
+  /* How much lobe colour pools behind the plate. Paper takes less before a
+     blue wash turns it grey. */
+  --glow: 13%;
 
   --link: var(--lobe-neg);
   --time: var(--lobe-pos);
@@ -74,7 +77,8 @@
   --lobe-pos: #a3301d;
   --lobe-pos-soft: #f8e5e0;
 
-  --field-opacity: 0.42;
+  --field-opacity: 0.75;
+  --glow: 5%;
 }
 
 *,
@@ -94,23 +98,27 @@ body {
   line-height: 1.6;
   color: var(--fg);
   background-color: var(--bg);
-  /* The orbital field carries the atmosphere now (see .field). All the ground
-     needs is one soft wash so the masthead has something to sit against. */
-  background-image: radial-gradient(
-    110% 55% at 50% -10%,
-    color-mix(in oklab, var(--lobe-neg) 11%, transparent),
-    transparent 72%
-  );
-  background-attachment: fixed;
+  /* A glow pooled behind the orbital plate, red over blue like the lobes it
+     sits under. It scrolls with the page and fades out through the first
+     screen, so the masthead's rule crosses it instead of ending it. */
+  background-image:
+    radial-gradient(
+      32rem 22rem at 82% 4rem,
+      color-mix(in oklab, var(--lobe-pos) calc(var(--glow) * 0.7), transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      70rem 48rem at 78% 0,
+      color-mix(in oklab, var(--lobe-neg) var(--glow), transparent),
+      transparent 72%
+    );
   background-repeat: no-repeat;
 }
 
-/* The Monte-Carlo point cloud from components/OrbitalField.astro. It is a plate
-   in the masthead rather than a wash behind the whole page: at page scale the
-   cloud is too thin to read as an orbital, and dense enough to read it competes
-   with the event text. In the band it is large, legible and out of the way.
-   Decorative, so it is hidden from assistive technology and takes no pointer
-   events. */
+/* The contour plot from components/OrbitalField.astro, a plate in the masthead.
+   It is square and fitted to the band's height, so the orbital is never
+   cropped. Decorative, so it is hidden from assistive technology and takes no
+   pointer events. */
 .field {
   position: absolute;
   inset-block: var(--space-s);
@@ -118,9 +126,64 @@ body {
      column, so the band shares the page's measure. */
   inset-inline-end: max(1rem, calc(50% - 39rem + 1rem));
   z-index: -1;
-  width: var(--plate-width);
+  /* Height drives the size, not width: a replaced element given a width takes
+     its height from its aspect ratio and ignores the bottom inset, which is
+     what used to crop the plate. `meet` keeps the plot whole if the width cap
+     wins instead. */
+  inset-block-end: auto;
+  height: calc(100% - 2 * var(--space-s));
+  width: auto;
+  aspect-ratio: 1;
+  max-width: var(--plate-width);
   opacity: var(--field-opacity);
   pointer-events: none;
+}
+
+.field__contour {
+  fill: none;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.field__frame {
+  fill: none;
+  stroke: var(--rule-strong);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.field__frame * {
+  vector-effect: non-scaling-stroke;
+}
+
+.field__node {
+  stroke-dasharray: 3 5;
+}
+
+.field__frame text {
+  fill: var(--fg-muted);
+  stroke: none;
+  font-family: var(--font-mono);
+  font-size: 44px;
+  font-style: italic;
+}
+
+/* The load moment: contours draw in from each lobe's peak outwards. */
+@media (prefers-reduced-motion: no-preference) {
+  .field__contour {
+    stroke-dasharray: 1;
+    animation: trace 900ms cubic-bezier(0.45, 0, 0.2, 1) backwards;
+    animation-delay: calc(var(--order) * 70ms);
+  }
+  .field__frame {
+    animation: rise 600ms ease-out backwards;
+  }
+}
+
+@keyframes trace {
+  from {
+    stroke-dashoffset: 1;
+  }
 }
 
 h1,
@@ -225,6 +288,7 @@ a:hover {
   justify-content: space-between;
 }
 .site-head__name {
+  font-size: var(--step-2);
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--fg);
@@ -279,33 +343,6 @@ a:hover {
 .theme-toggle:hover {
   color: var(--link);
   border-block-end-color: var(--link);
-}
-
-/* A plotting grid crossed with density contours, faded out before it reaches
-   the wordmark. A pseudo-element, so it stays out of the accessibility tree. */
-.site-head::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background-image:
-    repeating-linear-gradient(
-      to right,
-      color-mix(in oklab, var(--lobe-neg) 22%, transparent) 0 1px,
-      transparent 1px 34px
-    ),
-    repeating-linear-gradient(
-      to bottom,
-      color-mix(in oklab, var(--lobe-neg) 22%, transparent) 0 1px,
-      transparent 1px 34px
-    ),
-    repeating-radial-gradient(
-      circle at 88% 120%,
-      color-mix(in oklab, var(--lobe-pos) 30%, transparent) 0 1px,
-      transparent 1px 22px
-    );
-  opacity: 0.5;
-  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), transparent 88%);
 }
 
 .site-foot__inner {

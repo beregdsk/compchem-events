@@ -1,172 +1,137 @@
-// Monte-Carlo point cloud of a real hydrogenic 3d(z²) orbital.
+// Contour plot of a real hydrogenic 3d(z²) orbital.
 //
 // This is the plate in the site's masthead. It is not decoration standing in
-// for chemistry: the dots are samples drawn from |ψ|² by rejection sampling,
-// the same construction the poster art it borrows from uses, and the two
-// colours the renderer gives them are the two signs of ψ — the phase lobes the
-// palette is already named after.
+// for chemistry: the lines are isovalue contours of ψ on the xz plane, the
+// figure a quantum chemistry paper prints for a d orbital, and the two colours
+// the renderer gives them are the two signs of ψ — the phase lobes the palette
+// is already named after.
 //
 // Everything here runs at build time inside an Astro component, so the cost is
 // paid once and the browser receives plain markup: no canvas, no runtime JS.
-// The PRNG is seeded, so a rebuild reproduces the same cloud and the committed
-// output does not churn.
+// The field is evaluated on a fixed grid with no randomness, so a rebuild
+// reproduces the same markup and the committed output does not churn.
+import { contours } from 'd3-contour';
 
-/** Side of the square viewBox the dots are projected into. */
+/** Side of the square viewBox the plot is drawn into. */
 export const FIELD_SIZE = 1000;
 
 /**
- * Density tiers, faintest first. Rejection sampling already places more dots
- * where |ψ|² is large; the tiers additionally draw those dots heavier, which is
- * what gives the cloud a hot core and a dusty fringe instead of a flat spray.
- * `upTo` is a fraction of the peak density. Widths are viewBox units, sized so
- * that at the scale the masthead plate draws at they land between one and three
- * device pixels — below that a dot renders as a grey smudge rather than a mark.
+ * Half-width of the plot window, in Bohr radii. Wide enough that the faintest
+ * contour closes well inside the frame — a plate that clips its own orbital
+ * reads as a mistake — and no wider, or the lobes shrink into the middle.
  */
-export const TIERS = [
-  { upTo: 0.04, width: 4.5, opacity: 0.5 },
-  { upTo: 0.3, width: 6.5, opacity: 0.75 },
-  { upTo: Infinity, width: 9, opacity: 1 },
-] as const;
+export const WINDOW = 22;
 
-export interface Dot {
-  x: number;
-  y: number;
-  /** Sign of ψ: +1 for the axial lobes, -1 for the equatorial torus. */
-  phase: 1 | -1;
-  /** Index into `TIERS`. */
-  tier: number;
-}
+/**
+ * Contour levels as fractions of the positive lobe's peak |ψ|, faintest first.
+ * Spaced roughly geometrically so the lines crowd towards each lobe's maximum,
+ * which is what makes a contour plot read as a hill rather than a target.
+ */
+export const LEVELS = [0.1, 0.2, 0.34, 0.5, 0.68, 0.86] as const;
+
+/**
+ * Grid points per side. At 120 the innermost rings still draw as curves at the
+ * plate's size, and the markup is about 7 kB gzipped against 11 kB for the
+ * point cloud this replaced.
+ */
+const GRID = 120;
 
 export interface Layer {
+  /** Sign of ψ: +1 for the axial lobes, -1 for the equatorial torus. */
   phase: 1 | -1;
-  tier: number;
-  width: number;
-  opacity: number;
-  /** SVG path data: one zero-length subpath per dot, drawn with a round cap. */
+  /** Index into `LEVELS`: 0 is the outermost line. */
+  level: number;
+  /** SVG path data in viewBox units: closed rings, one subpath each. */
   d: string;
 }
 
-/** Radius of the sampling ball, in Bohr radii. Beyond it |ψ|² is under 0.3% of peak. */
-const EXTENT = 20;
-
 /**
- * Half-width of the plot window, in Bohr radii — the projection's scale, and
- * therefore how much of the frame the cloud fills.
- *
- * It is deliberately far smaller than the sampling ball. |ψ|² peaks at r = 6 a₀
- * and the bulk of the density sits well inside it, so scaling the frame to the
- * ball would draw the whole orbital into the middle third and leave it reading
- * as dust. Samples that land outside the window are dropped, exactly as a plot
- * clipped to its axes drops them.
+ * ψ(3d z²) on the xz plane (y = 0), up to normalisation. With r² = x² + z²,
+ * R₃₂(r)·Y₂₀(θ) ∝ r² e^(−r/3) (3cos²θ − 1) = e^(−r/3) (2z² − x²).
  */
-const WINDOW = 15;
-
-/** Tilt of the orbital's z axis towards the viewer, so the torus reads as an ellipse. */
-const TILT = 0.35;
-
-/** Seeded so the emitted markup is reproducible across builds. */
-const SEED = 0x5ca1ab1e;
-
-/**
- * ψ(3d z²) up to normalisation: R₃₂(r)·Y₂₀(θ) ∝ r² e^(−r/3) (3cos²θ − 1).
- * Returned unnormalised, because sampling only needs ratios.
- */
-function amplitude(r: number, cosTheta: number): number {
-  return r * r * Math.exp(-r / 3) * (3 * cosTheta * cosTheta - 1);
+function amplitude(x: number, z: number): number {
+  return Math.exp(-Math.hypot(x, z) / 3) * (2 * z * z - x * x);
 }
 
-/** |ψ|² at its maximum: on the z axis at r = 6 a₀, where d/dr of r⁴e^(−2r/3) vanishes. */
-const PEAK_DENSITY = amplitude(6, 1) ** 2;
+/** |ψ| at its maximum: on the z axis at r = 6 a₀, where d/dr of r² e^(−r/3) vanishes. */
+const PEAK = amplitude(0, 6);
 
-function mulberry32(seed: number): () => number {
-  let a = seed >>> 0;
-  return () => {
-    a = (a + 0x6d2b79f5) >>> 0;
-    let t = a;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
+/**
+ * Grid index to Bohr radii, at the centre of the cell d3-contour gives that
+ * sample, so the plot and the axis ticks share one scale.
+ */
+function toBohr(index: number): number {
+  return ((index + 0.5) / GRID) * 2 * WINDOW - WINDOW;
 }
 
 /**
- * Draw `count` samples from |ψ|², projected orthographically onto the viewBox.
- *
- * Rejection sampling in a ball: propose a uniform point, keep it with
- * probability |ψ(point)|²/peak. Acceptance is a few percent, which is
- * irrelevant at build time and keeps the sampler honest — no closed-form
- * shortcut that would quietly distort the shape.
+ * Contour coordinate to viewBox units. d3-contour places sample i on the span
+ * [i, i + 1], so its output runs 0…GRID. Rounded to whole units: the plate
+ * draws the 1000-unit box at 320 px at most, so a unit is a third of a pixel,
+ * and dropping the decimals takes a quarter off the gzipped markup.
  */
-export function sampleOrbital(count: number): Dot[] {
-  const random = mulberry32(SEED);
-  const scale = FIELD_SIZE / 2 / WINDOW;
-  const centre = FIELD_SIZE / 2;
-  const dots: Dot[] = [];
+function toView(value: number): number {
+  return Math.round((value / GRID) * FIELD_SIZE);
+}
 
-  while (dots.length < count) {
-    const x = (random() * 2 - 1) * EXTENT;
-    const y = (random() * 2 - 1) * EXTENT;
-    const z = (random() * 2 - 1) * EXTENT;
-    const r = Math.hypot(x, y, z);
-    if (r > EXTENT || r === 0) continue;
-
-    const psi = amplitude(r, z / r);
-    const density = psi * psi;
-    if (random() * PEAK_DENSITY > density) continue;
-
-    // Rotate about the horizontal screen axis, then project. The orbital's z
-    // axis stays vertical; the equatorial plane opens up by sin(TILT).
-    const depth = z * Math.cos(TILT) + y * Math.sin(TILT);
-    const px = round(centre + x * scale);
-    const py = round(centre - depth * scale);
-    if (px < 0 || px > FIELD_SIZE || py < 0 || py > FIELD_SIZE) continue;
-
-    dots.push({
-      x: px,
-      y: py,
-      phase: psi >= 0 ? 1 : -1,
-      tier: TIERS.findIndex((tier) => density / PEAK_DENSITY <= tier.upTo),
-    });
+/**
+ * Trace every level for both signs of ψ.
+ *
+ * The negative torus peaks at half the positive lobes' |ψ| (36 vs 72 e⁻² on the
+ * plane), and the levels are cut against the positive peak, so the torus gets
+ * fewer rings than the lobes. That is the orbital's real shape, not a styling
+ * choice. Levels a sign never reaches are dropped rather than emitted empty.
+ */
+export function orbitalLayers(): Layer[] {
+  const values = new Float64Array(GRID * GRID);
+  for (let row = 0; row < GRID; row++) {
+    for (let col = 0; col < GRID; col++) {
+      // Row 0 is the top of the plot, so z grows upwards.
+      values[row * GRID + col] = amplitude(toBohr(col), -toBohr(row)) / PEAK;
+    }
   }
 
-  return dots;
-}
-
-/**
- * Whole viewBox units. One unit lands under two device pixels at the sizes the
- * field is drawn at, which is below the diameter of the dots themselves, so the
- * quantisation is invisible in a random cloud — and it takes a quarter off the
- * emitted markup.
- */
-function round(value: number): number {
-  return Math.round(value);
-}
-
-/**
- * Group a fresh sample into the paths the renderer draws: one per phase and
- * density tier, so each group can carry its own stroke weight and opacity.
- *
- * Fewer than 2 × `TIERS.length` layers come back, because the tiers are cut
- * against the orbital's global peak and the equatorial torus never reaches it —
- * the axial lobes really are the denser feature. Empty groups are dropped
- * rather than emitted as blank paths.
- */
-export function orbitalLayers(count: number): Layer[] {
-  const dots = sampleOrbital(count);
+  const tracer = contours().size([GRID, GRID]);
   const layers: Layer[] = [];
 
   for (const phase of [1, -1] as const) {
-    for (const [tier, { width, opacity }] of TIERS.entries()) {
-      const d = dots
-        .filter((dot) => dot.phase === phase && dot.tier === tier)
-        // A zero-length subpath with a round linecap renders as a disc of
-        // diameter `width`; the explicit (if empty) lineto is what makes every
-        // engine agree to draw it, and `h0` is the shortest way to write one.
-        .map((dot) => `M${dot.x} ${dot.y}h0`)
+    const signed = phase === 1 ? values : values.map((v) => -v);
+    for (const [level, fraction] of LEVELS.entries()) {
+      const { coordinates } = tracer.contour(Array.from(signed), fraction);
+      const d = coordinates
+        .flat()
+        // d3 closes each ring by repeating its first point; `Z` does that already.
+        .map(
+          (ring) =>
+            'M' +
+            ring
+              .slice(0, -1)
+              .map((point) => {
+                // GeoJSON positions are typed number[], but d3 always emits pairs.
+                const [x, y] = point as [number, number];
+                return `${toView(x)} ${toView(y)}`;
+              })
+              .join('L') +
+            'Z',
+        )
         .join('');
-      if (d) layers.push({ phase, tier, width, opacity, d });
+      if (d) layers.push({ phase, level, d });
     }
   }
 
   return layers;
+}
+
+/**
+ * Where the nodal cones of 3d(z²) cut the plane: ψ vanishes where 2z² = x²,
+ * two lines through the origin at ±arctan(1/√2) ≈ 35.3° from the x axis.
+ * Returned as the endpoints of each line where it leaves the frame.
+ */
+export function nodalLines(): [number, number, number, number][] {
+  const centre = FIELD_SIZE / 2;
+  const rise = (centre * Math.SQRT1_2) | 0;
+  return [
+    [0, centre + rise, FIELD_SIZE, centre - rise],
+    [0, centre - rise, FIELD_SIZE, centre + rise],
+  ];
 }
