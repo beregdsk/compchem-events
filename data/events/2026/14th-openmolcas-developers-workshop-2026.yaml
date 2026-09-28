@@ -3,7 +3,7 @@ title: 14th OpenMolcas Developers' Workshop
 type: workshop
 start_date: 2026-10-05
 end_date: 2026-10-07
-format: online
+format: in-person
 url: https://rseq.org/evento/14th-openmolcas-developers-workshop/
 source_url: https://rseq.org/eventos/?ical=1
 topics:
@@ -11,12 +11,12 @@ topics:
   - wavefunction-methods
   - excited-states
   - software-hpc
-description: The 14th OpenMolcas Developers' Workshop brings together developers
-  and users of the OpenMolcas quantum chemistry software to discuss new
-  methodologies, technical developments, and future perspectives.
+description: A workshop for developers and users of the OpenMolcas quantum
+  chemistry software to discuss new methodologies, technical developments, and
+  future perspectives.
 added: 2026-09-28
 last_verified: 2026-09-28
 location:
   city: Valencia
   country: ES
-  venue: Institute of Molecular Science (ICMol), Valencia
+  venue: Institute of Molecular Science (ICMol)
