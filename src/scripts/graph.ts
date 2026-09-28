@@ -28,6 +28,8 @@ const ZOOM_MAX = 3;
 function enhance(figure: HTMLElement, svg: SVGSVGElement, payload: GraphPayload) {
   // Pointer state, declared first: the highlight handlers below read `dragging`.
   let dragging: SimNode | null = null;
+  /** The one pointer that owns the drag; every other pointer is ignored until it lifts. */
+  let dragId: number | null = null;
   let moved = false;
   let suppressClick = false;
 
@@ -105,6 +107,10 @@ function enhance(figure: HTMLElement, svg: SVGSVGElement, payload: GraphPayload)
   svg.addEventListener(
     'wheel',
     (e) => {
+      // A plain wheel belongs to the page: zooming on it would trap anyone
+      // scrolling past the map. Ctrl/⌘ zooms, and so does a trackpad pinch,
+      // which browsers deliver as a ctrl+wheel.
+      if (!e.ctrlKey && !e.metaKey) return;
       e.preventDefault();
       zoomAt(e.clientX, e.clientY, Math.exp(e.deltaY * 0.001));
     },
@@ -142,6 +148,9 @@ function enhance(figure: HTMLElement, svg: SVGSVGElement, payload: GraphPayload)
   let pinchDistance = 0;
 
   svg.addEventListener('pointerdown', (e) => {
+    // Primary button only: a right-click is for the link's context menu, whose
+    // pointerup may never arrive, and must not leave a node stuck to the cursor.
+    if (e.button !== 0 || dragId !== null) return;
     const nodeEl = nodeOf(e.target);
     start = { x: e.clientX, y: e.clientY };
     moved = false;
@@ -149,6 +158,7 @@ function enhance(figure: HTMLElement, svg: SVGSVGElement, payload: GraphPayload)
       e.preventDefault(); // no native link drag or text selection
       dragging = simById.get(nodeEl.dataset.id!) ?? null;
       if (dragging) {
+        dragId = e.pointerId;
         dragging.fx = dragging.x;
         dragging.fy = dragging.y;
         sim.alphaTarget(0.3).restart();
@@ -168,11 +178,12 @@ function enhance(figure: HTMLElement, svg: SVGSVGElement, payload: GraphPayload)
   });
 
   svg.addEventListener('pointermove', (e) => {
-    if (Math.hypot(e.clientX - start.x, e.clientY - start.y) > DRAG_SLOP) moved = true;
-    if (dragging) {
+    if (dragId !== null) {
+      if (e.pointerId !== dragId) return;
+      if (Math.hypot(e.clientX - start.x, e.clientY - start.y) > DRAG_SLOP) moved = true;
       const p = toSvg(e.clientX, e.clientY);
-      dragging.fx = p.x;
-      dragging.fy = p.y;
+      dragging!.fx = p.x;
+      dragging!.fy = p.y;
       return;
     }
     const prev = pointers.get(e.pointerId);
@@ -183,6 +194,12 @@ function enhance(figure: HTMLElement, svg: SVGSVGElement, payload: GraphPayload)
       const distance = Math.hypot(p!.x - q!.x, p!.y - q!.y);
       if (pinchDistance > 0) zoomAt((p!.x + q!.x) / 2, (p!.y + q!.y) / 2, pinchDistance / distance);
       pinchDistance = distance;
+    } else if (e.pointerType === 'touch') {
+      // One finger on the background scrolls the page rather than panning the
+      // map, so the cluster list below stays reachable on a phone; two fingers
+      // pinch-zoom. touch-action has to be none (see global.css), so the page
+      // can't scroll itself here.
+      scrollBy(0, prev.y - e.clientY);
     } else if (pointers.size === 1) {
       const unit = vb[2] / svg.clientWidth;
       vb[0] -= (e.clientX - prev.x) * unit;
@@ -192,12 +209,18 @@ function enhance(figure: HTMLElement, svg: SVGSVGElement, payload: GraphPayload)
   });
 
   function release(e: PointerEvent) {
-    if (dragging) {
-      dragging.fx = null;
-      dragging.fy = null;
+    if (dragId !== null) {
+      if (e.pointerId !== dragId) return;
+      dragging!.fx = null;
+      dragging!.fy = null;
       sim.alphaTarget(0);
+      // A mouse drag's click follows in this same task; a touch drag has none.
+      // Clearing on the next task keeps the flag from swallowing a later click
+      // — a keyboard Enter on a node has no pointer events to reset it.
       suppressClick = moved;
+      setTimeout(() => (suppressClick = false));
       dragging = null;
+      dragId = null;
       highlight(nodeOf(document.elementFromPoint(e.clientX, e.clientY))?.dataset.id ?? null);
     }
     pointers.delete(e.pointerId);

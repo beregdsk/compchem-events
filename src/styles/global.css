@@ -765,6 +765,9 @@ a:hover {
 
 .graph.is-live .graph__svg {
   cursor: grab;
+  /* none, not pan-y: Chrome ignores touch-action on SVG children, so pan-y here
+     would let the browser take a vertical node drag. The script scrolls the
+     page itself for a one-finger swipe on the background (src/scripts/graph.ts). */
   touch-action: none;
 }
 
