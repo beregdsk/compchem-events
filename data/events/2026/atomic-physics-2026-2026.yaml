@@ -6,12 +6,7 @@ end_date: 2026-11-27
 format: online
 url: https://www.pks.mpg.de/atom26
 source_url: https://www.pks.mpg.de/atom26
-topics:
-  - electronic-structure
-  - excited-states
-  - photochemistry
-  - quantum-dynamics
-  - spectroscopy
+topics: [electronic-structure, excited-states, quantum-dynamics, spectroscopy]
 description: International workshop on atomic physics focusing on quantum
   correlations in molecular systems, addressing entanglement in ultrafast
   excitation, ionization, non-adiabatic transitions, and electronic coherence.

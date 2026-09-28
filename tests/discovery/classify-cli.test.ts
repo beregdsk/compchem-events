@@ -5,7 +5,7 @@ describe('readCandidate', () => {
   it('parses a YAML candidate file', () => {
     const candidate = readCandidate('tests/discovery/fixtures/candidates/clean-add.yaml');
     expect(candidate.title).toBe('New Symposium on Excited-State Photochemistry');
-    expect(candidate.topics).toEqual(['photochemistry', 'excited-states']);
+    expect(candidate.topics).toEqual(['excited-states', 'spectroscopy']);
   });
 
   it('parses a JSON candidate file', () => {

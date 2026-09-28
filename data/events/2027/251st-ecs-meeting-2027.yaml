@@ -6,10 +6,7 @@ end_date: 2027-06-03
 format: in-person
 url: https://www.electrochem.org/251/deadlines
 source_url: https://www.electrochem.org/251/deadlines
-topics:
-  - materials-modeling
-  - catalysis
-  - spectroscopy
+topics: [materials-modeling, catalysis, spectroscopy, electrochemistry]
 description: The 251st ECS Meeting is a premier international gathering focusing
   on electrochemistry, solid state science and technology, energy storage,
   materials, and sensors.

@@ -9,7 +9,7 @@ location:
   country: CN
 url: https://www.cecam.org/workshop-details/computational-electrochemistry-in-the-era-of-ai-1501
 organizer: CECAM Beijing node
-topics: [materials-modeling, ml-potentials, catalysis]
+topics: [materials-modeling, ml-potentials, catalysis, electrochemistry]
 description: >-
   Four days on simulating electrochemical interfaces for batteries, fuel cells
   and electrolysers, and on what machine-learned potentials and AI-driven

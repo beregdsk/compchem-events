@@ -6,9 +6,7 @@ end_date: 2026-10-10
 format: hybrid
 url: https://cheminform.ru/konferenczii-i-seminary/ionnye-provodniki-ot-modelirovaniya-k-eksperimentu/
 source_url: https://cheminform.ru/konferenczii-i-seminary/ionnye-provodniki-ot-modelirovaniya-k-eksperimentu/
-topics:
-  - materials-modeling
-  - education-training
+topics: [materials-modeling, education-training, electrochemistry]
 description: Second school-conference of young scientists with international
   participation on ionic conductors, covering energy storage, new materials,
   electrode-electrolyte interfaces, and theoretical modeling of ionic

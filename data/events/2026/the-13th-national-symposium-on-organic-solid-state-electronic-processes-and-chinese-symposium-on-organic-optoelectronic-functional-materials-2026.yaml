@@ -8,12 +8,7 @@ format: in-person
 url: https://www.chemsoc.org.cn/meeting/13NOS/
 source_url: https://www.chemsoc.org.cn/meeting/home/announcement/a7318.html
 fee: paid
-topics:
-  - electronic-structure
-  - excited-states
-  - photochemistry
-  - materials-modeling
-  - soft-matter
+topics: [electronic-structure, excited-states, materials-modeling, soft-matter]
 description: The 13th National Symposium on Organic Solid State Electronic
   Processes and Chinese Symposium on Organic Optoelectronic Functional
   Materials, organized by the Chinese Chemical Society, will be held in Tianjin,
