@@ -8,9 +8,7 @@
 - slug: wavefunction-methods
   label: Wavefunction methods
 - slug: excited-states
-  label: Excited states
-- slug: photochemistry
-  label: Photochemistry
+  label: Excited states and photochemistry
 - slug: quantum-dynamics
   label: Quantum dynamics
 - slug: molecular-dynamics
@@ -33,6 +31,8 @@
   label: Materials modelling
 - slug: catalysis
   label: Catalysis
+- slug: electrochemistry
+  label: Electrochemistry
 - slug: spectroscopy
   label: Computational spectroscopy
 - slug: quantum-computing-chemistry

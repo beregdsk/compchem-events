@@ -6,9 +6,7 @@ end_date: 2026-11-15
 format: in-person
 url: https://iupac.org/event/2nd-women-in-chemical-sciences-conference-wicsic-2026/
 source_url: https://iupac.org/events/?ical=1
-topics:
-  - ml-chemistry
-  - education-training
+topics: [ml-chemistry]
 description: The conference focuses on transforming chemical sciences with AI,
   showcasing research and innovations in education and practice, while promoting
   women's leadership in STEM.

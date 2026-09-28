@@ -45,7 +45,7 @@ const fullInput: DraftInput = {
   organizer: 'Test Organiser',
   cost: 'Free',
   fee: 'free',
-  topics: ['photochemistry', 'excited-states'],
+  topics: ['excited-states', 'spectroscopy'],
   description: 'A symposium on excited-state photochemistry.',
 };
 

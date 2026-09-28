@@ -16,7 +16,7 @@ const candidate: RawEvent = {
   end_date: '2027-11-05',
   format: 'in-person',
   url: 'https://organiser.example.org/excited-states-symposium-2027/',
-  topics: ['photochemistry'],
+  topics: ['excited-states'],
   description: 'A symposium on excited-state photochemistry.',
   added: '2026-09-25',
   last_verified: '2026-09-25',

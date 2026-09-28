@@ -7,10 +7,7 @@ end_date: 2026-10-15
 format: in-person
 url: https://iupac.org/event/xxxvii-latin-american-congress-of-chemistry-claq-2026/
 source_url: https://iupac.org/events/?ical=1
-topics:
-  - ml-chemistry
-  - materials-modeling
-  - education-training
+topics: [ml-chemistry, materials-modeling]
 description: The XXXVII Latin American Congress of Chemistry (CLAQ 2026) focuses
   on green chemistry, advanced functional materials, AI in chemistry, and
   environmental remediation for sustainable development.

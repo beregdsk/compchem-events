@@ -6,11 +6,7 @@ end_date: 2024-08-02
 format: in-person
 url: https://telluridescience.org/schools/battery/
 source_url: https://telluridescience.org/schools/battery/
-topics:
-  - materials-modeling
-  - spectroscopy
-  - catalysis
-  - education-training
+topics: [materials-modeling, spectroscopy, catalysis, education-training, electrochemistry]
 description: Week-long Telluride summer school (Jul 29–Aug 2, 2024) on
   electrochemical energy storage, covering experimental and theoretical methods
   for batteries, supercapacitors, interfaces, electrolytes and electrocatalysis;
