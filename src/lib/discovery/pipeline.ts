@@ -18,7 +18,7 @@ import { keywordTopics } from './keyword-topics';
 import { politeFetch, type FetchOptions } from './fetch';
 import type { ExtractionInput } from './html';
 import { extractionInputFromPage } from './parsers/page';
-import { findEventPageLinks } from './parsers/listing';
+import { findEventPageLinks, findNextListingPage } from './parsers/listing';
 import { parseFeedItems } from './parsers/rss';
 import { parseICalEvents, type ICalEvent } from './parsers/ical';
 import { extractionInputsFromChannel } from './parsers/telegram';
@@ -48,6 +48,13 @@ const LISTING_EXTRACTION_TEXT_LIMIT = 16000;
  * account, and extraction backs off on 429 rather than failing.
  */
 const SOURCE_CONCURRENCY = 4;
+
+/**
+ * Pages of one paginated listing followed per run (the first included).
+ * The per-source page cap still bounds the total; this bounds the crawl
+ * of archives that run back for years.
+ */
+const MAX_LISTING_PAGES = 5;
 
 function truncateForExtraction(text: string, limit = EXTRACTION_TEXT_LIMIT): string {
   return text.length > limit ? text.slice(0, limit) : text;
@@ -82,6 +89,17 @@ const RELEVANCE_GENERIC_TERMS = [
   'вычислительн',
   'моделировани',
   'суперкомпьют',
+  // Other non-English sources: Italian/French (chimica, chimie), German
+  // (Chemie), and Chinese/Japanese (化学 chemistry, 分子 molecule, 计算/計算
+  // computation, 理论/理論 theory) — CJK has no word boundaries to miss.
+  'chimi',
+  'chemie',
+  '化学',
+  '分子',
+  '计算',
+  '計算',
+  '理论',
+  '理論',
 ];
 
 function relevanceKeywords(topicSlugs: readonly string[]): string[] {
@@ -438,17 +456,26 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
       }
       case 'listing-page':
       case 'mailing-list-archive': {
-        await fetchAndProcess(source.url, budget, async (body) => {
-          for (const link of findEventPageLinks(body, source.url)) {
-            await fetchAndProcess(link, budget, (pageBody) =>
-              processInput(extractionInputFromPage(pageBody, link)),
-            );
-          }
-          // A child page's own failure is handled (and retried) at that
-          // child's own URL via the nested fetchAndProcess above; it does
-          // not make the listing page itself un-"seen".
-          return true;
-        });
+        // Page 1, then each `rel="next"` page in turn. An unchanged (or
+        // failed) page stops the walk: later pages only shift when page 1
+        // gains a post, so they are unchanged too.
+        let listingUrl: string | undefined = source.url;
+        for (let n = 0; listingUrl && n < MAX_LISTING_PAGES; n++) {
+          const current: string = listingUrl;
+          listingUrl = undefined;
+          await fetchAndProcess(current, budget, async (body) => {
+            for (const link of findEventPageLinks(body, current)) {
+              await fetchAndProcess(link, budget, (pageBody) =>
+                processInput(extractionInputFromPage(pageBody, link)),
+              );
+            }
+            listingUrl = findNextListingPage(body, current);
+            // A child page's own failure is handled (and retried) at that
+            // child's own URL via the nested fetchAndProcess above; it does
+            // not make the listing page itself un-"seen".
+            return true;
+          });
+        }
         return;
       }
       case 'telegram-channel': {

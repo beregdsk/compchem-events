@@ -314,12 +314,96 @@
   notes: >-
     Russian chemistry news site run from IGIC RAS (hia@igic.ras.ru); this
     category posts one article per Russian chemistry conference or school,
-    newest first, 10 a page. Mostly experimental and general chemistry, so
-    screen hard. The link filter keeps the 10 posts plus ~4 sidebar
-    articles the relevance filter drops. WordPress, but the category's
-    /feed/ serves HTML, not RSS. /konferenczii-2026/ is a year index (94
-    posts, mostly past) — over the per-source page cap, so not used.
+    newest first, 10 a page, 11 pages (~110 posts) when checked. Posts go
+    up months ahead, so in-field ones sit deep: CMSAM-2026 (computer
+    modelling and structural analysis of molecules) was on page 3 — the
+    agent follows rel="next" up to 5 pages. Mostly experimental and
+    general chemistry, so screen hard. The category's /feed/ serves HTML,
+    not RSS. /konferenczii-2026/ is a year index of the same posts.
     robots.txt disallows only /wp-admin/.
+
+- name: Химическая информация (cheminform.ru) — вебинары
+  url: https://cheminform.ru/category/vebinar/
+  kind: listing-page
+  added: 2026-09-28
+  last_checked: 2026-09-28
+  notes: >-
+    The same site's webinar category, 5 pages when checked — mostly
+    re-posted English-language webinars (ACS, MDPI journals, vendors),
+    several on AI and ML for chemistry and drug design. Screen hard.
+
+- name: Fritz Haber Institute (MPG) workshops and conferences
+  url: https://www.fhi.mpg.de/1466547/workshops_conferences
+  kind: listing-page
+  added: 2026-09-28
+  last_checked: 2026-09-28
+  notes: >-
+    FHI Berlin's own workshops and conferences — its Theory department makes
+    many of them electronic-structure and catalysis modelling. The link
+    filter keeps ~22 /events/<id>/ pages when checked.
+
+- name: MPI for the Physics of Complex Systems (MPG) workshops
+  url: https://www.pks.mpg.de/events/workshops-seminars
+  kind: listing-page
+  added: 2026-09-28
+  last_checked: 2026-09-28
+  notes: >-
+    Dresden's visitors-programme workshops and seminars, one short-name page
+    each (/atom26, /dash27, …). Mostly physics; the chemical-physics and
+    quantum-dynamics ones are the finds, so screen hard.
+
+- name: Hünfeld workshop (MPI-NAT)
+  url: https://www.mpinat.mpg.de/workshop/huenfeld
+  kind: event-page
+  added: 2026-09-28
+  last_checked: 2026-09-28
+  notes: >-
+    "Computer Simulation and Theory of Macromolecules", the annual
+    biomolecular-simulation workshop at Hünfeld monastery, run from MPI for
+    Multidisciplinary Sciences. One stable page per year's edition.
+
+- name: Chimica 4.0 (University of Turin) schools
+  url: https://www.chimica4-0.unito.it/category/summerschool/
+  kind: listing-page
+  added: 2026-09-28
+  last_checked: 2026-09-28
+  notes: >-
+    Schools of UniTo's Chemistry 4.0 excellence project, some co-promoted by
+    the Italian Chemical Society's theoretical/computational divisions — e.g.
+    "Chemistry through the eyes of AI and ML" (Sept 2026) and the
+    chemometrics-and-ML-with-Python school. Italian and English.
+
+- name: Chinese Chemical Society meeting notices (中国化学会 会议通知)
+  url: https://www.chemsoc.org.cn/meeting/home/announcement/
+  kind: listing-page
+  added: 2026-09-28
+  last_checked: 2026-09-28
+  notes: >-
+    The CCS's own notices for its national meetings, ~30 per page, each with
+    its own page — among them the 全国理论与计算化学会议 (national theoretical
+    and computational chemistry conference; 16th announced 2 Sept 2026). All
+    of chemistry, in Chinese, so screen hard; the model gives English
+    titles. robots.txt allows the path.
+
+- name: Japan Society for Molecular Science co-sponsored events (分子科学会)
+  url: https://www.molsci.jp/activities/cosponsor/
+  kind: listing-page
+  added: 2026-09-28
+  last_checked: 2026-09-28
+  notes: >-
+    Events the JSMS co-sponsors, one notice page each — theoretical
+    chemistry meetings (理論化学討論会) among them. In Japanese. The society's
+    own annual meeting (分子科学討論会) has a page per year at /<year>/.
+
+- name: Virtual Winter School on Computational Chemistry
+  url: https://winterschool.cc/
+  kind: event-page
+  added: 2026-09-28
+  last_checked: 2026-09-28
+  notes: >-
+    Free online school, held each January (25-29 Jan 2027 when checked);
+    lectures and workshops across computational and theoretical chemistry.
+    One stable homepage per edition.
 
 - name: IUPAC events calendar
   url: https://iupac.org/events/?ical=1
@@ -466,6 +550,23 @@
 #   IP/geo block, not a bot challenge (the deployment host is in KZ). The
 #   older www.ras.ru answers but carries only news, no events listing.
 #   Usable only from an allowed network.
+#
+# Regional and Telegram search, 2026-09-28 (all fetched that day)
+#   SCI Divisione di Chimica Teorica e Computazionale —
+#   societachimica.it/it/divisioni/teocomp/home: live, but no 2026/27 event
+#   on it; its schools surface through the Chimica 4.0 entry above instead.
+#   RFCT / ThéMoSiA — chimie-theorique.cnrs.fr refused the connection.
+#   CNRS Chimie agenda — inc.cnrs.fr/fr/event-list: live, but institutional
+#   and general chemistry (anniversaries, ERC training, organic chemistry).
+#   CCP9 — ccp9.ac.uk/events/: newest entry 2025; its 2026 meeting was only
+#   in /news/. ICAM-I2CAM /workshops: 404.
+#   Telegram: @compchemistry redirects to t.me/compchemistry — no public /s/
+#   preview (a group, or preview off), so unreadable without an account.
+#   Probed and unusable: compchem, quantumchemistry, cheminformatics,
+#   mlchemistry, chemconf, chemistry_conferences, sciconf (no preview);
+#   comp_chem (exam prep), ai4science (paper reading). allconferencealertt
+#   and similar "conference alert" channels relay predatory listing farms —
+#   the same class rejected below (waset, 10times).
 #
 # DFT2026 and related, searched 2026-09-28
 #   dft2026.com — did not answer a scripted fetch at all, and the conference

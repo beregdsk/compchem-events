@@ -124,9 +124,34 @@ function looksLikeEventPage(url: URL, listing: URL): boolean {
   const segments = url.pathname.toLowerCase().split('/').filter(Boolean);
   if (segments.some((s) => NON_EVENT_SEGMENT.has(s) || /(?:^|-)past(?:-|$)/.test(s))) return false;
   if (/past/i.test(url.search)) return false;
+  // Another page of a paginated listing (WordPress-style /page/2/), not an
+  // event — followed separately, via findNextListingPage.
+  if (segments.some((s, i) => s === 'page' && /^\d+$/.test(segments[i + 1] ?? ''))) return false;
   const path = withoutTrailingSlash(url.pathname);
   const listingPath = withoutTrailingSlash(listing.pathname);
   return !(path === '/' || path === listingPath || listingPath.startsWith(`${path}/`));
+}
+
+/**
+ * The listing's next page, when it marks one with `rel="next"` (on an
+ * `<a>` or `<link>`), same host only. Sites that post an event months
+ * ahead push it off page 1 long before it happens — cheminform.ru's
+ * conference category had in-field events on page 3.
+ */
+export function findNextListingPage(html: string, listingUrl: string): string | undefined {
+  const base = new URL(listingUrl);
+  const href = parseHTML(html)
+    .querySelector('a[rel~="next"][href], link[rel~="next"][href]')
+    ?.getAttribute('href');
+  if (!href) return undefined;
+  try {
+    const next = new URL(href, base);
+    next.hash = '';
+    if (next.host !== base.host || next.href === base.href) return undefined;
+    return next.href;
+  } catch {
+    return undefined;
+  }
 }
 
 /**

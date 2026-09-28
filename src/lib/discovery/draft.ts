@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { stringify } from 'yaml';
 import type { ISODate } from '../dates';
 import type { RawEvent } from '../types';
@@ -44,7 +45,9 @@ const CYRILLIC: Record<string, string> = {
 
 /**
  * ASCII, lowercase, hyphen-separated — matches the event id schema pattern.
- * Never empty: a title with no Latin or Cyrillic letters becomes "event".
+ * Never empty: a title with no Latin or Cyrillic letters (Chinese, Japanese)
+ * becomes "event-" plus a short hash of the title, so two such events don't
+ * share an id.
  */
 export function slugifyTitle(title: string): string {
   const slug = title
@@ -54,7 +57,7 @@ export function slugifyTitle(title: string): string {
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
-  return slug || 'event';
+  return slug || `event-${createHash('sha256').update(title).digest('hex').slice(0, 8)}`;
 }
 
 export interface DraftInput {

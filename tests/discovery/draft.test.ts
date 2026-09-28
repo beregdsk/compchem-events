@@ -24,7 +24,8 @@ describe('slugifyTitle', () => {
   });
 
   it('never returns an empty slug', () => {
-    expect(slugifyTitle('量子化学会议')).toBe('event');
+    expect(slugifyTitle('量子化学会议')).toMatch(/^event-[0-9a-f]{8}$/);
+    expect(slugifyTitle('量子化学会议')).not.toBe(slugifyTitle('理论化学会议'));
   });
 
   it('collapses repeated separators and trims leading/trailing hyphens', () => {

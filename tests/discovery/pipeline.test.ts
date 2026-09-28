@@ -568,7 +568,7 @@ describe('runPipeline', () => {
     }
   });
 
-  it('sends a Russian-language post to the model instead of skipping it as off-topic', async () => {
+  it('sends Russian- and Chinese-language posts to the model instead of skipping them as off-topic', async () => {
     const { path: statePath, cleanup: cleanupState } = tmpStatePath();
     const { path: sourcesPath, cleanup: cleanupSources } = tmpSourcesFile(
       '- name: Channel\n  url: https://t.me/s/confsci\n  kind: telegram-channel\n',
@@ -584,6 +584,9 @@ describe('runPipeline', () => {
           </div>
           <div class="tgme_widget_message" data-post="confsci/2">
             <div class="tgme_widget_message_text">Конференция по механике грунтов</div>
+          </div>
+          <div class="tgme_widget_message" data-post="confsci/3">
+            <div class="tgme_widget_message_text">第十六届全国理论与计算化学会议<br>2027年5月</div>
           </div>`);
       };
       const extractTexts: string[] = [];
@@ -602,11 +605,60 @@ describe('runPipeline', () => {
         },
         log: (m) => logs.push(m),
       });
-      expect(extractTexts).toHaveLength(1);
+      expect(extractTexts).toHaveLength(2);
       expect(extractTexts[0]).toContain('квантовой химии');
+      expect(extractTexts[1]).toContain('理论与计算化学');
       expect(logs).toContain('skipping (off-topic): https://t.me/confsci/2');
       expect(logs.filter((l) => l.startsWith('dropped'))).toEqual([]);
-      expect(result.candidates).toHaveLength(1);
+      expect(result.candidates).toHaveLength(2);
+    } finally {
+      cleanupState();
+      cleanupSources();
+    }
+  });
+
+  it('follows a listing through its rel="next" pages, at most five deep', async () => {
+    const { path: statePath, cleanup: cleanupState } = tmpStatePath();
+    const { path: sourcesPath, cleanup: cleanupSources } = tmpSourcesFile(
+      '- name: Paged\n  url: https://example.org/events/\n  kind: listing-page\n',
+    );
+    try {
+      const fetched: string[] = [];
+      const pageFetch: typeof fetch = async (input) => {
+        const url = String(input);
+        if (url.endsWith('/robots.txt')) return new Response('', { status: 200 });
+        fetched.push(url);
+        const listing = /\/events\/(?:page\/(\d+)\/)?$/.exec(url);
+        if (listing) {
+          const n = Number(listing[1] ?? 1);
+          return new Response(
+            `<main><a href="/events/post-${n}/">Post ${n}</a>` +
+              `<a rel="next" href="/events/page/${n + 1}/">Next</a></main>`,
+          );
+        }
+        return new Response(
+          `<html><body><h1>${url.slice(-7, -1)} Workshop</h1><p>A computational chemistry event.</p></body></html>`,
+        );
+      };
+      const result = await runPipeline({
+        sourcesPath,
+        statePath,
+        userAgent: 'Test Agent (+https://example.org)',
+        maxPages: 100,
+        maxTokens: 500_000,
+        sleepImpl: async () => {},
+        fetchImpl: pageFetch,
+        extract: { apiKey: 'sk-test', model: 'test-model', fetchImpl: stubExtractFetch() },
+      });
+      const listingPages = fetched.filter((u) => /\/events\/(page\/\d+\/)?$/.test(u));
+      expect(listingPages).toEqual([
+        'https://example.org/events/',
+        'https://example.org/events/page/2/',
+        'https://example.org/events/page/3/',
+        'https://example.org/events/page/4/',
+        'https://example.org/events/page/5/',
+      ]);
+      expect(result.candidates).toHaveLength(5);
     } finally {
       cleanupState();
       cleanupSources();

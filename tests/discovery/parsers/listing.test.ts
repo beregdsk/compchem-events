@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { findEventPageLinks } from '../../../src/lib/discovery/parsers/listing';
+import {
+  findEventPageLinks,
+  findNextListingPage,
+} from '../../../src/lib/discovery/parsers/listing';
 
 describe('findEventPageLinks', () => {
   it('returns absolute, same-host links from a listing page', () => {
@@ -38,5 +41,27 @@ describe('findEventPageLinks', () => {
       'https://example.org/events/workshop-2027?lang=en',
       'https://example.org/events-contact-chemistry-2027/',
     ]);
+  });
+});
+
+describe('findNextListingPage', () => {
+  const listing = 'https://example.org/category/events/';
+
+  it('follows rel="next", and never treats a /page/N/ link as an event', () => {
+    const html = `<main>
+      <a href="/events/post-a/">A</a>
+      <a class="page-numbers" href="/category/events/page/3/">3</a>
+      <a class="next page-numbers" rel="next" href="/category/events/page/2/">Next</a>
+    </main>`;
+    expect(findNextListingPage(html, listing)).toBe('https://example.org/category/events/page/2/');
+    expect(findEventPageLinks(html, listing)).toEqual(['https://example.org/events/post-a/']);
+  });
+
+  it('ignores a missing, off-host or self-referencing next link', () => {
+    expect(findNextListingPage('<a href="/x">x</a>', listing)).toBeUndefined();
+    expect(
+      findNextListingPage('<a rel="next" href="https://other.example/page/2/">n</a>', listing),
+    ).toBeUndefined();
+    expect(findNextListingPage(`<link rel="next" href="${listing}">`, listing)).toBeUndefined();
   });
 });
