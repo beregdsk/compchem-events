@@ -13,4 +13,16 @@
   // Empty because this Worker has no bindings that need preview-only
   // values — see https://developers.cloudflare.com/workers/previews/configuration/.
   "previews": {},
+  // The site's domain. Cloudflare creates the DNS records and certificate on
+  // deploy; www is attached too so the common typo resolves.
+  "routes": [
+    { "pattern": "compchem.observer", "custom_domain": true },
+    { "pattern": "www.compchem.observer", "custom_domain": true },
+  ],
+  // The old compchem-events.beregdsk.workers.dev address is retired; the
+  // custom domain is the only public host. Preview URLs follow the workers.dev
+  // setting unless set explicitly, so they are turned back on here: Workers
+  // Builds gives every PR branch one.
+  "workers_dev": false,
+  "preview_urls": true,
 }

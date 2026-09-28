@@ -21,11 +21,11 @@ export interface SiteConfig {
 }
 
 export const site: SiteConfig = {
-  name: 'CompChem Events',
+  name: 'CompChem Observer',
   tagline: 'Conferences, workshops and schools in computational chemistry',
-  url: 'https://compchem-events.beregdsk.workers.dev',
+  url: 'https://compchem.observer',
   contactEmail: 'placeholder@example.org',
-  repoUrl: 'https://github.com/beregdsk/compchem-events',
+  repoUrl: 'https://github.com/beregdsk/compchem-observer',
   reportForm: {
     url: 'https://tally.so/r/ODvo7M',
     eventIdParam: 'event_id',

@@ -20,11 +20,9 @@ function withAdded(added: string, id: string): LoadedEvent {
 /** Entry ids in feed order, extracted from `<id>.../events/<id>/</id>` —
  * distinct from the feed-level `<id>` element, which has no `/events/`. */
 function entryIdOrder(feed: string): string[] {
-  return [
-    ...feed.matchAll(
-      /<id>https:\/\/compchem-events\.beregdsk\.workers\.dev\/events\/([^/]+)\/<\/id>/g,
-    ),
-  ].map((m) => m[1]!);
+  return [...feed.matchAll(/<id>https:\/\/compchem\.observer\/events\/([^/]+)\/<\/id>/g)].map(
+    (m) => m[1]!,
+  );
 }
 
 describe('atomFeed', () => {
@@ -43,12 +41,12 @@ describe('atomFeed', () => {
 
   it('carries a self link and a feed id', () => {
     expect(feed).toContain('rel="self"');
-    expect(feed).toContain('<id>https://compchem-events.beregdsk.workers.dev/</id>');
+    expect(feed).toContain('<id>https://compchem.observer/</id>');
   });
 
   it('carries a feed-level author (RFC 4287 §4.1.1)', () => {
     expect(feed).toContain('<author>');
-    expect(feed).toContain('<name>CompChem Events</name>');
+    expect(feed).toContain('<name>CompChem Observer</name>');
   });
 
   it('timestamps entries from the added date', () => {
@@ -61,11 +59,9 @@ describe('atomFeed', () => {
       path: '/topics/dft.xml',
       idPath: '/topics/dft/',
     });
-    expect(scoped).toContain('<title>CompChem Events — newly added dft events</title>');
-    expect(scoped).toContain(
-      '<link href="https://compchem-events.beregdsk.workers.dev/topics/dft.xml" rel="self"/>',
-    );
-    expect(scoped).toContain('<id>https://compchem-events.beregdsk.workers.dev/topics/dft/</id>');
+    expect(scoped).toContain('<title>CompChem Observer — newly added dft events</title>');
+    expect(scoped).toContain('<link href="https://compchem.observer/topics/dft.xml" rel="self"/>');
+    expect(scoped).toContain('<id>https://compchem.observer/topics/dft/</id>');
   });
 
   it('escapes special characters in titles', () => {
