@@ -3,9 +3,14 @@ import Base from '../layouts/Base.astro';
 import { loadSources, SOURCE_KINDS, type SourceKind } from '../lib/discovery/sources';
 import { site } from '../../site.config';
 
-/** Public-facing heading for each kind. Order follows SOURCE_KINDS. */
+/**
+ * Public-facing heading for each kind. Order follows SOURCE_KINDS; kinds
+ * that differ only in how the agent reads them share a heading.
+ */
 const KIND_LABELS: Record<SourceKind, string> = {
   'listing-page': 'Event listings',
+  'inline-listing': 'Event listings',
+  'cecam-api': 'Event listings',
   'event-page': 'Recurring event pages',
   rss: 'RSS feeds',
   ical: 'Calendar feeds',
@@ -17,11 +22,12 @@ const KIND_LABELS: Record<SourceKind, string> = {
 // `notes` in data/sources.yaml are operator notes, not public copy, so only
 // name, link and check date are shown.
 const sources = loadSources();
-const groups = SOURCE_KINDS.map((kind) => ({
-  kind,
-  label: KIND_LABELS[kind],
-  items: sources.filter((s) => s.kind === kind),
-})).filter((g) => g.items.length > 0);
+const groups = [...new Set(SOURCE_KINDS.map((kind) => KIND_LABELS[kind]))]
+  .map((label) => ({
+    label,
+    items: sources.filter((s) => KIND_LABELS[s.kind] === label),
+  }))
+  .filter((g) => g.items.length > 0);
 ---
 
 <Base

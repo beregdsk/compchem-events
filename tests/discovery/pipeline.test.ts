@@ -466,6 +466,108 @@ describe('runPipeline', () => {
     }
   });
 
+  it('extracts every event an inline listing states, and each CECAM API event with its page text', async () => {
+    const { path: statePath, cleanup: cleanupState } = tmpStatePath();
+    const { path: sourcesPath, cleanup: cleanupSources } = tmpSourcesFile(
+      '- name: Inline\n  url: https://example.org/upcoming\n  kind: inline-listing\n' +
+        '- name: CECAM\n  url: https://www.cecam.org/program\n  kind: cecam-api\n',
+    );
+    try {
+      const pageFetch: typeof fetch = async (input, init) => {
+        const url = String(input);
+        if (url.endsWith('/robots.txt')) return new Response('', { status: 200 });
+        if (url === 'https://example.org/upcoming') {
+          return new Response(
+            '<html><body><p>Upcoming computational chemistry events: Alpha Workshop, 1 Mar 2027; Beta School, 5 Apr 2027.</p></body></html>',
+          );
+        }
+        if (url === 'https://members.cecam.org/api/all-events') {
+          expect(init?.method).toBe('POST');
+          return new Response(
+            JSON.stringify({
+              success: '1',
+              workshops: {
+                last_page: 1,
+                data: [
+                  {
+                    title: 'Gamma Workshop',
+                    slug: 'gamma-workshop-1500',
+                    start: '2027-06-01',
+                    end: '2027-06-03',
+                    event: 'Flagship Workshop',
+                    location: 'CECAM-HQ-EPFL, Lausanne, Switzerland',
+                    organisers: [],
+                  },
+                ],
+              },
+            }),
+          );
+        }
+        if (url === 'https://www.cecam.org/workshop-details/gamma-workshop-1500') {
+          return new Response(
+            '<html><body><p>A workshop on molecular simulation in chemistry.</p></body></html>',
+          );
+        }
+        throw new Error(`unstubbed: ${url}`);
+      };
+      const extractTexts: string[] = [];
+      const extractFetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+        const body = JSON.parse(init!.body as string) as {
+          messages: Array<{ content: string }>;
+          response_format: { json_schema: { name: string } };
+        };
+        const text = body.messages[1]!.content;
+        extractTexts.push(text);
+        const content =
+          body.response_format.json_schema.name === 'candidate_events'
+            ? {
+                events: [
+                  extractedFor('Alpha Workshop').event,
+                  extractedFor('Beta School').event,
+                  {
+                    ...extractedFor('Omega Workshop').event,
+                    start_date: '2025-01-10',
+                    end_date: '2025-01-12',
+                  },
+                ],
+              }
+            : extractedFor(text.split('\n')[0]!);
+        return new Response(
+          JSON.stringify({ choices: [{ message: { content: JSON.stringify(content) } }] }),
+        );
+      }) as typeof fetch;
+
+      const result = await runPipeline({
+        sourcesPath,
+        statePath,
+        userAgent: 'Test Agent (+https://example.org)',
+        maxPages: 50,
+        maxTokens: 500_000,
+        sleepImpl: async () => {},
+        fetchImpl: pageFetch,
+        extract: { apiKey: 'sk-test', model: 'test-model', fetchImpl: extractFetch },
+      });
+
+      expect(result.errors).toEqual([]);
+      // Omega ended before `today`: extracted, but never a candidate.
+      expect(result.candidates.map((c) => c.title).sort()).toEqual([
+        'Alpha Workshop',
+        'Beta School',
+        'Gamma Workshop',
+      ]);
+      const alpha = result.candidates.find((c) => c.title === 'Alpha Workshop')!;
+      expect(alpha.source_url).toBe('https://example.org/upcoming');
+      const gamma = result.candidates.find((c) => c.title === 'Gamma Workshop')!;
+      expect(gamma.source_url).toBe('https://www.cecam.org/workshop-details/gamma-workshop-1500');
+      const gammaText = extractTexts.find((t) => t.startsWith('Gamma Workshop'))!;
+      expect(gammaText).toContain('Dates: 2027-06-01 to 2027-06-03');
+      expect(gammaText).toContain('A workshop on molecular simulation in chemistry.');
+    } finally {
+      cleanupState();
+      cleanupSources();
+    }
+  });
+
   it('runs sources concurrently without overshooting maxPages', async () => {
     const { path: statePath, cleanup: cleanupState } = tmpStatePath();
     const hosts = ['a', 'b', 'c', 'd', 'e'].map((h) => `${h}.example`);

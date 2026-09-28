@@ -3,6 +3,8 @@ import { parse } from 'yaml';
 
 export const SOURCE_KINDS = [
   'listing-page',
+  'inline-listing',
+  'cecam-api',
   'event-page',
   'rss',
   'ical',

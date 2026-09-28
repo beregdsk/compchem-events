@@ -14,6 +14,10 @@
 #
 # kind:
 #   listing-page           index of many events; follow links to event pages
+#   inline-listing         page listing several events as text, not links;
+#                          all of them are extracted from the page itself
+#   cecam-api              CECAM's program, read from the JSON API its page
+#                          renders from (src/lib/discovery/cecam-client.ts)
 #   event-page             one recurring event with a stable URL
 #   rss                    feed; parse the feed, not the page
 #   ical                   iCalendar feed; parse directly, no LLM needed
@@ -45,21 +49,27 @@
 
 - name: CECAM
   url: https://www.cecam.org/program?type=all&month=all&location=all
-  kind: listing-page
+  kind: cecam-api
   added: 2026-09-23
-  last_checked: 2026-09-23
+  last_checked: 2026-09-28
   notes: >-
     The single highest-value source: flagship and node workshops, schools and
-    conferences, filterable by type and month. robots.txt allows everything.
-    Event pages are at /workshop-details/<id>.
+    conferences. The program page renders its list in the browser from
+    members.cecam.org/api/all-events, so as a listing-page it yielded no
+    event links at all; checked 2026-09-28, the API returned 29 upcoming
+    events over 2 pages. Event pages are at /workshop-details/<slug> and
+    carry the description but, without JavaScript, no dates — the API
+    supplies those. robots.txt allows everything on both hosts.
 
 - name: CCL conference announcements
   url: https://server.ccl.net/chemistry/announcements/conferences/index.shtml
-  kind: listing-page
+  kind: inline-listing
   added: 2026-09-23
   last_checked: 2026-09-23
   notes: >-
-    The public web face of the CCL mailing list, ordered by date as YY.MM.DD.
+    The public web face of the CCL mailing list, ordered by date as YY.MM.DD,
+    one line per announcement on the page itself (inline-listing since
+    2026-09-28 — it has no same-host per-event links to follow).
     No robots.txt and no login. Submissions are user-supplied and, in CCL's
     own words, not reviewed for scientific content; manual approval only
     filters spam. Screen hard and expect stale rows.
@@ -196,21 +206,24 @@
 
 - name: CCPBioSim
   url: https://www.ccpbiosim.org/events/upcoming-events
-  kind: listing-page
+  kind: inline-listing
   added: 2026-09-23
   last_checked: 2026-09-23
   notes: >-
     Biomolecular simulation training and workshops. Note the domain: the
-    older ccpbiosim.ac.uk redirects here.
+    older ccpbiosim.ac.uk redirects here. Events are listed as text (date,
+    title, place, one line of summary) with no per-event pages, so
+    inline-listing since 2026-09-28.
 
 - name: EuChemS Division of Computational and Theoretical Chemistry
   url: https://www.euchems.eu/divisions/computational-chemistry-2/conferences/
-  kind: listing-page
+  kind: inline-listing
   added: 2026-09-23
   last_checked: 2026-09-23
   notes: >-
     Small, curated and directly on topic. The best precision-per-fetch of any
-    source here.
+    source here. Conferences are listed as text with links to their own
+    (other-host) sites, so inline-listing since 2026-09-28.
 
 - name: EuChemS events calendar
   url: https://www.euchems.eu/events-overview/euchems-events-calendar/
@@ -324,6 +337,19 @@
     verified either way. Broad across all of chemistry (webinars,
     publications workshops, division events), so filter hard on topic.
 
+- name: SCM events
+  url: https://www.scm.com/events/
+  kind: inline-listing
+  added: 2026-09-28
+  last_checked: 2026-09-28
+  notes: >-
+    Software for Chemistry & Materials (Amsterdam Modeling Suite / ADF).
+    "Upcoming events & Webinars" is a list of dates, title and city on the
+    page itself. When checked it held mostly trade shows and big meetings
+    where SCM has a booth (Battery Show, ECS 250, AIChE, MRS) — screen
+    hard; its own workshops and webinars are the real finds. robots.txt
+    allows everything, Crawl-delay: 10.
+
 - name: RSEQ events calendar
   url: https://rseq.org/eventos/?ical=1
   kind: ical
@@ -403,6 +429,14 @@
 #   an identified bot user agent and a spoofed browser one — robots.txt
 #   itself allows the path, so this is not a robots.txt block. Same class
 #   of failure as ICTP's www.ictp.it above.
+#
+# Russian Academy of Sciences events — https://new.ras.ru/press-center/events-additional/
+#   Checked 2026-09-28. HTTP 403 for the whole new.ras.ru host, robots.txt
+#   and homepage included, to a plain fetch, a browser user agent, this
+#   pipeline's real-browser fallback, and an outside fetcher alike — an
+#   IP/geo block, not a bot challenge (the deployment host is in KZ). The
+#   older www.ras.ru answers but carries only news, no events listing.
+#   Usable only from an allowed network.
 #
 # DFT2026 and related, searched 2026-09-28
 #   dft2026.com — did not answer a scripted fetch at all, and the conference

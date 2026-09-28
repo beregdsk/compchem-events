@@ -12,7 +12,7 @@ A small VDS owned by the maintainer, as a scheduled job (daily or weekly cron). 
 
 ## Pipeline
 
-1. **Load sources** from `data/sources.yaml`: a list of `{name, url, kind, notes}` entries, where `kind` is one of `listing-page`, `event-page`, `rss`, `mailing-list-archive`.
+1. **Load sources** from `data/sources.yaml`: a list of `{name, url, kind, notes}` entries, where `kind` is one of `SOURCE_KINDS` in `src/lib/discovery/sources.ts` (see *Sources* below).
 2. **Fetch** each source politely: identify with a User-Agent that includes the project URL and a contact address, honour `robots.txt`, rate-limit per host, cache with ETag or content hash, and skip unchanged pages (state in a local JSON or SQLite file, not in the repo).
 3. **Find candidates**: extract links to event pages from listing pages, then fetch each new event page once.
 4. **Extract**: send the page text to the LLM with a fixed prompt asking for JSON matching the event schema, plus a `confidence` value and the exact `source_url`. Use structured output or JSON mode where available.
@@ -65,6 +65,8 @@ Three of the URLs this document originally suggested were already dead when the 
 
 Three source kinds were added beyond the four listed under *Pipeline* above:
 
+- `inline-listing` — a page that lists several events as text rather than as links to per-event pages (CCL's announcements, CCPBioSim, the EuChemS division's conferences, SCM). The page's own text goes to the model once, in a listing mode that returns every in-field event it states; each is then validated and screened like any other candidate.
+- `cecam-api` — CECAM's program, which its page renders in the browser from a JSON API (`src/lib/discovery/cecam-client.ts`). The API gives each event's dates and organisers; the event's own page, fetched like any other, gives its description, and both go to the model together.
 - `ical` — a calendar feed, parsed directly, since dates and titles arrive already typed. A feed carries no topics, so each event's topics come from keyword matches against `data/topics.yaml` (`src/lib/discovery/keyword-topics.ts`); only an event no keyword places goes to the extraction model, like any page. Telluride Science publishes one.
 - `mailbox` — a list we are subscribed to, read over IMAP. See below. Not implemented; no entries yet.
 - `telegram-channel` — a public channel, fetched at its anonymous web-preview path (`t.me/s/<channel>`, not `t.me/<channel>`, which redirects to the app). No login or bot token needed. Treat it like a listing-page: low precision, screen every post against `docs/curation-policy.md`. A post is exactly as hostile as a web page — same extraction pipeline in *Security model*, no exceptions. `data/sources.yaml` has a live example.

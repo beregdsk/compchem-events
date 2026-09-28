@@ -4,6 +4,8 @@ import {
   EXTRACT_ATTEMPTS,
   clip,
   extractEvent,
+  extractEvents,
+  normalizeEventUrl,
 } from '../../src/lib/discovery/extract-client';
 
 function stubFetch(status: number, body: unknown, statusText = 'OK') {
@@ -335,5 +337,67 @@ describe('clip', () => {
   it('leaves short text alone and cuts long text at a word boundary', () => {
     expect(clip('  short  ', 10)).toBe('short');
     expect(clip('alpha beta gamma delta', 15)).toBe('alpha beta…');
+  });
+});
+
+const listedEvent = (title: string, start = '2027-03-01') => ({
+  title,
+  type: 'workshop',
+  start_date: start,
+  end_date: start,
+  format: 'online',
+  location: null,
+  url: null,
+  organizer: null,
+  cost: null,
+  topics: ['molecular-dynamics'],
+  description: `About ${title}.`,
+  confidence: 0.8,
+});
+
+describe('extractEvents', () => {
+  it('asks for every listed event and returns each, normalized', async () => {
+    const { impl, calls } = stubFetch(
+      200,
+      completionWith({ events: [listedEvent('MD Workshop'), listedEvent('ML School')] }),
+    );
+    const events = await extractEvents('listing text', { ...options, fetchImpl: impl });
+    expect(events.map((e) => e.title)).toEqual(['MD Workshop', 'ML School']);
+    const body = JSON.parse(calls[0]!.init.body as string) as {
+      messages: Array<{ content: string }>;
+      response_format: { json_schema: { name: string } };
+    };
+    expect(body.response_format.json_schema.name).toBe('candidate_events');
+    expect(body.messages[0]!.content).toContain('lists several events inline');
+  });
+
+  it('returns an empty list when the page lists no event in the field', async () => {
+    const { impl } = stubFetch(200, completionWith({ events: [] }));
+    await expect(extractEvents('text', { ...options, fetchImpl: impl })).resolves.toEqual([]);
+  });
+
+  it('retries a response with a non-ISO date instead of passing it on', async () => {
+    const replies = [
+      completionWith({ events: [listedEvent('MD Workshop', '1 March 2027')] }),
+      completionWith({ events: [listedEvent('MD Workshop')] }),
+    ];
+    let calls = 0;
+    const impl = (async () =>
+      new Response(JSON.stringify(replies[calls++]), { status: 200 })) as typeof fetch;
+    const events = await extractEvents('text', { ...options, fetchImpl: impl });
+    expect(calls).toBe(2);
+    expect(events[0]!.start_date).toBe('2027-03-01');
+  });
+});
+
+describe('normalizeEventUrl', () => {
+  it('keeps https, upgrades http and bare hosts, and drops anything else', () => {
+    expect(normalizeEventUrl('https://example.org/a')).toBe('https://example.org/a');
+    expect(normalizeEventUrl('http://euchems2026.eu')).toBe('https://euchems2026.eu/');
+    expect(normalizeEventUrl('www.euchems-compchem.eu')).toBe('https://www.euchems-compchem.eu/');
+    expect(normalizeEventUrl('ftp://example.org/x')).toBeNull();
+    expect(normalizeEventUrl('javascript:alert(1)')).toBeNull();
+    expect(normalizeEventUrl('see website')).toBeNull();
+    expect(normalizeEventUrl(null)).toBeNull();
   });
 });

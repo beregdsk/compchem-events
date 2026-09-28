@@ -4,10 +4,16 @@ import {
   validateEvent,
   type ValidationContext,
 } from '../validation';
-import { todayUTC, type ISODate } from '../dates';
+import { compareISO, todayUTC, type ISODate } from '../dates';
 import type { RawEvent } from '../types';
 import { draftFilePath, synthesizeDraft } from './draft';
-import { extractEvent, type ExtractOptions } from './extract-client';
+import { cecamEventText, cecamEventUrl, fetchCecamEvents } from './cecam-client';
+import {
+  extractEvent,
+  extractEvents,
+  type ExtractedFields,
+  type ExtractOptions,
+} from './extract-client';
 import { keywordTopics } from './keyword-topics';
 import { politeFetch, type FetchOptions } from './fetch';
 import type { ExtractionInput } from './html';
@@ -32,6 +38,8 @@ import { loadState, saveState, type PageState } from './state';
  * page's readable content.
  */
 const EXTRACTION_TEXT_LIMIT = 8000;
+/** An inline listing carries many events in one page, so it gets more room. */
+const LISTING_EXTRACTION_TEXT_LIMIT = 16000;
 
 /**
  * Sources processed at once. A run is mostly waiting — on the per-host
@@ -41,8 +49,8 @@ const EXTRACTION_TEXT_LIMIT = 8000;
  */
 const SOURCE_CONCURRENCY = 4;
 
-function truncateForExtraction(text: string): string {
-  return text.length > EXTRACTION_TEXT_LIMIT ? text.slice(0, EXTRACTION_TEXT_LIMIT) : text;
+function truncateForExtraction(text: string, limit = EXTRACTION_TEXT_LIMIT): string {
+  return text.length > limit ? text.slice(0, limit) : text;
 }
 
 /**
@@ -211,12 +219,49 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
   }
 
   function acceptDraft(draft: RawEvent, sourceUrl: string): void {
+    // The archive keeps past events, so validation allows them — but
+    // discovery only proposes upcoming ones. Listings (CCL's especially)
+    // still carry long-finished entries, and models extract them anyway.
+    if (compareISO(draft.end_date, today) < 0) {
+      log(`skipping past event from ${sourceUrl}: ${draft.title} (ended ${draft.end_date})`);
+      return;
+    }
     const errors = validationErrors(draft);
     if (errors.length > 0) {
       log(`dropped candidate from ${sourceUrl}: ${errors.join('; ')}`);
       return;
     }
     candidates.push(draft);
+  }
+
+  function draftFromFields(fields: ExtractedFields, sourceUrl: string): RawEvent {
+    return synthesizeDraft(
+      {
+        title: fields.title,
+        type: fields.type,
+        start_date: fields.start_date,
+        end_date: fields.end_date,
+        format: fields.format,
+        location: fields.location,
+        // The model may honestly have no canonical event URL to report
+        // (never fabricated) — fall back to the URL the pipeline itself
+        // fetched this content from, the same value already used for
+        // source_url.
+        url: fields.url ?? sourceUrl,
+        source_url: sourceUrl,
+        organizer: fields.organizer,
+        cost: fields.cost,
+        // The model may pick nothing from the vocabulary (or only
+        // off-vocabulary entries, which extractEvent drops); keywords over
+        // its own title and summary are a better answer than a dropped event.
+        topics:
+          fields.topics.length > 0
+            ? fields.topics
+            : keywordTopics(`${fields.title} ${fields.description}`, vocabulary),
+        description: fields.description,
+      },
+      today,
+    );
   }
 
   /**
@@ -230,8 +275,14 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
    * found" and "dropped by validation" are normal outcomes and return
    * `true`, same as success, so the caller knows whether it's safe to
    * commit this fetch's page state.
+   *
+   * `mode: 'listing'` treats the text as an inline listing: every event it
+   * states is extracted in one call, and each becomes its own candidate.
    */
-  async function processInput(input: ExtractionInput): Promise<boolean> {
+  async function processInput(
+    input: ExtractionInput,
+    mode: 'single' | 'listing' = 'single',
+  ): Promise<boolean> {
     if (tokensUsed >= options.maxTokens) {
       log(`max tokens (${options.maxTokens}) reached, skipping ${input.sourceUrl}`);
       // Unlike "no event found" or "dropped by validation", this item was
@@ -247,36 +298,16 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
       return true;
     }
     try {
-      const fields = await extractEvent(truncateForExtraction(input.text), extractOptions);
-      if (!fields) return true;
-      const draft = synthesizeDraft(
-        {
-          title: fields.title,
-          type: fields.type,
-          start_date: fields.start_date,
-          end_date: fields.end_date,
-          format: fields.format,
-          location: fields.location,
-          // The model may honestly have no canonical event URL to report
-          // (never fabricated) — fall back to the URL the pipeline itself
-          // fetched this content from, the same value already used for
-          // source_url.
-          url: fields.url ?? input.sourceUrl,
-          source_url: input.sourceUrl,
-          organizer: fields.organizer,
-          cost: fields.cost,
-          // The model may pick nothing from the vocabulary (or only
-          // off-vocabulary entries, which extractEvent drops); keywords over
-          // its own title and summary are a better answer than a dropped event.
-          topics:
-            fields.topics.length > 0
-              ? fields.topics
-              : keywordTopics(`${fields.title} ${fields.description}`, vocabulary),
-          description: fields.description,
-        },
-        today,
-      );
-      acceptDraft(draft, input.sourceUrl);
+      const found =
+        mode === 'single'
+          ? [await extractEvent(truncateForExtraction(input.text), extractOptions)]
+          : await extractEvents(
+              truncateForExtraction(input.text, LISTING_EXTRACTION_TEXT_LIMIT),
+              extractOptions,
+            );
+      for (const fields of found) {
+        if (fields) acceptDraft(draftFromFields(fields, input.sourceUrl), input.sourceUrl);
+      }
       return true;
     } catch (err) {
       log(
@@ -370,6 +401,29 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
         await fetchAndProcess(source.url, budget, (body) =>
           processInput(extractionInputFromPage(body, source.url)),
         );
+        return;
+      }
+      case 'inline-listing': {
+        await fetchAndProcess(source.url, budget, (body) =>
+          processInput(extractionInputFromPage(body, source.url), 'listing'),
+        );
+        return;
+      }
+      case 'cecam-api': {
+        // The API supplies what the event page, rendered without
+        // JavaScript, lacks (dates, organisers); the page supplies the
+        // description. Each event page is fetched politely and its state
+        // kept like any other page, so an event already handled is
+        // "unchanged" next run and not re-extracted.
+        for (const event of await fetchCecamEvents(options.userAgent, options.fetchImpl)) {
+          const url = cecamEventUrl(event);
+          await fetchAndProcess(url, budget, (body) =>
+            processInput({
+              text: `${cecamEventText(event)}\n\n${extractionInputFromPage(body, url).text}`,
+              sourceUrl: url,
+            }),
+          );
+        }
         return;
       }
       case 'listing-page':
