@@ -16,6 +16,21 @@ DTEND;VALUE=DATE:20270303
 SUMMARY:Online Workshop From Ical
 URL:https://example.org/ical-workshop
 END:VEVENT
+BEGIN:VEVENT
+UID:ical-2@example.org
+DTSTART;VALUE=DATE:20270401
+DTEND;VALUE=DATE:20270403
+SUMMARY:Molecular Dynamics Winter School
+URL:https://example.org/md-school
+END:VEVENT
+BEGIN:VEVENT
+UID:ical-3@example.org
+DTSTART;VALUE=DATE:20270501
+DTEND;VALUE=DATE:20270503
+SUMMARY:OpenMolcas Developers Meeting
+DESCRIPTION:A quantum chemistry code meeting.
+URL:https://example.org/openmolcas
+END:VEVENT
 END:VCALENDAR`;
 
 // All extraction-bound bodies below mention "chemistry" so they clear the
@@ -143,7 +158,7 @@ function tmpSourcesFile(yaml: string): { path: string; cleanup: () => void } {
 }
 
 describe('runPipeline', () => {
-  it('produces validated candidates for every non-LLM and LLM-backed source, drops an ical candidate that fails schema validation, and logs one source-item extraction failure without recording it as an error', async () => {
+  it('produces validated candidates for every non-LLM and LLM-backed source, and logs one source-item extraction failure without recording it as an error', async () => {
     const { path: statePath, cleanup } = tmpStatePath();
     const logs: string[] = [];
     try {
@@ -161,16 +176,9 @@ describe('runPipeline', () => {
       };
       const result = await runPipeline(options);
 
-      // The ical source (`parseICalFeed`, Task 7) produces a structurally
-      // complete draft with no LLM call, by design. But that parser never
-      // populates `topics` (a deliberate, already-tested Task 7 behavior —
-      // see tests/discovery/parsers/ical.test.ts's
-      // `expect(draft.topics).toEqual([])`), and schema/event.schema.json
-      // requires `topics` to have at least one item. So this candidate is
-      // correctly rejected by `validateEvent` and dropped — matching this
-      // task's own design doc ("A draft that fails validateEvent is
-      // discarded and logged with the reason"). It must never reach
-      // `candidates`; only its drop is observable, via the log callback.
+      // Ical events carry no topics: one gets them from keywords with no
+      // LLM call, one keywords can't place goes to the model, and one that
+      // is neither on-topic nor placeable is skipped by the relevance filter.
       const titles = result.candidates.map((c) => c.title).sort();
       expect(titles).toEqual(
         [
@@ -179,13 +187,20 @@ describe('runPipeline', () => {
           'RSS Feed Workshop',
           'Telegram Computational Chemistry Workshop Announcement',
           'No Url Workshop',
+          'Molecular Dynamics Winter School',
+          'OpenMolcas Developers Meeting',
         ].sort(),
       );
-      expect(result.candidates.some((c) => c.title === 'Online Workshop From Ical')).toBe(false);
+      const mdSchool = result.candidates.find(
+        (c) => c.title === 'Molecular Dynamics Winter School',
+      )!;
+      expect(mdSchool.topics).toEqual(['molecular-dynamics']);
+      expect(mdSchool.url).toBe('https://example.org/md-school');
+      expect(mdSchool.source_url).toBe('https://example.org/calendar.ics');
+      const molcas = result.candidates.find((c) => c.title === 'OpenMolcas Developers Meeting')!;
+      expect(molcas.source_url).toBe('https://example.org/calendar.ics');
       expect(
-        logs.some((line) =>
-          line.includes('dropped candidate from https://example.org/calendar.ics'),
-        ),
+        logs.some((line) => line === 'skipping (off-topic): https://example.org/calendar.ics'),
       ).toBe(true);
 
       const pageCandidate = result.candidates.find((c) => c.title === 'Event Page Workshop')!;
@@ -234,7 +249,12 @@ describe('runPipeline', () => {
         extract: { apiKey: 'sk-test', model: 'test-extract-model', fetchImpl: stubExtractFetch() },
       };
       const result = await runPipeline(options);
-      expect(result.candidates.length).toBeLessThanOrEqual(1);
+      // Only the first source's one page was fetched — the ical feed, which
+      // alone may yield several candidates.
+      expect(result.candidates.length).toBeGreaterThan(0);
+      expect(
+        result.candidates.every((c) => c.source_url === 'https://example.org/calendar.ics'),
+      ).toBe(true);
     } finally {
       cleanup();
     }

@@ -190,12 +190,17 @@ function schemaValidator(root: string): ValidateFunction {
   return compiled;
 }
 
+/** The controlled topic vocabulary from data/topics.yaml, slugs with their labels. */
+export function loadTopics(root = '.'): Topic[] {
+  return (parse(readFileSync(join(root, 'data/topics.yaml'), 'utf8')) as Topic[] | null) ?? [];
+}
+
 export function loadValidationContext(root = '.', today: ISODate = todayUTC()): ValidationContext {
-  const topics = parse(readFileSync(join(root, 'data/topics.yaml'), 'utf8')) as Topic[] | null;
+  const topics = loadTopics(root);
   const blocklist = parse(readFileSync(join(root, 'data/blocklist.yaml'), 'utf8')) as
     BlocklistEntry[] | null;
   return {
-    topics: new Set((topics ?? []).map((t) => t.slug)),
+    topics: new Set(topics.map((t) => t.slug)),
     blockedHosts: new Set((blocklist ?? []).map((b) => b.domain.toLowerCase())),
     today,
   };

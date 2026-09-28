@@ -1,6 +1,7 @@
 import { EVENT_FORMATS, EVENT_TYPES } from '../types';
 import type { EventFormat, EventType } from '../types';
 import { fetchWithTimeout } from './http';
+import { MAX_TOPICS } from './keyword-topics';
 
 export interface ExtractedLocation {
   city: string;
@@ -170,26 +171,54 @@ function isRawResponse(value: unknown): value is RawResponse {
   );
 }
 
-function normalize(raw: RawExtractedEvent): ExtractedFields {
+/**
+ * Cuts `text` to at most `max` characters (schema/event.schema.json's
+ * maxLength), at a word boundary where one is near, marking the cut with an
+ * ellipsis. Models routinely overrun a stated length limit by a few words;
+ * trimming here keeps an otherwise good extraction from failing validation.
+ */
+export function clip(text: string, max: number): string {
+  const trimmed = text.trim();
+  if (trimmed.length <= max) return trimmed;
+  const cut = trimmed.slice(0, max - 1);
+  const space = cut.lastIndexOf(' ');
+  return `${(space > max * 0.6 ? cut.slice(0, space) : cut).replace(/[\s,.;:]+$/, '')}…`;
+}
+
+function normalize(raw: RawExtractedEvent, vocabulary: readonly string[]): ExtractedFields {
   const fields: ExtractedFields = {
-    title: raw.title,
+    title: clip(raw.title, 140),
     type: raw.type as EventType,
     start_date: raw.start_date,
     end_date: raw.end_date,
     format: raw.format as EventFormat,
     url: raw.url,
-    topics: raw.topics,
-    description: raw.description,
+    // Off-vocabulary entries and anything past the schema's cap are dropped
+    // rather than failing the whole candidate.
+    topics: [...new Set(raw.topics)].filter((t) => vocabulary.includes(t)).slice(0, MAX_TOPICS),
+    description: clip(raw.description, 280),
     confidence: raw.confidence,
   };
   if (raw.location) {
-    const location: ExtractedLocation = { city: raw.location.city, country: raw.location.country };
-    if (raw.location.venue) location.venue = raw.location.venue;
+    const location: ExtractedLocation = {
+      city: clip(raw.location.city, 100),
+      country: raw.location.country,
+    };
+    if (raw.location.venue) location.venue = clip(raw.location.venue, 200);
     fields.location = location;
   }
-  if (raw.organizer) fields.organizer = raw.organizer;
-  if (raw.cost) fields.cost = raw.cost;
+  if (raw.organizer) fields.organizer = clip(raw.organizer, 200);
+  if (raw.cost) fields.cost = clip(raw.cost, 200);
   return fields;
+}
+
+/**
+ * Some models wrap JSON in a Markdown code fence despite `response_format`;
+ * unwrap it so the content parses.
+ */
+function stripCodeFence(content: string): string {
+  const match = /^\s*```(?:json)?\s*\n([\s\S]*?)\n?```\s*$/.exec(content);
+  return match ? match[1]! : content;
 }
 
 interface ChatCompletionResponse {
@@ -201,11 +230,40 @@ function isChatCompletionResponse(data: unknown): data is ChatCompletionResponse
   return typeof data === 'object' && data !== null && 'choices' in data;
 }
 
-/** One extraction call. Returns `null` when the model found no event in `text`. */
+/**
+ * Total attempts per extraction. A router such as `openrouter/free` sends
+ * each request to whichever model is free at the moment, and some of them
+ * ignore `response_format` entirely — observed live: guard-model output
+ * ("User Safety: safe"), prose, empty content, events missing required
+ * fields, and 60s timeouts. A retry usually lands on a different model.
+ */
+export const EXTRACT_ATTEMPTS = 3;
+
+/** An error worth another attempt: malformed output, a timeout, 429 or 5xx — not a bad key or request. */
+class RetryableExtractError extends Error {}
+
+/**
+ * One extraction, retried up to `EXTRACT_ATTEMPTS` times on a malformed or
+ * transient failure. Returns `null` when the model found no event in `text`.
+ */
 export async function extractEvent(
   text: string,
   options: ExtractOptions,
 ): Promise<ExtractedFields | null> {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= EXTRACT_ATTEMPTS; attempt++) {
+    try {
+      return await extractOnce(text, options);
+    } catch (err) {
+      const timedOut = err instanceof Error && err.name === 'TimeoutError';
+      if (!(err instanceof RetryableExtractError) && !timedOut) throw err;
+      lastError = err;
+    }
+  }
+  throw lastError;
+}
+
+async function extractOnce(text: string, options: ExtractOptions): Promise<ExtractedFields | null> {
   const fetchImpl = options.fetchImpl ?? fetch;
   const baseUrl = options.baseUrl ?? DEFAULT_EXTRACT_BASE_URL;
 
@@ -230,7 +288,8 @@ export async function extractEvent(
 
   if (!response.ok) {
     const body = await response.text().catch(() => '');
-    throw new Error(
+    const retryable = response.status === 429 || response.status >= 500;
+    throw new (retryable ? RetryableExtractError : Error)(
       `extract request failed: ${response.status} ${response.statusText}${body ? ` — ${body}` : ''}`,
     );
   }
@@ -241,18 +300,20 @@ export async function extractEvent(
   }
   options.onUsage?.(data.usage?.total_tokens ?? 0);
   const content = data.choices?.[0]?.message?.content;
-  if (!content) throw new Error('extract response had no message content');
+  if (!content) throw new RetryableExtractError('extract response had no message content');
 
   let parsed: unknown;
   try {
-    parsed = JSON.parse(content);
+    parsed = JSON.parse(stripCodeFence(content));
   } catch {
-    throw new Error(`extract response content was not valid JSON: ${content}`);
+    throw new RetryableExtractError(`extract response content was not valid JSON: ${content}`);
   }
 
   if (!isRawResponse(parsed)) {
-    throw new Error(`extract response did not match the expected shape: ${content}`);
+    throw new RetryableExtractError(
+      `extract response did not match the expected shape: ${content}`,
+    );
   }
   if (!parsed.found || !parsed.event) return null;
-  return normalize(parsed.event);
+  return normalize(parsed.event, options.topics);
 }

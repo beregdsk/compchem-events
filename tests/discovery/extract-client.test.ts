@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_EXTRACT_BASE_URL, extractEvent } from '../../src/lib/discovery/extract-client';
+import {
+  DEFAULT_EXTRACT_BASE_URL,
+  EXTRACT_ATTEMPTS,
+  clip,
+  extractEvent,
+} from '../../src/lib/discovery/extract-client';
 
 function stubFetch(status: number, body: unknown, statusText = 'OK') {
   const calls: Array<{ url: string; init: RequestInit }> = [];
@@ -199,5 +204,92 @@ describe('extractEvent', () => {
     await expect(extractEvent('text', { ...options, fetchImpl: impl })).rejects.toThrow(
       /expected shape/,
     );
+  });
+
+  it('retries a malformed response and returns the next good one', async () => {
+    const replies = [
+      { choices: [{ message: { content: 'User Safety: safe' } }] },
+      { choices: [{ message: { content: '' } }] },
+      completionWith({ found: false, event: null }),
+    ];
+    let calls = 0;
+    const impl = (async () =>
+      new Response(JSON.stringify(replies[calls++]), { status: 200 })) as typeof fetch;
+    await expect(extractEvent('text', { ...options, fetchImpl: impl })).resolves.toBeNull();
+    expect(calls).toBe(3);
+  });
+
+  it(`gives up after ${EXTRACT_ATTEMPTS} malformed responses`, async () => {
+    const { impl, calls } = stubFetch(200, { choices: [{ message: { content: 'not json' } }] });
+    await expect(extractEvent('text', { ...options, fetchImpl: impl })).rejects.toThrow(
+      /not valid JSON/,
+    );
+    expect(calls).toHaveLength(EXTRACT_ATTEMPTS);
+  });
+
+  it('retries a 429 but not a 401', async () => {
+    const rateLimited = stubFetch(429, { error: 'slow down' }, 'Too Many Requests');
+    await expect(extractEvent('text', { ...options, fetchImpl: rateLimited.impl })).rejects.toThrow(
+      /429/,
+    );
+    expect(rateLimited.calls).toHaveLength(EXTRACT_ATTEMPTS);
+
+    const unauthorized = stubFetch(401, { error: 'bad key' }, 'Unauthorized');
+    await expect(
+      extractEvent('text', { ...options, fetchImpl: unauthorized.impl }),
+    ).rejects.toThrow(/401/);
+    expect(unauthorized.calls).toHaveLength(1);
+  });
+
+  it('retries a timed-out call', async () => {
+    let calls = 0;
+    const impl = (async () => {
+      calls++;
+      if (calls === 1) throw new DOMException('timed out', 'TimeoutError');
+      return new Response(JSON.stringify(completionWith({ found: false, event: null })));
+    }) as typeof fetch;
+    await expect(extractEvent('text', { ...options, fetchImpl: impl })).resolves.toBeNull();
+    expect(calls).toBe(2);
+  });
+
+  it('unwraps JSON inside a Markdown code fence', async () => {
+    const fenced = '```json\n' + JSON.stringify({ found: false, event: null }) + '\n```';
+    const { impl } = stubFetch(200, { choices: [{ message: { content: fenced } }] });
+    await expect(extractEvent('text', { ...options, fetchImpl: impl })).resolves.toBeNull();
+  });
+
+  it('trims overlong fields and drops excess or unknown topics instead of failing', async () => {
+    const topics = ['a', 'b', 'c', 'd', 'e', 'f'];
+    const { impl } = stubFetch(
+      200,
+      completionWith({
+        found: true,
+        event: {
+          title: 'Sanibel Symposium',
+          type: 'symposium',
+          start_date: '2027-02-21',
+          end_date: '2027-02-26',
+          format: 'in-person',
+          location: null,
+          url: null,
+          organizer: null,
+          cost: null,
+          topics: ['a', 'not-a-topic', 'b', 'a', 'c', 'd', 'e', 'f'],
+          description: 'word '.repeat(80),
+          confidence: 0.9,
+        },
+      }),
+    );
+    const result = await extractEvent('text', { ...options, topics, fetchImpl: impl });
+    expect(result!.topics).toEqual(['a', 'b', 'c', 'd', 'e']);
+    expect(result!.description.length).toBeLessThanOrEqual(280);
+    expect(result!.description.endsWith('word…')).toBe(true);
+  });
+});
+
+describe('clip', () => {
+  it('leaves short text alone and cuts long text at a word boundary', () => {
+    expect(clip('  short  ', 10)).toBe('short');
+    expect(clip('alpha beta gamma delta', 15)).toBe('alpha beta…');
   });
 });

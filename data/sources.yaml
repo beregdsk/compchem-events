@@ -324,6 +324,39 @@
     verified either way. Broad across all of chemistry (webinars,
     publications workshops, division events), so filter hard on topic.
 
+- name: RSEQ events calendar
+  url: https://rseq.org/eventos/?ical=1
+  kind: ical
+  added: 2026-09-28
+  last_checked: 2026-09-28
+  notes: >-
+    Spanish Royal Society of Chemistry — listed DFT2026 (Donostia) and, when
+    checked, the 14th OpenMolcas Developers' Workshop among 24 upcoming
+    events. "The Events Calendar" plugin like Telluride/IUPAC, so parse the
+    feed and skip the HTML. All of chemistry, mostly Spanish meetings, so
+    filter hard on topic. robots.txt allows everything.
+
+- name: Sanibel Symposium
+  url: https://sanibelsymposium.qtp.ufl.edu/
+  kind: event-page
+  added: 2026-09-28
+  last_checked: 2026-09-28
+  notes: >-
+    Annual "theory meeting for theoreticians" (quantum theory of atoms,
+    molecules and materials). One stable homepage that always announces
+    the next edition — the 66th, 21-26 Feb 2027, St. Augustine Beach FL,
+    when checked.
+
+- name: International Congress of Quantum Chemistry (IAQMS)
+  url: https://www.iaqms.org/congress.php
+  kind: event-page
+  added: 2026-09-28
+  last_checked: 2026-09-28
+  notes: >-
+    The Academy's own page for the triennial ICQC series; lists the next
+    congress first (18th, Berkeley, 31 May - 5 Jun 2026, when checked). Very
+    low volume, very high relevance.
+
 # ---------------------------------------------------------------------------
 # Candidates: checked and NOT usable as sources. Kept so nobody re-derives
 # these findings. Each was checked on 2026-09-23.
@@ -370,6 +403,22 @@
 #   an identified bot user agent and a spoofed browser one — robots.txt
 #   itself allows the path, so this is not a robots.txt block. Same class
 #   of failure as ICTP's www.ictp.it above.
+#
+# DFT2026 and related, searched 2026-09-28
+#   dft2026.com — did not answer a scripted fetch at all, and the conference
+#   (21st DFT, Donostia, 23-27 Aug 2026) is over; each edition gets its own
+#   site, so there is no stable series URL to watch. It was found via RSEQ
+#   (live entry above). uik.eus (Basque summer courses) also listed it, but
+#   covers every discipline. ISTCP US (istcp.org) says only "next
+#   conference: to be announced". psi-k.net/events/ is the closed forum
+#   (newest post 2024). max-centre.eu/events renders its list client-side
+#   and exposes no feed. The yearly Symposium on Theoretical Chemistry and
+#   the Electronic Structure workshop move host site every edition.
+#   Rejected as other people's curation (see labinitio.org above):
+#   lcpq.ups-tlse.fr/congres, uregina.ca/~eastalla/conf.html,
+#   quantumdynamicsconferences.wikidot.com. Rejected as commercial/predatory
+#   listing farms: 10times.com, waset.org, conferenceindex.org,
+#   internationalconferencealerts.com, *.annualcongress.com.
 #
 # ACS meetings calendar — https://www.acs.org/meetings/events-calendar.html
 # and https://www.acs.org/events/acs-meetings/future-meetings.html

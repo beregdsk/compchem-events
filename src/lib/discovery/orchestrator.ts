@@ -19,13 +19,31 @@ import {
 } from './github-client';
 
 /**
- * Neutralises backtick runs so candidate-controlled text (extracted from a
- * hostile page — see docs/discovery-agent.md's Security model) can never
- * close the fenced code block it's placed inside and inject markdown of
- * its own into the rest of the PR body.
+ * Renders candidate-controlled text (extracted from a hostile page — see
+ * docs/discovery-agent.md's Security model) as an inline code span, which
+ * GitHub wraps like prose but never parses as markdown, HTML, @mentions or
+ * #references. Backticks are neutralised so the text can't close its span,
+ * and whitespace runs collapse to one space so a blank line can't end the
+ * list item and start markdown of its own.
  */
-function sanitizeForCodeBlock(text: string): string {
-  return text.replace(/`/g, '´');
+function inlineCode(text: string): string {
+  return `\`${text.replace(/`/g, '´').replace(/\s+/g, ' ').trim()}\``;
+}
+
+/**
+ * A clickable autolink for an https URL. `URL.href` percent-encodes spaces,
+ * `<` and `>`, the only characters that could end a CommonMark autolink
+ * early; anything that doesn't parse as https falls back to inline code.
+ */
+function link(url: string | undefined): string {
+  if (url === undefined) return '(none)';
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol === 'https:') return `<${parsed.href}>`;
+  } catch {
+    // fall through
+  }
+  return inlineCode(url);
 }
 
 export interface AddClassification {
@@ -34,19 +52,18 @@ export interface AddClassification {
 }
 
 export function buildPrBody(candidate: RawEvent, classification: AddClassification): string {
+  const optional = (text: string | undefined) => (text === undefined ? '(none)' : inlineCode(text));
   const details = [
-    `title: ${candidate.title}`,
-    `dates: ${candidate.start_date} to ${candidate.end_date}`,
-    `format: ${candidate.format}`,
-    `url: ${candidate.url}`,
-    `source_url: ${candidate.source_url ?? '(none)'}`,
-    `organizer: ${candidate.organizer ?? '(none)'}`,
-    `cost: ${candidate.cost ?? '(none)'}`,
-    `topics: ${candidate.topics.join(', ')}`,
-    `description: ${candidate.description}`,
-  ]
-    .map(sanitizeForCodeBlock)
-    .join('\n');
+    `- **title:** ${inlineCode(candidate.title)}`,
+    `- **dates:** ${inlineCode(`${candidate.start_date} to ${candidate.end_date}`)}`,
+    `- **format:** ${inlineCode(candidate.format)}`,
+    `- **url:** ${link(candidate.url)}`,
+    `- **source_url:** ${link(candidate.source_url)}`,
+    `- **organizer:** ${optional(candidate.organizer)}`,
+    `- **cost:** ${optional(candidate.cost)}`,
+    `- **topics:** ${inlineCode(candidate.topics.join(', '))}`,
+    `- **description:** ${inlineCode(candidate.description)}`,
+  ];
 
   const c = classification.criteria;
   return [
@@ -55,9 +72,7 @@ export function buildPrBody(candidate: RawEvent, classification: AddClassificati
       `programme: ${c.programme.toFixed(2)}, cost: ${c.cost.toFixed(2)}, ` +
       `red_flag: ${c.red_flag.toFixed(2)}`,
     '',
-    '```',
-    details,
-    '```',
+    ...details,
   ].join('\n');
 }
 

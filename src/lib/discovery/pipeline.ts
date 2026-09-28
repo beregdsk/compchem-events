@@ -1,8 +1,14 @@
-import { loadValidationContext, validateEvent, type ValidationContext } from '../validation';
+import {
+  loadTopics,
+  loadValidationContext,
+  validateEvent,
+  type ValidationContext,
+} from '../validation';
 import { todayUTC, type ISODate } from '../dates';
 import type { RawEvent } from '../types';
 import { draftFilePath, synthesizeDraft } from './draft';
 import { extractEvent, type ExtractOptions } from './extract-client';
+import { keywordTopics } from './keyword-topics';
 import { politeFetch, type FetchOptions } from './fetch';
 import type { ExtractionInput } from './html';
 import { extractionInputFromPage } from './parsers/page';
@@ -54,6 +60,20 @@ const RELEVANCE_GENERIC_TERMS = [
 
 function relevanceKeywords(topicSlugs: readonly string[]): string[] {
   return [...RELEVANCE_GENERIC_TERMS, ...topicSlugs.map((slug) => slug.replace(/-/g, ' '))];
+}
+
+/**
+ * The text a calendar-feed event is re-extracted from when keywords alone
+ * found no topic: every typed field the feed carried, title first.
+ */
+function icalExtractionText(draft: RawEvent): string {
+  return [
+    draft.title,
+    `Dates: ${draft.start_date} to ${draft.end_date}`,
+    `Format: ${draft.format}`,
+    `URL: ${draft.url}`,
+    draft.description,
+  ].join('\n');
 }
 
 function looksRelevant(text: string, keywords: readonly string[]): boolean {
@@ -110,6 +130,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
   const ctx: ValidationContext = loadValidationContext('.', today);
   const log = options.log ?? (() => {});
   const keywords = relevanceKeywords([...ctx.topics]);
+  const vocabulary = loadTopics();
   let tokensUsed = 0;
   const extractOptions: ExtractOptions = {
     ...options.extract,
@@ -210,7 +231,13 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
           source_url: input.sourceUrl,
           organizer: fields.organizer,
           cost: fields.cost,
-          topics: fields.topics,
+          // The model may pick nothing from the vocabulary (or only
+          // off-vocabulary entries, which extractEvent drops); keywords over
+          // its own title and summary are a better answer than a dropped event.
+          topics:
+            fields.topics.length > 0
+              ? fields.topics
+              : keywordTopics(`${fields.title} ${fields.description}`, vocabulary),
           description: fields.description,
         },
         today,
@@ -268,10 +295,23 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
   async function processSource(source: Source): Promise<void> {
     switch (source.kind) {
       case 'ical': {
+        // A feed carries no topics, and the schema requires at least one.
+        // Keywords first — free, no LLM call; only an event they can't
+        // place goes to the model, as the same hostile-text extraction as
+        // any page (its own relevance pre-filter included).
         await fetchAndProcess(source.url, async (body) => {
-          for (const draft of parseICalFeed(body, source.url, today))
-            acceptDraft(draft, source.url);
-          return true;
+          let allOk = true;
+          for (const draft of parseICalFeed(body, source.url, today)) {
+            const topics = keywordTopics(`${draft.title} ${draft.description}`, vocabulary);
+            if (topics.length > 0) {
+              acceptDraft({ ...draft, topics }, source.url);
+            } else if (
+              !(await processInput({ text: icalExtractionText(draft), sourceUrl: source.url }))
+            ) {
+              allOk = false;
+            }
+          }
+          return allOk;
         });
         return;
       }
