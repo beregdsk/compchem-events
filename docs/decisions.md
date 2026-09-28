@@ -580,3 +580,11 @@ to `compchem-observer` the same day, through the API first and `wrangler.jsonc` 
 after, because Workers Builds fails a build whose `wrangler.jsonc` name differs from the
 Worker in the dashboard. The custom domains and the build trigger are keyed to the
 Worker's immutable id, so they followed the rename.
+
+## 2026-09-28 — Contact address: contacts@compchem.observer via Email Routing
+
+`contactEmail` is `contacts@compchem.observer`, closing the last open item from the
+2026-09-25 entry. It is shown on the about and sources pages and sent in the discovery
+crawler's user agent. Cloudflare Email Routing forwards it to the maintainer's inbox: one
+literal rule on the zone, no mailbox and no cost. It only receives. Replying from the
+address would need an outbound provider, which nothing here needs yet.
