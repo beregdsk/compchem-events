@@ -85,3 +85,14 @@ describe('themes', () => {
     expect(block(":root[data-theme='dark'] {")).toMatch(/color-scheme:\s*dark/);
   });
 });
+
+describe('event map', () => {
+  // Past nodes dim their shape, never their label: a label at 35% opacity
+  // would fail AA. The label instead uses --fg-muted, whose contrast against
+  // --bg-raise (the graph's ground) is already asserted above.
+  it('keeps past-event labels at full opacity in a tested colour', () => {
+    const rule = block('.graph-node--past .graph-node__label {');
+    expect(rule).toMatch(/fill:\s*var\(--fg-muted\)/);
+    expect(rule).not.toMatch(/opacity/);
+  });
+});

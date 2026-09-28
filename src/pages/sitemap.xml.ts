@@ -2,7 +2,15 @@ import type { APIRoute } from 'astro';
 import { loadEvents } from '../lib/events';
 import { site } from '../../site.config';
 
-export const STATIC_PATHS = ['/', '/archive/', '/about/', '/sources/', '/donate/', '/submit/'];
+export const STATIC_PATHS = [
+  '/',
+  '/archive/',
+  '/about/',
+  '/sources/',
+  '/donate/',
+  '/submit/',
+  '/graph/',
+];
 
 export const GET: APIRoute = () => {
   const paths = [...STATIC_PATHS, ...loadEvents().map((e) => `/events/${e.id}/`)];

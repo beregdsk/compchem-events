@@ -745,3 +745,110 @@ a:hover {
   font-size: var(--step--1);
   white-space: nowrap;
 }
+
+/* Event map (/graph/). Spec 2026-09-28. Type is shape, not colour; blue marks
+   what you can still attend. Past events dim their shape, never their label —
+   see tests/styles/contrast.test.ts. */
+.graph {
+  margin: var(--space-l) 0;
+}
+
+.graph__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 75vh;
+  background: var(--bg-raise);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+}
+
+.graph.is-live .graph__svg {
+  cursor: grab;
+  touch-action: none;
+}
+
+.graph__edge {
+  stroke: var(--rule-strong);
+  stroke-width: 1.2;
+}
+
+.graph-node__shape {
+  fill: var(--fg);
+  stroke: var(--bg-raise);
+  stroke-width: 1.5;
+}
+
+.graph-node__shape--ring {
+  fill: none;
+  stroke: var(--fg);
+  stroke-width: 2.5;
+}
+
+.graph-node__halo {
+  fill: none;
+  stroke: var(--lobe-neg);
+  stroke-width: 2;
+}
+
+.graph-node__label {
+  fill: var(--fg);
+  font-family: var(--font-sans);
+  font-size: 13px;
+}
+
+.graph-node--past .graph-node__shape {
+  opacity: 0.35;
+}
+
+.graph-node--past .graph-node__label {
+  fill: var(--fg-muted);
+}
+
+.graph-node {
+  cursor: pointer;
+}
+
+.graph-node:focus-visible {
+  outline: none;
+}
+
+.graph-node:focus-visible .graph-node__shape {
+  stroke: var(--lobe-neg);
+  stroke-width: 3;
+}
+
+.graph.is-highlighting .graph-node:not(.is-lit),
+.graph.is-highlighting .graph__edge:not(.is-lit) {
+  opacity: 0.15;
+}
+
+.graph.is-highlighting .graph__edge.is-lit {
+  stroke: var(--lobe-neg);
+}
+
+.graph__legend ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-m);
+  margin: var(--space-s) 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--fg-muted);
+  font-size: var(--step--1);
+}
+
+.graph__legend li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.graph__legend svg {
+  width: 1.1em;
+  height: 1.1em;
+}
+
+.graph-clusters > li + li {
+  margin-top: var(--space-s);
+}
