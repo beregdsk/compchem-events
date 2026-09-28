@@ -8,7 +8,11 @@ format: in-person
 url: https://registration.ims.ac.jp/cppf2026/
 source_url: https://www.molsci.jp/news/cosponsor/n260730/
 fee: free
-topics: [electronic-structure, excited-states, spectroscopy]
+topics:
+  - electronic-structure
+  - excited-states
+  - photochemistry
+  - spectroscopy
 description: The 83rd Okazaki Conference on Circularly Polarized Photonics
   Frontier (CPPF2026), organized by the Institute for Molecular Science, will be
   held from November 15 to 17, 2026, at the Okazaki Conference Center in Aichi,
