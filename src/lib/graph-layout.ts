@@ -10,6 +10,7 @@ import {
   forceSimulation,
   forceX,
   forceY,
+  type Force,
   type Simulation,
   type SimulationLinkDatum,
   type SimulationNodeDatum,
@@ -24,11 +25,44 @@ const SEED = 0x5eed;
 const TICKS = 300;
 /** viewBox margin; the right side leaves room for labels. */
 const PAD = { left: 40, right: 220, top: 40, bottom: 40 };
+/** Approximate extent of a node's label (28 characters at 13px), in simulation units. */
+export const LABEL_WIDTH = 190;
+export const LABEL_HEIGHT = 20;
 
 /** Deterministic PRNG for d3's jiggle and tie-breaking. */
 function lcg(seed: number): () => number {
   let s = seed >>> 0;
   return () => (s = (Math.imul(1664525, s) + 1013904223) >>> 0) / 2 ** 32;
+}
+
+/**
+ * Circular collision can't see labels: they are wide, short and run to the
+ * right of their node, so two nodes a comfortable circle apart can still print
+ * one title over another. This pushes such pairs apart vertically — the cheap
+ * direction, since stacking rows costs far less room than spreading columns.
+ */
+function forceLabelGap(): Force<SimNode, SimLink> {
+  let nodes: SimNode[] = [];
+  // Like forceCollide, not scaled by alpha: an overlap is resolved in full
+  // however cool the simulation is, or the link forces win as it settles.
+  const force = () => {
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const a = nodes[i]!;
+        const b = nodes[j]!;
+        const dx = b.x! - a.x!;
+        const dy = b.y! - a.y!;
+        if (Math.abs(dx) >= LABEL_WIDTH || Math.abs(dy) >= LABEL_HEIGHT) continue;
+        const push = (LABEL_HEIGHT - Math.abs(dy)) * 0.5 * (dy < 0 ? -1 : 1);
+        a.vy! -= push;
+        b.vy! += push;
+      }
+    }
+  };
+  force.initialize = (n: SimNode[]) => {
+    nodes = n;
+  };
+  return force;
 }
 
 export function createSimulation(
@@ -46,13 +80,14 @@ export function createSimulation(
       'link',
       forceLink<SimNode, SimLink>(links)
         .id((d) => d.id)
-        .distance(70)
+        .distance(110)
         .strength((l) => l.weight),
     )
-    .force('charge', forceManyBody<SimNode>().strength(-240))
+    .force('charge', forceManyBody<SimNode>().strength(-650))
     .force('x', forceX<SimNode>(0).strength(0.06))
     .force('y', forceY<SimNode>(0).strength(0.06))
-    .force('collide', forceCollide<SimNode>(26))
+    .force('collide', forceCollide<SimNode>(42))
+    .force('labels', forceLabelGap())
     .stop();
 }
 

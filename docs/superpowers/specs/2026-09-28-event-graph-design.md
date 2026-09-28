@@ -1,6 +1,6 @@
 # Event map (similarity graph) — design
 
-Date: 2026-09-28. Status: approved in conversation, awaiting spec review.
+Date: 2026-09-28. Status: approved and implemented (plan `docs/superpowers/plans/2026-09-28-event-graph.md`).
 
 ## Intent
 
@@ -43,8 +43,10 @@ data/events/*.yaml → loadEvents() → buildEventGraph() → layoutGraph()
 ### `src/lib/event-graph.ts` (pure, no DOM, no d3)
 
 - `organizerKeys(organizer?: string): Set<string>` — split on `;`; from each
-  part take acronym tokens (runs of letters/digits containing at least two
-  capitals, e.g. CECAM, CCP5, RSC, MolSSI, GDCh), lowercased. A part with no
+  part take acronym tokens (tokens of at least three characters containing at
+  least two capitals, e.g. CECAM, CCP5, RSC, MolSSI, GDCh), lowercased. The
+  length floor keeps country codes in node names (IT, NL, DE) from linking
+  unrelated events. A part with no
   acronym contributes its whole trimmed text, lowercased. Missing organizer →
   empty set.
 - `similarity(a, b): number` =
@@ -61,8 +63,11 @@ data/events/*.yaml → loadEvents() → buildEventGraph() → layoutGraph()
 
 ### `src/lib/graph-layout.ts` (build time)
 
-Thin wrapper over d3-force: link (strength ∝ weight), many-body charge,
-center, and collide forces; `randomSource` seeded from a fixed constant; a
+Thin wrapper over d3-force: link (strength ∝ weight, distance 110),
+many-body charge (−650), weak x/y centering (0.06), collide (radius 42), and a
+custom label-gap force that pushes apart nodes within one label width
+(190) horizontally and one line (20) vertically, since circular collision can't
+see the wide labels (tuned 2026-09-28 against the real data); `randomSource` seeded from a fixed constant; a
 fixed number of ticks run synchronously. Returns `{ id, x, y }` per node,
 fitted into a fixed square viewBox. Same input → identical output, so rebuilds
 don't churn.
@@ -134,8 +139,9 @@ dependency covers layout and interaction; no runtime network calls.
     self-loops; no duplicate undirected edges.
 - `tests/lib/graph-layout.test.ts`: deterministic for the same input; all
   positions finite and inside the viewBox.
-- `tests/pages/links.test.ts`: include `/graph/`, so every node's href must
-  resolve to a real event page.
+- `tests/e2e/graph.spec.ts`: every node's href returns 200 from the
+  production preview (`tests/pages/links.test.ts` is a source-grep test and
+  cannot check built pages).
 - `tests/e2e/smoke.spec.ts`: `/graph/` renders one node per event with no
   console errors; hovering a node applies the highlight to its neighbours;
   with JS disabled the SVG and cluster list are present.
