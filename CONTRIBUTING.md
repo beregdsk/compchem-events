@@ -26,7 +26,7 @@ Use the form linked on the site's `/submit/` page. A maintainer will review it a
 
 ## What we accept
 
-See the [curation policy](docs/curation-policy.md). In short: computational and theoretical chemistry events with an official page, an identifiable organiser and a real scientific programme. Maintainers may decline or remove listings that don't meet the criteria and will explain why.
+See the [curation policy](docs/curation-policy.md). In short: computational and theoretical chemistry events with an official page, an identifiable organiser and a real scientific programme. Maintainers may decline or remove listings that fall outside it and will explain why.
 
 ## Code contributions
 

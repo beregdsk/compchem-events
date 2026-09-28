@@ -1,4 +1,4 @@
-// Force layout for the event map. Runs at build time, like orbital.ts, so the
+// Force layout for the graph view. Runs at build time, like orbital.ts, so the
 // page ships a finished picture that works without JavaScript; the client
 // script (src/scripts/graph.ts) reuses `createSimulation` to take over from
 // the same positions, so the two never disagree about the forces. Seeded, so
@@ -74,18 +74,20 @@ export function createSimulation(
     target: e.target,
     weight: e.weight,
   }));
+  // Short-range repulsion (charge with distanceMax): enough to part neighbours,
+  // not enough to fling clusters apart, so related events stay together.
   return forceSimulation<SimNode, SimLink>(nodes)
     .randomSource(lcg(SEED))
     .force(
       'link',
       forceLink<SimNode, SimLink>(links)
         .id((d) => d.id)
-        .distance(110)
-        .strength((l) => l.weight),
+        .distance(60)
+        .strength((l) => Math.min(1, l.weight * 1.5)),
     )
-    .force('charge', forceManyBody<SimNode>().strength(-650))
-    .force('x', forceX<SimNode>(0).strength(0.06))
-    .force('y', forceY<SimNode>(0).strength(0.06))
+    .force('charge', forceManyBody<SimNode>().strength(-300).distanceMax(400))
+    .force('x', forceX<SimNode>(0).strength(0.1))
+    .force('y', forceY<SimNode>(0).strength(0.1))
     .force('collide', forceCollide<SimNode>(42))
     .force('labels', forceLabelGap())
     .stop();

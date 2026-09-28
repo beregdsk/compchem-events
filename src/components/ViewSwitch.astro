@@ -1,0 +1,20 @@
+---
+// Switches the upcoming-events page between its list and its graph view.
+// Plain links, so it works without JavaScript; the current view is marked
+// with aria-current rather than being a link to itself.
+interface Props {
+  current: 'list' | 'graph';
+}
+
+const { current } = Astro.props;
+const views = [
+  { id: 'list', href: '/', label: 'List' },
+  { id: 'graph', href: '/graph/', label: 'Graph' },
+] as const;
+---
+
+<nav class="view-switch mono" aria-label="View">
+  {views.map((v) =>
+    v.id === current ? <span aria-current="page">{v.label}</span> : <a href={v.href}>{v.label}</a>,
+  )}
+</nav>

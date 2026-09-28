@@ -15,7 +15,7 @@ async function linkedPair(page: Page): Promise<[string, string]> {
   return [(await edge.getAttribute('data-source'))!, (await edge.getAttribute('data-target'))!];
 }
 
-test.describe('event map', () => {
+test.describe('graph view', () => {
   test('enhances, and hovering a node lights up its neighbour', async ({ page }) => {
     const errors = collectErrors(page);
     await page.goto('/graph/');
@@ -96,7 +96,7 @@ test.describe('event map', () => {
   });
 });
 
-test.describe('event map without JavaScript', () => {
+test.describe('graph view without JavaScript', () => {
   test.use({ javaScriptEnabled: false });
 
   test('shows the static graph and a cluster list covering every event', async ({ page }) => {
@@ -116,7 +116,7 @@ async function centreOf(page: Page, id: string) {
   return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 }
 
-test.describe('event map, pointer edge cases', () => {
+test.describe('graph view, pointer edge cases', () => {
   test('a right-button press does not start a drag', async ({ page }) => {
     await page.goto('/graph/');
     const [id] = await linkedPair(page);
@@ -143,7 +143,7 @@ test.describe('event map, pointer edge cases', () => {
   });
 });
 
-test.describe('event map on touch', () => {
+test.describe('graph view on touch', () => {
   test.use({ hasTouch: true });
 
   test('a vertical touch drag moves the node, not the page', async ({ page }) => {

@@ -1,4 +1,4 @@
-// Brings the event map to life: the static SVG from graph.astro becomes a
+// Brings the graph view to life: the static SVG from graph.astro becomes a
 // live force simulation you can drag, with hover/focus highlighting of an
 // event's neighbours and pan/zoom on the viewBox. Everything here is an
 // enhancement — without it the page is a working map of links.

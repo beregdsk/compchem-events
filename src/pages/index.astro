@@ -2,6 +2,7 @@
 import Base from '../layouts/Base.astro';
 import EventRow from '../components/EventRow.astro';
 import PageActions from '../components/PageActions.astro';
+import ViewSwitch from '../components/ViewSwitch.astro';
 import { hasOpenTravelGrant, loadEvents, upcomingEvents } from '../lib/events';
 import { todayUTC } from '../lib/dates';
 import { EVENT_FEES, EVENT_FORMATS, EVENT_TYPES, type Topic } from '../lib/types';
@@ -32,7 +33,10 @@ const fees = EVENT_FEES.filter((f) => events.some((e) => e.fee === f));
   description="Upcoming conferences, workshops and schools in computational and theoretical chemistry, with deadlines, filters and calendar export."
   path="/"
 >
-  <h1>Upcoming events</h1>
+  <div class="page-head">
+    <h1>Upcoming events</h1>
+    <ViewSwitch current="list" />
+  </div>
 
   <noscript>
     <p class="warn">

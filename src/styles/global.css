@@ -420,6 +420,50 @@ a:hover {
   margin-block-end: 0;
 }
 
+/* Heading plus the list/graph switch: one row, wrapping under on narrow screens. */
+.page-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-s) var(--space-m);
+  align-items: center;
+  justify-content: space-between;
+  margin-block-end: var(--space-s);
+}
+
+.page-head h1 {
+  margin: 0;
+}
+
+.view-switch {
+  display: inline-flex;
+  border: 1px solid var(--rule-strong);
+  font-size: var(--step--1);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.view-switch > * {
+  padding: 0.35em 0.9em;
+}
+
+.view-switch > * + * {
+  border-inline-start: 1px solid var(--rule-strong);
+}
+
+.view-switch a {
+  color: var(--fg-muted);
+  text-decoration: none;
+}
+
+.view-switch a:hover {
+  color: var(--link);
+}
+
+.view-switch [aria-current] {
+  color: var(--link);
+  background: color-mix(in oklab, var(--link) 14%, transparent);
+}
+
 @media (max-width: 52rem) {
   .site-foot__inner {
     grid-template-columns: minmax(0, 1fr);
@@ -824,7 +868,7 @@ a:hover {
   white-space: nowrap;
 }
 
-/* Event map (/graph/). Spec 2026-09-28. Type is shape, not colour; blue marks
+/* Graph view (/graph/). Spec 2026-09-28. Type is shape, not colour; blue marks
    what you can still attend. Past events dim their shape, never their label —
    see tests/styles/contrast.test.ts. */
 .graph {

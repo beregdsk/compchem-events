@@ -38,7 +38,7 @@ export interface AutoApproveResult {
  * whose recorded confidence is at least `AUTO_APPROVE_THRESHOLD` and whose
  * `REQUIRED_CHECKS` have all completed successfully: a `high-confidence`
  * label plus a comment-type review explaining why. A maintainer still has
- * to click merge: `docs/curation-policy.md` says an automatically
+ * to click merge: `docs/discovery-agent.md` says an automatically
  * discovered event is never published without human review, and this only
  * fast-tracks finding the PRs ready for that review, never skips it.
  *
@@ -86,7 +86,7 @@ export async function autoApproveHighConfidencePrs(
       'COMMENT',
       `High confidence: ${confidence.toFixed(2)} ≥ ${AUTO_APPROVE_THRESHOLD.toFixed(2)}, ` +
         `and ${REQUIRED_CHECKS.join(', ')} all passed. This does not approve or merge the PR — ` +
-        "a maintainer's own review and merge are still required (docs/curation-policy.md).",
+        "a maintainer's own review and merge are still required (docs/discovery-agent.md).",
       options,
     );
     await addLabel(pr.number, HIGH_CONFIDENCE_LABEL, options);

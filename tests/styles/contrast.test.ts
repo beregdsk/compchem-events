@@ -86,7 +86,7 @@ describe('themes', () => {
   });
 });
 
-describe('event map', () => {
+describe('graph view', () => {
   // Past nodes dim their shape, never their label: a label at 35% opacity
   // would fail AA. The label instead uses --fg-muted, whose contrast against
   // --bg-raise (the graph's ground) is already asserted above.
