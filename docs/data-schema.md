@@ -17,6 +17,7 @@ One YAML file per event at `data/events/<start-year>/<id>.yaml`. The JSON Schema
 | `url` | string | yes | Official event page. `https://` required. |
 | `source_url` | string | no | Page where the dates were verified, if different from `url`. Must be on the organiser's official site. |
 | `organizer` | string | no | Organising body or society. |
+| `cost` | string | no | Registration cost as the organiser states it, 1-200 characters, e.g. `Free` or `€200 early bird, €300 after 1 May`. Shown on the event page. |
 | `topics` | string[] | yes | 1-5 unique values from `data/topics.yaml`. |
 | `description` | string | yes | Own words, 280 characters or fewer, plain text. |
 | `deadlines` | object[] | no | See below. |

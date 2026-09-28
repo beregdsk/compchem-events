@@ -1,0 +1,79 @@
+---
+import Base from '../../layouts/Base.astro';
+import EventRow from '../../components/EventRow.astro';
+import PageActions from '../../components/PageActions.astro';
+import { eventsWithTopic, loadEvents, pastEvents, upcomingEvents } from '../../lib/events';
+import { formatDateRange, todayUTC } from '../../lib/dates';
+import { loadTopics } from '../../lib/validation';
+import type { LoadedEvent, Topic } from '../../lib/types';
+
+// Every topic gets a page, even an empty one, so its feeds can be subscribed
+// to before the first event arrives.
+export function getStaticPaths() {
+  const events = loadEvents();
+  return loadTopics().map((topic) => {
+    const tagged = eventsWithTopic(events, topic.slug);
+    return {
+      params: { slug: topic.slug },
+      props: { topic, upcoming: upcomingEvents(tagged), past: pastEvents(tagged) },
+    };
+  });
+}
+
+interface Props {
+  topic: Topic;
+  upcoming: LoadedEvent[];
+  past: LoadedEvent[];
+}
+
+const { topic, upcoming, past } = Astro.props;
+const today = todayUTC();
+---
+
+<Base
+  title={topic.label}
+  description={`Upcoming ${topic.label.toLowerCase()} conferences, workshops and schools, with a calendar and feed for this topic alone.`}
+  path={`/topics/${topic.slug}/`}
+>
+  <h1>{topic.label}</h1>
+
+  <div class="listing-head">
+    <p class="result-count">
+      {upcoming.length} upcoming {upcoming.length === 1 ? 'event' : 'events'}
+    </p>
+    <PageActions
+      actions={[
+        { href: `/topics/${topic.slug}.ics`, label: 'Subscribe (.ics)' },
+        { href: `/topics/${topic.slug}.xml`, label: 'Atom feed' },
+        { href: '/topics/', label: 'All topics' },
+      ]}
+    />
+  </div>
+
+  {upcoming.length === 0 && <p class="muted">Nothing upcoming in this topic yet.</p>}
+  <ul class="event-list reveal">
+    {upcoming.map((event) => (
+      <EventRow event={event} today={today} />
+    ))}
+  </ul>
+
+  {past.length > 0 && (
+    <section class="related" aria-labelledby="past-heading">
+      <h2 id="past-heading">Previously</h2>
+      <ul class="related__list related__list--past">
+        {past.map((e) => (
+          <li>
+            <a href={`/events/${e.id}/`}>{e.title}</a>
+            <time class="mono muted" datetime={e.start_date}>
+              {formatDateRange(e.start_date, e.end_date)}
+            </time>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+</Base>
+
+<script>
+  import '../../scripts/countdown.ts';
+</script>

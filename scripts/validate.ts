@@ -11,6 +11,7 @@ import {
   type EventFile,
   type ValidationResult,
 } from '../src/lib/validation';
+import { validateSources } from '../src/lib/discovery/sources';
 
 // Re-exported so the discovery agent (docs/discovery-agent.md) can depend on a
 // stable entry point, as promised by TASK.md section 7.
@@ -25,6 +26,7 @@ export {
 } from '../src/lib/validation';
 
 const EVENTS_DIR = 'data/events';
+const SOURCES_FILE = 'data/sources.yaml';
 
 export function readEventFiles(root = '.'): EventFile[] {
   const dir = join(root, EVENTS_DIR);
@@ -51,6 +53,7 @@ function main(): void {
   const collection = validateCollection(entries, ctx);
   all.errors.push(...collection.errors);
   all.warnings.push(...collection.warnings);
+  all.errors.push(...validateSources(parse(readFileSync(SOURCES_FILE, 'utf8')), SOURCES_FILE));
 
   const report = formatProblems(all);
   if (report) console.log(report);

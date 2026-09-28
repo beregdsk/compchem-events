@@ -1,7 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import DeadlineList from '../../components/DeadlineList.astro';
-import { isStale, loadEvents } from '../../lib/events';
+import { isStale, loadEvents, seriesEditions } from '../../lib/events';
 import { formatDate, formatDateRange, todayUTC } from '../../lib/dates';
 import { buildEventGraph, relatedEvents } from '../../lib/event-graph';
 import { nameOf } from '../../lib/regions';
@@ -16,12 +16,14 @@ export function getStaticPaths() {
   const events = loadEvents();
   const graph = buildEventGraph(events);
   const byId = new Map(events.map((e) => [e.id, e]));
+  const series = seriesEditions(events);
   return events.map((event) => {
     const related = relatedEvents(graph, event.id).map((id) => byId.get(id)!);
     return {
       params: { id: event.id },
       props: {
         event,
+        editions: event.series ? (series.get(event.series)?.length ?? 0) : 0,
         upcoming: related.filter((e) => e.status_derived !== 'past').slice(0, RELATED_MAX),
         previous: related.filter((e) => e.status_derived === 'past').slice(0, RELATED_MAX),
       },
@@ -31,11 +33,13 @@ export function getStaticPaths() {
 
 interface Props {
   event: LoadedEvent;
+  /** Listed editions of this event's series; 0 when it has no series page. */
+  editions: number;
   upcoming: LoadedEvent[];
   previous: LoadedEvent[];
 }
 
-const { event, upcoming, previous } = Astro.props;
+const { event, editions, upcoming, previous } = Astro.props;
 const relatedGroups = [
   { heading: 'Coming up', events: upcoming, past: false },
   { heading: 'Previously', events: previous, past: true },
@@ -138,6 +142,16 @@ const jsonLd = {
       {event.organizer && <dt>Organiser</dt>}
       {event.organizer && <dd>{event.organizer}</dd>}
 
+      {event.cost && <dt>Cost</dt>}
+      {event.cost && <dd>{event.cost}</dd>}
+
+      {editions > 0 && <dt>Series</dt>}
+      {editions > 0 && (
+        <dd>
+          <a href={`/series/${event.series}/`}>All {editions} editions</a>
+        </dd>
+      )}
+
       <dt>Official page</dt>
       <dd>
         <a href={event.url} rel="noopener">
@@ -157,7 +171,7 @@ const jsonLd = {
       <dt>Topics</dt>
       <dd class="event__tags">
         {event.topics.map((t) => (
-          <a class="pill pill--topic" href={`/?topics=${t}`}>
+          <a class="pill pill--topic" href={`/topics/${t}/`}>
             {t}
           </a>
         ))}

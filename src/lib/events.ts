@@ -160,3 +160,33 @@ export function upcomingDeadlines(events: LoadedEvent[], today: ISODate): Upcomi
 export function isStale(event: LoadedEvent, today: ISODate): boolean {
   return compareISO(event.start_date, today) > 0 && daysBetween(event.last_verified, today) > 90;
 }
+
+/** True when a travel-grant deadline is still open: the filter students ask for most. */
+export function hasOpenTravelGrant(event: LoadedEvent, today: ISODate): boolean {
+  return (event.deadlines ?? []).some(
+    (d) => d.type === 'travel_grant' && compareISO(d.date, today) >= 0,
+  );
+}
+
+export function eventsWithTopic(events: LoadedEvent[], slug: string): LoadedEvent[] {
+  return events.filter((e) => e.topics.includes(slug));
+}
+
+/**
+ * Series with at least two editions, each newest first. A series of one
+ * has nothing to show that its event page does not already.
+ */
+export function seriesEditions(events: LoadedEvent[]): Map<string, LoadedEvent[]> {
+  const bySeries = new Map<string, LoadedEvent[]>();
+  for (const e of events) {
+    if (e.series) bySeries.set(e.series, [...(bySeries.get(e.series) ?? []), e]);
+  }
+  return new Map(
+    [...bySeries]
+      .filter(([, editions]) => editions.length >= 2)
+      .map(([slug, editions]) => [
+        slug,
+        [...editions].sort((a, b) => compareISO(b.start_date, a.start_date)),
+      ]),
+  );
+}

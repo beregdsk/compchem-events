@@ -55,20 +55,20 @@ All configuration by environment variables, validated by `scripts/discovery/run.
 | `IMAP_PORT` | no | 993 |
 | `IMAP_SECURE` | no | `true` (anything but the literal string `false`) |
 
-`IMAP_HOST`/`IMAP_USER`/`IMAP_PASSWORD` must be set all together or not at all — setting only some fails fast (a likely typo), same as every other required-together value here. None set is the normal state until a dedicated mailbox account exists (see *Mailing lists*): every `kind: mailbox` source is then skipped with a log line, and nothing else about the run changes.
+`IMAP_HOST`/`IMAP_USER`/`IMAP_PASSWORD` must be set all together or not at all — setting only some fails fast (a likely typo), same as every other required-together value here. With none set (for example, a local dry run), every `kind: mailbox` source is skipped with a log line and nothing else about the run changes. The production deployment sets all three (see *Mailing lists*).
 
 ## Sources
 
-`data/sources.yaml` holds them. Seventeen entries were compiled and fetched on 2026-09-23; that file documents its own format and keeps checked-but-unusable candidates in a commented block at the bottom.
+`data/sources.yaml` holds them. The first seventeen entries were compiled and fetched on 2026-09-23, and more have been added since, each fetched first. That file documents its own format and keeps checked-but-unusable candidates in a commented block at the bottom. `npm run validate` checks it in CI (`validateSources` in `src/lib/discovery/sources.ts`): an unknown field or kind, a non-https or repeated url, or a missing `last_checked` fails the build, where `loadSources` would otherwise skip the entry silently at run time.
 
 Three of the URLs this document originally suggested were already dead when the list was compiled (`cecam.org/workshop-list`, `molssi.org/events/`, `acscomp.org`), and `www.ictp.it` refuses a scripted user agent. Hence the rule in that file: every entry is fetched before it is added, and `last_checked` says when.
 
-Three source kinds were added beyond the four listed under *Pipeline* above:
+Five source kinds were added beyond the four the original version of this document listed:
 
 - `inline-listing` — a page that lists several events as text rather than as links to per-event pages (CCL's announcements, CCPBioSim, the EuChemS division's conferences, SCM). The page's own text goes to the model once, in a listing mode that returns every in-field event it states; each is then validated and screened like any other candidate.
 - `cecam-api` — CECAM's program, which its page renders in the browser from a JSON API (`src/lib/discovery/cecam-client.ts`). The API gives each event's dates and organisers; the event's own page, fetched like any other, gives its description, and both go to the model together.
 - `ical` — a calendar feed, parsed directly, since dates and titles arrive already typed. A feed carries no topics, so each event's topics come from keyword matches against `data/topics.yaml` (`src/lib/discovery/keyword-topics.ts`); only an event no keyword places goes to the extraction model, like any page. Telluride Science publishes one.
-- `mailbox` — a list we are subscribed to, read over IMAP. See below. Not implemented; no entries yet.
+- `mailbox` — a list we are subscribed to, read over IMAP (`src/lib/discovery/mailbox-client.ts`). See below. Psi-k is the live entry.
 - `telegram-channel` — a public channel, fetched at its anonymous web-preview path (`t.me/s/<channel>`, not `t.me/<channel>`, which redirects to the app). No login or bot token needed. Treat it like a listing-page: low precision, screen every post against `docs/curation-policy.md`. A post is exactly as hostile as a web page — same extraction pipeline in *Security model*, no exceptions. `data/sources.yaml` has a live example.
 
 Existing aggregators such as https://labinitio.org/ are for **coverage comparison only**. Do not scrape or republish another site's curation.
@@ -87,7 +87,7 @@ So for lists like Psi-k, **subscribe and read the mail**:
 - Deduplicate on `Message-ID`, and keep the same state file as the web sources. A list that cross-posts a CECAM workshop must not produce a second candidate.
 - Everything else is unchanged: schema validation, blocklist, curation screening, one pull request for human review.
 
-Implemented as `src/lib/discovery/mailbox-client.ts` (IMAP + MIME parsing), wired into the `kind: 'mailbox'` case in `pipeline.ts`. It was deliberately cheap to add: just another text source feeding the same extract → validate → screen → PR pipeline. What's left is not code but the operational step *Mailing lists* already called out above — a dedicated, subscribed mailbox account — and then a live entry in `data/sources.yaml` once one exists.
+Implemented as `src/lib/discovery/mailbox-client.ts` (IMAP + MIME parsing), wired into the `kind: 'mailbox'` case in `pipeline.ts`. It was deliberately cheap to add: just another text source feeding the same extract → validate → screen → PR pipeline. The mailbox account, its `discovery` folder and the Psi-k subscription were confirmed working end to end on 2026-09-27, and `data/sources.yaml` has the live `kind: mailbox` entry.
 
 ## Human review
 
@@ -157,8 +157,8 @@ the mounted volume above, so state survives between runs), `GITHUB_TOKEN`,
 `GITHUB_REPO`, and optionally `LLM_BASE_URL` (extraction only),
 `LLM_BASE_URL_CLASSIFY` (classification only — these are two different
 endpoints and must be set independently when proxying either one),
-`LLM_MODEL`, `MAX_PAGES`, `MAX_TOKENS`, `MAX_PRS`, and — once a dedicated
-mailbox account exists (see *Mailing lists*) — `IMAP_HOST`, `IMAP_USER`,
+`LLM_MODEL`, `MAX_PAGES`, `MAX_TOKENS`, `MAX_PRS`, and — for the
+`kind: mailbox` sources (see *Mailing lists*) — `IMAP_HOST`, `IMAP_USER`,
 `IMAP_PASSWORD` and optionally `IMAP_PORT`/`IMAP_SECURE` — see
 *Configuration* above for what each does and its default.
 

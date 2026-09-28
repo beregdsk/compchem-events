@@ -1,8 +1,10 @@
 # Sources the discovery agent watches.
 #
-# This file is data for `docs/discovery-agent.md` (phase 5). No code reads it
-# yet. It exists so the agent, when it is built, starts from a checked list
-# instead of searching the open web on every run.
+# Read by the discovery agent (`docs/discovery-agent.md`) through
+# `src/lib/discovery/sources.ts`, and checked by `npm run validate` in CI: an
+# unknown field or kind, a non-https or repeated url, or a missing or
+# malformed `last_checked` fails the check. It exists so the agent starts
+# from a checked list instead of searching the open web on every run.
 #
 # Format:
 #   - name: CECAM

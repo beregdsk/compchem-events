@@ -680,7 +680,8 @@ a:hover {
   border-block-end: 1px solid var(--rule);
 }
 
-.related__list time {
+.related__list time,
+.related__aside {
   margin-inline-start: auto;
 }
 

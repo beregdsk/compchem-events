@@ -1,0 +1,29 @@
+---
+import Base from '../layouts/Base.astro';
+import { eventsWithTopic, loadEvents, upcomingEvents } from '../lib/events';
+import { loadTopics } from '../lib/validation';
+
+const upcoming = upcomingEvents(loadEvents());
+const topics = loadTopics().map((topic) => ({
+  ...topic,
+  count: eventsWithTopic(upcoming, topic.slug).length,
+}));
+---
+
+<Base
+  title="Topics"
+  description="Computational chemistry events by topic, each with its own calendar and feed."
+  path="/topics/"
+>
+  <h1>Topics</h1>
+  <p class="muted">Each topic has its own page, calendar (.ics) and Atom feed.</p>
+
+  <ul class="related__list">
+    {topics.map((t) => (
+      <li>
+        <a href={`/topics/${t.slug}/`}>{t.label}</a>
+        <span class="mono muted related__aside">{t.count} upcoming</span>
+      </li>
+    ))}
+  </ul>
+</Base>
