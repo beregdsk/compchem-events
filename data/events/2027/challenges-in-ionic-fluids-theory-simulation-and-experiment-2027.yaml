@@ -1,0 +1,25 @@
+id: challenges-in-ionic-fluids-theory-simulation-and-experiment-2027
+title: 'Challenges in ionic fluids: Theory, simulation, and experiment'
+type: workshop
+start_date: 2027-03-22
+end_date: 2027-03-25
+format: in-person
+url: https://www.cecam.org/workshop-details/challenges-in-ionic-fluids-theory-simulation-and-experiment-1483
+source_url: https://www.cecam.org/workshop-details/challenges-in-ionic-fluids-theory-simulation-and-experiment-1483
+topics:
+  - molecular-dynamics
+  - dft
+  - ml-potentials
+  - spectroscopy
+  - soft-matter
+description: Workshop on ionic fluids, uniting theory, simulation, and
+  experiment to tackle multiscale challenges. Topics include ML potentials,
+  classical DFT, and advanced spectroscopic techniques.
+added: 2026-09-28
+last_verified: 2026-09-28
+location:
+  city: Lausanne
+  country: CH
+  venue: CECAM-HQ-EPFL
+organizer: Stephen Cox (Durham University); Susan Perkin (Oxford University);
+  Benjamin Rotenberg (CNRS and Sorbonne Université)
