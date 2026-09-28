@@ -24,7 +24,7 @@ export const site: SiteConfig = {
   name: 'CompChem Observer',
   tagline: 'Conferences, workshops and schools in computational chemistry',
   url: 'https://compchem.observer',
-  contactEmail: 'placeholder@example.org',
+  contactEmail: 'contacts@compchem.observer',
   repoUrl: 'https://github.com/beregdsk/compchem-observer',
   reportForm: {
     url: 'https://tally.so/r/ODvo7M',
