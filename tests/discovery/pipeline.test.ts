@@ -568,6 +568,51 @@ describe('runPipeline', () => {
     }
   });
 
+  it('sends a Russian-language post to the model instead of skipping it as off-topic', async () => {
+    const { path: statePath, cleanup: cleanupState } = tmpStatePath();
+    const { path: sourcesPath, cleanup: cleanupSources } = tmpSourcesFile(
+      '- name: Channel\n  url: https://t.me/s/confsci\n  kind: telegram-channel\n',
+    );
+    const logs: string[] = [];
+    try {
+      const pageFetch: typeof fetch = async (input) => {
+        const url = String(input);
+        if (url.endsWith('/robots.txt')) return new Response('', { status: 200 });
+        return new Response(`
+          <div class="tgme_widget_message" data-post="confsci/1">
+            <div class="tgme_widget_message_text">Школа по квантовой химии<br>Дата: 1–3 марта 2027 г.</div>
+          </div>
+          <div class="tgme_widget_message" data-post="confsci/2">
+            <div class="tgme_widget_message_text">Конференция по механике грунтов</div>
+          </div>`);
+      };
+      const extractTexts: string[] = [];
+      const result = await runPipeline({
+        sourcesPath,
+        statePath,
+        userAgent: 'Test Agent (+https://example.org)',
+        maxPages: 50,
+        maxTokens: 500_000,
+        sleepImpl: async () => {},
+        fetchImpl: pageFetch,
+        extract: {
+          apiKey: 'sk-test',
+          model: 'test-model',
+          fetchImpl: stubExtractFetch(extractTexts),
+        },
+        log: (m) => logs.push(m),
+      });
+      expect(extractTexts).toHaveLength(1);
+      expect(extractTexts[0]).toContain('квантовой химии');
+      expect(logs).toContain('skipping (off-topic): https://t.me/confsci/2');
+      expect(logs.filter((l) => l.startsWith('dropped'))).toEqual([]);
+      expect(result.candidates).toHaveLength(1);
+    } finally {
+      cleanupState();
+      cleanupSources();
+    }
+  });
+
   it('runs sources concurrently without overshooting maxPages', async () => {
     const { path: statePath, cleanup: cleanupState } = tmpStatePath();
     const hosts = ['a', 'b', 'c', 'd', 'e'].map((h) => `${h}.example`);

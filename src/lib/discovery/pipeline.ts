@@ -72,6 +72,16 @@ const RELEVANCE_GENERIC_TERMS = [
   'first-principles',
   'chemistry',
   'chemical',
+  // Russian stems: the Telegram channels in data/sources.yaml post in
+  // Russian, and with English terms alone every one of their posts was
+  // skipped as off-topic before the model saw it. Stems, so one covers
+  // every inflection: "хими" — химия, химический; "квантов" — квантовый.
+  'хими',
+  'квантов',
+  'молекуляр',
+  'вычислительн',
+  'моделировани',
+  'суперкомпьют',
 ];
 
 function relevanceKeywords(topicSlugs: readonly string[]): string[] {

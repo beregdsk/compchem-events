@@ -74,6 +74,16 @@ export function splitTelegramPosts(doc: ReturnType<typeof parseHTML>): Extractio
     const dataPost = el.getAttribute('data-post');
     const textEl = el.querySelector('.tgme_widget_message_text');
     if (!dataPost || !textEl) continue;
+    // Line breaks are <br>, which textContent drops, running lines together.
+    for (const br of [...textEl.querySelectorAll('br')]) br.insertAdjacentText('afterend', '\n');
+    // Announcement channels link the event as a bare word ("Link", "Ссылка");
+    // keep the target, or the model never sees the event's own URL.
+    for (const a of [...textEl.querySelectorAll('a[href]')]) {
+      const href = a.getAttribute('href') ?? '';
+      if (/^https?:\/\//i.test(href) && href !== (a.textContent ?? '').trim()) {
+        a.insertAdjacentText('afterend', ` (${href})`);
+      }
+    }
     const text = (textEl.textContent ?? '').trim();
     if (!text) continue;
     posts.push({ sourceUrl: `https://t.me/${dataPost}`, text });

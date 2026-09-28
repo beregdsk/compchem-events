@@ -48,6 +48,17 @@ describe('htmlToText', () => {
 });
 
 describe('splitTelegramPosts', () => {
+  it('keeps line breaks and the targets of worded links in a post', () => {
+    const doc = parseHTML(`
+      <div class="tgme_widget_message" data-post="confsci/941">
+        <div class="tgme_widget_message_text">Форум<br>Дата: 2 декабря 2026 г.<br>Подробная информация: <a href="https://guap.ru/fmath">Ссылка</a> <a href="https://example.org/x">https://example.org/x</a> <a href="?q=%23chem">#chem</a></div>
+      </div>`);
+    const [post] = splitTelegramPosts(doc);
+    expect(post!.text).toBe(
+      'Форум\nДата: 2 декабря 2026 г.\nПодробная информация: Ссылка (https://guap.ru/fmath) https://example.org/x #chem',
+    );
+  });
+
   it('extracts one extraction input per message, dropping empty ones', () => {
     const html = `
       <div class="tgme_widget_message" data-post="samplechannel/101">

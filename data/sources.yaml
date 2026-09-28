@@ -292,6 +292,20 @@
     example of the kind. Fetch the /s/ web-preview path, which serves recent
     posts over plain HTTP with no login.
 
+- name: Научные конференции (Telegram)
+  url: https://t.me/s/confsci
+  kind: telegram-channel
+  added: 2026-09-28
+  last_checked: 2026-09-28
+  notes: >-
+    Russian-language channel (~15.6K subscribers) announcing Russian and
+    international conferences across the natural and technical sciences —
+    one post per event: title, dates and place, application deadline, and
+    a worded link ("Ссылка") to the event page. Very broad (mechanics,
+    microbiology, telecoms…), so screen hard; worth it for Russian
+    chemistry meetings the English-language sources never carry. Same /s/
+    web-preview path as the channel above, 20 recent posts per fetch.
+
 - name: IUPAC events calendar
   url: https://iupac.org/events/?ical=1
   kind: ical

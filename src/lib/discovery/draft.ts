@@ -2,14 +2,59 @@ import { stringify } from 'yaml';
 import type { ISODate } from '../dates';
 import type { RawEvent } from '../types';
 
-/** ASCII, lowercase, hyphen-separated — matches the event id schema pattern. */
+/**
+ * Russian Cyrillic to Latin, so a title from a Russian-language source
+ * still yields a readable id instead of an empty one.
+ */
+const CYRILLIC: Record<string, string> = {
+  а: 'a',
+  б: 'b',
+  в: 'v',
+  г: 'g',
+  д: 'd',
+  е: 'e',
+  ё: 'e',
+  ж: 'zh',
+  з: 'z',
+  и: 'i',
+  й: 'i',
+  к: 'k',
+  л: 'l',
+  м: 'm',
+  н: 'n',
+  о: 'o',
+  п: 'p',
+  р: 'r',
+  с: 's',
+  т: 't',
+  у: 'u',
+  ф: 'f',
+  х: 'kh',
+  ц: 'ts',
+  ч: 'ch',
+  ш: 'sh',
+  щ: 'shch',
+  ъ: '',
+  ы: 'y',
+  ь: '',
+  э: 'e',
+  ю: 'iu',
+  я: 'ia',
+};
+
+/**
+ * ASCII, lowercase, hyphen-separated — matches the event id schema pattern.
+ * Never empty: a title with no Latin or Cyrillic letters becomes "event".
+ */
 export function slugifyTitle(title: string): string {
-  return title
-    .normalize('NFKD')
-    .replace(/[̀-ͯ]/g, '')
+  const slug = title
     .toLowerCase()
+    .replace(/[а-яё]/g, (c) => CYRILLIC[c] ?? '')
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
+  return slug || 'event';
 }
 
 export interface DraftInput {

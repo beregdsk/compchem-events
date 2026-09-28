@@ -19,6 +19,14 @@ describe('slugifyTitle', () => {
     expect(slugifyTitle("École d'Été: DFT & Beyond!")).toBe('ecole-d-ete-dft-beyond');
   });
 
+  it('transliterates Cyrillic, so Russian titles get a readable id', () => {
+    expect(slugifyTitle('Школа по квантовой химии 2027')).toBe('shkola-po-kvantovoi-khimii-2027');
+  });
+
+  it('never returns an empty slug', () => {
+    expect(slugifyTitle('量子化学会议')).toBe('event');
+  });
+
   it('collapses repeated separators and trims leading/trailing hyphens', () => {
     expect(slugifyTitle('  --Multiple   Spaces--  ')).toBe('multiple-spaces');
   });
