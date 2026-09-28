@@ -1,0 +1,27 @@
+id: japan-society-for-computer-chemistry-2026-autumn-meeting-2026
+title: Japan Society for Computer Chemistry 2026 Autumn Meeting
+type: conference
+start_date: 2026-11-27
+end_date: 2026-11-28
+format: in-person
+url: https://sites.google.com/view/2026au/
+source_url: https://www.molsci.jp/news/cosponsor/n260903/
+topics:
+  - electronic-structure
+  - molecular-dynamics
+  - ml-chemistry
+  - software-hpc
+  - materials-modeling
+description: The 2026 Autumn Meeting of the Japan Society for Computer
+  Chemistry, co-hosted by the Japan Society for Molecular Science, will take
+  place in Numazu, Shizuoka, from November 27 to 28, 2026. It is a key event for
+  sharing research in computational chemistry.
+added: 2026-09-28
+last_verified: 2026-09-28
+location:
+  city: Numazu
+  country: JP
+  venue: Plaza Verde
+organizer: Japan Society for Computer Chemistry
+cost: 'General: ¥10,000; Student: ¥5,000; Member: ¥5,000; Japan Society for
+  Molecular Science Member: ¥3,000'
