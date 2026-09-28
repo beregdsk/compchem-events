@@ -557,3 +557,24 @@ being fixed to the viewport, so the masthead rule crosses it instead of ending i
 strength is a token (`--glow`), lower in the light theme because a blue wash turns
 paper grey. The wordmark moved up to `--step-2`, since at body size it was outranked
 by every page heading.
+
+## 2026-09-28 — Renamed to CompChem Observer, served from compchem.observer
+
+The site is now **CompChem Observer** at `https://compchem.observer`, and the repository
+is `beregdsk/compchem-observer`. This supersedes the 2026-09-20 name decision and closes
+the custom-domain item left open in the 2026-09-25 entry. The name follows the domain the
+maintainer bought.
+
+`site.url` is the single source for canonical links, the sitemap, feed URLs and ids, and
+the iCalendar UID domain, so all of them moved with it. That re-keys every calendar UID
+and Atom id, which would duplicate every event for an existing subscriber. There were
+none at the time of the switch, so the ids were allowed to move rather than being frozen
+on the old host. After this, changing `site.url` does carry that cost.
+
+The domain is attached to the Worker as a Custom Domain in `wrangler.jsonc` (apex and
+www), so Cloudflare manages DNS and certificates on deploy. `workers_dev` is false, which
+retires `compchem-events.beregdsk.workers.dev` at the maintainer's request. `preview_urls`
+is set explicitly to true because preview URLs otherwise follow the workers.dev setting,
+and Workers Builds gives every PR branch one. The Worker itself keeps the name
+`compchem-events`: Workers Builds fails a build whose `wrangler.jsonc` name differs from
+the Worker in the dashboard, and with workers.dev off the name is visible to no one.

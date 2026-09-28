@@ -75,7 +75,7 @@ export function buildCalendar(name: string, events: VEventInput[], stamp: Date):
   const lines: string[] = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//CompChem Events//EN',
+    'PRODID:-//CompChem Observer//EN',
     'CALSCALE:GREGORIAN',
     // No METHOD line: PUBLISH is iTIP scheduling transport (RFC 5546), not
     // RFC 5545 core, and RFC 5546 §3.2.1 would then require ORGANIZER, which
