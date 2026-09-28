@@ -459,3 +459,16 @@ Tally forms and `site.config.ts` now points at them instead of
 Only two human-only items remain open: a custom domain (the site still
 serves from `compchem-events.beregdsk.workers.dev`) and `contactEmail` in
 `site.config.ts`, still `placeholder@example.org`.
+
+## 2026-09-28 — Event map: d3-force
+
+The event map (`/graph/`, spec `docs/superpowers/specs/2026-09-28-event-graph-design.md`)
+adds `d3-force` v3 (ISC; pulls d3-dispatch, d3-quadtree, d3-timer; about
+15 kB gzipped) and `@types/d3-force` as a devDependency. It is the standard,
+small, maintained force-simulation implementation, and one dependency covers
+both uses: the seeded layout at build time (`src/lib/graph-layout.ts`) and the
+draggable simulation in the browser (`src/scripts/graph.ts`), which share one
+force configuration. Astro bundles it into the page's own script — no CDN, no
+runtime network calls. It loads only on `/graph/`, so the home page's 30 kB JS
+budget is untouched. Pan and zoom are hand-rolled on the SVG viewBox rather than
+adding d3-zoom.
