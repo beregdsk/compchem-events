@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { organizerKeys, shortLabel, similarity } from '../../src/lib/event-graph';
+import {
+  buildEventGraph,
+  clusters,
+  organizerKeys,
+  shortLabel,
+  similarity,
+} from '../../src/lib/event-graph';
+import type { LoadedEvent } from '../../src/lib/types';
 
 describe('organizerKeys', () => {
   it('reduces every CECAM node to the same key', () => {
@@ -98,5 +105,97 @@ describe('shortLabel', () => {
     const label = shortLabel('🧪'.repeat(40), 10);
     expect([...label]).toHaveLength(10);
     expect(label).toBe('🧪'.repeat(9) + '…');
+  });
+});
+
+const ev = (id: string, over: Partial<LoadedEvent> = {}): LoadedEvent =>
+  ({
+    id,
+    title: id,
+    type: 'workshop',
+    start_date: '2027-01-10',
+    end_date: '2027-01-12',
+    format: 'online',
+    url: `https://example.org/${id}/`,
+    topics: ['dft'],
+    description: 'd',
+    added: '2026-09-20',
+    last_verified: '2026-09-20',
+    region: 'Online',
+    status_derived: 'upcoming',
+    ...over,
+  }) as LoadedEvent;
+
+const key = (e: { source: string; target: string }) => [e.source, e.target].sort().join('|');
+
+describe('buildEventGraph', () => {
+  it('makes one node per event, linking to its event page', () => {
+    const g = buildEventGraph([ev('a'), ev('b', { status_derived: 'past' })]);
+    expect(g.nodes.map((n) => [n.id, n.href, n.status])).toEqual([
+      ['a', '/events/a/', 'upcoming'],
+      ['b', '/events/b/', 'past'],
+    ]);
+  });
+
+  it('links pairs at or above the threshold', () => {
+    const g = buildEventGraph([ev('a'), ev('b')]); // identical topics: 0.6
+    expect(g.edges.map(key)).toEqual(['a|b']);
+  });
+
+  it("keeps each node's best edge even below the threshold", () => {
+    const g = buildEventGraph([
+      ev('a', { topics: ['dft', 'catalysis', 'spectroscopy'] }),
+      ev('b', { topics: ['dft', 'soft-matter', 'drug-design'] }), // jaccard 0.2 → 0.12
+    ]);
+    expect(g.edges.map(key)).toEqual(['a|b']);
+    expect(g.edges[0]!.weight).toBeCloseTo(0.12);
+  });
+
+  it('leaves an event sharing nothing unlinked but present', () => {
+    const g = buildEventGraph([ev('a'), ev('b'), ev('lonely', { topics: ['catalysis'] })]);
+    expect(g.nodes.map((n) => n.id)).toContain('lonely');
+    expect(g.edges.some((e) => e.source === 'lonely' || e.target === 'lonely')).toBe(false);
+  });
+
+  it('has no self-loops and no duplicate undirected edges', () => {
+    const g = buildEventGraph([
+      ev('a'),
+      ev('b'),
+      ev('c'),
+      ev('d', { topics: ['catalysis', 'dft'] }),
+    ]);
+    expect(g.edges.every((e) => e.source !== e.target)).toBe(true);
+    const keys = g.edges.map(key);
+    expect(new Set(keys).size).toBe(keys.length);
+  });
+
+  it('is empty for no events', () => {
+    expect(buildEventGraph([])).toEqual({ nodes: [], edges: [] });
+  });
+});
+
+describe('clusters', () => {
+  it('groups connected events, largest first, and keeps singletons', () => {
+    const g = buildEventGraph([
+      ev('a'),
+      ev('b'),
+      ev('c'),
+      ev('x', { topics: ['catalysis'] }),
+      ev('y', { topics: ['catalysis'] }),
+      ev('lonely', { topics: ['soft-matter'] }),
+    ]);
+    expect(clusters(g).map((c) => c.map((n) => n.id).sort())).toEqual([
+      ['a', 'b', 'c'],
+      ['x', 'y'],
+      ['lonely'],
+    ]);
+  });
+
+  it('orders events within a cluster newest first', () => {
+    const g = buildEventGraph([
+      ev('old', { start_date: '2024-01-01', end_date: '2024-01-02' }),
+      ev('new', { start_date: '2027-01-01', end_date: '2027-01-02' }),
+    ]);
+    expect(clusters(g)[0]!.map((n) => n.id)).toEqual(['new', 'old']);
   });
 });

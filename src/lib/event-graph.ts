@@ -1,7 +1,8 @@
 // Similarity between events, and the graph built from it, for the event map
 // at /graph/. Pure: no DOM, no layout. Spec: docs/superpowers/specs/
 // 2026-09-28-event-graph-design.md.
-import type { LoadedEvent } from './types';
+import { compareISO, type ISODate } from './dates';
+import type { DerivedStatus, EventType, LoadedEvent } from './types';
 
 /** Weights of the three similarity signals. They sum to 1. */
 export const TOPIC_WEIGHT = 0.6;
@@ -67,4 +68,107 @@ export function shortLabel(title: string, max = 28): string {
       .join('')
       .trimEnd() + '…'
   );
+}
+
+export interface GraphNode {
+  id: string;
+  title: string;
+  type: EventType;
+  status: DerivedStatus;
+  start_date: ISODate;
+  end_date: ISODate;
+  href: string;
+}
+
+/** Undirected; `source` precedes `target` in the input order. */
+export interface GraphEdge {
+  source: string;
+  target: string;
+  weight: number;
+}
+
+export interface EventGraph {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+}
+
+/**
+ * Links every pair scoring at least `EDGE_THRESHOLD`, plus each event's single
+ * best link below it, so an event that resembles anything at all is never
+ * drawn alone. An event sharing nothing with any other stays unlinked.
+ */
+export function buildEventGraph(events: LoadedEvent[]): EventGraph {
+  const nodes: GraphNode[] = events.map((e) => ({
+    id: e.id,
+    title: e.title,
+    type: e.type,
+    status: e.status_derived,
+    start_date: e.start_date,
+    end_date: e.end_date,
+    href: `/events/${e.id}/`,
+  }));
+
+  const kept = new Map<string, GraphEdge>();
+  const best: { j: number; weight: number }[] = [];
+  const add = (i: number, j: number, weight: number) => {
+    kept.set(`${i}|${j}`, { source: events[i]!.id, target: events[j]!.id, weight });
+  };
+
+  for (let i = 0; i < events.length; i++) {
+    for (let j = i + 1; j < events.length; j++) {
+      const weight = similarity(events[i]!, events[j]!);
+      if (weight <= 0) continue;
+      if (weight > (best[i]?.weight ?? 0)) best[i] = { j, weight };
+      if (weight > (best[j]?.weight ?? 0)) best[j] = { j: i, weight };
+      if (weight >= EDGE_THRESHOLD) add(i, j, weight);
+    }
+  }
+  best.forEach((b, i) => {
+    if (b) add(Math.min(i, b.j), Math.max(i, b.j), b.weight);
+  });
+
+  const order = (k: string) => k.split('|').map(Number) as [number, number];
+  const edges = [...kept.entries()]
+    .sort(([a], [b]) => {
+      const [a0, a1] = order(a);
+      const [b0, b1] = order(b);
+      return a0 - b0 || a1 - b1;
+    })
+    .map(([, e]) => e);
+
+  return { nodes, edges };
+}
+
+/**
+ * Connected components, largest first; within one, newest event first. The
+ * event map lists these under the graph as its text equivalent.
+ */
+export function clusters(graph: EventGraph): GraphNode[][] {
+  const adjacent = new Map<string, string[]>(graph.nodes.map((n) => [n.id, []]));
+  for (const e of graph.edges) {
+    adjacent.get(e.source)!.push(e.target);
+    adjacent.get(e.target)!.push(e.source);
+  }
+  const byId = new Map(graph.nodes.map((n) => [n.id, n]));
+  const seen = new Set<string>();
+  const groups: GraphNode[][] = [];
+  for (const start of graph.nodes) {
+    if (seen.has(start.id)) continue;
+    const group: GraphNode[] = [];
+    const stack = [start.id];
+    seen.add(start.id);
+    while (stack.length) {
+      const id = stack.pop()!;
+      group.push(byId.get(id)!);
+      for (const next of adjacent.get(id)!) {
+        if (!seen.has(next)) {
+          seen.add(next);
+          stack.push(next);
+        }
+      }
+    }
+    group.sort((a, b) => compareISO(b.start_date, a.start_date) || a.title.localeCompare(b.title));
+    groups.push(group);
+  }
+  return groups.sort((a, b) => b.length - a.length || a[0]!.title.localeCompare(b[0]!.title));
 }
