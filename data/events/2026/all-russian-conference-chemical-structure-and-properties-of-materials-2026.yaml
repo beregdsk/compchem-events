@@ -1,0 +1,22 @@
+id: all-russian-conference-chemical-structure-and-properties-of-materials-2026
+title: All-Russian Conference 'Chemical Structure and Properties of Materials'
+type: conference
+start_date: 2026-10-12
+end_date: 2026-10-15
+format: in-person
+url: https://cheminform.ru/konferenczii-i-seminary/himicheskaya-struktura-i-svojstva-materialov/
+source_url: https://cheminform.ru/konferenczii-i-seminary/himicheskaya-struktura-i-svojstva-materialov/
+topics:
+  - materials-modeling
+  - ml-chemistry
+description: All-Russian conference dedicated to the 100th anniversary of Yu.T.
+  Struchkov. Topics include new methods for studying substance structure,
+  structure-property correlations, non-covalent interactions in functional
+  materials design, and AI in chemistry and materials science.
+added: 2026-09-28
+last_verified: 2026-09-28
+location:
+  city: Moscow
+  country: RU
+  venue: ИНЭОС РАН
+cost: 6 000 ₽ for young scientists, 12 000 ₽ for others
