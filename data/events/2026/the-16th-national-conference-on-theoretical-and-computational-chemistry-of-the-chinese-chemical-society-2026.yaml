@@ -8,7 +8,12 @@ format: in-person
 url: https://www.chemsoc.org.cn/meeting/nctcc2026/
 source_url: https://www.chemsoc.org.cn/meeting/home/announcement/a7487.html
 fee: paid
-topics: [electronic-structure, dft, wavefunction-methods, excited-states, quantum-dynamics]
+topics:
+  - electronic-structure
+  - dft
+  - wavefunction-methods
+  - photochemistry
+  - quantum-dynamics
 description: The 16th National Conference on Theoretical and Computational
   Chemistry of the Chinese Chemical Society will be held in Shenzhen from Dec
   26-28, 2026. Featuring 16 topics like wavefunction theory, DFT,

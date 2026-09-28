@@ -8,7 +8,9 @@
 - slug: wavefunction-methods
   label: Wavefunction methods
 - slug: excited-states
-  label: Excited states and photochemistry
+  label: Excited states
+- slug: photochemistry
+  label: Photochemistry
 - slug: quantum-dynamics
   label: Quantum dynamics
 - slug: molecular-dynamics

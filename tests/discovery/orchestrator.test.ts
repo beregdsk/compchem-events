@@ -18,7 +18,7 @@ const candidate: RawEvent = {
   source_url: 'https://organiser.example.org/excited-states-symposium-2027/',
   organizer: 'Example Photochemistry Society',
   cost: 'Free, registration required',
-  topics: ['excited-states', 'spectroscopy'],
+  topics: ['photochemistry', 'excited-states'],
   description: 'A three-day symposium on excited-state photochemistry.',
   added: '2026-09-25',
   last_verified: '2026-09-25',
@@ -155,7 +155,7 @@ function candidateEvent(overrides: Partial<RawEvent> = {}): RawEvent {
     format: 'online',
     url: 'https://organiser.example.org/excited-states-symposium-2027/',
     source_url: 'https://organiser.example.org/excited-states-symposium-2027/',
-    topics: ['excited-states'],
+    topics: ['photochemistry'],
     description: 'A symposium on excited-state photochemistry.',
     added: '2026-09-25',
     last_verified: '2026-09-25',
@@ -402,6 +402,7 @@ describe('runDiscoveryRun', () => {
     );
     expect(result.prsOpened).toBe(1);
     expect(result.skipped).toEqual([{ id: 'second-2027', reason: 'MAX_PRS reached' }]);
+    expect(result.deferred).toEqual(['second-2027']);
   });
 
   it('stops classifying once MAX_TOKENS is reached, logging the rest as skipped', async () => {
@@ -422,6 +423,7 @@ describe('runDiscoveryRun', () => {
     expect(result.skipped).toEqual([
       { id: 'excited-states-symposium-2027', reason: 'MAX_TOKENS reached' },
     ]);
+    expect(result.deferred).toEqual(['excited-states-symposium-2027']);
     expect(result.tokensUsed).toBe(100);
   });
 

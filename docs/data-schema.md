@@ -61,7 +61,7 @@ Warnings (reported, do not fail):
 
 ## Controlled vocabulary (initial `data/topics.yaml`)
 
-`electronic-structure`, `dft`, `wavefunction-methods`, `excited-states`, `quantum-dynamics`, `molecular-dynamics`, `enhanced-sampling`, `biomolecular-simulation`, `soft-matter`, `ml-potentials`, `ml-chemistry`, `cheminformatics`, `drug-design`, `materials-modeling`, `catalysis`, `electrochemistry`, `spectroscopy`, `quantum-computing-chemistry`, `software-hpc`, `education-training`.
+`electronic-structure`, `dft`, `wavefunction-methods`, `excited-states`, `photochemistry`, `quantum-dynamics`, `molecular-dynamics`, `enhanced-sampling`, `biomolecular-simulation`, `soft-matter`, `ml-potentials`, `ml-chemistry`, `cheminformatics`, `drug-design`, `materials-modeling`, `catalysis`, `electrochemistry`, `spectroscopy`, `quantum-computing-chemistry`, `software-hpc`, `education-training`.
 
 Each entry has `slug` and a human-readable `label`. Adding a topic is a schema-level change: keep the list short and reject near-duplicates.
 

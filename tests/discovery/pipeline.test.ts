@@ -961,6 +961,45 @@ describe('runPipeline', () => {
       }
     });
 
+    it('requeues a candidate a later step deferred, retrying its message (and only it) on the next run', async () => {
+      const { path: statePath, cleanup: cleanupState } = tmpStatePath();
+      const { path: sourcesPath, cleanup: cleanupSources } = tmpSourcesFile(
+        '- name: Psi-k\n  url: https://psi-k.example/mailing-list\n  kind: mailbox\n',
+      );
+      try {
+        const baseOptions = (): PipelineOptions => ({
+          sourcesPath,
+          statePath,
+          userAgent: 'Test Agent (+https://example.org)',
+          maxPages: 50,
+          maxTokens: 500_000,
+          today: '2026-09-23',
+          sleepImpl: async () => {},
+          extract: {
+            apiKey: 'sk-test',
+            model: 'test-extract-model',
+            fetchImpl: stubExtractFetch(),
+          },
+          mailbox: dummyCredentials,
+          mailboxFetchImpl: fakeMailboxFetchImpl(allMessages),
+        });
+
+        const result1 = await runPipeline(baseOptions());
+        const first = result1.candidates.find((c) => c.title === 'First Chemistry Announcement')!;
+        // As if the orchestrator hit MAX_TOKENS before classifying `first`.
+        result1.requeue([first.id]);
+        expect(
+          loadState(statePath).pages['mailbox:discovery:<msg-a@list.example>'],
+        ).toBeUndefined();
+
+        const result2 = await runPipeline(baseOptions());
+        expect(result2.candidates.map((c) => c.title)).toEqual(['First Chemistry Announcement']);
+      } finally {
+        cleanupState();
+        cleanupSources();
+      }
+    });
+
     it('skips mailbox sources without recording an error when no IMAP credentials are configured', async () => {
       const { path: statePath, cleanup: cleanupState } = tmpStatePath();
       const { path: sourcesPath, cleanup: cleanupSources } = tmpSourcesFile(

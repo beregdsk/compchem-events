@@ -6,7 +6,10 @@ end_date: 2027-11-25
 format: in-person
 url: https://www.cecam.org/workshop-details/mathematics-for-quantum-dynamics-1486
 source_url: https://www.cecam.org/workshop-details/mathematics-for-quantum-dynamics-1486
-topics: [quantum-dynamics, spectroscopy, excited-states]
+topics:
+  - quantum-dynamics
+  - spectroscopy
+  - photochemistry
 description: Workshop on mathematical methods for quantum dynamics in chemistry,
   bridging mathematicians and theoretical chemists to advance numerical methods
   for simulating quantum systems.

@@ -85,7 +85,7 @@ describe('event schema', () => {
 describe('controlled vocabulary', () => {
   it('parses as a list of slug/label pairs', () => {
     const topics = parse(readFileSync('data/topics.yaml', 'utf8')) as Topic[];
-    expect(topics).toHaveLength(20);
+    expect(topics).toHaveLength(21);
     for (const t of topics) {
       expect(t.slug).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/);
       expect(t.label.length).toBeGreaterThan(0);
