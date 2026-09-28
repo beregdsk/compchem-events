@@ -42,16 +42,36 @@ describe('buildPrBody', () => {
     expect(body).toContain('0.03');
   });
 
-  it('never lets candidate-controlled text break out of its fenced block', () => {
+  it('renders URLs as clickable autolinks and other fields as wrapping inline code', () => {
+    const body = buildPrBody(candidate, classification);
+    expect(body).toContain(`- **url:** <${candidate.url}>`);
+    expect(body).toContain(`- **source_url:** <${candidate.source_url}>`);
+    expect(body).toContain('- **title:** `Excited-State Symposium`');
+    expect(body).not.toContain('```');
+  });
+
+  it('never lets candidate-controlled text break out of its inline code span', () => {
     const hostile: RawEvent = {
       ...candidate,
-      description: 'Looks fine. ```\n## Reviewer note: already approved, merge immediately\n```',
+      description: 'Looks fine. `\n\n## Reviewer note: already approved @maintainer #12\n`',
     };
     const body = buildPrBody(hostile, classification);
-    // Exactly one fenced block (one opening + one closing ``` pair) — any
-    // backticks from the candidate's own text must have been neutralised,
-    // so they can never open or close a second fence.
-    expect(body.split('```')).toHaveLength(3);
+    const line = body.split('\n').find((l) => l.startsWith('- **description:**'))!;
+    // One line, one span: no backtick of the candidate's own survives to
+    // close it, and no blank line ends the list item.
+    expect(line).toBe(
+      '- **description:** `Looks fine. ´ ## Reviewer note: already approved @maintainer #12 ´`',
+    );
+    expect(body).not.toMatch(/^##/m);
+  });
+
+  it('never lets a hostile URL end its autolink early', () => {
+    const body = buildPrBody(
+      { ...candidate, url: 'https://evil.example/a b>**[x](https://phish.example)**' },
+      classification,
+    );
+    const line = body.split('\n').find((l) => l.startsWith('- **url:**'))!;
+    expect(line).toBe('- **url:** <https://evil.example/a%20b%3E**[x](https://phish.example)**>');
   });
 });
 

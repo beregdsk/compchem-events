@@ -459,3 +459,69 @@ Tally forms and `site.config.ts` now points at them instead of
 Only two human-only items remain open: a custom domain (the site still
 serves from `compchem-events.beregdsk.workers.dev`) and `contactEmail` in
 `site.config.ts`, still `placeholder@example.org`.
+
+## 2026-09-28 — Event map: d3-force
+
+The event map (`/graph/`, spec `docs/superpowers/specs/2026-09-28-event-graph-design.md`)
+adds `d3-force` v3 (ISC; pulls d3-dispatch, d3-quadtree, d3-timer; about
+15 kB gzipped) and `@types/d3-force` as a devDependency. It is the standard,
+small, maintained force-simulation implementation, and one dependency covers
+both uses: the seeded layout at build time (`src/lib/graph-layout.ts`) and the
+draggable simulation in the browser (`src/scripts/graph.ts`), which share one
+force configuration. Astro bundles it into the page's own script — no CDN, no
+runtime network calls. It loads only on `/graph/`, so the home page's 30 kB JS
+budget is untouched. Pan and zoom are hand-rolled on the SVG viewBox rather than
+adding d3-zoom.
+
+## 2026-09-28 — Topic pages and feeds, series pages, travel-grant filter, `cost` shown
+
+- **Topic pages and feeds.** `/topics/<slug>/` lists a topic's upcoming and
+  past events, with `/topics/<slug>.ics` and `/topics/<slug>.xml` beside it;
+  `/topics/` indexes them. They are built for every slug in `data/topics.yaml`,
+  including topics with no events yet, so a feed can be subscribed to before
+  its first event arrives. They reuse `eventsCalendar` and `atomFeed`, which
+  now take a scope (calendar name; feed title, self link and id), so there is
+  one builder per format rather than two. Each topic feed has its own Atom
+  `<id>` (the topic page's URL). Event-page topic chips now link to the topic
+  page rather than to a filtered home page, and the home page shows a link to
+  the topic page when exactly one topic is selected.
+- **Series pages** (`/series/<slug>/`) are built only for a series with two
+  or more listed editions: with one, the page would repeat the event page.
+  At the time of writing no series has two editions, so none ships yet; the
+  event page links to its series page only when one exists.
+- **Travel-grant filter** (`?grant=open`): events with a `travel_grant`
+  deadline that is still open. It is shown only when an upcoming event has
+  one, following the home page's rule of offering only options the data
+  contains. At the time of writing none does, so the checkbox is hidden.
+- **`cost`** already existed as an optional free-text field (added with
+  discovery's cost extraction) but was undocumented and never shown. It is
+  now in `docs/data-schema.md` and on the event page.
+
+## 2026-09-28 — `data/sources.yaml` is validated in CI
+
+The 2026-09-23 entry declined a validator because nothing read the file. The
+discovery agent now does, and `loadSources` skips a malformed entry silently,
+so a typo such as `last_check:` or `kind: listing` would drop a source from
+every run with no signal anywhere. `validateSources`
+(`src/lib/discovery/sources.ts`) is the gate, run by `npm run validate`. It
+rejects an unknown field or kind, a non-https or repeated url, a `folder` on a
+non-mailbox source, and a missing or impossible `last_checked` (required,
+since the file's own rule is that nothing goes in unfetched). `loadSources`
+keeps its skip-don't-throw behaviour at run time.
+
+## 2026-09-28 — `fee: free | paid` field and cost filter
+
+The maintainer asked for a free/paid filter. `cost` is free text as the
+organiser words it, and parsing it into a category would put words in the
+organiser's mouth, so the category is its own optional field, `fee`, stated
+by whoever verifies the event, alongside `cost` rather than derived from it.
+`paid` covers any registration fee, waivers or not; an event whose page says
+nothing has no `fee` and matches only "any" in the filter, never "free" —
+unknown is not free. The extraction model returns `fee` only when the text
+states it; the prompt forbids guessing from the kind of event, and the value
+is shown in the discovery PR body for the reviewer to check. An event with
+`fee: free` carries `isAccessibleForFree` in its JSON-LD.
+
+The home-page select appears only once some upcoming event has a `fee`, like
+every other option there. At the time of writing none does: existing events
+need their fees checked on the organisers' pages before any can be set.

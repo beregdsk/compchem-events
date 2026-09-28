@@ -1,0 +1,48 @@
+---
+import Base from '../../layouts/Base.astro';
+import EventRow from '../../components/EventRow.astro';
+import PageActions from '../../components/PageActions.astro';
+import { loadEvents, seriesEditions } from '../../lib/events';
+import { todayUTC } from '../../lib/dates';
+import type { LoadedEvent } from '../../lib/types';
+
+export function getStaticPaths() {
+  return [...seriesEditions(loadEvents())].map(([slug, editions]) => ({
+    params: { slug },
+    props: { editions },
+  }));
+}
+
+interface Props {
+  /** Newest first. */
+  editions: LoadedEvent[];
+}
+
+const { editions } = Astro.props;
+const latest = editions[0]!;
+const today = todayUTC();
+---
+
+<Base
+  title={`Editions of ${latest.title}`}
+  description={`Every listed edition of ${latest.title}, past and upcoming.`}
+  path={`/series/${latest.series}/`}
+>
+  <h1>All editions</h1>
+  <p class="muted">
+    {editions.length} listed editions of this series, newest first. Past editions show when it
+    usually runs and when its calls open.
+  </p>
+
+  <PageActions actions={[{ href: `/events/${latest.id}/`, label: 'Latest edition' }]} />
+
+  <ul class="event-list reveal">
+    {editions.map((event) => (
+      <EventRow event={event} today={today} />
+    ))}
+  </ul>
+</Base>
+
+<script>
+  import '../../scripts/countdown.ts';
+</script>

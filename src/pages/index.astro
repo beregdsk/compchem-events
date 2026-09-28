@@ -2,9 +2,9 @@
 import Base from '../layouts/Base.astro';
 import EventRow from '../components/EventRow.astro';
 import PageActions from '../components/PageActions.astro';
-import { loadEvents, upcomingEvents } from '../lib/events';
+import { hasOpenTravelGrant, loadEvents, upcomingEvents } from '../lib/events';
 import { todayUTC } from '../lib/dates';
-import { EVENT_FORMATS, EVENT_TYPES, type Topic } from '../lib/types';
+import { EVENT_FEES, EVENT_FORMATS, EVENT_TYPES, type Topic } from '../lib/types';
 import { nameOf, REGIONS } from '../lib/regions';
 import { readFileSync } from 'node:fs';
 import { parse } from 'yaml';
@@ -23,6 +23,8 @@ const countries = [...new Set(events.flatMap((e) => (e.location ? [e.location.co
   .sort((a, b) => a.name.localeCompare(b.name, 'en'));
 const regions = REGIONS.filter((r) => events.some((e) => e.region === r));
 const hasOnline = events.some((e) => e.region === 'Online');
+const hasOpenGrant = events.some((e) => hasOpenTravelGrant(e, today));
+const fees = EVENT_FEES.filter((f) => events.some((e) => e.fee === f));
 ---
 
 <Base
@@ -101,6 +103,18 @@ const hasOnline = events.some((e) => e.region === 'Online');
         </select>
       </div>
 
+      {fees.length > 0 && (
+        <div>
+          <label for="f-fee">Cost</label>
+          <select id="f-fee" name="fee">
+            <option value="">Any</option>
+            {fees.map((f) => (
+              <option value={f}>{f}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
       <fieldset>
         <legend>Dates</legend>
         <label for="f-from">From</label>
@@ -112,6 +126,12 @@ const hasOnline = events.some((e) => e.region === 'Online');
       <label>
         <input type="checkbox" name="deadline" value="open" /> Has an open deadline
       </label>
+
+      {hasOpenGrant && (
+        <label>
+          <input type="checkbox" name="grant" value="open" /> Travel grant still open
+        </label>
+      )}
 
       <button type="button" class="filters__clear" id="clear-filters">
         Clear filters
@@ -131,6 +151,9 @@ const hasOnline = events.some((e) => e.region === 'Online');
           ]}
         />
       </div>
+      <p class="mono" id="topic-feed" hidden>
+        <a href="/topics/">Calendar and feed for this topic</a>
+      </p>
       <ul class="event-list reveal" id="event-list">
         {events.map((event) => (
           <EventRow event={event} today={today} />

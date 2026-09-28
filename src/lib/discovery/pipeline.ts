@@ -1,15 +1,32 @@
-import { loadValidationContext, validateEvent, type ValidationContext } from '../validation';
-import { todayUTC, type ISODate } from '../dates';
+import {
+  loadTopics,
+  loadValidationContext,
+  validateEvent,
+  type ValidationContext,
+} from '../validation';
+import { compareISO, todayUTC, type ISODate } from '../dates';
 import type { RawEvent } from '../types';
 import { draftFilePath, synthesizeDraft } from './draft';
-import { extractEvent, type ExtractOptions } from './extract-client';
+import { cecamEventText, cecamEventUrl, fetchCecamEvents } from './cecam-client';
+import {
+  extractEvent,
+  extractEvents,
+  type ExtractedFields,
+  type ExtractOptions,
+} from './extract-client';
+import { keywordTopics } from './keyword-topics';
 import { politeFetch, type FetchOptions } from './fetch';
 import type { ExtractionInput } from './html';
 import { extractionInputFromPage } from './parsers/page';
-import { findEventPageLinks } from './parsers/listing';
+import { findEventPageLinks, findNextListingPage } from './parsers/listing';
 import { parseFeedItems } from './parsers/rss';
-import { parseICalFeed } from './parsers/ical';
+import { parseICalEvents, type ICalEvent } from './parsers/ical';
 import { extractionInputsFromChannel } from './parsers/telegram';
+import {
+  fetchNewMailboxMessages,
+  type MailboxCredentials,
+  type ParsedMailMessage,
+} from './mailbox-client';
 import { loadSources, type Source } from './sources';
 import { loadState, saveState, type PageState } from './state';
 
@@ -21,9 +38,26 @@ import { loadState, saveState, type PageState } from './state';
  * page's readable content.
  */
 const EXTRACTION_TEXT_LIMIT = 8000;
+/** An inline listing carries many events in one page, so it gets more room. */
+const LISTING_EXTRACTION_TEXT_LIMIT = 16000;
 
-function truncateForExtraction(text: string): string {
-  return text.length > EXTRACTION_TEXT_LIMIT ? text.slice(0, EXTRACTION_TEXT_LIMIT) : text;
+/**
+ * Sources processed at once. A run is mostly waiting — on the per-host
+ * politeness delay and on 20-60s LLM calls — so sources overlap well; kept
+ * small because OpenRouter's free tier allows 20 requests a minute per
+ * account, and extraction backs off on 429 rather than failing.
+ */
+const SOURCE_CONCURRENCY = 4;
+
+/**
+ * Pages of one paginated listing followed per run (the first included).
+ * The per-source page cap still bounds the total; this bounds the crawl
+ * of archives that run back for years.
+ */
+const MAX_LISTING_PAGES = 5;
+
+function truncateForExtraction(text: string, limit = EXTRACTION_TEXT_LIMIT): string {
+  return text.length > limit ? text.slice(0, limit) : text;
 }
 
 /**
@@ -45,10 +79,47 @@ const RELEVANCE_GENERIC_TERMS = [
   'first-principles',
   'chemistry',
   'chemical',
+  // Russian stems: the Telegram channels in data/sources.yaml post in
+  // Russian, and with English terms alone every one of their posts was
+  // skipped as off-topic before the model saw it. Stems, so one covers
+  // every inflection: "хими" — химия, химический; "квантов" — квантовый.
+  'хими',
+  'квантов',
+  'молекуляр',
+  'вычислительн',
+  'моделировани',
+  'суперкомпьют',
+  // Other non-English sources: Italian/French (chimica, chimie), German
+  // (Chemie), and Chinese/Japanese (化学 chemistry, 分子 molecule, 计算/計算
+  // computation, 理论/理論 theory) — CJK has no word boundaries to miss.
+  'chimi',
+  'chemie',
+  '化学',
+  '分子',
+  '计算',
+  '計算',
+  '理论',
+  '理論',
 ];
 
 function relevanceKeywords(topicSlugs: readonly string[]): string[] {
   return [...RELEVANCE_GENERIC_TERMS, ...topicSlugs.map((slug) => slug.replace(/-/g, ' '))];
+}
+
+/**
+ * The text a calendar-feed event is re-extracted from when keywords alone
+ * can't make a valid candidate of it: every field the feed carried, title
+ * first, including the free-text location the model can split into
+ * city/country.
+ */
+function icalExtractionText({ draft, location, description }: ICalEvent): string {
+  return [
+    draft.title,
+    `Dates: ${draft.start_date} to ${draft.end_date}`,
+    location ? `Location: ${location}` : 'Location: none given (online?)',
+    `URL: ${draft.url}`,
+    description ?? draft.description,
+  ].join('\n');
 }
 
 function looksRelevant(text: string, keywords: readonly string[]): boolean {
@@ -77,7 +148,23 @@ export interface PipelineOptions {
   sleepImpl?: (ms: number) => Promise<void>;
   now?: () => Date;
   extract: Omit<ExtractOptions, 'topics'>;
+  /** IMAP credentials for `kind: 'mailbox'` sources. Undefined disables them — see `case 'mailbox'` below. */
+  mailbox?: MailboxCredentials;
+  /**
+   * Defaults to the real `fetchNewMailboxMessages` (unlike `browserFetchImpl`,
+   * which has no internal default and is simply left unset in every test) —
+   * a mailbox source only ever runs when `mailbox` credentials are present,
+   * so there is no risk of a test accidentally dialing out; defaulting here
+   * means a real deployment can't silently no-op a configured mailbox by
+   * forgetting to pass this. Tests that do want to fake it override it.
+   */
+  mailboxFetchImpl?: typeof fetchNewMailboxMessages;
   log?: (message: string) => void;
+}
+
+/** Pages one source has fetched so far, against `maxPagesPerSource`. */
+interface SourceBudget {
+  pagesFetched: number;
 }
 
 export interface PipelineResult {
@@ -94,6 +181,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
   const ctx: ValidationContext = loadValidationContext('.', today);
   const log = options.log ?? (() => {});
   const keywords = relevanceKeywords([...ctx.topics]);
+  const vocabulary = loadTopics();
   let tokensUsed = 0;
   const extractOptions: ExtractOptions = {
     ...options.extract,
@@ -106,7 +194,8 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
   const candidates: RawEvent[] = [];
   const errors: Array<{ source: string; message: string }> = [];
   let pagesFetched = 0;
-  let pagesFetchedForSource = 0;
+  /** URLs already fetched (or being fetched) this run, by any source. */
+  const claimedUrls = new Set<string>();
   const maxPagesPerSource = options.maxPagesPerSource ?? 40;
 
   const fetchOpts: FetchOptions = {
@@ -118,34 +207,90 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
     now: options.now,
   };
 
-  async function fetchPage(url: string): Promise<string | undefined> {
+  /**
+   * Budgets are reserved before the fetch and released if it doesn't
+   * produce a page, so sources running concurrently can't all pass the
+   * check and overshoot `maxPages` together. A URL another source already
+   * fetched this run is skipped, as a second fetch would only have found
+   * it unchanged.
+   */
+  async function fetchPage(url: string, source: SourceBudget): Promise<string | undefined> {
+    if (claimedUrls.has(url)) {
+      log(`already fetched this run: ${url}`);
+      return undefined;
+    }
     if (pagesFetched >= options.maxPages) {
       log(`max pages (${options.maxPages}) reached, skipping ${url}`);
       return undefined;
     }
-    if (pagesFetchedForSource >= maxPagesPerSource) {
+    if (source.pagesFetched >= maxPagesPerSource) {
       log(`max pages per source (${maxPagesPerSource}) reached, skipping ${url}`);
       return undefined;
     }
+    claimedUrls.add(url);
+    pagesFetched += 1;
+    source.pagesFetched += 1;
     const result = await politeFetch(url, fetchOpts);
-    if (result.status === 'fetched') {
-      pagesFetched += 1;
-      pagesFetchedForSource += 1;
-      return result.body;
-    }
+    if (result.status === 'fetched') return result.body;
+    pagesFetched -= 1;
+    source.pagesFetched -= 1;
     if (result.status === 'unchanged') log(`unchanged: ${url}`);
     else if (result.status === 'skipped') log(`skipped (${result.reason}): ${url}`);
     else log(`error fetching ${url}: ${result.error}`);
     return undefined;
   }
 
+  function validationErrors(draft: RawEvent): string[] {
+    return validateEvent({ file: draftFilePath(draft), data: draft }, ctx).errors.map(
+      (e) => e.message,
+    );
+  }
+
   function acceptDraft(draft: RawEvent, sourceUrl: string): void {
-    const result = validateEvent({ file: draftFilePath(draft), data: draft }, ctx);
-    if (result.errors.length > 0) {
-      log(`dropped candidate from ${sourceUrl}: ${result.errors.map((e) => e.message).join('; ')}`);
+    // The archive keeps past events, so validation allows them — but
+    // discovery only proposes upcoming ones. Listings (CCL's especially)
+    // still carry long-finished entries, and models extract them anyway.
+    if (compareISO(draft.end_date, today) < 0) {
+      log(`skipping past event from ${sourceUrl}: ${draft.title} (ended ${draft.end_date})`);
+      return;
+    }
+    const errors = validationErrors(draft);
+    if (errors.length > 0) {
+      log(`dropped candidate from ${sourceUrl}: ${errors.join('; ')}`);
       return;
     }
     candidates.push(draft);
+  }
+
+  function draftFromFields(fields: ExtractedFields, sourceUrl: string): RawEvent {
+    return synthesizeDraft(
+      {
+        title: fields.title,
+        type: fields.type,
+        start_date: fields.start_date,
+        end_date: fields.end_date,
+        format: fields.format,
+        location: fields.location,
+        // The model may honestly have no canonical event URL to report
+        // (never fabricated) — fall back to the URL the pipeline itself
+        // fetched this content from, the same value already used for
+        // source_url.
+        url: fields.url ?? sourceUrl,
+        source_url: sourceUrl,
+        organizer: fields.organizer,
+        cost: fields.cost,
+        fee: fields.fee,
+        // The model may pick nothing from the vocabulary (or only
+        // off-vocabulary entries, which extractEvent drops); keywords over
+        // its own title and summary are a better answer than a dropped event.
+        topics:
+          fields.topics.length > 0
+            ? fields.topics
+            : keywordTopics(`${fields.title} ${fields.description}`, vocabulary),
+        description: fields.description,
+      },
+      today,
+    );
   }
 
   /**
@@ -159,8 +304,14 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
    * found" and "dropped by validation" are normal outcomes and return
    * `true`, same as success, so the caller knows whether it's safe to
    * commit this fetch's page state.
+   *
+   * `mode: 'listing'` treats the text as an inline listing: every event it
+   * states is extracted in one call, and each becomes its own candidate.
    */
-  async function processInput(input: ExtractionInput): Promise<boolean> {
+  async function processInput(
+    input: ExtractionInput,
+    mode: 'single' | 'listing' = 'single',
+  ): Promise<boolean> {
     if (tokensUsed >= options.maxTokens) {
       log(`max tokens (${options.maxTokens}) reached, skipping ${input.sourceUrl}`);
       // Unlike "no event found" or "dropped by validation", this item was
@@ -176,30 +327,16 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
       return true;
     }
     try {
-      const fields = await extractEvent(truncateForExtraction(input.text), extractOptions);
-      if (!fields) return true;
-      const draft = synthesizeDraft(
-        {
-          title: fields.title,
-          type: fields.type,
-          start_date: fields.start_date,
-          end_date: fields.end_date,
-          format: fields.format,
-          location: fields.location,
-          // The model may honestly have no canonical event URL to report
-          // (never fabricated) — fall back to the URL the pipeline itself
-          // fetched this content from, the same value already used for
-          // source_url.
-          url: fields.url ?? input.sourceUrl,
-          source_url: input.sourceUrl,
-          organizer: fields.organizer,
-          cost: fields.cost,
-          topics: fields.topics,
-          description: fields.description,
-        },
-        today,
-      );
-      acceptDraft(draft, input.sourceUrl);
+      const found =
+        mode === 'single'
+          ? [await extractEvent(truncateForExtraction(input.text), extractOptions)]
+          : await extractEvents(
+              truncateForExtraction(input.text, LISTING_EXTRACTION_TEXT_LIMIT),
+              extractOptions,
+            );
+      for (const fields of found) {
+        if (fields) acceptDraft(draftFromFields(fields, input.sourceUrl), input.sourceUrl);
+      }
       return true;
     } catch (err) {
       log(
@@ -234,10 +371,11 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
    */
   async function fetchAndProcess(
     url: string,
+    budget: SourceBudget,
     process: (body: string) => Promise<boolean>,
   ): Promise<void> {
     const previous = capturePageState(url);
-    const body = await fetchPage(url);
+    const body = await fetchPage(url, budget);
     if (body === undefined) return;
     let ok: boolean;
     try {
@@ -250,17 +388,36 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
   }
 
   async function processSource(source: Source): Promise<void> {
+    const budget: SourceBudget = { pagesFetched: 0 };
     switch (source.kind) {
       case 'ical': {
-        await fetchAndProcess(source.url, async (body) => {
-          for (const draft of parseICalFeed(body, source.url, today))
-            acceptDraft(draft, source.url);
-          return true;
+        // A feed carries no topics, and the schema requires at least one;
+        // nor a structured location, which an in-person event requires.
+        // Keywords first — free, no LLM call. Only an event that still
+        // isn't a valid candidate goes to the model, as the same
+        // hostile-text extraction as any page (relevance pre-filter included).
+        await fetchAndProcess(source.url, budget, async (body) => {
+          let allOk = true;
+          for (const event of parseICalEvents(body, source.url, today)) {
+            const { draft } = event;
+            const keyed = {
+              ...draft,
+              topics: keywordTopics(`${draft.title} ${event.description ?? ''}`, vocabulary),
+            };
+            if (keyed.topics.length > 0 && validationErrors(keyed).length === 0) {
+              candidates.push(keyed);
+            } else if (
+              !(await processInput({ text: icalExtractionText(event), sourceUrl: source.url }))
+            ) {
+              allOk = false;
+            }
+          }
+          return allOk;
         });
         return;
       }
       case 'rss': {
-        await fetchAndProcess(source.url, async (body) => {
+        await fetchAndProcess(source.url, budget, async (body) => {
           let allOk = true;
           for (const input of parseFeedItems(body, source.url)) {
             if (!(await processInput(input))) allOk = false;
@@ -270,28 +427,60 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
         return;
       }
       case 'event-page': {
-        await fetchAndProcess(source.url, (body) =>
+        await fetchAndProcess(source.url, budget, (body) =>
           processInput(extractionInputFromPage(body, source.url)),
         );
         return;
       }
+      case 'inline-listing': {
+        await fetchAndProcess(source.url, budget, (body) =>
+          processInput(extractionInputFromPage(body, source.url), 'listing'),
+        );
+        return;
+      }
+      case 'cecam-api': {
+        // The API supplies what the event page, rendered without
+        // JavaScript, lacks (dates, organisers); the page supplies the
+        // description. Each event page is fetched politely and its state
+        // kept like any other page, so an event already handled is
+        // "unchanged" next run and not re-extracted.
+        for (const event of await fetchCecamEvents(options.userAgent, options.fetchImpl)) {
+          const url = cecamEventUrl(event);
+          await fetchAndProcess(url, budget, (body) =>
+            processInput({
+              text: `${cecamEventText(event)}\n\n${extractionInputFromPage(body, url).text}`,
+              sourceUrl: url,
+            }),
+          );
+        }
+        return;
+      }
       case 'listing-page':
       case 'mailing-list-archive': {
-        await fetchAndProcess(source.url, async (body) => {
-          for (const link of findEventPageLinks(body, source.url)) {
-            await fetchAndProcess(link, (pageBody) =>
-              processInput(extractionInputFromPage(pageBody, link)),
-            );
-          }
-          // A child page's own failure is handled (and retried) at that
-          // child's own URL via the nested fetchAndProcess above; it does
-          // not make the listing page itself un-"seen".
-          return true;
-        });
+        // Page 1, then each `rel="next"` page in turn. An unchanged (or
+        // failed) page stops the walk: later pages only shift when page 1
+        // gains a post, so they are unchanged too.
+        let listingUrl: string | undefined = source.url;
+        for (let n = 0; listingUrl && n < MAX_LISTING_PAGES; n++) {
+          const current: string = listingUrl;
+          listingUrl = undefined;
+          await fetchAndProcess(current, budget, async (body) => {
+            for (const link of findEventPageLinks(body, current)) {
+              await fetchAndProcess(link, budget, (pageBody) =>
+                processInput(extractionInputFromPage(pageBody, link)),
+              );
+            }
+            listingUrl = findNextListingPage(body, current);
+            // A child page's own failure is handled (and retried) at that
+            // child's own URL via the nested fetchAndProcess above; it does
+            // not make the listing page itself un-"seen".
+            return true;
+          });
+        }
         return;
       }
       case 'telegram-channel': {
-        await fetchAndProcess(source.url, async (body) => {
+        await fetchAndProcess(source.url, budget, async (body) => {
           let allOk = true;
           for (const input of extractionInputsFromChannel(body)) {
             if (!(await processInput(input))) allOk = false;
@@ -300,22 +489,77 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
         });
         return;
       }
-      case 'mailbox':
-        log(`mailbox source "${source.name}" is not implemented, skipping`);
+      case 'mailbox': {
+        if (!options.mailbox) {
+          log(`mailbox source "${source.name}" has no IMAP credentials configured, skipping`);
+          return;
+        }
+        // Defaults to 'discovery', not INBOX: a dedicated account's mail
+        // filters route every mailing list's traffic into one shared
+        // label/folder rather than a distinct one per list — see
+        // docs/discovery-agent.md's *Mailing lists* section.
+        const folder = source.folder ?? 'discovery';
+        const fetchImpl = options.mailboxFetchImpl ?? fetchNewMailboxMessages;
+        const alreadySeen = (messageId: string) =>
+          state.pages[`mailbox:${folder}:${messageId}`] !== undefined;
+
+        let messages: ParsedMailMessage[];
+        try {
+          messages = await fetchImpl(options.mailbox, folder, alreadySeen);
+        } catch (err) {
+          errors.push({
+            source: source.url,
+            message: err instanceof Error ? err.message : String(err),
+          });
+          return;
+        }
+
+        // Each message is a synthetic "page" keyed by its Message-ID, reusing
+        // the same capture/restore idempotence as a real fetched page: a
+        // transient extraction failure rolls back and retries next run, but
+        // once fully handled (accepted, dropped, or off-topic) a message
+        // stays seen forever — Message-IDs are permanent, unlike page content.
+        for (const message of messages) {
+          const url = `mailbox:${folder}:${message.messageId}`;
+          const previous = capturePageState(url);
+          state.pages[url] = { fetchedAt: new Date().toISOString() };
+          let ok: boolean;
+          try {
+            // A mailing-list message is exactly as hostile as a web page —
+            // same extraction pipeline, no exceptions. `sourceUrl` is the
+            // source's own info page (not this message specifically): unlike
+            // every other kind, a post has no per-message URL of its own,
+            // and the schema requires source_url to be https://. This is
+            // safe because source_url is only used for the blocklist host
+            // check and PR-body display, never for dedup identity.
+            ok = await processInput({ text: message.text, sourceUrl: source.url });
+          } catch (err) {
+            restorePageState(url, previous);
+            throw err;
+          }
+          if (!ok) restorePageState(url, previous);
+        }
+        return;
+      }
     }
   }
 
-  for (const source of sources) {
-    pagesFetchedForSource = 0;
-    try {
-      await processSource(source);
-    } catch (err) {
-      errors.push({
-        source: source.url,
-        message: err instanceof Error ? err.message : String(err),
-      });
+  // A fixed pool of workers pulling from one queue: at most
+  // SOURCE_CONCURRENCY sources in flight, each started as soon as a slot frees.
+  const queue = [...sources];
+  async function worker(): Promise<void> {
+    for (let source = queue.shift(); source; source = queue.shift()) {
+      try {
+        await processSource(source);
+      } catch (err) {
+        errors.push({
+          source: source.url,
+          message: err instanceof Error ? err.message : String(err),
+        });
+      }
     }
   }
+  await Promise.all(Array.from({ length: SOURCE_CONCURRENCY }, worker));
 
   saveState(options.statePath, state);
   return { candidates, errors, tokensUsed };

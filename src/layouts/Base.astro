@@ -37,8 +37,8 @@ const fullTitle = path === '/' ? `${site.name} — ${site.tagline}` : `${title} 
     />
     <link rel="sitemap" href="/sitemap.xml" />
     {/* Applies a stored theme choice before first paint, so the page never
-    flashes the other theme. Without a stored choice the system preference
-    decides, in CSS. */}
+    flashes the other theme. Without a stored choice, dark is the default,
+    in CSS. */}
     <script is:inline>
       try {
         const choice = localStorage.getItem('theme');
@@ -76,9 +76,20 @@ const fullTitle = path === '/' ? `${site.name} — ${site.tagline}` : `${title} 
       <div class="site-foot__inner">
         <section class="site-foot__col">
           <h2 class="site-foot__head mono">About</h2>
-          <p>
-            <a href="/about/">About this site</a>
-          </p>
+          <ul>
+            <li>
+              <a href="/about/">About this site</a>
+            </li>
+            <li>
+              <a href="/sources/">Sources</a>
+            </li>
+            <li>
+              <a href="/graph/">Event map</a>
+            </li>
+            <li>
+              <a href="/donate/">Donate</a>
+            </li>
+          </ul>
         </section>
 
         <section class="site-foot__col">
@@ -109,6 +120,9 @@ const fullTitle = path === '/' ? `${site.name} — ${site.tagline}` : `${title} 
             </li>
             <li>
               <a href="/feed.xml">Atom feed</a>
+            </li>
+            <li>
+              <a href="/topics/">Feeds by topic</a>
             </li>
             <li>
               <a href="/events.json">JSON export</a>

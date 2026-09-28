@@ -24,6 +24,10 @@ export const DEADLINE_TYPES = [
 ] as const;
 export type DeadlineType = (typeof DEADLINE_TYPES)[number];
 
+/** Whether attending costs anything. `cost` says how much; this is what filters use. */
+export const EVENT_FEES = ['free', 'paid'] as const;
+export type EventFee = (typeof EVENT_FEES)[number];
+
 export const EVENT_STATUSES = ['scheduled', 'postponed', 'cancelled'] as const;
 export type EventStatus = (typeof EVENT_STATUSES)[number];
 
@@ -60,6 +64,7 @@ export interface RawEvent {
   organizer?: string;
   /** A short phrase for registration cost or fees, e.g. "Free" or "€200 early bird". */
   cost?: string;
+  fee?: EventFee;
   topics: string[];
   description: string;
   deadlines?: Deadline[];

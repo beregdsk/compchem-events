@@ -1,15 +1,63 @@
+import { createHash } from 'node:crypto';
 import { stringify } from 'yaml';
 import type { ISODate } from '../dates';
 import type { RawEvent } from '../types';
 
-/** ASCII, lowercase, hyphen-separated — matches the event id schema pattern. */
+/**
+ * Russian Cyrillic to Latin, so a title from a Russian-language source
+ * still yields a readable id instead of an empty one.
+ */
+const CYRILLIC: Record<string, string> = {
+  а: 'a',
+  б: 'b',
+  в: 'v',
+  г: 'g',
+  д: 'd',
+  е: 'e',
+  ё: 'e',
+  ж: 'zh',
+  з: 'z',
+  и: 'i',
+  й: 'i',
+  к: 'k',
+  л: 'l',
+  м: 'm',
+  н: 'n',
+  о: 'o',
+  п: 'p',
+  р: 'r',
+  с: 's',
+  т: 't',
+  у: 'u',
+  ф: 'f',
+  х: 'kh',
+  ц: 'ts',
+  ч: 'ch',
+  ш: 'sh',
+  щ: 'shch',
+  ъ: '',
+  ы: 'y',
+  ь: '',
+  э: 'e',
+  ю: 'iu',
+  я: 'ia',
+};
+
+/**
+ * ASCII, lowercase, hyphen-separated — matches the event id schema pattern.
+ * Never empty: a title with no Latin or Cyrillic letters (Chinese, Japanese)
+ * becomes "event-" plus a short hash of the title, so two such events don't
+ * share an id.
+ */
 export function slugifyTitle(title: string): string {
-  return title
-    .normalize('NFKD')
-    .replace(/[̀-ͯ]/g, '')
+  const slug = title
     .toLowerCase()
+    .replace(/[а-яё]/g, (c) => CYRILLIC[c] ?? '')
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
+  return slug || `event-${createHash('sha256').update(title).digest('hex').slice(0, 8)}`;
 }
 
 export interface DraftInput {
@@ -23,6 +71,7 @@ export interface DraftInput {
   source_url: string;
   organizer?: string;
   cost?: string;
+  fee?: RawEvent['fee'];
   topics: string[];
   description: string;
 }
@@ -53,6 +102,7 @@ export function synthesizeDraft(input: DraftInput, today: ISODate): RawEvent {
   if (input.location) draft.location = input.location;
   if (input.organizer) draft.organizer = input.organizer;
   if (input.cost) draft.cost = input.cost;
+  if (input.fee) draft.fee = input.fee;
   return draft;
 }
 

@@ -20,6 +20,73 @@ describe('buildConfig', () => {
     expect(result.config.github).toEqual({ token: 'gh-test-token', repo: 'acme/compchem-events' });
     expect(result.config.extract.apiKey).toBe('sk-test');
     expect(result.config.classify.apiKey).toBe('sk-test');
+    // No IMAP_* vars: mailbox stays undefined, exactly like a deployment
+    // that has no dedicated mailing-list account yet — see
+    // docs/discovery-agent.md, "Mailing lists".
+    expect(result.config.mailbox).toBeUndefined();
+  });
+
+  it('builds mailbox credentials when all three IMAP vars are set, with port/secure defaults', () => {
+    const result = buildConfig({
+      ...validEnv,
+      IMAP_HOST: 'imap.example.org',
+      IMAP_USER: 'discovery@example.org',
+      IMAP_PASSWORD: 'app-password',
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error('expected ok');
+    expect(result.config.mailbox).toEqual({
+      host: 'imap.example.org',
+      port: 993,
+      secure: true,
+      user: 'discovery@example.org',
+      password: 'app-password',
+    });
+  });
+
+  it('honours IMAP_PORT and IMAP_SECURE overrides', () => {
+    const result = buildConfig({
+      ...validEnv,
+      IMAP_HOST: 'imap.example.org',
+      IMAP_USER: 'discovery@example.org',
+      IMAP_PASSWORD: 'app-password',
+      IMAP_PORT: '143',
+      IMAP_SECURE: 'false',
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error('expected ok');
+    expect(result.config.mailbox).toEqual({
+      host: 'imap.example.org',
+      port: 143,
+      secure: false,
+      user: 'discovery@example.org',
+      password: 'app-password',
+    });
+  });
+
+  it('fails fast when only some IMAP_* vars are set (a likely typo)', () => {
+    expect(
+      buildConfig({
+        ...validEnv,
+        IMAP_HOST: 'imap.example.org',
+        IMAP_USER: 'discovery@example.org',
+      }),
+    ).toEqual({
+      ok: false,
+      error: 'IMAP_HOST, IMAP_USER and IMAP_PASSWORD must all be set together, or all omitted',
+    });
+  });
+
+  it('rejects a non-positive IMAP_PORT', () => {
+    expect(
+      buildConfig({
+        ...validEnv,
+        IMAP_HOST: 'imap.example.org',
+        IMAP_USER: 'discovery@example.org',
+        IMAP_PASSWORD: 'app-password',
+        IMAP_PORT: '0',
+      }),
+    ).toEqual({ ok: false, error: 'IMAP_PORT must be a positive number, got "0"' });
   });
 
   it('fails fast when GITHUB_TOKEN is missing', () => {

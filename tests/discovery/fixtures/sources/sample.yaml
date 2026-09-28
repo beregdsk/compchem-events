@@ -9,6 +9,11 @@
   url: https://example.org/feed.xml
   kind: rss
 
+- name: Good Mailbox
+  url: https://example.org/mailing-list
+  kind: mailbox
+  folder: Announcements
+
 - name: Missing Kind
   url: https://example.org/missing-kind
 

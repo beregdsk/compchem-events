@@ -1,5 +1,5 @@
-// Theme toggle. The system preference decides by default; this lets a reader
-// override it and remembers the choice.
+// Theme toggle. Dark is the default regardless of OS preference; this lets a
+// reader switch to light and remembers the choice.
 //
 // The override is a `data-theme` attribute on <html>, which global.css reads.
 // A tiny inline script in the document head applies the stored value before
@@ -13,16 +13,15 @@ const STORAGE_KEY = 'theme';
 
 const root = document.documentElement;
 const button = document.querySelector<HTMLButtonElement>('#theme-toggle');
-const prefersLight = window.matchMedia('(prefers-color-scheme: light)');
 
 function stored(): Theme | null {
   const value = root.dataset.theme;
   return value === 'light' || value === 'dark' ? value : null;
 }
 
-/** What the page is actually showing: the override if there is one, else the system. */
+/** What the page is actually showing: the override if there is one, else dark. */
 function current(): Theme {
-  return stored() ?? (prefersLight.matches ? 'light' : 'dark');
+  return stored() ?? 'dark';
 }
 
 if (button) {
@@ -46,7 +45,4 @@ if (button) {
     }
     label();
   });
-
-  // Follow the system if the reader has not overridden it.
-  prefersLight.addEventListener('change', label);
 }

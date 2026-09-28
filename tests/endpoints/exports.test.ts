@@ -55,6 +55,19 @@ describe('atomFeed', () => {
     expect(feed).toContain('<updated>2026-09-20T00:00:00Z</updated>');
   });
 
+  it('scopes title, self link and id to a topic feed', () => {
+    const scoped = atomFeed(events, at, {
+      title: 'newly added dft events',
+      path: '/topics/dft.xml',
+      idPath: '/topics/dft/',
+    });
+    expect(scoped).toContain('<title>CompChem Events — newly added dft events</title>');
+    expect(scoped).toContain(
+      '<link href="https://compchem-events.beregdsk.workers.dev/topics/dft.xml" rel="self"/>',
+    );
+    expect(scoped).toContain('<id>https://compchem-events.beregdsk.workers.dev/topics/dft/</id>');
+  });
+
   it('escapes special characters in titles', () => {
     const escaped = atomFeed([{ ...events[0]!, title: 'A & B <tag> "quoted"' }], at);
     expect(escaped).toContain('A &amp; B &lt;tag&gt; &quot;quoted&quot;');

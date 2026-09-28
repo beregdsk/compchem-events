@@ -2,14 +2,17 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   deriveStatus,
   eventById,
+  eventsWithTopic,
   hasOpenDeadline,
+  hasOpenTravelGrant,
   isStale,
   loadEvents,
   pastEvents,
+  seriesEditions,
   upcomingDeadlines,
   upcomingEvents,
 } from '../../src/lib/events';
-import type { RawEvent } from '../../src/lib/types';
+import type { LoadedEvent, RawEvent } from '../../src/lib/types';
 
 const opts = { eventsDir: 'tests/fixtures/valid', today: '2026-09-20', includeFixtures: true };
 
@@ -203,5 +206,61 @@ describe('warnings (do not throw)', () => {
     } finally {
       warnSpy.mockRestore();
     }
+  });
+});
+
+const loaded = (over: Partial<RawEvent>): LoadedEvent => ({
+  ...stub(over),
+  region: 'Online',
+  status_derived: 'upcoming',
+});
+
+describe('hasOpenTravelGrant', () => {
+  const grant = loaded({ deadlines: [{ type: 'travel_grant', date: '2026-10-01' }] });
+
+  it('is true while the travel-grant deadline is today or later', () => {
+    expect(hasOpenTravelGrant(grant, '2026-10-01')).toBe(true);
+  });
+
+  it('is false once it has passed', () => {
+    expect(hasOpenTravelGrant(grant, '2026-10-02')).toBe(false);
+  });
+
+  it('ignores other open deadlines', () => {
+    const other = loaded({ deadlines: [{ type: 'abstract', date: '2026-12-01' }] });
+    expect(hasOpenTravelGrant(other, '2026-10-01')).toBe(false);
+  });
+});
+
+describe('eventsWithTopic', () => {
+  it('keeps only events tagged with the topic', () => {
+    const events = [
+      loaded({ id: 'a-2027', topics: ['dft'] }),
+      loaded({ id: 'b-2027', topics: ['catalysis', 'dft'] }),
+      loaded({ id: 'c-2027', topics: ['catalysis'] }),
+    ];
+    expect(eventsWithTopic(events, 'dft').map((e) => e.id)).toEqual(['a-2027', 'b-2027']);
+  });
+});
+
+describe('seriesEditions', () => {
+  const events = [
+    loaded({ id: 'mol-2025', series: 'mol', start_date: '2025-06-01' }),
+    loaded({ id: 'mol-2027', series: 'mol', start_date: '2027-06-01' }),
+    loaded({ id: 'mol-2026', series: 'mol', start_date: '2026-06-01' }),
+    loaded({ id: 'solo-2027', series: 'solo' }),
+    loaded({ id: 'none-2027' }),
+  ];
+
+  it('groups editions newest first', () => {
+    expect(
+      seriesEditions(events)
+        .get('mol')!
+        .map((e) => e.id),
+    ).toEqual(['mol-2027', 'mol-2026', 'mol-2025']);
+  });
+
+  it('leaves out a series with a single edition', () => {
+    expect([...seriesEditions(events).keys()]).toEqual(['mol']);
   });
 });

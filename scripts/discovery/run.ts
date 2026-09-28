@@ -7,6 +7,7 @@ import { DEFAULT_JEV_MODEL } from '../../src/lib/discovery/classify-candidate';
 import { DEFAULT_EXTRACT_BASE_URL } from '../../src/lib/discovery/extract-client';
 import { DEFAULT_JEV_BASE_URL } from '../../src/lib/discovery/jev-client';
 import { fetchWithBrowser } from '../../src/lib/discovery/browser-fetch';
+import type { MailboxCredentials } from '../../src/lib/discovery/mailbox-client';
 import { runDiscoveryRun, type OrchestratorOptions } from '../../src/lib/discovery/orchestrator';
 import { runPipeline, type PipelineOptions } from '../../src/lib/discovery/pipeline';
 import { autoApproveHighConfidencePrs } from '../../src/lib/discovery/auto-approve';
@@ -21,6 +22,8 @@ export interface ResolvedConfig {
   extract: { apiKey: string; baseUrl: string; model: string };
   classify: { apiKey: string; baseUrl: string; model: string };
   github: { token: string; repo: string };
+  /** Undefined until IMAP_HOST/IMAP_USER/IMAP_PASSWORD are all set — `mailbox` sources stay inert until then. */
+  mailbox?: MailboxCredentials;
 }
 
 export type ConfigResult = { ok: true; config: ResolvedConfig } | { ok: false; error: string };
@@ -62,6 +65,34 @@ export function buildConfig(env: Record<string, string | undefined>): ConfigResu
     return { ok: false, error: `MAX_PRS must be a positive number, got "${env.MAX_PRS}"` };
   }
 
+  // Fully optional: a mailbox account is a human-only operational step (see
+  // docs/discovery-agent.md, "Mailing lists"), so none of these three set at
+  // all just leaves `mailbox` undefined and every `kind: 'mailbox'` source
+  // skips. Only a partial set (a likely typo, e.g. a copy-paste that missed
+  // one var) fails fast, matching this function's style everywhere else.
+  const imapVars = [env.IMAP_HOST, env.IMAP_USER, env.IMAP_PASSWORD];
+  const imapVarsSet = imapVars.filter((v) => v !== undefined).length;
+  if (imapVarsSet !== 0 && imapVarsSet !== imapVars.length) {
+    return {
+      ok: false,
+      error: 'IMAP_HOST, IMAP_USER and IMAP_PASSWORD must all be set together, or all omitted',
+    };
+  }
+  let mailbox: MailboxCredentials | undefined;
+  if (imapVarsSet > 0) {
+    const port = env.IMAP_PORT ? Number(env.IMAP_PORT) : 993;
+    if (!Number.isFinite(port) || port <= 0) {
+      return { ok: false, error: `IMAP_PORT must be a positive number, got "${env.IMAP_PORT}"` };
+    }
+    mailbox = {
+      host: env.IMAP_HOST!,
+      port,
+      secure: env.IMAP_SECURE !== 'false',
+      user: env.IMAP_USER!,
+      password: env.IMAP_PASSWORD!,
+    };
+  }
+
   return {
     ok: true,
     config: {
@@ -82,6 +113,7 @@ export function buildConfig(env: Record<string, string | undefined>): ConfigResu
         model: env.LLM_MODEL ?? DEFAULT_JEV_MODEL,
       },
       github: { token: githubToken, repo: githubRepo },
+      mailbox,
     },
   };
 }
@@ -104,6 +136,7 @@ async function main(): Promise<void> {
     maxTokens: cfg.maxTokens,
     extract: cfg.extract,
     browserFetchImpl: fetchWithBrowser,
+    mailbox: cfg.mailbox,
     log,
   };
   const pipelineResult = await runPipeline(pipelineOptions);

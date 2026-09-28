@@ -134,6 +134,26 @@ describe('politeFetch', () => {
     expect(sleeps).toEqual([4000]);
   });
 
+  it('spaces concurrent requests to one host an interval apart', async () => {
+    const { impl } = stubFetch({
+      'https://example.org/robots.txt': { status: 200, body: '' },
+      'https://example.org/a': { status: 200, body: 'a' },
+      'https://example.org/b': { status: 200, body: 'b' },
+      'https://example.org/c': { status: 200, body: 'c' },
+    });
+    const sleeps: number[] = [];
+    const options = baseOptions({
+      fetchImpl: impl,
+      sleepImpl: async (ms) => {
+        sleeps.push(ms);
+      },
+      minHostIntervalMs: 5000,
+    });
+    // `now` is frozen, so all three ask at the same instant.
+    await Promise.all(['a', 'b', 'c'].map((p) => politeFetch(`https://example.org/${p}`, options)));
+    expect(sleeps.sort((x, y) => x - y)).toEqual([5000, 10000]);
+  });
+
   it('reports a non-2xx response as an error', async () => {
     const { impl } = stubFetch({
       'https://example.org/robots.txt': { status: 200, body: '' },

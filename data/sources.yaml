@@ -1,8 +1,10 @@
 # Sources the discovery agent watches.
 #
-# This file is data for `docs/discovery-agent.md` (phase 5). No code reads it
-# yet. It exists so the agent, when it is built, starts from a checked list
-# instead of searching the open web on every run.
+# Read by the discovery agent (`docs/discovery-agent.md`) through
+# `src/lib/discovery/sources.ts`, and checked by `npm run validate` in CI: an
+# unknown field or kind, a non-https or repeated url, or a missing or
+# malformed `last_checked` fails the check. It exists so the agent starts
+# from a checked list instead of searching the open web on every run.
 #
 # Format:
 #   - name: CECAM
@@ -14,13 +16,23 @@
 #
 # kind:
 #   listing-page           index of many events; follow links to event pages
+#   inline-listing         page listing several events as text, not links;
+#                          all of them are extracted from the page itself
+#   cecam-api              CECAM's program, read from the JSON API its page
+#                          renders from (src/lib/discovery/cecam-client.ts)
 #   event-page             one recurring event with a stable URL
 #   rss                    feed; parse the feed, not the page
 #   ical                   iCalendar feed; parse directly, no LLM needed
 #   mailing-list-archive   public web archive of a list
 #   mailbox                a list we are subscribed to, read over IMAP
-#                          (see "Mailing lists" in docs/discovery-agent.md;
-#                          not implemented — no mailbox entries yet)
+#                          (see "Mailing lists" in docs/discovery-agent.md).
+#                          Optional `folder:` names the IMAP folder to read;
+#                          defaults to `discovery`, the one shared label/
+#                          folder every list's mail filter routes into on
+#                          the dedicated mailbox account (not INBOX — every
+#                          `mailbox` source is meant to share this same
+#                          folder, not get one each). IMAP_HOST/IMAP_USER/
+#                          IMAP_PASSWORD are set on the deployment host.
 #   telegram-channel       public channel; fetch the anonymous web preview at
 #                          t.me/s/<channel>, not t.me/<channel> (the latter
 #                          redirects to the app). No login needed. Posts are
@@ -39,21 +51,27 @@
 
 - name: CECAM
   url: https://www.cecam.org/program?type=all&month=all&location=all
-  kind: listing-page
+  kind: cecam-api
   added: 2026-09-23
-  last_checked: 2026-09-23
+  last_checked: 2026-09-28
   notes: >-
     The single highest-value source: flagship and node workshops, schools and
-    conferences, filterable by type and month. robots.txt allows everything.
-    Event pages are at /workshop-details/<id>.
+    conferences. The program page renders its list in the browser from
+    members.cecam.org/api/all-events, so as a listing-page it yielded no
+    event links at all; checked 2026-09-28, the API returned 29 upcoming
+    events over 2 pages. Event pages are at /workshop-details/<slug> and
+    carry the description but, without JavaScript, no dates — the API
+    supplies those. robots.txt allows everything on both hosts.
 
 - name: CCL conference announcements
   url: https://server.ccl.net/chemistry/announcements/conferences/index.shtml
-  kind: listing-page
+  kind: inline-listing
   added: 2026-09-23
   last_checked: 2026-09-23
   notes: >-
-    The public web face of the CCL mailing list, ordered by date as YY.MM.DD.
+    The public web face of the CCL mailing list, ordered by date as YY.MM.DD,
+    one line per announcement on the page itself (inline-listing since
+    2026-09-28 — it has no same-host per-event links to follow).
     No robots.txt and no login. Submissions are user-supplied and, in CCL's
     own words, not reviewed for scientific content; manual approval only
     filters spam. Screen hard and expect stale rows.
@@ -67,7 +85,79 @@
     Carries some workshop and conference announcements, but thin and slow —
     the newest item on 2026-09-23 was dated 2025-11-16. The Psi-k mailing
     list itself holds far more; its forum archive is login-gated, so that
-    traffic is only reachable by mailbox. See the candidates block.
+    traffic is only reachable by mailbox. See the entry below.
+
+- name: Psi-k
+  url: https://psi-k.net/important-new-psi-k-mailing-list/
+  kind: mailbox
+  added: 2026-09-27
+  last_checked: 2026-09-27
+  notes: >-
+    Read over IMAP from the dedicated `discovery` folder — a Gmail filter
+    routes the list's mail there. Confirmed live 2026-09-27: 157 real list
+    messages present, all parsed cleanly (subject + plaintext body, correct
+    Message-ID). `folder` omitted; defaults to `discovery` (see this file's
+    format comment above). `url` is the list's own announcement/info page,
+    not a per-message link — every mailbox candidate's source_url is this
+    same value, since a mailing-list post has no per-message URL of its own.
+
+- name: Molecular Dynamics News
+  url: https://jmhutson.webspace.durham.ac.uk/mdn/
+  kind: mailbox
+  added: 2026-09-27
+  last_checked: 2026-09-27
+  notes: >-
+    Conference announcements, faculty/postdoc positions and new-software
+    notices for gas-phase molecular dynamics, collision and reaction
+    dynamics, and high-resolution spectroscopy of van der Waals complexes.
+    Read over IMAP from the shared `discovery` folder like every other
+    mailbox source (see this file's format comment above); `folder`
+    omitted. `url` is the list's own maintainer-run info/join page —
+    confirmed live 2026-09-27 (loads, names the list, links to JISCMail).
+    jiscmail.ac.uk itself returns HTTP 403 to a scripted fetch (same
+    anti-bot class documented elsewhere in this file for RSC/ICTP/
+    PSIK-FORUM), which is why this entry doesn't cite it directly.
+
+- name: Spectroscopy Group
+  url: https://www.jiscmail.ac.uk/lists/SPECTROSCOPY-GROUP.html
+  kind: mailbox
+  added: 2026-09-27
+  last_checked: 2026-09-27
+  notes: >-
+    General spectroscopy-community discussion and announcement list —
+    conferences among the traffic. Read over IMAP from the shared
+    `discovery` folder; `folder` omitted. No independent (non-JISCMail)
+    page describing this specific list was found, and jiscmail.ac.uk
+    itself returns HTTP 403 to a scripted fetch (same Cloudflare-challenge
+    class already documented in this file for RSC/ICTP/PSIK-FORUM), so
+    this `url` could not be confirmed by an automated fetch — liveness is
+    per the subscriber (the list owner of this repo), confirmed 2026-09-27.
+
+- name: ICN-CONF
+  url: https://www.jiscmail.ac.uk/ICN-CONF
+  kind: mailbox
+  added: 2026-09-27
+  last_checked: 2026-09-27
+  notes: >-
+    Meeting announcements in (bio)inorganic chemistry — conferences,
+    workshops and summer schools — grown out of the ECOSTBio COST Action
+    (CM1305). Read over IMAP from the shared `discovery` folder; `folder`
+    omitted. Same jiscmail.ac.uk fetch limitation as the Spectroscopy
+    Group entry above: 403 to a scripted fetch, liveness confirmed
+    2026-09-27 by the subscriber rather than an automated check.
+
+- name: CCPBioSim mailing list
+  url: https://www.ccpbiosim.org/
+  kind: mailbox
+  added: 2026-09-27
+  last_checked: 2026-09-27
+  notes: >-
+    The CCPBioSim network's own mailing list — training, talks and
+    announcements that don't always make the events page above. Distinct
+    from the "CCPBioSim" listing-page entry below, which only covers that
+    published page. Read over IMAP from the shared `discovery` folder;
+    `folder` omitted. `url` is the network's own homepage, confirmed live
+    2026-09-27: it names the list and links subscribers to JISCMail.
 
 - name: Gordon Research Conferences
   url: https://www.grc.org/find-a-conference/
@@ -118,21 +208,24 @@
 
 - name: CCPBioSim
   url: https://www.ccpbiosim.org/events/upcoming-events
-  kind: listing-page
+  kind: inline-listing
   added: 2026-09-23
   last_checked: 2026-09-23
   notes: >-
     Biomolecular simulation training and workshops. Note the domain: the
-    older ccpbiosim.ac.uk redirects here.
+    older ccpbiosim.ac.uk redirects here. Events are listed as text (date,
+    title, place, one line of summary) with no per-event pages, so
+    inline-listing since 2026-09-28.
 
 - name: EuChemS Division of Computational and Theoretical Chemistry
   url: https://www.euchems.eu/divisions/computational-chemistry-2/conferences/
-  kind: listing-page
+  kind: inline-listing
   added: 2026-09-23
   last_checked: 2026-09-23
   notes: >-
     Small, curated and directly on topic. The best precision-per-fetch of any
-    source here.
+    source here. Conferences are listed as text with links to their own
+    (other-host) sites, so inline-listing since 2026-09-28.
 
 - name: EuChemS events calendar
   url: https://www.euchems.eu/events-overview/euchems-events-calendar/
@@ -201,6 +294,119 @@
     example of the kind. Fetch the /s/ web-preview path, which serves recent
     posts over plain HTTP with no login.
 
+- name: Научные конференции (Telegram)
+  url: https://t.me/s/confsci
+  kind: telegram-channel
+  added: 2026-09-28
+  last_checked: 2026-09-28
+  notes: >-
+    Russian-language channel (~15.6K subscribers) announcing Russian and
+    international conferences across the natural and technical sciences —
+    one post per event: title, dates and place, application deadline, and
+    a worded link ("Ссылка") to the event page. Very broad (mechanics,
+    microbiology, telecoms…), so screen hard; worth it for Russian
+    chemistry meetings the English-language sources never carry. Same /s/
+    web-preview path as the channel above, 20 recent posts per fetch.
+
+- name: Химическая информация (cheminform.ru) — конференции и семинары
+  url: https://cheminform.ru/category/konferenczii-i-seminary/
+  kind: listing-page
+  added: 2026-09-28
+  last_checked: 2026-09-28
+  notes: >-
+    Russian chemistry news site run from IGIC RAS (hia@igic.ras.ru); this
+    category posts one article per Russian chemistry conference or school,
+    newest first, 10 a page, 11 pages (~110 posts) when checked. Posts go
+    up months ahead, so in-field ones sit deep: CMSAM-2026 (computer
+    modelling and structural analysis of molecules) was on page 3 — the
+    agent follows rel="next" up to 5 pages. Mostly experimental and
+    general chemistry, so screen hard. The category's /feed/ serves HTML,
+    not RSS. /konferenczii-2026/ is a year index of the same posts.
+    robots.txt disallows only /wp-admin/.
+
+- name: Химическая информация (cheminform.ru) — вебинары
+  url: https://cheminform.ru/category/vebinar/
+  kind: listing-page
+  added: 2026-09-28
+  last_checked: 2026-09-28
+  notes: >-
+    The same site's webinar category, 5 pages when checked — mostly
+    re-posted English-language webinars (ACS, MDPI journals, vendors),
+    several on AI and ML for chemistry and drug design. Screen hard.
+
+- name: Fritz Haber Institute (MPG) workshops and conferences
+  url: https://www.fhi.mpg.de/1466547/workshops_conferences
+  kind: listing-page
+  added: 2026-09-28
+  last_checked: 2026-09-28
+  notes: >-
+    FHI Berlin's own workshops and conferences — its Theory department makes
+    many of them electronic-structure and catalysis modelling. The link
+    filter keeps ~22 /events/<id>/ pages when checked.
+
+- name: MPI for the Physics of Complex Systems (MPG) workshops
+  url: https://www.pks.mpg.de/events/workshops-seminars
+  kind: listing-page
+  added: 2026-09-28
+  last_checked: 2026-09-28
+  notes: >-
+    Dresden's visitors-programme workshops and seminars, one short-name page
+    each (/atom26, /dash27, …). Mostly physics; the chemical-physics and
+    quantum-dynamics ones are the finds, so screen hard.
+
+- name: Hünfeld workshop (MPI-NAT)
+  url: https://www.mpinat.mpg.de/workshop/huenfeld
+  kind: event-page
+  added: 2026-09-28
+  last_checked: 2026-09-28
+  notes: >-
+    "Computer Simulation and Theory of Macromolecules", the annual
+    biomolecular-simulation workshop at Hünfeld monastery, run from MPI for
+    Multidisciplinary Sciences. One stable page per year's edition.
+
+- name: Chimica 4.0 (University of Turin) schools
+  url: https://www.chimica4-0.unito.it/category/summerschool/
+  kind: listing-page
+  added: 2026-09-28
+  last_checked: 2026-09-28
+  notes: >-
+    Schools of UniTo's Chemistry 4.0 excellence project, some co-promoted by
+    the Italian Chemical Society's theoretical/computational divisions — e.g.
+    "Chemistry through the eyes of AI and ML" (Sept 2026) and the
+    chemometrics-and-ML-with-Python school. Italian and English.
+
+- name: Chinese Chemical Society meeting notices (中国化学会 会议通知)
+  url: https://www.chemsoc.org.cn/meeting/home/announcement/
+  kind: listing-page
+  added: 2026-09-28
+  last_checked: 2026-09-28
+  notes: >-
+    The CCS's own notices for its national meetings, ~30 per page, each with
+    its own page — among them the 全国理论与计算化学会议 (national theoretical
+    and computational chemistry conference; 16th announced 2 Sept 2026). All
+    of chemistry, in Chinese, so screen hard; the model gives English
+    titles. robots.txt allows the path.
+
+- name: Japan Society for Molecular Science co-sponsored events (分子科学会)
+  url: https://www.molsci.jp/activities/cosponsor/
+  kind: listing-page
+  added: 2026-09-28
+  last_checked: 2026-09-28
+  notes: >-
+    Events the JSMS co-sponsors, one notice page each — theoretical
+    chemistry meetings (理論化学討論会) among them. In Japanese. The society's
+    own annual meeting (分子科学討論会) has a page per year at /<year>/.
+
+- name: Virtual Winter School on Computational Chemistry
+  url: https://winterschool.cc/
+  kind: event-page
+  added: 2026-09-28
+  last_checked: 2026-09-28
+  notes: >-
+    Free online school, held each January (25-29 Jan 2027 when checked);
+    lectures and workshops across computational and theoretical chemistry.
+    One stable homepage per edition.
+
 - name: IUPAC events calendar
   url: https://iupac.org/events/?ical=1
   kind: ical
@@ -246,6 +452,52 @@
     verified either way. Broad across all of chemistry (webinars,
     publications workshops, division events), so filter hard on topic.
 
+- name: SCM events
+  url: https://www.scm.com/events/
+  kind: inline-listing
+  added: 2026-09-28
+  last_checked: 2026-09-28
+  notes: >-
+    Software for Chemistry & Materials (Amsterdam Modeling Suite / ADF).
+    "Upcoming events & Webinars" is a list of dates, title and city on the
+    page itself. When checked it held mostly trade shows and big meetings
+    where SCM has a booth (Battery Show, ECS 250, AIChE, MRS) — screen
+    hard; its own workshops and webinars are the real finds. robots.txt
+    allows everything, Crawl-delay: 10.
+
+- name: RSEQ events calendar
+  url: https://rseq.org/eventos/?ical=1
+  kind: ical
+  added: 2026-09-28
+  last_checked: 2026-09-28
+  notes: >-
+    Spanish Royal Society of Chemistry — listed DFT2026 (Donostia) and, when
+    checked, the 14th OpenMolcas Developers' Workshop among 24 upcoming
+    events. "The Events Calendar" plugin like Telluride/IUPAC, so parse the
+    feed and skip the HTML. All of chemistry, mostly Spanish meetings, so
+    filter hard on topic. robots.txt allows everything.
+
+- name: Sanibel Symposium
+  url: https://sanibelsymposium.qtp.ufl.edu/
+  kind: event-page
+  added: 2026-09-28
+  last_checked: 2026-09-28
+  notes: >-
+    Annual "theory meeting for theoreticians" (quantum theory of atoms,
+    molecules and materials). One stable homepage that always announces
+    the next edition — the 66th, 21-26 Feb 2027, St. Augustine Beach FL,
+    when checked.
+
+- name: International Congress of Quantum Chemistry (IAQMS)
+  url: https://www.iaqms.org/congress.php
+  kind: event-page
+  added: 2026-09-28
+  last_checked: 2026-09-28
+  notes: >-
+    The Academy's own page for the triennial ICQC series; lists the next
+    congress first (18th, Berkeley, 31 May - 5 Jun 2026, when checked). Very
+    low volume, very high relevance.
+
 # ---------------------------------------------------------------------------
 # Candidates: checked and NOT usable as sources. Kept so nobody re-derives
 # these findings. Each was checked on 2026-09-23.
@@ -253,8 +505,23 @@
 # Psi-k forum event board — https://psi-k.net/wps-forums/events/
 #   The mailing list is mirrored here, but posts are login-gated: the sitemap
 #   advertises thousands of /wps_forum_subs/ URLs and every one of them
-#   returns HTTP 200 serving the *homepage* to an anonymous fetch. This is
-#   the case that justifies mailbox ingestion.
+#   returns HTTP 200 serving the *homepage* to an anonymous fetch — the
+#   case that justified mailbox ingestion, now live (see the `kind: mailbox`
+#   entry above). The list itself moved in 2025 from this forum to JISCMail
+#   (psi-k.net/important-new-psi-k-mailing-list, checked 2026-09-26, HTTP
+#   200; the JISCMail subscribe page itself returns 403 to a scripted
+#   fetch, so cite the announcement instead — it's what the live entry's
+#   `url` points at).
+#
+#   JISCMail also publishes a public archive of the list itself
+#   (jiscmail.ac.uk/cgi-bin/wa-jisc.exe?A1=<period>&L=PSIK-FORUM, no login) —
+#   checked 2026-09-26, but it does NOT qualify as an ordinary web source:
+#   the whole jiscmail.ac.uk domain sits behind a Cloudflare managed
+#   challenge that returns HTTP 403 ("Just a moment...") to both a plain
+#   fetch and this pipeline's own real-browser fallback
+#   (browser-fetch.ts's fetchWithBrowser, the same one that gets past
+#   ACS's Incapsula challenge) — it never resolved past the challenge in a
+#   live test. Same class of failure as RSC and ICTP below.
 #
 # ICTP scientific calendar — https://www.ictp.it/home/scientific-calendar
 #   www.ictp.it refuses a scripted user agent (connection closed, no status).
@@ -277,6 +544,47 @@
 #   an identified bot user agent and a spoofed browser one — robots.txt
 #   itself allows the path, so this is not a robots.txt block. Same class
 #   of failure as ICTP's www.ictp.it above.
+#
+# Russian Academy of Sciences events — https://new.ras.ru/press-center/events-additional/
+#   Checked 2026-09-28. HTTP 403 for the whole new.ras.ru host, robots.txt
+#   and homepage included, to a plain fetch, a browser user agent, this
+#   pipeline's real-browser fallback, and an outside fetcher alike — an
+#   IP/geo block, not a bot challenge (the deployment host is in KZ). The
+#   older www.ras.ru answers but carries only news, no events listing.
+#   Usable only from an allowed network.
+#
+# Regional and Telegram search, 2026-09-28 (all fetched that day)
+#   SCI Divisione di Chimica Teorica e Computazionale —
+#   societachimica.it/it/divisioni/teocomp/home: live, but no 2026/27 event
+#   on it; its schools surface through the Chimica 4.0 entry above instead.
+#   RFCT / ThéMoSiA — chimie-theorique.cnrs.fr refused the connection.
+#   CNRS Chimie agenda — inc.cnrs.fr/fr/event-list: live, but institutional
+#   and general chemistry (anniversaries, ERC training, organic chemistry).
+#   CCP9 — ccp9.ac.uk/events/: newest entry 2025; its 2026 meeting was only
+#   in /news/. ICAM-I2CAM /workshops: 404.
+#   Telegram: @compchemistry redirects to t.me/compchemistry — no public /s/
+#   preview (a group, or preview off), so unreadable without an account.
+#   Probed and unusable: compchem, quantumchemistry, cheminformatics,
+#   mlchemistry, chemconf, chemistry_conferences, sciconf (no preview);
+#   comp_chem (exam prep), ai4science (paper reading). allconferencealertt
+#   and similar "conference alert" channels relay predatory listing farms —
+#   the same class rejected below (waset, 10times).
+#
+# DFT2026 and related, searched 2026-09-28
+#   dft2026.com — did not answer a scripted fetch at all, and the conference
+#   (21st DFT, Donostia, 23-27 Aug 2026) is over; each edition gets its own
+#   site, so there is no stable series URL to watch. It was found via RSEQ
+#   (live entry above). uik.eus (Basque summer courses) also listed it, but
+#   covers every discipline. ISTCP US (istcp.org) says only "next
+#   conference: to be announced". psi-k.net/events/ is the closed forum
+#   (newest post 2024). max-centre.eu/events renders its list client-side
+#   and exposes no feed. The yearly Symposium on Theoretical Chemistry and
+#   the Electronic Structure workshop move host site every edition.
+#   Rejected as other people's curation (see labinitio.org above):
+#   lcpq.ups-tlse.fr/congres, uregina.ca/~eastalla/conf.html,
+#   quantumdynamicsconferences.wikidot.com. Rejected as commercial/predatory
+#   listing farms: 10times.com, waset.org, conferenceindex.org,
+#   internationalconferencealerts.com, *.annualcongress.com.
 #
 # ACS meetings calendar — https://www.acs.org/meetings/events-calendar.html
 # and https://www.acs.org/events/acs-meetings/future-meetings.html

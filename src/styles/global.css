@@ -1,12 +1,9 @@
 /* Isosurface — dark-first editorial grid. Spec 2026-09-21 §5-6.
    System fonts only (spec D2). No webfonts, no external requests.
 
-   Two themes. Dark is the default and lives on :root; the light palette is
-   declared twice, once for readers whose system asks for it and once for
-   readers who picked it with the masthead toggle, because CSS offers no way to
-   share one block between a media query and an attribute selector. The two
-   copies are asserted identical in tests/styles/contrast.test.ts, so they
-   cannot drift apart. */
+   Two themes. Dark is the default and lives on :root, unconditionally — the
+   reader's OS preference is not consulted, only their explicit choice via the
+   masthead toggle. The light palette lives solely on `:root[data-theme='light']`. */
 
 :root {
   color-scheme: dark light;
@@ -60,28 +57,7 @@
 }
 
 /* Light theme — warm paper, never white, so the stipple has something to sit
-   on. Keep these two blocks byte-identical. */
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme='dark']) {
-    color-scheme: light;
-
-    --bg: #f4efe4;
-    --bg-raise: #fdfaf2;
-    --fg: #17202a;
-    --fg-muted: #586470;
-    --rule: #ded5c4;
-    --rule-strong: #bfb39c;
-    --control: #6f6552;
-
-    --lobe-neg: #15528f;
-    --lobe-neg-soft: #e4edf8;
-    --lobe-pos: #a3301d;
-    --lobe-pos-soft: #f8e5e0;
-
-    --field-opacity: 0.42;
-  }
-}
-
+   on. Only reachable via the masthead toggle's explicit choice. */
 :root[data-theme='light'] {
   color-scheme: light;
 
@@ -673,6 +649,47 @@ a:hover {
   overflow-wrap: anywhere;
 }
 
+/* Related events on a detail page: the event's neighbours on the map. */
+.related {
+  margin-block: var(--space-l) var(--space-m);
+}
+
+.related__heading {
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--fg-muted);
+  margin-block: var(--space-m) var(--space-xs);
+}
+
+.related__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-block-start: 1px solid var(--rule);
+}
+
+.related__list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-xs) var(--space-s);
+  padding-block: var(--space-xs);
+  border-block-end: 1px solid var(--rule);
+}
+
+.related__list time,
+.related__aside {
+  margin-inline-start: auto;
+}
+
+/* Muted rather than faded: past links keep text contrast. */
+.related__list--past a {
+  color: var(--fg-muted);
+}
+
 .deadlines {
   border-collapse: collapse;
   width: 100%;
@@ -768,4 +785,114 @@ a:hover {
   font-family: var(--font-mono);
   font-size: var(--step--1);
   white-space: nowrap;
+}
+
+/* Event map (/graph/). Spec 2026-09-28. Type is shape, not colour; blue marks
+   what you can still attend. Past events dim their shape, never their label —
+   see tests/styles/contrast.test.ts. */
+.graph {
+  margin: var(--space-l) 0;
+}
+
+.graph__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 75vh;
+  background: var(--bg-raise);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+}
+
+.graph.is-live .graph__svg {
+  cursor: grab;
+  /* none, not pan-y: Chrome ignores touch-action on SVG children, so pan-y here
+     would let the browser take a vertical node drag. The script scrolls the
+     page itself for a one-finger swipe on the background (src/scripts/graph.ts). */
+  touch-action: none;
+}
+
+.graph__edge {
+  stroke: var(--rule-strong);
+  stroke-width: 1.2;
+}
+
+.graph-node__shape {
+  fill: var(--fg);
+  stroke: var(--bg-raise);
+  stroke-width: 1.5;
+}
+
+.graph-node__shape--ring {
+  fill: none;
+  stroke: var(--fg);
+  stroke-width: 2.5;
+}
+
+.graph-node__halo {
+  fill: none;
+  stroke: var(--lobe-neg);
+  stroke-width: 2;
+}
+
+.graph-node__label {
+  fill: var(--fg);
+  font-family: var(--font-sans);
+  font-size: 13px;
+}
+
+.graph-node--past .graph-node__shape {
+  opacity: 0.35;
+}
+
+.graph-node--past .graph-node__label {
+  fill: var(--fg-muted);
+}
+
+.graph-node {
+  cursor: pointer;
+}
+
+.graph-node:focus-visible {
+  outline: none;
+}
+
+.graph-node:focus-visible .graph-node__shape {
+  stroke: var(--lobe-neg);
+  stroke-width: 3;
+}
+
+.graph.is-highlighting .graph-node:not(.is-lit),
+.graph.is-highlighting .graph__edge:not(.is-lit) {
+  opacity: 0.15;
+}
+
+.graph.is-highlighting .graph__edge.is-lit {
+  stroke: var(--lobe-neg);
+}
+
+.graph__legend ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-m);
+  margin: var(--space-s) 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--fg-muted);
+  font-size: var(--step--1);
+}
+
+.graph__legend li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.graph__legend svg {
+  width: 1.1em;
+  height: 1.1em;
+}
+
+.graph-clusters > li + li {
+  margin-top: var(--space-s);
 }

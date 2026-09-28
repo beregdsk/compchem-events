@@ -10,6 +10,10 @@ export interface FilterState {
   /** Inclusive upper bound of the date window, ISO `YYYY-MM-DD`. */
   to: string;
   deadline: boolean;
+  /** Only events with an open travel-grant deadline. */
+  grant: boolean;
+  /** `free` or `paid`; empty for any. An event with no `fee` matches only "any". */
+  fee: string;
 }
 
 export const EMPTY_FILTER: FilterState = {
@@ -22,6 +26,8 @@ export const EMPTY_FILTER: FilterState = {
   from: '',
   to: '',
   deadline: false,
+  grant: false,
+  fee: '',
 };
 
 /** The shape the server encodes into each row's data attributes. */
@@ -36,6 +42,8 @@ export interface FilterRow {
   start: string;
   end: string;
   openDeadline: boolean;
+  openGrant: boolean;
+  fee: string;
 }
 
 export function parseFilterState(params: URLSearchParams): FilterState {
@@ -52,6 +60,8 @@ export function parseFilterState(params: URLSearchParams): FilterState {
     from: params.get('from') ?? '',
     to: params.get('to') ?? '',
     deadline: params.get('deadline') === 'open',
+    grant: params.get('grant') === 'open',
+    fee: params.get('fee') ?? '',
   };
 }
 
@@ -66,6 +76,8 @@ export function serialiseFilterState(state: FilterState): URLSearchParams {
   if (state.from) params.set('from', state.from);
   if (state.to) params.set('to', state.to);
   if (state.deadline) params.set('deadline', 'open');
+  if (state.grant) params.set('grant', 'open');
+  if (state.fee) params.set('fee', state.fee);
   return params;
 }
 
@@ -87,6 +99,8 @@ export function matchesFilter(row: FilterRow, state: FilterState): boolean {
   if (state.from && row.end < state.from) return false;
   if (state.to && row.start > state.to) return false;
   if (state.deadline && !row.openDeadline) return false;
+  if (state.grant && !row.openGrant) return false;
+  if (state.fee && row.fee !== state.fee) return false;
   return true;
 }
 
@@ -101,5 +115,7 @@ export function rowFromDataset(dataset: Record<string, string | undefined>): Fil
     start: dataset.start ?? '',
     end: dataset.end ?? '',
     openDeadline: dataset.deadline === 'open',
+    openGrant: dataset.grant === 'open',
+    fee: dataset.fee ?? '',
   };
 }

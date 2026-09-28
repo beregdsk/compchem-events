@@ -24,7 +24,6 @@ function palette(selector: string): Record<string, string> {
 
 const DARK = palette(':root {');
 const LIGHT = palette(":root[data-theme='light'] {");
-const LIGHT_BY_SYSTEM = palette(":root:not([data-theme='dark']) {");
 
 function channel(value: number): number {
   const c = value / 255;
@@ -71,13 +70,6 @@ describe('themes', () => {
     expect(Object.keys(LIGHT).length).toBeGreaterThan(0);
   });
 
-  // The light palette has to be declared twice: once for the system preference
-  // and once for the reader's explicit choice. Nothing in CSS keeps the copies
-  // in step, so this does.
-  it('declares the same light values for the system preference and the toggle', () => {
-    expect(LIGHT_BY_SYSTEM).toEqual(LIGHT);
-  });
-
   it('repaints every colour token, leaving none inherited from the dark theme', () => {
     const colours = Object.keys(DARK).filter((name) => name !== 'field-opacity');
     expect(Object.keys(LIGHT).sort()).toEqual(colours.sort());
@@ -91,5 +83,16 @@ describe('themes', () => {
   it('lets the reader-chosen theme drive native controls too', () => {
     expect(block(":root[data-theme='light'] {")).toMatch(/color-scheme:\s*light/);
     expect(block(":root[data-theme='dark'] {")).toMatch(/color-scheme:\s*dark/);
+  });
+});
+
+describe('event map', () => {
+  // Past nodes dim their shape, never their label: a label at 35% opacity
+  // would fail AA. The label instead uses --fg-muted, whose contrast against
+  // --bg-raise (the graph's ground) is already asserted above.
+  it('keeps past-event labels at full opacity in a tested colour', () => {
+    const rule = block('.graph-node--past .graph-node__label {');
+    expect(rule).toMatch(/fill:\s*var\(--fg-muted\)/);
+    expect(rule).not.toMatch(/opacity/);
   });
 });

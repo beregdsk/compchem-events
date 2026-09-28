@@ -4,7 +4,7 @@ import { loadEvents, upcomingEvents } from '../lib/events';
 import type { LoadedEvent } from '../lib/types';
 import { site, siteDomain } from '../../site.config';
 
-export function eventsCalendar(events: LoadedEvent[], stamp: Date): string {
+export function eventsCalendar(events: LoadedEvent[], stamp: Date, scope = 'events'): string {
   const items: VEventInput[] = events.map((e) => ({
     uid: `${e.id}@${siteDomain}`,
     summary: e.title,
@@ -18,7 +18,7 @@ export function eventsCalendar(events: LoadedEvent[], stamp: Date): string {
         : [e.location?.venue, e.location?.city, e.location?.country].filter(Boolean).join(', '),
     cancelled: e.status === 'cancelled',
   }));
-  return buildCalendar(`${site.name} — events`, items, stamp);
+  return buildCalendar(`${site.name} — ${scope}`, items, stamp);
 }
 
 export const GET: APIRoute = () =>

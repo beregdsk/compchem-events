@@ -19,6 +19,15 @@ describe('slugifyTitle', () => {
     expect(slugifyTitle("École d'Été: DFT & Beyond!")).toBe('ecole-d-ete-dft-beyond');
   });
 
+  it('transliterates Cyrillic, so Russian titles get a readable id', () => {
+    expect(slugifyTitle('Школа по квантовой химии 2027')).toBe('shkola-po-kvantovoi-khimii-2027');
+  });
+
+  it('never returns an empty slug', () => {
+    expect(slugifyTitle('量子化学会议')).toMatch(/^event-[0-9a-f]{8}$/);
+    expect(slugifyTitle('量子化学会议')).not.toBe(slugifyTitle('理论化学会议'));
+  });
+
   it('collapses repeated separators and trims leading/trailing hyphens', () => {
     expect(slugifyTitle('  --Multiple   Spaces--  ')).toBe('multiple-spaces');
   });
@@ -35,6 +44,7 @@ const fullInput: DraftInput = {
   source_url: 'https://organiser.example.org/symposium-2027/',
   organizer: 'Test Organiser',
   cost: 'Free',
+  fee: 'free',
   topics: ['photochemistry', 'excited-states'],
   description: 'A symposium on excited-state photochemistry.',
 };
@@ -48,17 +58,20 @@ describe('synthesizeDraft', () => {
     expect(draft.location).toEqual({ city: 'Testville', country: 'DE' });
     expect(draft.organizer).toBe('Test Organiser');
     expect(draft.cost).toBe('Free');
+    expect(draft.fee).toBe('free');
   });
 
   it('omits location, organizer and cost entirely when absent, never as undefined keys', () => {
-    const { location, organizer, cost, ...rest } = fullInput;
+    const { location, organizer, cost, fee, ...rest } = fullInput;
     void location;
     void organizer;
     void cost;
+    void fee;
     const draft = synthesizeDraft(rest, '2026-09-23');
     expect('location' in draft).toBe(false);
     expect('organizer' in draft).toBe(false);
     expect('cost' in draft).toBe(false);
+    expect('fee' in draft).toBe(false);
   });
 });
 

@@ -1,0 +1,4 @@
+- name: Bad Folder
+  url: https://example.org/mailing-list
+  kind: mailbox
+  folder: 123

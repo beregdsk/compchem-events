@@ -1,0 +1,70 @@
+---
+import Base from '../layouts/Base.astro';
+import { loadSources, SOURCE_KINDS, type SourceKind } from '../lib/discovery/sources';
+import { site } from '../../site.config';
+
+/**
+ * Public-facing heading for each kind. Order follows SOURCE_KINDS; kinds
+ * that differ only in how the agent reads them share a heading.
+ */
+const KIND_LABELS: Record<SourceKind, string> = {
+  'listing-page': 'Event listings',
+  'inline-listing': 'Event listings',
+  'cecam-api': 'Event listings',
+  'event-page': 'Recurring event pages',
+  rss: 'RSS feeds',
+  ical: 'Calendar feeds',
+  'mailing-list-archive': 'Mailing-list archives',
+  mailbox: 'Mailing lists',
+  'telegram-channel': 'Telegram channels',
+};
+
+// `notes` in data/sources.yaml are operator notes, not public copy, so only
+// name, link and check date are shown.
+const sources = loadSources();
+const groups = [...new Set(SOURCE_KINDS.map((kind) => KIND_LABELS[kind]))]
+  .map((label) => ({
+    label,
+    items: sources.filter((s) => KIND_LABELS[s.kind] === label),
+  }))
+  .filter((g) => g.items.length > 0);
+---
+
+<Base
+  title="Sources"
+  description="The conference listings, feeds and mailing lists checked for new computational chemistry events."
+  path="/sources/"
+>
+  <div class="prose">
+    <h1>Sources</h1>
+    <p>
+      Besides direct submissions, new events are found by regularly checking the {sources.length}{' '}
+      sources below. A source is a starting point, not a guarantee: everything found through one is
+      still screened against the <a href="/about/#curation-policy">curation policy</a> and reviewed
+      by a person before it is listed.
+    </p>
+    <p>
+      Know a source we are missing? Add it to
+      <a href={`${site.repoUrl}/blob/main/data/sources.yaml`} rel="noopener">
+        <code>data/sources.yaml</code>
+      </a>
+      with a pull request, or email <a href={`mailto:${site.contactEmail}`}>{site.contactEmail}</a>.
+    </p>
+
+    {groups.map((group) => (
+      <section>
+        <h2>{group.label}</h2>
+        <ul>
+          {group.items.map((source) => (
+            <li>
+              <a href={source.url} rel="noopener">
+                {source.name}
+              </a>{' '}
+              <span class="mono muted">— {new URL(source.url).host}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))}
+  </div>
+</Base>

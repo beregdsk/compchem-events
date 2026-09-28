@@ -1,6 +1,6 @@
 # Discovery agent (follow-up, phase 5)
 
-**Status: implemented.** All steps (load sources, fetch, extract, validate, deduplicate/screen, open a PR) exist: fetch/extract/validate is `src/lib/discovery/pipeline.ts`, deduplicate/screen is `src/lib/discovery/classify-candidate.ts`, and PR-opening is `src/lib/discovery/orchestrator.ts`, composed by the cron entrypoint `scripts/discovery/run.ts` — see *Deployment* below. Mailbox/IMAP ingestion (see *Mailing lists*) remains unimplemented.
+**Status: implemented.** All steps (load sources, fetch, extract, validate, deduplicate/screen, open a PR) exist: fetch/extract/validate is `src/lib/discovery/pipeline.ts`, deduplicate/screen is `src/lib/discovery/classify-candidate.ts`, and PR-opening is `src/lib/discovery/orchestrator.ts`, composed by the cron entrypoint `scripts/discovery/run.ts` — see *Deployment* below. Mailbox/IMAP ingestion (see *Mailing lists*) is also implemented (`src/lib/discovery/mailbox-client.ts`) and live: the mailbox account, its `discovery` folder, and the Psi-k subscription were all confirmed working end-to-end 2026-09-27 (see `data/sources.yaml`'s live `kind: mailbox` entry).
 
 ## Purpose
 
@@ -12,7 +12,7 @@ A small VDS owned by the maintainer, as a scheduled job (daily or weekly cron). 
 
 ## Pipeline
 
-1. **Load sources** from `data/sources.yaml`: a list of `{name, url, kind, notes}` entries, where `kind` is one of `listing-page`, `event-page`, `rss`, `mailing-list-archive`.
+1. **Load sources** from `data/sources.yaml`: a list of `{name, url, kind, notes}` entries, where `kind` is one of `SOURCE_KINDS` in `src/lib/discovery/sources.ts` (see *Sources* below).
 2. **Fetch** each source politely: identify with a User-Agent that includes the project URL and a contact address, honour `robots.txt`, rate-limit per host, cache with ETag or content hash, and skip unchanged pages (state in a local JSON or SQLite file, not in the repo).
 3. **Find candidates**: extract links to event pages from listing pages, then fetch each new event page once.
 4. **Extract**: send the page text to the LLM with a fixed prompt asking for JSON matching the event schema, plus a `confidence` value and the exact `source_url`. Use structured output or JSON mode where available.
@@ -39,7 +39,7 @@ All configuration by environment variables, validated by `scripts/discovery/run.
 | Variable | Required | Default |
 |---|---|---|
 | `LLM_API_KEY` | yes | — |
-| `LLM_MODEL_EXTRACT` | yes | — |
+| `LLM_MODEL_EXTRACT` | yes (e.g. `dots-studio/dots-3-note-preview:free`) | — |
 | `STATE_PATH` | yes | — |
 | `GITHUB_TOKEN` | yes | — |
 | `GITHUB_REPO` | yes (`owner/repo`) | — |
@@ -49,17 +49,26 @@ All configuration by environment variables, validated by `scripts/discovery/run.
 | `MAX_PAGES` | no | 200 |
 | `MAX_TOKENS` | no | 500000 |
 | `MAX_PRS` | no | 20 |
+| `IMAP_HOST` | no (all three or none — see below) | — |
+| `IMAP_USER` | no | — |
+| `IMAP_PASSWORD` | no | — |
+| `IMAP_PORT` | no | 993 |
+| `IMAP_SECURE` | no | `true` (anything but the literal string `false`) |
+
+`IMAP_HOST`/`IMAP_USER`/`IMAP_PASSWORD` must be set all together or not at all — setting only some fails fast (a likely typo), same as every other required-together value here. With none set (for example, a local dry run), every `kind: mailbox` source is skipped with a log line and nothing else about the run changes. The production deployment sets all three (see *Mailing lists*).
 
 ## Sources
 
-`data/sources.yaml` holds them. Seventeen entries were compiled and fetched on 2026-09-23; that file documents its own format and keeps checked-but-unusable candidates in a commented block at the bottom.
+`data/sources.yaml` holds them. The first seventeen entries were compiled and fetched on 2026-09-23, and more have been added since, each fetched first. That file documents its own format and keeps checked-but-unusable candidates in a commented block at the bottom. `npm run validate` checks it in CI (`validateSources` in `src/lib/discovery/sources.ts`): an unknown field or kind, a non-https or repeated url, or a missing `last_checked` fails the build, where `loadSources` would otherwise skip the entry silently at run time.
 
 Three of the URLs this document originally suggested were already dead when the list was compiled (`cecam.org/workshop-list`, `molssi.org/events/`, `acscomp.org`), and `www.ictp.it` refuses a scripted user agent. Hence the rule in that file: every entry is fetched before it is added, and `last_checked` says when.
 
-Three source kinds were added beyond the four listed under *Pipeline* above:
+Five source kinds were added beyond the four the original version of this document listed:
 
-- `ical` — a calendar feed, parsed directly. No LLM call is needed at all, since dates and titles arrive already typed. Telluride Science publishes one.
-- `mailbox` — a list we are subscribed to, read over IMAP. See below. Not implemented; no entries yet.
+- `inline-listing` — a page that lists several events as text rather than as links to per-event pages (CCL's announcements, CCPBioSim, the EuChemS division's conferences, SCM). The page's own text goes to the model once, in a listing mode that returns every in-field event it states; each is then validated and screened like any other candidate.
+- `cecam-api` — CECAM's program, which its page renders in the browser from a JSON API (`src/lib/discovery/cecam-client.ts`). The API gives each event's dates and organisers; the event's own page, fetched like any other, gives its description, and both go to the model together.
+- `ical` — a calendar feed, parsed directly, since dates and titles arrive already typed. A feed carries no topics, so each event's topics come from keyword matches against `data/topics.yaml` (`src/lib/discovery/keyword-topics.ts`); only an event no keyword places goes to the extraction model, like any page. Telluride Science publishes one.
+- `mailbox` — a list we are subscribed to, read over IMAP (`src/lib/discovery/mailbox-client.ts`). See below. Psi-k is the live entry.
 - `telegram-channel` — a public channel, fetched at its anonymous web-preview path (`t.me/s/<channel>`, not `t.me/<channel>`, which redirects to the app). No login or bot token needed. Treat it like a listing-page: low precision, screen every post against `docs/curation-policy.md`. A post is exactly as hostile as a web page — same extraction pipeline in *Security model*, no exceptions. `data/sources.yaml` has a live example.
 
 Existing aggregators such as https://labinitio.org/ are for **coverage comparison only**. Do not scrape or republish another site's curation.
@@ -68,17 +77,17 @@ Existing aggregators such as https://labinitio.org/ are for **coverage compariso
 
 Much of this field's event traffic moves by mailing list rather than by web page. Where a list has an open web archive, it is an ordinary source and needs nothing special: CCL's conference announcements are a plain public page and are listed as `listing-page`.
 
-Where it does not, the archive is useless to us. Psi-k is the case that decided this. It mirrors its list to a forum at `psi-k.net/wps-forums/events/`, and the sitemap advertises thousands of post URLs — but every one of them returns HTTP 200 serving the *homepage* to an anonymous fetch. The posts are login-gated. Its public RSS feed carries a fraction of the traffic and was ten months stale when checked.
+Where it does not, the archive is useless to us. Psi-k is the case that decided this. It used to mirror its list to a forum at `psi-k.net/wps-forums/events/`, and the sitemap advertised thousands of post URLs — but every one of them returned HTTP 200 serving the *homepage* to an anonymous fetch. The posts were login-gated, and the public RSS feed carried only a fraction of the traffic. (The list itself moved again in 2025, to JISCMail — see the commented note in `data/sources.yaml` — which changes nothing about the reasoning below: it is still an ordinary subscriber mailing list with no open archive.)
 
 So for lists like Psi-k, **subscribe and read the mail**:
 
-- A dedicated address subscribed to the lists, never the maintainer's personal mailbox. One account, one purpose, revocable.
+- A dedicated address subscribed to the lists, never the maintainer's personal mailbox, is the ideal — one account, one purpose, revocable. Where that's not practical (as deployed: a personal Gmail account, chosen after the phone-verification and OAuth-only walls hit on several dedicated-mailbox providers), the credential still grants full-mailbox access regardless of which folder the code reads — a filter that routes every list's mail into one shared `discovery` label/folder (see `data/sources.yaml`'s format comment) is the minimum substitute isolation, never reading INBOX directly.
 - Read-only IMAP. The agent never sends, replies, deletes or marks. Credentials by environment variable (`IMAP_HOST`, `IMAP_USER`, `IMAP_PASSWORD`), alongside the others, and an app password rather than the account password where the provider offers one.
 - **A message body is exactly as hostile as a web page.** It goes into the same extraction step, as clearly delimited data, with no tools and no ability to act — see *Security model*. Mail is in fact worse than a page: anyone can send to a list, and the `From` header is not evidence. Attachments and HTML parts are not fetched or rendered; take `text/plain` and fall back to stripped HTML.
 - Deduplicate on `Message-ID`, and keep the same state file as the web sources. A list that cross-posts a CECAM workshop must not produce a second candidate.
 - Everything else is unchanged: schema validation, blocklist, curation screening, one pull request for human review.
 
-This is deliberately cheap to add because it is only another text source feeding the same extract → validate → screen → PR pipeline. Build it with the rest of the agent, not before: there is nothing for it to feed yet.
+Implemented as `src/lib/discovery/mailbox-client.ts` (IMAP + MIME parsing), wired into the `kind: 'mailbox'` case in `pipeline.ts`. It was deliberately cheap to add: just another text source feeding the same extract → validate → screen → PR pipeline. The mailbox account, its `discovery` folder and the Psi-k subscription were confirmed working end to end on 2026-09-27, and `data/sources.yaml` has the live `kind: mailbox` entry.
 
 ## Human review
 
@@ -109,8 +118,13 @@ re-deriving that judgement by hand.
 ## Failure handling
 
 - One source failing must not stop the run. Log the error and continue.
+- Sources run four at a time (`SOURCE_CONCURRENCY` in `pipeline.ts`). Page budgets are reserved before each fetch, per-host politeness slots are reserved before each wait, and a URL is fetched at most once per run, so concurrency never overshoots `MAX_PAGES` or hits one host faster than the per-host interval. `MAX_TOKENS` is checked before each LLM call, so calls already in flight in other sources can overshoot it slightly.
+- Extraction retries a malformed response, a timeout, a dropped connection, a 5xx or a 429 up to three attempts; a 429 waits until the rate limit's stated reset (OpenRouter's free tier allows 20 requests a minute per account).
+- A listing page's links are followed only when they plausibly lead to one event: links in site chrome (nav, header, footer, sidebar, menus), downloads, site pages (about, contact, privacy, membership…), past-event pages and the listing's own or ancestor pages are skipped (`parsers/listing.ts`). The filter is structural only, never by topic — a missed event is worse than a wasted fetch. A listing that marks a next page (`rel="next"`) is followed up to five pages deep, since sites that announce months ahead push in-field events off page 1.
+- The relevance pre-filter before each LLM call knows English, Russian, Italian/French/German and Chinese/Japanese terms, and the model is told to return English titles and descriptions whatever the source language.
 - Repeated failures on a source produce a single tracking issue, not a new one each run.
 - The job exits non-zero only on configuration errors, so a cron wrapper can alert on real problems and ignore transient network noise.
+- Every outbound HTTP call (page fetches, robots.txt, the extraction/classification/GitHub APIs) goes through `fetchWithTimeout` (`src/lib/discovery/http.ts`, 60s default, 90s for LLM calls) rather than a bare `fetch`. Plain `fetch` has no timeout of its own, so a server that accepts a connection and never responds hangs that call — and, with no timeout, the whole run — forever; this was observed live, not theoretical.
 
 ## Deployment
 
@@ -143,8 +157,10 @@ the mounted volume above, so state survives between runs), `GITHUB_TOKEN`,
 `GITHUB_REPO`, and optionally `LLM_BASE_URL` (extraction only),
 `LLM_BASE_URL_CLASSIFY` (classification only — these are two different
 endpoints and must be set independently when proxying either one),
-`LLM_MODEL`, `MAX_PAGES`, `MAX_TOKENS`, `MAX_PRS` — see *Configuration*
-above for what each does and its default.
+`LLM_MODEL`, `MAX_PAGES`, `MAX_TOKENS`, `MAX_PRS`, and — for the
+`kind: mailbox` sources (see *Mailing lists*) — `IMAP_HOST`, `IMAP_USER`,
+`IMAP_PASSWORD` and optionally `IMAP_PORT`/`IMAP_SECURE` — see
+*Configuration* above for what each does and its default.
 
 Two credentials stay human-only operational steps, per this document's
 *Security model*:

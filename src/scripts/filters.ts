@@ -13,6 +13,7 @@ const form = document.querySelector<HTMLFormElement>('#filters');
 const list = document.querySelector<HTMLUListElement>('#event-list');
 const countEl = document.querySelector<HTMLElement>('#result-count');
 const clearButton = document.querySelector<HTMLButtonElement>('#clear-filters');
+const topicFeed = document.querySelector<HTMLElement>('#topic-feed');
 
 if (form && list && countEl) {
   // Filtering is a JavaScript feature, so the controls only appear once it runs.
@@ -39,6 +40,8 @@ if (form && list && countEl) {
       from: field<HTMLInputElement>('from')?.value ?? '',
       to: field<HTMLInputElement>('to')?.value ?? '',
       deadline: field<HTMLInputElement>('deadline')?.checked ?? false,
+      grant: field<HTMLInputElement>('grant')?.checked ?? false,
+      fee: field<HTMLSelectElement>('fee')?.value ?? '',
     };
   }
 
@@ -48,12 +51,14 @@ if (form && list && countEl) {
     for (const box of form!.querySelectorAll<HTMLInputElement>('input[name="topic"]')) {
       box.checked = state.topics.includes(box.value);
     }
-    for (const name of ['region', 'country', 'format', 'type', 'from', 'to'] as const) {
+    for (const name of ['region', 'country', 'format', 'type', 'from', 'to', 'fee'] as const) {
       const el = field<HTMLSelectElement | HTMLInputElement>(name);
       if (el) el.value = state[name];
     }
     const deadline = field<HTMLInputElement>('deadline');
     if (deadline) deadline.checked = state.deadline;
+    const grant = field<HTMLInputElement>('grant');
+    if (grant) grant.checked = state.grant;
   }
 
   function apply(state: FilterState, mode: 'none' | 'push' | 'replace'): void {
@@ -67,6 +72,13 @@ if (form && list && countEl) {
     countEl!.textContent = isEmptyFilter(state)
       ? `${shown} upcoming ${shown === 1 ? 'event' : 'events'}`
       : `${shown} of ${rows.length} ${rows.length === 1 ? 'event' : 'events'} match`;
+
+    // One topic chosen: point at that topic's own page, which carries its feeds.
+    if (topicFeed) {
+      const [only] = state.topics;
+      topicFeed.hidden = state.topics.length !== 1;
+      if (state.topics.length === 1) topicFeed.querySelector('a')!.href = `/topics/${only}/`;
+    }
 
     if (mode === 'none') return;
     const params = serialiseFilterState(state).toString();

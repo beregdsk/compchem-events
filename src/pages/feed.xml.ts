@@ -12,9 +12,24 @@ function xml(value: string): string {
     .replace(/"/g, '&quot;');
 }
 
-export function atomFeed(events: LoadedEvent[], generatedAt: Date): string {
+export interface FeedScope {
+  /** Shown after the site name, e.g. `newly added events`. */
+  title: string;
+  /** The feed's own path, for its `rel="self"` link and its id. */
+  path: string;
+  /** Path whose URL is the feed's permanent `<id>`. Unique per feed. */
+  idPath: string;
+}
+
+const ALL_EVENTS: FeedScope = { title: 'newly added events', path: '/feed.xml', idPath: '/' };
+
+export function atomFeed(
+  events: LoadedEvent[],
+  generatedAt: Date,
+  scope: FeedScope = ALL_EVENTS,
+): string {
   const newest = [...events].sort((a, b) => compareISO(b.added, a.added)).slice(0, 50);
-  const selfUrl = new URL('/feed.xml', site.url).href;
+  const selfUrl = new URL(scope.path, site.url).href;
   const entries = newest
     .map((e) => {
       const url = new URL(`/events/${e.id}/`, site.url).href;
@@ -33,10 +48,10 @@ export function atomFeed(events: LoadedEvent[], generatedAt: Date): string {
   return [
     '<?xml version="1.0" encoding="utf-8"?>',
     '<feed xmlns="http://www.w3.org/2005/Atom">',
-    `  <title>${xml(site.name)} — newly added events</title>`,
+    `  <title>${xml(site.name)} — ${xml(scope.title)}</title>`,
     `  <link href="${xml(selfUrl)}" rel="self"/>`,
     `  <link href="${xml(site.url)}"/>`,
-    `  <id>${xml(new URL('/', site.url).href)}</id>`,
+    `  <id>${xml(new URL(scope.idPath, site.url).href)}</id>`,
     `  <updated>${generatedAt.toISOString().replace(/\.\d{3}Z$/, 'Z')}</updated>`,
     '  <author>',
     `    <name>${xml(site.name)}</name>`,
