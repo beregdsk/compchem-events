@@ -1,0 +1,25 @@
+id: studying-dynamics-in-soft-matter-and-porous-materials-2026
+title: Studying dynamics in soft matter and porous materials
+type: school
+start_date: 2026-10-05
+end_date: 2026-10-09
+format: in-person
+url: https://www.cecam.org/workshop-details/studying-dynamics-in-soft-matter-and-porous-materials-1510
+source_url: https://www.cecam.org/workshop-details/studying-dynamics-in-soft-matter-and-porous-materials-1510
+topics:
+  - soft-matter
+  - molecular-dynamics
+  - ml-potentials
+  - software-hpc
+  - education-training
+description: CECAM Flagship School on dynamics in soft matter and porous
+  materials, covering polymer dynamics, lattice Boltzmann, coarse-graining, and
+  machine learning, with hands-on sessions using ESPResSo and waLBerla.
+added: 2026-09-28
+last_verified: 2026-09-28
+location:
+  city: Stuttgart
+  country: DE
+  venue: Institute for Computational Physics, University of Stuttgart, Stuttgart
+organizer: Jean-Noël Grad, Christian Holm, Rudolf Weeber
+cost: Free
