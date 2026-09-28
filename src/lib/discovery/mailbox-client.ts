@@ -73,8 +73,28 @@ export async function fetchNewMailboxMessages(
     logger: false,
   });
 
-  await client.connect();
+  // imapflow emits connection-level failures (e.g. a dropped socket) as an
+  // `error` event on the client, separately from rejecting whatever
+  // promise was in flight — observed live: a rejected `connect()` (bad
+  // auth) was correctly caught below, and then a *second*, unrelated
+  // ECONNRESET during cleanup crashed the whole process anyway, because
+  // nothing was listening. Node's default behavior for an unhandled
+  // EventEmitter `error` event is to throw and kill the process — which
+  // would take an entire cron run down over one flaky mailbox connection.
+  // Every real failure path here already surfaces through an awaited
+  // promise rejection (connect/fetch/getMailboxLock all throw normally),
+  // so this listener only exists to stop that redundant event from
+  // reaching Node's default handler; it deliberately does nothing else.
+  client.on('error', () => {});
+
   try {
+    // `connect()` throws on either a connection *or* an authentication
+    // failure (imapflow's own contract) — it must be inside this try, not
+    // before it, or a bad-credentials run never reaches the cleanup below
+    // at all. Observed live: with `connect()` outside the try, a failed
+    // login left the TCP socket open and the whole process hanging
+    // (never exiting) until an external timeout killed it.
+    await client.connect();
     const lock = await client.getMailboxLock(folder, { readOnly: true });
     try {
       const newUids: number[] = [];
@@ -104,6 +124,16 @@ export async function fetchNewMailboxMessages(
       lock.release();
     }
   } finally {
-    await client.logout().catch(() => {});
+    // `close()`, not `logout()`: `logout()` sends a graceful LOGOUT
+    // command over an authenticated session, which may not exist here —
+    // `connect()` can fail before one ever does. `close()` unconditionally
+    // and synchronously tears down the TCP connection regardless of what
+    // stage failed, which is what actually stops a bad-credentials or
+    // dropped-connection run from hanging forever (see the comment above).
+    try {
+      client.close();
+    } catch {
+      // Best-effort cleanup — nothing more to do if even this fails.
+    }
   }
 }

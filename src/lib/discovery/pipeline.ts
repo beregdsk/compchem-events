@@ -321,7 +321,11 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
           log(`mailbox source "${source.name}" has no IMAP credentials configured, skipping`);
           return;
         }
-        const folder = source.folder ?? 'INBOX';
+        // Defaults to 'discovery', not INBOX: a dedicated account's mail
+        // filters route every mailing list's traffic into one shared
+        // label/folder rather than a distinct one per list — see
+        // docs/discovery-agent.md's *Mailing lists* section.
+        const folder = source.folder ?? 'discovery';
         const fetchImpl = options.mailboxFetchImpl ?? fetchNewMailboxMessages;
         const alreadySeen = (messageId: string) =>
           state.pages[`mailbox:${folder}:${messageId}`] !== undefined;

@@ -16,7 +16,7 @@ export interface Source {
   name: string;
   url: string;
   kind: SourceKind;
-  /** `kind: 'mailbox'` only: the IMAP folder to read. Defaults to `INBOX`. */
+  /** `kind: 'mailbox'` only: the IMAP folder to read. Defaults to `discovery` (see `pipeline.ts`). */
   folder?: string;
   added?: string;
   last_checked?: string;

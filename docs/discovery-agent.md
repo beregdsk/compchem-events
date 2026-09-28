@@ -1,6 +1,6 @@
 # Discovery agent (follow-up, phase 5)
 
-**Status: implemented.** All steps (load sources, fetch, extract, validate, deduplicate/screen, open a PR) exist: fetch/extract/validate is `src/lib/discovery/pipeline.ts`, deduplicate/screen is `src/lib/discovery/classify-candidate.ts`, and PR-opening is `src/lib/discovery/orchestrator.ts`, composed by the cron entrypoint `scripts/discovery/run.ts` — see *Deployment* below. Mailbox/IMAP ingestion (see *Mailing lists*) is also implemented (`src/lib/discovery/mailbox-client.ts`), but stays inert — every `kind: mailbox` source is skipped — until a human sets up the one remaining piece: a dedicated mailbox account (see *Mailing lists*).
+**Status: implemented.** All steps (load sources, fetch, extract, validate, deduplicate/screen, open a PR) exist: fetch/extract/validate is `src/lib/discovery/pipeline.ts`, deduplicate/screen is `src/lib/discovery/classify-candidate.ts`, and PR-opening is `src/lib/discovery/orchestrator.ts`, composed by the cron entrypoint `scripts/discovery/run.ts` — see *Deployment* below. Mailbox/IMAP ingestion (see *Mailing lists*) is also implemented (`src/lib/discovery/mailbox-client.ts`) and live: the mailbox account, its `discovery` folder, and the Psi-k subscription were all confirmed working end-to-end 2026-09-27 (see `data/sources.yaml`'s live `kind: mailbox` entry).
 
 ## Purpose
 
@@ -79,7 +79,7 @@ Where it does not, the archive is useless to us. Psi-k is the case that decided 
 
 So for lists like Psi-k, **subscribe and read the mail**:
 
-- A dedicated address subscribed to the lists, never the maintainer's personal mailbox. One account, one purpose, revocable.
+- A dedicated address subscribed to the lists, never the maintainer's personal mailbox, is the ideal — one account, one purpose, revocable. Where that's not practical (as deployed: a personal Gmail account, chosen after the phone-verification and OAuth-only walls hit on several dedicated-mailbox providers), the credential still grants full-mailbox access regardless of which folder the code reads — a filter that routes every list's mail into one shared `discovery` label/folder (see `data/sources.yaml`'s format comment) is the minimum substitute isolation, never reading INBOX directly.
 - Read-only IMAP. The agent never sends, replies, deletes or marks. Credentials by environment variable (`IMAP_HOST`, `IMAP_USER`, `IMAP_PASSWORD`), alongside the others, and an app password rather than the account password where the provider offers one.
 - **A message body is exactly as hostile as a web page.** It goes into the same extraction step, as clearly delimited data, with no tools and no ability to act — see *Security model*. Mail is in fact worse than a page: anyone can send to a list, and the `From` header is not evidence. Attachments and HTML parts are not fetched or rendered; take `text/plain` and fall back to stripped HTML.
 - Deduplicate on `Message-ID`, and keep the same state file as the web sources. A list that cross-posts a CECAM workshop must not produce a second candidate.

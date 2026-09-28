@@ -20,11 +20,13 @@
 #   mailing-list-archive   public web archive of a list
 #   mailbox                a list we are subscribed to, read over IMAP
 #                          (see "Mailing lists" in docs/discovery-agent.md).
-#                          Optional `folder:` names the IMAP folder to read
-#                          (defaults to INBOX). Inert until IMAP_HOST/
-#                          IMAP_USER/IMAP_PASSWORD are set — no mailbox
-#                          entries yet, since no dedicated mailbox account
-#                          exists to subscribe it to a list.
+#                          Optional `folder:` names the IMAP folder to read;
+#                          defaults to `discovery`, the one shared label/
+#                          folder every list's mail filter routes into on
+#                          the dedicated mailbox account (not INBOX — every
+#                          `mailbox` source is meant to share this same
+#                          folder, not get one each). IMAP_HOST/IMAP_USER/
+#                          IMAP_PASSWORD are set on the deployment host.
 #   telegram-channel       public channel; fetch the anonymous web preview at
 #                          t.me/s/<channel>, not t.me/<channel> (the latter
 #                          redirects to the app). No login needed. Posts are
@@ -71,7 +73,79 @@
     Carries some workshop and conference announcements, but thin and slow —
     the newest item on 2026-09-23 was dated 2025-11-16. The Psi-k mailing
     list itself holds far more; its forum archive is login-gated, so that
-    traffic is only reachable by mailbox. See the candidates block.
+    traffic is only reachable by mailbox. See the entry below.
+
+- name: Psi-k
+  url: https://psi-k.net/important-new-psi-k-mailing-list/
+  kind: mailbox
+  added: 2026-09-27
+  last_checked: 2026-09-27
+  notes: >-
+    Read over IMAP from the dedicated `discovery` folder — a Gmail filter
+    routes the list's mail there. Confirmed live 2026-09-27: 157 real list
+    messages present, all parsed cleanly (subject + plaintext body, correct
+    Message-ID). `folder` omitted; defaults to `discovery` (see this file's
+    format comment above). `url` is the list's own announcement/info page,
+    not a per-message link — every mailbox candidate's source_url is this
+    same value, since a mailing-list post has no per-message URL of its own.
+
+- name: Molecular Dynamics News
+  url: https://jmhutson.webspace.durham.ac.uk/mdn/
+  kind: mailbox
+  added: 2026-09-27
+  last_checked: 2026-09-27
+  notes: >-
+    Conference announcements, faculty/postdoc positions and new-software
+    notices for gas-phase molecular dynamics, collision and reaction
+    dynamics, and high-resolution spectroscopy of van der Waals complexes.
+    Read over IMAP from the shared `discovery` folder like every other
+    mailbox source (see this file's format comment above); `folder`
+    omitted. `url` is the list's own maintainer-run info/join page —
+    confirmed live 2026-09-27 (loads, names the list, links to JISCMail).
+    jiscmail.ac.uk itself returns HTTP 403 to a scripted fetch (same
+    anti-bot class documented elsewhere in this file for RSC/ICTP/
+    PSIK-FORUM), which is why this entry doesn't cite it directly.
+
+- name: Spectroscopy Group
+  url: https://www.jiscmail.ac.uk/lists/SPECTROSCOPY-GROUP.html
+  kind: mailbox
+  added: 2026-09-27
+  last_checked: 2026-09-27
+  notes: >-
+    General spectroscopy-community discussion and announcement list —
+    conferences among the traffic. Read over IMAP from the shared
+    `discovery` folder; `folder` omitted. No independent (non-JISCMail)
+    page describing this specific list was found, and jiscmail.ac.uk
+    itself returns HTTP 403 to a scripted fetch (same Cloudflare-challenge
+    class already documented in this file for RSC/ICTP/PSIK-FORUM), so
+    this `url` could not be confirmed by an automated fetch — liveness is
+    per the subscriber (the list owner of this repo), confirmed 2026-09-27.
+
+- name: ICN-CONF
+  url: https://www.jiscmail.ac.uk/ICN-CONF
+  kind: mailbox
+  added: 2026-09-27
+  last_checked: 2026-09-27
+  notes: >-
+    Meeting announcements in (bio)inorganic chemistry — conferences,
+    workshops and summer schools — grown out of the ECOSTBio COST Action
+    (CM1305). Read over IMAP from the shared `discovery` folder; `folder`
+    omitted. Same jiscmail.ac.uk fetch limitation as the Spectroscopy
+    Group entry above: 403 to a scripted fetch, liveness confirmed
+    2026-09-27 by the subscriber rather than an automated check.
+
+- name: CCPBioSim mailing list
+  url: https://www.ccpbiosim.org/
+  kind: mailbox
+  added: 2026-09-27
+  last_checked: 2026-09-27
+  notes: >-
+    The CCPBioSim network's own mailing list — training, talks and
+    announcements that don't always make the events page above. Distinct
+    from the "CCPBioSim" listing-page entry below, which only covers that
+    published page. Read over IMAP from the shared `discovery` folder;
+    `folder` omitted. `url` is the network's own homepage, confirmed live
+    2026-09-27: it names the list and links subscribers to JISCMail.
 
 - name: Gordon Research Conferences
   url: https://www.grc.org/find-a-conference/
@@ -257,20 +331,23 @@
 # Psi-k forum event board — https://psi-k.net/wps-forums/events/
 #   The mailing list is mirrored here, but posts are login-gated: the sitemap
 #   advertises thousands of /wps_forum_subs/ URLs and every one of them
-#   returns HTTP 200 serving the *homepage* to an anonymous fetch. This is
-#   the case that justifies mailbox ingestion. `kind: mailbox` is now
-#   implemented (src/lib/discovery/mailbox-client.ts) — what's still missing
-#   is the operational step, not code: a dedicated mailbox account,
-#   subscribed to Psi-k, with IMAP_HOST/IMAP_USER/IMAP_PASSWORD set (see
-#   "Mailing lists" in docs/discovery-agent.md). The list itself moved in
-#   2025 from this forum to JISCMail (psi-k.net/important-new-psi-k-mailing-list,
-#   checked 2026-09-26, HTTP 200; the JISCMail subscribe page itself returns
-#   403 to a scripted fetch, so cite the announcement instead). Once a
-#   mailbox account is subscribed there, add a live entry here, e.g.:
-#     - name: Psi-k
-#       url: https://psi-k.net/important-new-psi-k-mailing-list/
-#       kind: mailbox
-#       folder: INBOX
+#   returns HTTP 200 serving the *homepage* to an anonymous fetch — the
+#   case that justified mailbox ingestion, now live (see the `kind: mailbox`
+#   entry above). The list itself moved in 2025 from this forum to JISCMail
+#   (psi-k.net/important-new-psi-k-mailing-list, checked 2026-09-26, HTTP
+#   200; the JISCMail subscribe page itself returns 403 to a scripted
+#   fetch, so cite the announcement instead — it's what the live entry's
+#   `url` points at).
+#
+#   JISCMail also publishes a public archive of the list itself
+#   (jiscmail.ac.uk/cgi-bin/wa-jisc.exe?A1=<period>&L=PSIK-FORUM, no login) —
+#   checked 2026-09-26, but it does NOT qualify as an ordinary web source:
+#   the whole jiscmail.ac.uk domain sits behind a Cloudflare managed
+#   challenge that returns HTTP 403 ("Just a moment...") to both a plain
+#   fetch and this pipeline's own real-browser fallback
+#   (browser-fetch.ts's fetchWithBrowser, the same one that gets past
+#   ACS's Incapsula challenge) — it never resolved past the challenge in a
+#   live test. Same class of failure as RSC and ICTP below.
 #
 # ICTP scientific calendar — https://www.ictp.it/home/scientific-calendar
 #   www.ictp.it refuses a scripted user agent (connection closed, no status).
