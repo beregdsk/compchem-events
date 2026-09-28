@@ -306,6 +306,21 @@
     chemistry meetings the English-language sources never carry. Same /s/
     web-preview path as the channel above, 20 recent posts per fetch.
 
+- name: Химическая информация (cheminform.ru) — конференции и семинары
+  url: https://cheminform.ru/category/konferenczii-i-seminary/
+  kind: listing-page
+  added: 2026-09-28
+  last_checked: 2026-09-28
+  notes: >-
+    Russian chemistry news site run from IGIC RAS (hia@igic.ras.ru); this
+    category posts one article per Russian chemistry conference or school,
+    newest first, 10 a page. Mostly experimental and general chemistry, so
+    screen hard. The link filter keeps the 10 posts plus ~4 sidebar
+    articles the relevance filter drops. WordPress, but the category's
+    /feed/ serves HTML, not RSS. /konferenczii-2026/ is a year index (94
+    posts, mostly past) — over the per-source page cap, so not used.
+    robots.txt disallows only /wp-admin/.
+
 - name: IUPAC events calendar
   url: https://iupac.org/events/?ical=1
   kind: ical
