@@ -1,5 +1,5 @@
-import { EVENT_FORMATS, EVENT_TYPES } from '../types';
-import type { EventFormat, EventType } from '../types';
+import { EVENT_FEES, EVENT_FORMATS, EVENT_TYPES } from '../types';
+import type { EventFee, EventFormat, EventType } from '../types';
 import { fetchWithTimeout, LLM_TIMEOUT_MS } from './http';
 import { MAX_TOPICS } from './keyword-topics';
 
@@ -26,6 +26,8 @@ export interface ExtractedFields {
    * criterion with real evidence instead of leaving it to guess.
    */
   cost?: string;
+  /** `free` or `paid` only when the text says so; absent otherwise, never inferred from silence. */
+  fee?: EventFee;
   topics: string[];
   description: string;
   confidence: number;
@@ -58,6 +60,7 @@ const EVENT_SCHEMA = {
     'url',
     'organizer',
     'cost',
+    'fee',
     'topics',
     'description',
     'confidence',
@@ -81,6 +84,7 @@ const EVENT_SCHEMA = {
     url: { type: ['string', 'null'] },
     organizer: { type: ['string', 'null'] },
     cost: { type: ['string', 'null'] },
+    fee: { enum: [...EVENT_FEES, null] },
     topics: { type: 'array', items: { type: 'string' } },
     description: { type: 'string' },
     confidence: { type: 'number' },
@@ -136,6 +140,7 @@ function systemPrompt(topics: readonly string[], mode: 'single' | 'listing'): st
     'location.country, when location is given, is the ISO 3166-1 alpha-2 code, uppercase (e.g. DE, US, GB). Set location to null when the event is online or no location is stated.',
     'Set organizer to null when no organiser is identifiable, and location.venue to null when no venue is stated.',
     '"cost" is a short phrase for the registration cost or fees stated in the text, e.g. "Free" or "€200 early bird, €300 after 1 May" — quote or closely paraphrase the text\'s own figures, never estimate one. Set cost to null when the text says nothing about cost.',
+    '"fee" is "free" when the text says attendance or registration is free, "paid" when it states any registration fee (even with waivers or discounts), and null when the text does not say — never guess from the kind of event.',
   ].join(' ');
 }
 
@@ -155,6 +160,8 @@ interface RawExtractedEvent {
   url: string | null;
   organizer: string | null;
   cost: string | null;
+  /** Optional here although the schema requires it: a model that omits it just gets no fee. */
+  fee?: EventFee | null;
   topics: string[];
   description: string;
   confidence: number;
@@ -198,6 +205,7 @@ function isRawEvent(value: unknown): value is RawExtractedEvent {
     (e.url === null || typeof e.url === 'string') &&
     (e.organizer === null || typeof e.organizer === 'string') &&
     (e.cost === null || typeof e.cost === 'string') &&
+    (e.fee === undefined || e.fee === null || (EVENT_FEES as readonly unknown[]).includes(e.fee)) &&
     Array.isArray(e.topics) &&
     e.topics.every((t) => typeof t === 'string') &&
     typeof e.description === 'string' &&
@@ -278,6 +286,7 @@ function normalize(raw: RawExtractedEvent, vocabulary: readonly string[]): Extra
   }
   if (raw.organizer) fields.organizer = clip(raw.organizer, 200);
   if (raw.cost) fields.cost = clip(raw.cost, 200);
+  if (raw.fee) fields.fee = raw.fee;
   return fields;
 }
 

@@ -44,6 +44,7 @@ const fullInput: DraftInput = {
   source_url: 'https://organiser.example.org/symposium-2027/',
   organizer: 'Test Organiser',
   cost: 'Free',
+  fee: 'free',
   topics: ['photochemistry', 'excited-states'],
   description: 'A symposium on excited-state photochemistry.',
 };
@@ -57,17 +58,20 @@ describe('synthesizeDraft', () => {
     expect(draft.location).toEqual({ city: 'Testville', country: 'DE' });
     expect(draft.organizer).toBe('Test Organiser');
     expect(draft.cost).toBe('Free');
+    expect(draft.fee).toBe('free');
   });
 
   it('omits location, organizer and cost entirely when absent, never as undefined keys', () => {
-    const { location, organizer, cost, ...rest } = fullInput;
+    const { location, organizer, cost, fee, ...rest } = fullInput;
     void location;
     void organizer;
     void cost;
+    void fee;
     const draft = synthesizeDraft(rest, '2026-09-23');
     expect('location' in draft).toBe(false);
     expect('organizer' in draft).toBe(false);
     expect('cost' in draft).toBe(false);
+    expect('fee' in draft).toBe(false);
   });
 });
 

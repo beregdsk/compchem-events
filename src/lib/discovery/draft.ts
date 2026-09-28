@@ -71,6 +71,7 @@ export interface DraftInput {
   source_url: string;
   organizer?: string;
   cost?: string;
+  fee?: RawEvent['fee'];
   topics: string[];
   description: string;
 }
@@ -101,6 +102,7 @@ export function synthesizeDraft(input: DraftInput, today: ISODate): RawEvent {
   if (input.location) draft.location = input.location;
   if (input.organizer) draft.organizer = input.organizer;
   if (input.cost) draft.cost = input.cost;
+  if (input.fee) draft.fee = input.fee;
   return draft;
 }
 

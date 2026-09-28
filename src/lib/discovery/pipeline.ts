@@ -279,6 +279,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
         source_url: sourceUrl,
         organizer: fields.organizer,
         cost: fields.cost,
+        fee: fields.fee,
         // The model may pick nothing from the vocabulary (or only
         // off-vocabulary entries, which extractEvent drops); keywords over
         // its own title and summary are a better answer than a dropped event.

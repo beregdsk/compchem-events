@@ -61,6 +61,7 @@ export function buildPrBody(candidate: RawEvent, classification: AddClassificati
     `- **source_url:** ${link(candidate.source_url)}`,
     `- **organizer:** ${optional(candidate.organizer)}`,
     `- **cost:** ${optional(candidate.cost)}`,
+    `- **fee:** ${optional(candidate.fee)}`,
     `- **topics:** ${inlineCode(candidate.topics.join(', '))}`,
     `- **description:** ${inlineCode(candidate.description)}`,
   ];

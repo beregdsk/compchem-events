@@ -495,10 +495,7 @@ adding d3-zoom.
   contains. At the time of writing none does, so the checkbox is hidden.
 - **`cost`** already existed as an optional free-text field (added with
   discovery's cost extraction) but was undocumented and never shown. It is
-  now in `docs/data-schema.md` and on the event page. No structured
-  free/paid enum or "free" filter was added: the field is free text as the
-  organiser states it, and parsing it into a category would put words in
-  the organiser's mouth.
+  now in `docs/data-schema.md` and on the event page.
 
 ## 2026-09-28 — `data/sources.yaml` is validated in CI
 
@@ -511,3 +508,20 @@ rejects an unknown field or kind, a non-https or repeated url, a `folder` on a
 non-mailbox source, and a missing or impossible `last_checked` (required,
 since the file's own rule is that nothing goes in unfetched). `loadSources`
 keeps its skip-don't-throw behaviour at run time.
+
+## 2026-09-28 — `fee: free | paid` field and cost filter
+
+The maintainer asked for a free/paid filter. `cost` is free text as the
+organiser words it, and parsing it into a category would put words in the
+organiser's mouth, so the category is its own optional field, `fee`, stated
+by whoever verifies the event, alongside `cost` rather than derived from it.
+`paid` covers any registration fee, waivers or not; an event whose page says
+nothing has no `fee` and matches only "any" in the filter, never "free" —
+unknown is not free. The extraction model returns `fee` only when the text
+states it; the prompt forbids guessing from the kind of event, and the value
+is shown in the discovery PR body for the reviewer to check. An event with
+`fee: free` carries `isAccessibleForFree` in its JSON-LD.
+
+The home-page select appears only once some upcoming event has a `fee`, like
+every other option there. At the time of writing none does: existing events
+need their fees checked on the organisers' pages before any can be set.

@@ -41,6 +41,7 @@ if (form && list && countEl) {
       to: field<HTMLInputElement>('to')?.value ?? '',
       deadline: field<HTMLInputElement>('deadline')?.checked ?? false,
       grant: field<HTMLInputElement>('grant')?.checked ?? false,
+      fee: field<HTMLSelectElement>('fee')?.value ?? '',
     };
   }
 
@@ -50,7 +51,7 @@ if (form && list && countEl) {
     for (const box of form!.querySelectorAll<HTMLInputElement>('input[name="topic"]')) {
       box.checked = state.topics.includes(box.value);
     }
-    for (const name of ['region', 'country', 'format', 'type', 'from', 'to'] as const) {
+    for (const name of ['region', 'country', 'format', 'type', 'from', 'to', 'fee'] as const) {
       const el = field<HTMLSelectElement | HTMLInputElement>(name);
       if (el) el.value = state[name];
     }

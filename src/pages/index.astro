@@ -4,7 +4,7 @@ import EventRow from '../components/EventRow.astro';
 import PageActions from '../components/PageActions.astro';
 import { hasOpenTravelGrant, loadEvents, upcomingEvents } from '../lib/events';
 import { todayUTC } from '../lib/dates';
-import { EVENT_FORMATS, EVENT_TYPES, type Topic } from '../lib/types';
+import { EVENT_FEES, EVENT_FORMATS, EVENT_TYPES, type Topic } from '../lib/types';
 import { nameOf, REGIONS } from '../lib/regions';
 import { readFileSync } from 'node:fs';
 import { parse } from 'yaml';
@@ -24,6 +24,7 @@ const countries = [...new Set(events.flatMap((e) => (e.location ? [e.location.co
 const regions = REGIONS.filter((r) => events.some((e) => e.region === r));
 const hasOnline = events.some((e) => e.region === 'Online');
 const hasOpenGrant = events.some((e) => hasOpenTravelGrant(e, today));
+const fees = EVENT_FEES.filter((f) => events.some((e) => e.fee === f));
 ---
 
 <Base
@@ -101,6 +102,18 @@ const hasOpenGrant = events.some((e) => hasOpenTravelGrant(e, today));
           ))}
         </select>
       </div>
+
+      {fees.length > 0 && (
+        <div>
+          <label for="f-fee">Cost</label>
+          <select id="f-fee" name="fee">
+            <option value="">Any</option>
+            {fees.map((f) => (
+              <option value={f}>{f}</option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <fieldset>
         <legend>Dates</legend>

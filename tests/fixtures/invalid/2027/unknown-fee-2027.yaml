@@ -1,0 +1,14 @@
+# EXPECTED ERROR: fee must be equal to one of the allowed values
+id: unknown-fee-2027
+title: Invalid Example with an Unknown Fee
+type: workshop
+start_date: 2027-04-10
+end_date: 2027-04-12
+format: online
+url: https://example.org/unknown-fee-2027/
+fee: cheap
+topics: [dft]
+description: A fee value outside the free/paid vocabulary.
+added: 2026-09-20
+last_verified: 2026-09-20
+fixture: true

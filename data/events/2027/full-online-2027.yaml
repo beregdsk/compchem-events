@@ -8,6 +8,8 @@ format: online
 url: https://example.org/full-online-2027/programme/
 source_url: https://example.org/full-online-2027/dates/
 organizer: Example Society for Computational Chemistry
+cost: Free, registration required
+fee: free
 topics: [ml-potentials, molecular-dynamics, software-hpc]
 description: Every optional field populated, with no location because the event is online.
 deadlines:

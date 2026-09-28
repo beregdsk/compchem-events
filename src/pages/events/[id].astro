@@ -96,6 +96,7 @@ const jsonLd = {
         : 'https://schema.org/EventScheduled',
   description: event.description,
   url: event.url,
+  ...(event.fee ? { isAccessibleForFree: event.fee === 'free' } : {}),
   ...(event.organizer ? { organizer: { '@type': 'Organization', name: event.organizer } } : {}),
   ...(event.location
     ? {
@@ -142,8 +143,8 @@ const jsonLd = {
       {event.organizer && <dt>Organiser</dt>}
       {event.organizer && <dd>{event.organizer}</dd>}
 
-      {event.cost && <dt>Cost</dt>}
-      {event.cost && <dd>{event.cost}</dd>}
+      {(event.cost || event.fee) && <dt>Cost</dt>}
+      {(event.cost || event.fee) && <dd>{event.cost ?? event.fee}</dd>}
 
       {editions > 0 && <dt>Series</dt>}
       {editions > 0 && (

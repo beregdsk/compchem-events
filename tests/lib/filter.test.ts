@@ -20,13 +20,14 @@ const row: FilterRow = {
   end: '2027-03-10',
   openDeadline: true,
   openGrant: true,
+  fee: 'free',
 };
 
 describe('parseFilterState', () => {
   it('reads every parameter', () => {
     const s = parseFilterState(
       new URLSearchParams(
-        'q=dft&topics=dft,catalysis&region=Europe&country=DE&format=hybrid&type=school&from=2027-01-01&to=2027-12-31&deadline=open&grant=open',
+        'q=dft&topics=dft,catalysis&region=Europe&country=DE&format=hybrid&type=school&from=2027-01-01&to=2027-12-31&deadline=open&grant=open&fee=free',
       ),
     );
     expect(s).toEqual({
@@ -40,6 +41,7 @@ describe('parseFilterState', () => {
       to: '2027-12-31',
       deadline: true,
       grant: true,
+      fee: 'free',
     });
   });
 
@@ -131,6 +133,13 @@ describe('matchesFilter', () => {
     ).toBe(false);
   });
 
+  it('filters by fee, and an event with no fee matches only "any"', () => {
+    expect(matchesFilter(row, { ...EMPTY_FILTER, fee: 'free' })).toBe(true);
+    expect(matchesFilter(row, { ...EMPTY_FILTER, fee: 'paid' })).toBe(false);
+    expect(matchesFilter({ ...row, fee: '' }, { ...EMPTY_FILTER, fee: 'free' })).toBe(false);
+    expect(matchesFilter({ ...row, fee: '' }, EMPTY_FILTER)).toBe(true);
+  });
+
   it('filters by open travel grant', () => {
     expect(matchesFilter(row, { ...EMPTY_FILTER, grant: true })).toBe(true);
     expect(matchesFilter({ ...row, openGrant: false }, { ...EMPTY_FILTER, grant: true })).toBe(
@@ -152,7 +161,9 @@ describe('rowFromDataset', () => {
       end: '2027-01-03',
       deadline: 'open',
       grant: 'open',
+      fee: 'paid',
     });
+    expect(parsed.fee).toBe('paid');
     expect(parsed.openGrant).toBe(true);
     expect(parsed.topics).toEqual(['dft', 'catalysis']);
     expect(parsed.openDeadline).toBe(true);

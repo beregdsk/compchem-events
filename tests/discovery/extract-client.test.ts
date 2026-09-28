@@ -111,6 +111,32 @@ describe('extractEvent', () => {
     expect(result?.cost).toBe('Free');
   });
 
+  it('passes a stated fee through, and omits it when null, missing or off-vocabulary', async () => {
+    const event = (fee: unknown) => ({
+      title: 'MD Summer School',
+      type: 'school',
+      start_date: '2027-07-01',
+      end_date: '2027-07-05',
+      format: 'in-person',
+      location: null,
+      url: 'https://example.org/md-school',
+      organizer: null,
+      cost: null,
+      ...(fee === undefined ? {} : { fee }),
+      topics: ['molecular-dynamics'],
+      description: 'A summer school on molecular dynamics.',
+      confidence: 0.9,
+    });
+    const run = async (fee: unknown) => {
+      const { impl } = stubFetch(200, completionWith({ found: true, event: event(fee) }));
+      return extractEvent('page text', { ...options, fetchImpl: impl });
+    };
+    expect((await run('free'))?.fee).toBe('free');
+    expect((await run('paid'))?.fee).toBe('paid');
+    expect(Object.hasOwn((await run(null)) as object, 'fee')).toBe(false);
+    expect(Object.hasOwn((await run(undefined)) as object, 'fee')).toBe(false);
+  });
+
   it('accepts a null event.url without throwing (Fix D)', async () => {
     const { impl } = stubFetch(
       200,
