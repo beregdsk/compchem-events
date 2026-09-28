@@ -1,0 +1,26 @@
+id: 40th-molecular-simulation-symposium-2026
+title: 40th Molecular Simulation Symposium
+type: symposium
+start_date: 2026-12-07
+end_date: 2026-12-09
+format: in-person
+url: https://www.molsci.jp/news/cosponsor/n260707/
+source_url: https://www.molsci.jp/news/cosponsor/n260707/
+topics:
+  - molecular-dynamics
+  - enhanced-sampling
+  - biomolecular-simulation
+  - soft-matter
+  - materials-modeling
+description: The 40th Molecular Simulation Symposium, organized by the Society
+  for Molecular Simulation, will take place December 7-9, 2026, at Kyushu
+  University Medical School Centennial Hall. It is co-organized with the Japan
+  Society for Molecular Science.
+added: 2026-09-28
+last_verified: 2026-09-28
+location:
+  city: Fukuoka
+  country: JP
+  venue: Kyushu University Medical School Centennial Hall
+organizer: Society for Molecular Simulation
+cost: 'General: ¥19,000; Student: ¥6,000; Members: ¥11,000; Student members: ¥6,000'
