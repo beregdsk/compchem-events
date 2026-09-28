@@ -215,8 +215,10 @@ function enhance(figure: HTMLElement, svg: SVGSVGElement, payload: GraphPayload)
       dragging!.fy = null;
       sim.alphaTarget(0);
       // A mouse drag's click follows in this same task; a touch drag has none.
-      // Clearing on the next task keeps the flag from swallowing a later click
-      // — a keyboard Enter on a node has no pointer events to reset it.
+      // Clearing on the next task keeps the flag from swallowing a later
+      // pointer click. Keyboard activation is exempt in the click handler
+      // instead: Chrome runs input ahead of timers, so an Enter pressed right
+      // after a touch drag can arrive before this timeout fires.
       suppressClick = moved;
       setTimeout(() => (suppressClick = false));
       dragging = null;
@@ -229,10 +231,12 @@ function enhance(figure: HTMLElement, svg: SVGSVGElement, payload: GraphPayload)
   svg.addEventListener('pointerup', release);
   svg.addEventListener('pointercancel', release);
 
-  // A drag that ends over its own node must not follow the link.
+  // A drag that ends over its own node must not follow the link. A click
+  // with `detail` 0 came from the keyboard, never from the drag.
   svg.addEventListener(
     'click',
     (e) => {
+      if (e.detail === 0) return;
       if (suppressClick && nodeOf(e.target)) e.preventDefault();
       suppressClick = false;
     },
