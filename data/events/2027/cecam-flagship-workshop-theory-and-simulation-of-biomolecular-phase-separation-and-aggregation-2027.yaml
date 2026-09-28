@@ -1,0 +1,26 @@
+id: cecam-flagship-workshop-theory-and-simulation-of-biomolecular-phase-separation-and-aggregation-2027
+title: 'CECAM Flagship Workshop: Theory and simulation of biomolecular phase
+  separation and aggregation'
+type: workshop
+start_date: 2027-01-11
+end_date: 2027-01-14
+format: in-person
+url: https://www.cecam.org/workshop-details/theory-and-simulation-of-biomolecular-phase-separation-and-aggregation-1272
+source_url: https://www.cecam.org/workshop-details/theory-and-simulation-of-biomolecular-phase-separation-and-aggregation-1272
+topics:
+  - biomolecular-simulation
+  - soft-matter
+  - ml-chemistry
+description: Workshop on theory and simulation of biomolecular phase separation
+  and aggregation, covering theoretical methods, coarse-grained simulations, and
+  machine learning approaches to understand condensates and their role in
+  disease.
+added: 2026-09-28
+last_verified: 2026-09-28
+location:
+  city: Zurich
+  country: CH
+  venue: CECAM-ETHZ, auditorium E51, HIT Building, Zurich
+organizer: Jerelle Joseph (Princeton University); Thomas Michaels (ETH Zurich);
+  Rohit Pappu (Washington University In St. Louis); Andela Saric (Institute of
+  Science and Technology Austria)
