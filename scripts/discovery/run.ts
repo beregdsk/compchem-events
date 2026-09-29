@@ -2,6 +2,7 @@
 import { pathToFileURL } from 'node:url';
 import { site } from '../../site.config';
 import { loadEvents } from '../../src/lib/events';
+import { loadPositions } from '../../src/lib/positions';
 import { loadValidationContext } from '../../src/lib/validation';
 import { DEFAULT_JEV_MODEL } from '../../src/lib/discovery/classify-candidate';
 import { DEFAULT_EXTRACT_BASE_URL } from '../../src/lib/discovery/extract-client';
@@ -153,6 +154,8 @@ async function main(): Promise<void> {
     maxPrs: cfg.maxPrs,
     maxTokens: cfg.maxTokens,
     tokensUsedSoFar: pipelineResult.tokensUsed,
+    positions: pipelineResult.positions,
+    existingPositions: loadPositions({ includeFixtures: false }),
     log,
   };
   const result = await runDiscoveryRun(orchestratorOptions);

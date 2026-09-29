@@ -5,8 +5,8 @@ import {
   AUTO_APPROVE_THRESHOLD,
   HIGH_CONFIDENCE_LABEL,
 } from '../../src/lib/discovery/auto-approve';
-import { buildPrBody } from '../../src/lib/discovery/orchestrator';
-import type { RawEvent } from '../../src/lib/types';
+import { buildPositionPrBody, buildPrBody } from '../../src/lib/discovery/orchestrator';
+import type { RawEvent, RawPosition } from '../../src/lib/types';
 
 const candidate: RawEvent = {
   id: 'excited-states-symposium-2027',
@@ -31,6 +31,22 @@ function bodyWithConfidence(confidence: number): string {
 describe('parseConfidence', () => {
   it("reads the number from buildPrBody's own Confidence line", () => {
     expect(parseConfidence(bodyWithConfidence(0.93))).toBe(0.93);
+  });
+
+  it("reads the number from buildPositionPrBody's Confidence line", () => {
+    const p: RawPosition = {
+      id: 'utrecht-university-phd-position-in-molecular-dynamics-2026',
+      title: 'PhD position in molecular dynamics',
+      level: 'phd',
+      institution: 'Utrecht University',
+      location: { city: 'Utrecht', country: 'NL' },
+      url: 'https://example.org/jobs/phd-md',
+      source_url: 'https://example.org/jobs.xml',
+      topics: ['molecular-dynamics'],
+      description: 'A funded PhD project.',
+      added: '2026-09-29',
+    };
+    expect(parseConfidence(buildPositionPrBody(p, 0.93))).toBe(0.93);
   });
 
   it('returns undefined for a body with no Confidence line', () => {

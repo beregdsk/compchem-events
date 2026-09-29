@@ -1,5 +1,7 @@
-import type { RawEvent } from '../types';
+import { POSITION_LEVEL_LABELS, type RawEvent, type RawPosition } from '../types';
+import { isBlocked, normaliseTitle } from '../validation';
 import {
+  ADD_THRESHOLD,
   classifyCandidate,
   type ClassificationResult,
   type CriteriaScores,
@@ -17,6 +19,8 @@ import {
   type DefaultBranch,
   type GitHubOptions,
 } from './github-client';
+import type { PositionCandidate } from './pipeline';
+import { positionFilePath } from './position-draft';
 
 /**
  * Renders candidate-controlled text (extracted from a hostile page — see
@@ -77,6 +81,48 @@ export function buildPrBody(candidate: RawEvent, classification: AddClassificati
   ].join('\n');
 }
 
+export function buildPositionPrBody(p: RawPosition, confidence: number): string {
+  const optional = (text: string | undefined) => (text === undefined ? '(none)' : inlineCode(text));
+  return [
+    `Confidence: ${confidence.toFixed(2)}`,
+    'Position advert (no classifier runs on positions; check it against docs/curation-policy.md).',
+    '',
+    `- **title:** ${inlineCode(p.title)}`,
+    `- **level:** ${inlineCode(POSITION_LEVEL_LABELS[p.level])}`,
+    `- **institution:** ${inlineCode(p.institution)}`,
+    `- **group:** ${optional(p.group)}`,
+    `- **location:** ${inlineCode(`${p.location.city}, ${p.location.country}`)}`,
+    `- **deadline:** ${optional(p.deadline)}`,
+    `- **url:** ${link(p.url)}`,
+    `- **source_url:** ${link(p.source_url)}`,
+    `- **topics:** ${inlineCode(p.topics.join(', '))}`,
+    `- **description:** ${inlineCode(p.description)}`,
+  ].join('\n');
+}
+
+/**
+ * Mechanical duplicate and blocklist checks for a position, against those on
+ * main and those accepted earlier this run. A url equal to its own
+ * source_url is the fallback for a post with no advert link, which several
+ * positions can share, so only title plus institution identifies those.
+ */
+export function positionSkipReason(
+  p: RawPosition,
+  known: readonly RawPosition[],
+  blockedHosts: ReadonlySet<string>,
+): 'duplicate-url' | 'duplicate-title-institution' | 'blocklisted' | undefined {
+  const url = (u: string) => u.replace(/\/+$/, '');
+  const key = (x: RawPosition) => `${normaliseTitle(x.title)}|${normaliseTitle(x.institution)}`;
+  const ownUrl = p.url !== p.source_url;
+  for (const k of known) {
+    if (ownUrl && k.url !== k.source_url && url(k.url) === url(p.url)) return 'duplicate-url';
+    if (key(k) === key(p)) return 'duplicate-title-institution';
+  }
+  if (isBlocked(p.url, blockedHosts)) return 'blocklisted';
+  if (p.source_url && isBlocked(p.source_url, blockedHosts)) return 'blocklisted';
+  return undefined;
+}
+
 export interface OrchestratorOptions {
   candidates: readonly RawEvent[];
   existingEvents: readonly RawEvent[];
@@ -87,6 +133,9 @@ export interface OrchestratorOptions {
   maxPrs: number;
   maxTokens: number;
   tokensUsedSoFar: number;
+  /** Position adverts from the pipeline, proposed after events. */
+  positions: readonly PositionCandidate[];
+  existingPositions: readonly RawPosition[];
   log?: (message: string) => void;
 }
 
@@ -253,6 +302,50 @@ export async function runDiscoveryRun(options: OrchestratorOptions): Promise<Orc
       skipped.push({ id: candidate.id, reason: `error: ${messageText}` });
       orchestratorErrors.push({ source: candidate.id, message: messageText });
       log(`error processing ${candidate.id}: ${messageText}`);
+    }
+  }
+
+  const knownPositions: RawPosition[] = [...options.existingPositions];
+  for (const { draft, confidence } of options.positions) {
+    try {
+      if (confidence < ADD_THRESHOLD) {
+        skipped.push({ id: draft.id, reason: 'low confidence' });
+        log(`skipping position ${draft.id}: low confidence (${confidence.toFixed(2)})`);
+        continue;
+      }
+      const reason = positionSkipReason(draft, knownPositions, options.blockedHosts);
+      if (reason) {
+        skipped.push({ id: draft.id, reason });
+        log(`skipping position ${draft.id}: ${reason}`);
+        continue;
+      }
+      knownPositions.push(draft);
+      if (prsOpened + prsUpdated >= options.maxPrs) {
+        skipped.push({ id: draft.id, reason: 'MAX_PRS reached' });
+        deferred.push(draft.id);
+        continue;
+      }
+      const proposal = await proposeFile({
+        branch: `discovery/position/${draft.id}`,
+        path: positionFilePath(draft),
+        content: serializeDraft(draft),
+        title: `Position: ${draft.title}`,
+        message: `Add candidate position: ${draft.title}`,
+        body: buildPositionPrBody(draft, confidence),
+        labels: ['needs-review', 'position'],
+      });
+      if (proposal.outcome === 'reviewed') {
+        skipped.push({ id: draft.id, reason: 'already reviewed' });
+        continue;
+      }
+      if (proposal.outcome === 'updated') prsUpdated += 1;
+      else prsOpened += 1;
+      log(`${proposal.outcome} PR #${proposal.pr} for position ${draft.id}`);
+    } catch (err) {
+      const messageText = err instanceof Error ? err.message : String(err);
+      skipped.push({ id: draft.id, reason: `error: ${messageText}` });
+      orchestratorErrors.push({ source: draft.id, message: messageText });
+      log(`error processing position ${draft.id}: ${messageText}`);
     }
   }
 
