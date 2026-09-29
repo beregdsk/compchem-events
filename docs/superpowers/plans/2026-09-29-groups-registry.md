@@ -70,6 +70,7 @@ Discovery:
 - `scripts/discovery/run.ts` (modify): `MAX_SEARCHES`, wiring.
 - `scripts/discovery/groups-backfill.ts` (create), `package.json` (modify).
 - `data/sources.yaml`, `docs/discovery-agent.md` (modify).
+- `src/lib/discovery/parsers/listing.ts` also gains `findPositionLinks` (Task 12).
 
 ---
 
@@ -1171,6 +1172,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 - Modify: `data/sources.yaml`
 - Create: `tests/discovery/fixtures/pages/labinitio-groups.html` (trimmed copy of `https://labinitio.org/explore/aust_comp_chem/`: nav, two `<h3>` institutions with two `<li><a>` PIs each, one linking to Google Scholar and one to a lab site such as `https://cootelab.com/`, and the footer)
 - Create: `tests/discovery/fixtures/pages/xfel-theory-groups.html` (trimmed copy of the XFEL list: the in-page `#e297116` index links, and one `<table>` with `<caption><strong>Atoms, molecules, clusters and gas phase chemistry</strong></caption>` holding two rows with external group links)
+- Create: `tests/discovery/fixtures/pages/curlie-groups.html` (trimmed copy of the curlie Research_Groups page: header/nav, three `.site-item` blocks each with a `/public/flag?...` link and a `.site-title a[target=_blank]` link to an `http://` group site, and the footer)
 - Create: `tests/discovery/parsers/group-listing.test.ts`
 - Test: `tests/discovery/pipeline.test.ts`
 
@@ -1202,6 +1204,12 @@ describe('parseGroupListing', () => {
     const leads = parseGroupListing(page('labinitio-groups'), 'https://labinitio.org/explore/aust_comp_chem/');
     expect(leads.map((l) => l.text)).not.toContain('Home');
     expect(leads.some((l) => l.link?.includes('labinitio.org'))).toBe(false);
+  });
+
+  it('reads curlie entries and skips its own flag links', () => {
+    const leads = parseGroupListing(page('curlie-groups'), 'https://curlie.org/Science/Chemistry/Computational/Research_Groups/');
+    expect(leads.map((l) => l.text)).toContain('Case, David A.');
+    expect(leads.some((l) => l.link?.includes('curlie.org'))).toBe(false);
   });
 
   it('reads XFEL rows with the table caption as context', () => {
@@ -1333,6 +1341,12 @@ Fetch both URLs first and confirm HTTP 200. Append to `data/sources.yaml`:
   added: 2026-09-29
   last_checked: 2026-09-29
   notes: PIs under institution headings, mostly linked to Google Scholar, so most resolve through search. CC BY 4.0; none of it is copied.
+- name: curlie — computational chemistry research groups
+  url: https://curlie.org/Science/Chemistry/Computational/Research_Groups/
+  kind: group-listing
+  added: 2026-09-29
+  last_checked: 2026-09-29
+  notes: 34 group links (DMOZ descendant), mostly old http:// URLs, so many are stale and resolve through search. robots.txt sets Crawl-delay 1000; one fetch per daily run.
 - name: European XFEL — list of external theory groups
   url: https://www.xfel.eu/organization/scientific_and_technical_groups/theory/list_of_external_theory_groups/index_eng.html
   kind: group-listing
@@ -1924,7 +1938,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 Behaviour of `resolveGroupLeads`, in order, per lead:
 1. Listing lead → one item `{name: text, type: link && isProfileHost(link) ? 'person' : 'organisation', context}`. Other leads → `splitOrganizer(text)`; if every part matches the index, the lead is done; otherwise the unmatched parts, joined with `'; '` (each with its affiliation in parentheses), go to **one** `splitNames` call; each returned item (affiliation becomes `context`, falling back to the lead's `context`) is matched again.
 2. Unmatched item: `key = normaliseGroupName(name)`. Skip (log `cached`) if `state.groupLookups[key]` is newer than 90 days, or if `key` was already handled this run.
-3. Candidate URLs: the lead's `link` when present, not a profile host, and not on the origin's host; then, only if none verifies, `searchGroupWebsites` (person: `"<name>" research group <context>`; organisation: `"<name>" <context>`), counted against `maxSearches` — when the cap is hit, stop searching and **do not** cache the key.
+3. Candidate URLs: the lead's `link` when present, not a profile host, and not on the origin's host, upgraded from `http://` to `https://` with `normalizeEventUrl` (extract-client.ts) before fetching; then, only if none verifies, `searchGroupWebsites` (person: `"<name>" research group <context>`; organisation: `"<name>" <context>`), counted against `maxSearches` — when the cap is hit, stop searching and **do not** cache the key.
 4. For up to 2 search URLs (plus the link): `politeFetch(url, { ...fetch, state, force: true })`, counted against `maxPages`; on `fetched`, `extractGroup(extractionInputFromPage(body, finalUrl).text, item, extract)`; record `{ url, verdict }` (`not this group`, `error: …`, `drafted`). First draft wins; `website = finalUrl`.
 5. A draft is validated with `validateGroup({ file: groupFilePath(draft), data: draft }, ctx)`; errors → verdict `invalid: …`, no candidate.
 6. Cache: `state.groupLookups[key] = { triedAt, outcome }` for every tried key (`drafted`, `not found`, `invalid`, `error`), except when a cap stopped the lookup.
@@ -1977,6 +1991,10 @@ it('splits people and searches each with their affiliation', ...)
 it('verifies a listing link first and does not search when it verifies', ...)
   // lead { text: 'Michelle Coote', link: 'https://cootelab.com/', fromListing: true, context: 'Flinders University' };
   // expect one candidate with website 'https://cootelab.com/', searches === 0.
+
+it('fetches an http:// listing link as https://', ...)
+  // lead link 'http://cootelab.com/'; expect the page stub to be asked for 'https://cootelab.com/' and
+  // the candidate's website to start with 'https://'.
 
 it('searches instead of fetching a Google Scholar link', ...)
   // lead link 'https://scholar.google.com.au/citations?user=x'; expect no fetch of scholar, one search.
@@ -2048,7 +2066,7 @@ import { daysBetween, type ISODate } from '../dates';
 import { normaliseGroupName, validateGroup } from '../group-validation';
 import type { RawGroup } from '../types';
 import { loadValidationContext } from '../validation';
-import type { ExtractOptions } from './extract-client';
+import { normalizeEventUrl, type ExtractOptions } from './extract-client';
 import { politeFetch, type FetchOptions } from './fetch';
 import { groupFilePath, synthesizeGroupDraft } from './group-draft';
 import { extractGroup, splitNames, type NameItem } from './group-extract';
@@ -2131,8 +2149,9 @@ export async function resolveGroupLeads(options: ResolveOptions): Promise<Resolv
       try {
         let found: { fields: Awaited<ReturnType<typeof extractGroup>> & object; website: string } | undefined;
         const originHost = new URL(lead.origin).host;
-        if (lead.link && !isProfileHost(lead.link) && new URL(lead.link).host !== originHost) {
-          found = await verify(lead.link, item, considered);
+        const link = lead.link ? normalizeEventUrl(lead.link) : null;
+        if (link && !isProfileHost(link) && new URL(link).host !== originHost) {
+          found = await verify(link, item, considered);
         }
         if (!found) {
           if (result.searches >= options.maxSearches) { capped = true; }
@@ -2468,7 +2487,133 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 ---
 
-### Task 12: Ship the code, then run the backfill
+### Task 12: Position-listing sources (CCL's job list)
+
+**Files:**
+- Modify: `src/lib/discovery/sources.ts` (`'position-listing'` in `SOURCE_KINDS`)
+- Modify: `src/lib/discovery/parsers/listing.ts` (add `findPositionLinks`)
+- Modify: `src/lib/discovery/pipeline.ts` (`case 'position-listing'`)
+- Modify: `data/sources.yaml`, `docs/discovery-agent.md` (*Positions* section), `METADATA.md`
+- Create: `tests/discovery/fixtures/pages/ccl-joblist.html` (trimmed copy of `https://ccl.net/cca/jobs/joblist.html`: the intro, the `<a name="1">` heading, and five `<LI><A HREF="/cca/jobs/joblist/messNNNNNNN.shtml">yy.mm.dd Title</A>` entries dated 2026-09-23, 2026-09-10, 2026-08-19, 2026-07-02 and 2025-08-19, plus the `#1`/`#bottom` anchors and the submission links)
+- Test: `tests/discovery/parsers/listing.test.ts`, `tests/discovery/pipeline.test.ts`, `tests/discovery/sources.test.ts`
+
+**Interfaces:**
+- Consumes: `findEventPageLinks`'s link filtering; `processInput(..., 'post')`; `STALE_AFTER_DAYS` (src/lib/positions.ts); `daysBetween`.
+- Produces: `findPositionLinks(html: string, listingUrl: string, today: ISODate): string[]`.
+
+- [ ] **Step 1: Failing tests**
+
+`tests/discovery/parsers/listing.test.ts`:
+
+```ts
+describe('findPositionLinks', () => {
+  const html = readFileSync('tests/discovery/fixtures/pages/ccl-joblist.html', 'utf8');
+  const links = findPositionLinks(html, 'https://ccl.net/cca/jobs/joblist.html', '2026-09-29');
+
+  it('follows adverts dated within 45 days', () => {
+    expect(links).toEqual([
+      'https://ccl.net/cca/jobs/joblist/mess0070344.shtml',
+      'https://ccl.net/cca/jobs/joblist/mess0070247.shtml',
+    ]);
+  });
+
+  it('never follows in-page anchors, the submission form or mailto links', () => {
+    expect(links.some((l) => /cgi-bin|#|mailto/.test(l))).toBe(false);
+  });
+});
+```
+
+(2026-08-19 is 41 days before 2026-09-29, so adjust the fixture's third entry to 2026-08-10 — 50 days — to make the expected list exactly the first two.)
+
+`tests/discovery/sources.test.ts`: add `'position-listing'` to the accepted-kinds `it.each`.
+
+`tests/discovery/pipeline.test.ts`: a `position-listing` source whose page links two adverts on the same host, dated within 45 days; the advert bodies are a postdoc advert (passes `looksLikePosition`) and a workshop announcement; the LLM stub answers the position schema for the first and the event schema for the second. Expect `result.positions` to have one entry with `source_url` equal to the advert page, and `result.candidates` to have the workshop.
+
+- [ ] **Step 2: Verify failure**
+
+Run: `npx vitest run tests/discovery/parsers/listing.test.ts tests/discovery/sources.test.ts tests/discovery/pipeline.test.ts` — expected FAIL.
+
+- [ ] **Step 3: Implement**
+
+`listing.ts`:
+
+```ts
+/** `26.09.23 Computational Chemistry Postdoc` — CCL's yy.mm.dd prefix. */
+const LEADING_DATE = /^\s*(\d{2})\.(\d{2})\.(\d{2})\b/;
+
+/**
+ * Advert links on a job listing: the same structural filter as event
+ * listings, minus any whose link text starts with a yy.mm.dd date older
+ * than the positions page's stale threshold — an old advert must not be
+ * proposed as new with today's `added`. Undated links are kept.
+ */
+export function findPositionLinks(html: string, listingUrl: string, today: ISODate): string[] {
+  const doc = parseHTML(html);
+  const dated = new Map<string, string>();
+  for (const a of doc.querySelectorAll('a[href]')) {
+    const m = LEADING_DATE.exec(a.textContent ?? '');
+    if (!m) continue;
+    try {
+      dated.set(new URL(a.getAttribute('href')!, listingUrl).href, `20${m[1]}-${m[2]}-${m[3]}`);
+    } catch {
+      // unparsable href: findEventPageLinks drops it too
+    }
+  }
+  return findEventPageLinks(html, listingUrl).filter((link) => {
+    const posted = dated.get(link);
+    return posted === undefined || !isRealISODate(posted) || daysBetween(posted as ISODate, today) < STALE_AFTER_DAYS;
+  });
+}
+```
+
+with `isRealISODate` a small local helper (true when `new Date(d + 'T00:00:00Z').toISOString().slice(0, 10) === d`), and imports of `daysBetween`, `type ISODate` from `../../dates` and `STALE_AFTER_DAYS` from `../../positions`. If importing `positions.ts` pulls build-time code into the discovery bundle, move `STALE_AFTER_DAYS` and `ARCHIVE_AFTER_DAYS` into `src/lib/dates.ts`-adjacent `src/lib/position-status.ts` and re-export them from `positions.ts`.
+
+`sources.ts`: add `'position-listing'`. `pipeline.ts`:
+
+```ts
+      case 'position-listing': {
+        // A job board: each advert page is a post (position gate first,
+        // falling through to event extraction), fetched once and then left
+        // alone by the usual unchanged-page state.
+        await fetchAndProcess(source.url, budget, async (body) => {
+          for (const link of findPositionLinks(body, source.url, today)) {
+            await fetchAndProcess(link, budget, (pageBody) =>
+              processInput(extractionInputFromPage(pageBody, link), link, 'post'),
+            );
+          }
+          return true;
+        });
+        return;
+      }
+```
+
+- [ ] **Step 4: Source, docs, commit**
+
+Fetch `https://ccl.net/cca/jobs/joblist.html` and confirm HTTP 200, then add to `data/sources.yaml` (and `position-listing` to its format comment: "page listing job adverts; each linked advert is read as a post, adverts dated over 45 days ago skipped"):
+
+```yaml
+- name: CCL — jobs offered
+  url: https://ccl.net/cca/jobs/joblist.html
+  kind: position-listing
+  added: 2026-09-29
+  last_checked: 2026-09-29
+  notes: About 25 adverts linked as /cca/jobs/joblist/messNNNNNNN.shtml, dated yy.mm.dd in the link text; academic and industry mixed (the extractor drops industry). robots.txt is a 404.
+```
+
+`docs/discovery-agent.md` *Positions*: replace "Only three source kinds are routed: `rss`, `telegram-channel` and `mailbox`." with "Four source kinds are routed: `rss`, `telegram-channel`, `mailbox`, and `position-listing` (a job board whose linked adverts are each read as a post; adverts dated over 45 days ago are not followed)." `METADATA.md`: mention `findPositionLinks` in the `parsers/listing.ts` row.
+
+Run: `npx vitest run tests/discovery && npm run validate && npm run typecheck && npm run lint` — expected PASS.
+
+```bash
+git add src/lib/discovery/sources.ts src/lib/discovery/parsers/listing.ts src/lib/discovery/pipeline.ts data/sources.yaml docs/discovery-agent.md METADATA.md tests/discovery
+git commit -m "feat(discovery): position-listing sources, starting with CCL's job list
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+```
+
+---
+
+### Task 13: Ship the code, then run the backfill
 
 This task is operational. Nothing in it runs in CI.
 
@@ -2479,7 +2624,7 @@ Expected: all green. If any fails, fix it in the task that owns the code before 
 
 - [ ] **Step 2: Open the implementation PR and merge when green**
 
-Push the branch, open a PR titled `feat: groups registry, group discovery and aggregator sources` whose body summarises Tasks 1–11 and ends with `🤖 Generated with [Claude Code](https://claude.com/claude-code)`. Merge once every check passes (standing instruction in memory: merge own PRs when CI is green). Then pull `main` on the discovery host's checkout (memory: cron runs from the agg checkout, keep it on main) and rebuild the image, so the next scheduled run includes the groups pass.
+Push the branch, open a PR titled `feat: groups registry, group discovery and aggregator sources` whose body summarises Tasks 1–12 and ends with `🤖 Generated with [Claude Code](https://claude.com/claude-code)`. Merge once every check passes (standing instruction in memory: merge own PRs when CI is green). Then pull `main` on the discovery host's checkout (memory: cron runs from the agg checkout, keep it on main) and rebuild the image, so the next scheduled run includes the groups pass.
 
 - [ ] **Step 3: Dry-size the backfill**
 
@@ -2497,5 +2642,5 @@ Send the batch PR link and its counts (entries, skipped, searches used) to Teleg
 
 ## Self-review notes
 
-- Spec coverage: data model and validation (Task 1), page (Task 2), aggregator kind and rule reversal (Task 3), `force`/`finalUrl`/negative cache (Task 4), group-listing sources (Task 5), matching (Task 6), split/search/verify (Task 7), drafts, caps and cache (Task 8), skip reasons and PRs (Task 9), wiring, `MAX_SEARCHES`, security docs (Task 10), backfill (Task 11), running it (Task 12).
+- Spec coverage: position-listing sources (Task 12); data model and validation (Task 1), page (Task 2), aggregator kind and rule reversal (Task 3), `force`/`finalUrl`/negative cache (Task 4), group-listing sources (Task 5), matching (Task 6), split/search/verify (Task 7), drafts, caps and cache (Task 8), skip reasons and PRs (Task 9), wiring, `MAX_SEARCHES`, security docs (Task 10), backfill (Task 11), running it (Task 13).
 - Known gaps, accepted: DNS rebinding (a public name resolving to a private IP) is not checked, same as every other fetch the agent makes; alias-update PRs are out of scope (spec non-goal).
