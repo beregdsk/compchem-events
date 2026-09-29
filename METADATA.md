@@ -43,7 +43,7 @@ data/events/*.yaml  →  scripts/validate.ts  (gate: build fails on invalid data
 | `site.config.ts` | Every site-specific setting: name, domain, form URLs. The only place such values belong. |
 | `astro.config.ts` | Astro build configuration. |
 | `tsconfig.json` | TypeScript configuration (strict). |
-| `vitest.config.ts` | Test runner configuration. |
+| `vitest.config.ts` | Test runner configuration, wrapped in Astro's `getViteConfig` so tests can render `.astro` components. |
 | `playwright.config.ts` | Config for the one browser-driven smoke test. Builds against a production build via `npm run preview`. |
 | `eslint.config.js` | Lint rules. |
 | `.prettierrc.json` / `.prettierignore` | Formatting rules, and the pre-existing docs exempted from them. |
@@ -190,6 +190,7 @@ Vitest. Run with `npm test`.
 | Path | What it covers |
 | --- | --- |
 | `tests/lib/*.test.ts` | One file per `src/lib/` module: dates, events, filter, ical, orbital, regions, validation, and the semantic rules. |
+| `tests/components/*.test.ts` | Astro components rendered with the container API (`experimental_AstroContainer`); `position-row.test.ts` covers a position row's level label, advert link, deadline and stale label. Production builds carry no position data, so this is where a rendered row is checked. |
 | `tests/schema/schema.test.ts` | The JSON Schema itself. |
 | `tests/endpoints/` | The generated outputs: both `.ics` files parsed with a real iCalendar parser, plus the feed, JSON and sitemap. |
 | `tests/pages/links.test.ts` | Internal links resolve. |
