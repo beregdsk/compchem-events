@@ -42,6 +42,17 @@ describe('findEventPageLinks', () => {
       'https://example.org/events-contact-chemistry-2027/',
     ]);
   });
+
+  it('skips German category and archive pages (TYPO3, WE-Heraeus-Stiftung)', () => {
+    const html = `<main>
+      <a href="/veranstaltungen/kategorie/physikschule/">Physikschule</a>
+      <a href="/veranstaltungen/aktion/archiv/">vergangene Veranstaltungen</a>
+      <a href="/veranstaltungen/quantum-magnonics/">Quantum Magnonics</a>
+    </main>`;
+    expect(
+      findEventPageLinks(html, 'https://example.org/veranstaltungen/kategorie/we-heraeus-seminar/'),
+    ).toEqual(['https://example.org/veranstaltungen/quantum-magnonics/']);
+  });
 });
 
 describe('findNextListingPage', () => {

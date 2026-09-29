@@ -66,6 +66,7 @@ const FILE_EXTENSION =
 const NON_EVENT_SEGMENT = new Set([
   'about',
   'about-us',
+  'archiv',
   'accessibility',
   'account',
   'author',
@@ -80,6 +81,7 @@ const NON_EVENT_SEGMENT = new Set([
   'feed',
   'governance',
   'impressum',
+  'kategorie',
   'jobs',
   'login',
   'logout',
