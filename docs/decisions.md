@@ -618,4 +618,8 @@ Positions skip the jev classifier, whose criteria (programme, registration
 cost) do not fit an advert; mechanical duplicate and blocklist checks plus the
 0.5 confidence floor apply, and a human still merges every PR. A `url` equal
 to its `source_url` is the fallback for a post without an advert link and is
-not treated as a duplicate on its own.
+not treated as a duplicate on its own. A post advertising several positions
+yields only the first, and a post that yields a position is not also extracted
+as an event. Rendered rows are covered by a container-API test
+(`tests/components/position-row.test.ts`), since production builds carry no
+position data.

@@ -396,6 +396,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
             position.confidence,
             origin,
           );
+          log(`position found in ${input.sourceUrl}; event extraction skipped`);
           return true;
         }
       }

@@ -323,6 +323,7 @@ export async function runDiscoveryRun(options: OrchestratorOptions): Promise<Orc
       if (prsOpened + prsUpdated >= options.maxPrs) {
         skipped.push({ id: draft.id, reason: 'MAX_PRS reached' });
         deferred.push(draft.id);
+        log(`skipping position ${draft.id}: MAX_PRS (${options.maxPrs}) reached`);
         continue;
       }
       const proposal = await proposeFile({
@@ -336,6 +337,9 @@ export async function runDiscoveryRun(options: OrchestratorOptions): Promise<Orc
       });
       if (proposal.outcome === 'reviewed') {
         skipped.push({ id: draft.id, reason: 'already reviewed' });
+        log(
+          `skipping position ${draft.id}: branch exists with a closed/merged PR (already reviewed)`,
+        );
         continue;
       }
       if (proposal.outcome === 'updated') prsUpdated += 1;
