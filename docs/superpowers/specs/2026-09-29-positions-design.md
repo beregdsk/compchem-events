@@ -34,8 +34,8 @@ inline listing).
 ## Constraints from the repo
 
 - `AGENTS.md` rule 1: nothing from memory; every position needs a `url` it
-  was actually found at. (`last_verified` is being removed from events in a
-  separate change first, so positions never get it.)
+  was actually found at. (`last_verified` was removed from events in #87,
+  so positions never get it.)
 - Rule 2: `description` in our own words, 280 characters or fewer.
 - Rule 3: static only; status is derived at build time. `rebuild.yml` already
   rebuilds daily, so open/stale/archived move on schedule.
