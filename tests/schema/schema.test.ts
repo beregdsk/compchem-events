@@ -38,6 +38,16 @@ describe('event schema', () => {
     expect(validate({ ...base, id: 'example-workshop' })).toBe(false);
   });
 
+  // A date that matches YYYY-MM-DD but does not exist used to pass here and
+  // then crash the build with a bare RangeError in date arithmetic.
+  it.each(['2027-13-01', '2027-02-30', '2026-02-29'])('rejects the impossible date %s', (d) => {
+    expect(validate({ ...base, start_date: d, end_date: d })).toBe(false);
+  });
+
+  it('accepts a leap day', () => {
+    expect(validate({ ...base, start_date: '2028-02-29', end_date: '2028-03-01' })).toBe(true);
+  });
+
   it('rejects an unknown top-level property', () => {
     expect(validate({ ...base, rating: 5 })).toBe(false);
   });

@@ -623,3 +623,14 @@ yields only the first, and a post that yields a position is not also extracted
 as an event. Rendered rows are covered by a container-API test
 (`tests/components/position-row.test.ts`), since production builds carry no
 position data.
+
+## 2026-09-29 — Dates are calendar-checked; open position PRs are not rewritten
+
+Both schemas now give their `date` type `format: date` as well as the
+`YYYY-MM-DD` pattern, so `2027-02-30` fails `npm run validate` with a field
+error instead of passing it and crashing the build with a bare `RangeError`.
+A position whose PR is already open is left alone when the advert is seen
+again (skip reason `already proposed`), and so is one proposed under last
+year's id: rewriting the PR would move `added`, the "first seen" date that the
+45/90-day clock counts from, and a re-sighting after 1 January would otherwise
+open a second PR. Event PRs still refresh as before.

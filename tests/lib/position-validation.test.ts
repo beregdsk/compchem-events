@@ -78,6 +78,10 @@ describe('validatePosition', () => {
     );
   });
 
+  it('rejects an impossible deadline with a clear message', () => {
+    expect(errorsFor({ ...valid, deadline: '2026-02-30' }).join()).toMatch(/deadline: .*date/);
+  });
+
   it('rejects a blocklisted host', () => {
     const blocked = { ...ctx, blockedHosts: new Set(['example.org']) };
     const r = validatePosition({ file: FILE, data: valid }, blocked);

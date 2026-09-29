@@ -10,7 +10,7 @@ One YAML file per event at `data/events/<start-year>/<id>.yaml`. The JSON Schema
 | `title` | string | yes | Official event name, 5-140 characters. |
 | `series` | string | no | Slug shared by recurring editions (for example `euchems-compchem`). |
 | `type` | enum | yes | `conference`, `workshop`, `school`, `symposium`, `webinar`, `hackathon`. |
-| `start_date` | date | yes | `YYYY-MM-DD`. |
+| `start_date` | date | yes | `YYYY-MM-DD`, a real calendar date (every `date` field is checked this way). |
 | `end_date` | date | yes | `YYYY-MM-DD`, on or after `start_date`. Same day is allowed. |
 | `format` | enum | yes | `in-person`, `hybrid`, `online`. |
 | `location` | object | if `format` is not `online` | `city` (string, required), `country` (ISO 3166-1 alpha-2, uppercase, required), `venue` (string, optional). |
