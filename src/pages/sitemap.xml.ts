@@ -11,6 +11,8 @@ export const STATIC_PATHS = [
   '/donate/',
   '/submit/',
   '/graph/',
+  '/positions/',
+  '/positions/archive/',
   '/topics/',
 ];
 

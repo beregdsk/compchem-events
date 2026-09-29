@@ -140,6 +140,8 @@ One file per URL. Pages stay thin; they compose `src/lib/`.
 | `sources.astro` | `/sources/` — the public list of what the discovery agent reads. |
 | `donate.astro` | `/donate/` — what running the site costs, and how to help. |
 | `archive.astro` | `/archive` — past events. |
+| `positions.astro` | `/positions/` — open positions, plus those that may already be filled. |
+| `positions/archive.astro` | `/positions/archive/` — closed positions, grouped by year. |
 | `about.astro` | `/about` — what this is, plus the curation policy. |
 | `submit.astro` | `/submit` — how to add or correct an event. |
 | `404.astro` | Not-found page. |
@@ -156,6 +158,7 @@ One file per URL. Pages stay thin; they compose `src/lib/`.
 | --- | --- |
 | `layouts/Base.astro` | The page shell: masthead, footer, metadata, global stylesheet. |
 | `components/EventRow.astro` | One event in a list, with its dates, place and topics. |
+| `components/PositionRow.astro` | One position in a list: deadline or "no deadline", level, institution, place, topics, and a stale note. |
 | `components/DeadlineList.astro` | An event's deadlines. |
 | `components/OrbitalField.astro` | Renders the orbital plate as inline SVG at build time — inline so the dots can follow the theme tokens, which an external image could not. |
 | `components/PageActions.astro` | The row of per-page actions (subscribe, export, submit). |
@@ -194,7 +197,7 @@ Vitest. Run with `npm test`.
 | `tests/discovery/*.test.ts` | The discovery agent, one file per module: sources, fetching, parsers, extraction, drafting, classification, the orchestrator and the CLIs. Every LLM, GitHub and IMAP call is stubbed; CI never calls a real API. |
 | `tests/discovery/fixtures/candidates/` | Candidate events covering a clean add, each mechanical skip reason, and an adversarial prompt-injection attempt. |
 | `tests/smoke.test.ts` | `site.config.ts` sanity (Vitest, not a browser). |
-| `tests/e2e/*.spec.ts` | Playwright, against a production build: `smoke.spec.ts` (the home page loads, choosing a topic reduces the list, the URL updates), `graph.spec.ts` (the event map) and `related.spec.ts` (related events on an event page). Run with `npm run test:e2e`; not part of `npm test`. |
+| `tests/e2e/*.spec.ts` | Playwright, against a production build: `smoke.spec.ts` (the home page loads, choosing a topic reduces the list, the URL updates), `graph.spec.ts` (the event map) and `related.spec.ts` (related events on an event page) and `positions.spec.ts` (the positions pages and their links). Run with `npm run test:e2e`; not part of `npm test`. |
 | `tests/fixtures/valid/` | Events that must pass, covering the minimal, full and cancelled shapes. |
 | `tests/fixtures/invalid/` | One file per rule that must fail, named for the rule it breaks. Add a file here whenever you add a rule. |
 | `tests/fixtures/warnings/` | Events that pass but should warn, such as a bare-homepage `url`. |
