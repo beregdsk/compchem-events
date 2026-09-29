@@ -19,6 +19,15 @@ No single item is decisive; use judgement and record the reasons.
 - Journal or proceedings claims that cannot be verified, or misuse of indexing names.
 - The event page is missing, unreachable, or contradicts the listing.
 
+### Positions
+
+We list PhD, postdoc and permanent academic positions (research scientist,
+lecturer, faculty) in computational or theoretical chemistry. We do not list
+industry jobs, recruitment agencies or adverts that hide the employer. Each
+listing links the institution's advert when one exists, otherwise the
+announcement it was found in. A position without a deadline is marked "may
+already be filled" after 45 days and moves to the archive after 90.
+
 ### Blocklist
 
 `data/blocklist.yaml` lists organiser domains that are not listed. Each entry has the domain, the date added, and at least one **public evidence link** (for example a recognised checklist, a published report, or documented complaints). Entries require maintainer approval in a PR. We describe conduct and evidence, not motives. Anyone can request a review by opening an issue.

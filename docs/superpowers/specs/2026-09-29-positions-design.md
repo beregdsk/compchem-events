@@ -1,7 +1,6 @@
 # Positions page (PhD, postdoc, permanent academic jobs) — design
 
-Date: 2026-09-29. Status: approved in conversation; awaiting review of this
-written spec before planning.
+Date: 2026-09-29. Status: approved and implemented (plan docs/superpowers/plans/2026-09-29-positions.md).
 
 ## Intent
 
