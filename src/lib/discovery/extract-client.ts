@@ -337,7 +337,7 @@ export class RetryableExtractError extends Error {
  * limit's reset as epoch ms (`error.metadata.headers["X-RateLimit-Reset"]`);
  * otherwise a standard `Retry-After` header in seconds; otherwise a default.
  */
-function rateLimitWaitMs(response: Response, body: string, now = Date.now()): number {
+export function rateLimitWaitMs(response: Response, body: string, now = Date.now()): number {
   let waitMs: number | undefined;
   try {
     const reset = Number(
