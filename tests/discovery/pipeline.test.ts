@@ -665,6 +665,48 @@ describe('runPipeline', () => {
     }
   });
 
+  it('aggregator: extracts the linked page and records it, not the aggregator, as url and source_url', async () => {
+    const { path: statePath, cleanup: cleanupState } = tmpStatePath();
+    const { path: sourcesPath, cleanup: cleanupSources } = tmpSourcesFile(
+      '- name: Agg\n  url: https://agg.example/list/\n  kind: aggregator\n',
+    );
+    try {
+      const responses: Record<string, string> = {
+        'https://agg.example/list/':
+          '<html><body><main><a href="https://conf.example/2027/">Conf 2027</a>' +
+          '<a href="/list/own-page">Own page</a></main></body></html>',
+        'https://conf.example/2027/':
+          '<html><body><h1>Conf Workshop 2027</h1><p>A computational chemistry workshop.</p></body></html>',
+      };
+      const pageFetch: typeof fetch = async (input) => {
+        const url = String(input);
+        if (url.endsWith('/robots.txt')) return new Response('', { status: 200 });
+        const body = responses[url];
+        if (body === undefined) throw new Error(`unstubbed url: ${url}`);
+        return new Response(body, { status: 200 });
+      };
+      const result = await runPipeline({
+        sourcesPath,
+        statePath,
+        userAgent: 'Test Agent (+https://example.org)',
+        maxPages: 100,
+        maxTokens: 500_000,
+        sleepImpl: async () => {},
+        fetchImpl: pageFetch,
+        extract: { apiKey: 'sk-test', model: 'test-model', fetchImpl: stubExtractFetch() },
+      });
+      expect(result.candidates).toHaveLength(1);
+      expect(result.candidates[0]!.source_url).toBe('https://conf.example/2027/');
+      for (const c of result.candidates) {
+        expect(c.url.startsWith('https://agg.example')).toBe(false);
+        expect((c.source_url ?? '').startsWith('https://agg.example')).toBe(false);
+      }
+    } finally {
+      cleanupState();
+      cleanupSources();
+    }
+  });
+
   it('runs sources concurrently without overshooting maxPages', async () => {
     const { path: statePath, cleanup: cleanupState } = tmpStatePath();
     const hosts = ['a', 'b', 'c', 'd', 'e'].map((h) => `${h}.example`);

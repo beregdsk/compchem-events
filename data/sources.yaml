@@ -38,6 +38,11 @@
 #                          redirects to the app). No login needed. Posts are
 #                          exactly as hostile as a web page or mailing-list
 #                          message — same extraction pipeline, no exceptions.
+#   aggregator             another site's curated list of events; links to
+#                          other hosts are followed and only those official
+#                          pages are extracted (never the aggregator's text)
+#   group-listing          a page listing research groups; read by the groups
+#                          pass, one lead per link (docs/discovery-agent.md)
 #
 # Rules:
 #   - Every url below returned HTTP 200 and was read by a human or agent on
@@ -542,6 +547,12 @@
     congress first (18th, Berkeley, 31 May - 5 Jun 2026, when checked). Very
     low volume, very high relevance.
 
+- name: Lab Initio — computational chemistry conferences
+  url: https://labinitio.org/explore/comp_chem_conf/
+  kind: aggregator
+  added: 2026-09-29
+  last_checked: 2026-09-29
+  notes: Curated list of upcoming conferences, each linked to its own site. CC BY 4.0; only the linked official pages are extracted.
 # ---------------------------------------------------------------------------
 # Candidates: checked and NOT usable as sources. Kept so nobody re-derives
 # these findings. Each was checked on 2026-09-23.
@@ -580,8 +591,9 @@
 #   file requires a fetch before an entry.
 #
 # labinitio.org and other aggregators
-#   Coverage comparison only. Do not scrape or republish another site's
-#   curation (docs/discovery-agent.md).
+#   Allowed as sources since 2026-09-29 (kind: aggregator for events,
+#   group-listing for groups): every fact is rechecked on the official page
+#   and none of their text is copied. labinitio's lists are live entries above.
 #
 # RSC (Royal Society of Chemistry) events — https://www.rsc.org/events
 #   Checked 2026-09-25. HTTP 403 from a WAF/bot-protection layer, both with
@@ -624,7 +636,7 @@
 #   (newest post 2024). max-centre.eu/events renders its list client-side
 #   and exposes no feed. The yearly Symposium on Theoretical Chemistry and
 #   the Electronic Structure workshop move host site every edition.
-#   Rejected as other people's curation (see labinitio.org above):
+#   Rejected under the old other-people's-curation rule, dropped 2026-09-29, and not yet re-evaluated:
 #   lcpq.ups-tlse.fr/congres, uregina.ca/~eastalla/conf.html,
 #   quantumdynamicsconferences.wikidot.com. Rejected as commercial/predatory
 #   listing farms: 10times.com, waset.org, conferenceindex.org,

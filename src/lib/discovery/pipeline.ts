@@ -21,7 +21,7 @@ import { positionFilePath, synthesizePositionDraft } from './position-draft';
 import { politeFetch, type FetchOptions } from './fetch';
 import type { ExtractionInput } from './html';
 import { extractionInputFromPage } from './parsers/page';
-import { findEventPageLinks, findNextListingPage } from './parsers/listing';
+import { findAggregatorLinks, findEventPageLinks, findNextListingPage } from './parsers/listing';
 import { parseFeedItems } from './parsers/rss';
 import { parseICalEvents, type ICalEvent } from './parsers/ical';
 import { extractionInputsFromChannel } from './parsers/telegram';
@@ -561,6 +561,23 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
         }
         return;
       }
+      case 'aggregator': {
+        // Another site's curated list: only the official pages it links to
+        // are extracted, so every candidate's url and source_url is the
+        // event's own page, never the aggregator.
+        await fetchAndProcess(source.url, budget, async (body) => {
+          for (const link of findAggregatorLinks(body, source.url)) {
+            await fetchAndProcess(link, budget, (pageBody) =>
+              processInput(extractionInputFromPage(pageBody, link), link),
+            );
+          }
+          return true;
+        });
+        return;
+      }
+      case 'group-listing':
+        // Read by the groups pass (Task 5 fills this in).
+        return;
       case 'telegram-channel': {
         await fetchAndProcess(source.url, budget, async (body) => {
           let allOk = true;

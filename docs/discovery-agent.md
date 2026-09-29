@@ -63,15 +63,20 @@ All configuration by environment variables, validated by `scripts/discovery/run.
 
 Three of the URLs this document originally suggested were already dead when the list was compiled (`cecam.org/workshop-list`, `molssi.org/events/`, `acscomp.org`), and `www.ictp.it` refuses a scripted user agent. Hence the rule in that file: every entry is fetched before it is added, and `last_checked` says when.
 
-Five source kinds were added beyond the four the original version of this document listed:
+Several source kinds were added beyond the four the original version of this document listed:
 
 - `inline-listing` — a page that lists several events as text rather than as links to per-event pages (CCL's announcements, CCPBioSim, the EuChemS division's conferences, SCM). The page's own text goes to the model once, in a listing mode that returns every in-field event it states; each is then validated and screened like any other candidate.
 - `cecam-api` — CECAM's program, which its page renders in the browser from a JSON API (`src/lib/discovery/cecam-client.ts`). The API gives each event's dates and organisers; the event's own page, fetched like any other, gives its description, and both go to the model together.
+- `aggregator` — another site's curated list of events (labinitio.org's conference list). Links to other hosts are followed (`findAggregatorLinks` in `src/lib/discovery/parsers/listing.ts`) and only those official pages are extracted; the aggregator's own text never reaches the model.
 - `ical` — a calendar feed, parsed directly, since dates and titles arrive already typed. A feed carries no topics, so each event's topics come from keyword matches against `data/topics.yaml` (`src/lib/discovery/keyword-topics.ts`); only an event no keyword places goes to the extraction model, like any page. Telluride Science publishes one.
 - `mailbox` — a list we are subscribed to, read over IMAP (`src/lib/discovery/mailbox-client.ts`). See below. Psi-k is the live entry.
 - `telegram-channel` — a public channel, fetched at its anonymous web-preview path (`t.me/s/<channel>`, not `t.me/<channel>`, which redirects to the app). No login or bot token needed. Treat it like a listing-page: low precision, screen every post against `docs/curation-policy.md`. A post is exactly as hostile as a web page — same extraction pipeline in *Security model*, no exceptions. `data/sources.yaml` has a live example.
 
-Existing aggregators such as https://labinitio.org/ are for **coverage comparison only**. Do not scrape or republish another site's curation.
+Other aggregators may be sources (kind `aggregator`): another site's curated
+list points us at events, but only the pages it links to are fetched and
+extracted, so every fact is rechecked on, and linked to, the event's
+official page. None of the aggregator's own text is copied, and the
+aggregator is recorded in neither `url` nor `source_url`.
 
 ## Mailing lists
 

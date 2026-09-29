@@ -94,3 +94,9 @@ describe('validateSources', () => {
     expect(fields([{ ...good, kind: 'mailbox', folder: 'x' }])).toEqual([]);
   });
 });
+
+it.each(['aggregator', 'group-listing'])('accepts kind %s', (kind) => {
+  expect(
+    validateSources([{ name: 'X', url: 'https://x.example/', kind, last_checked: '2026-09-29' }]),
+  ).toEqual([]);
+});

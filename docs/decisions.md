@@ -644,3 +644,11 @@ registry is meant to standardise the `organizer` field later. `location` is
 optional for networks and societies, which have no single city. Ids have no
 year: a group is not dated, and the id must stay stable for events to point
 at it. See docs/superpowers/specs/2026-09-29-groups-registry-design.md.
+
+## 2026-09-29 — Other aggregators are allowed as sources
+
+The rule "coverage comparison only; do not scrape another site's curation"
+is dropped. Curated lists such as labinitio.org's are useful leads, so they
+are read as sources, but only the official pages they link to are extracted:
+every fact is rechecked there, and none of the aggregator's text is copied.
+The new source kind `aggregator` does this for events.

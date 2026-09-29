@@ -47,7 +47,7 @@ function isChromeContainer(el: Element): boolean {
   return tokens.some((t) => CHROME_TOKENS.has(t.toLowerCase()));
 }
 
-function inChrome(a: Element): boolean {
+export function inChrome(a: Element): boolean {
   if (a.closest(CHROME_SELECTOR)) return true;
   for (let el = a.parentElement; el && el.tagName !== 'BODY'; el = el.parentElement) {
     if (isChromeContainer(el)) return true;
@@ -172,6 +172,33 @@ export function findEventPageLinks(html: string, listingUrl: string): string[] {
       if (TRACKING_PARAM.test(key)) url.searchParams.delete(key);
     }
     if (looksLikeEventPage(url, listing)) links.add(url.toString());
+  }
+  return [...links];
+}
+
+/** Social and licence links an aggregator carries in its footer; never an event. */
+const NON_EVENT_HOSTS =
+  /(^|\.)(twitter\.com|x\.com|linkedin\.com|facebook\.com|instagram\.com|youtube\.com|creativecommons\.org|scholar\.google\.[a-z.]+|researchgate\.net|orcid\.org)$/i;
+
+/**
+ * Links an aggregator (another site's curated list) makes to other sites:
+ * each event's own page. The aggregator's own pages and site chrome are
+ * dropped, so only the official pages are fetched and extracted — none of
+ * the aggregator's text reaches the model.
+ */
+export function findAggregatorLinks(html: string, listingUrl: string): string[] {
+  const listingHost = new URL(listingUrl).host;
+  const links = new Set<string>();
+  for (const link of extractLinks(parseHTML(html), listingUrl, inChrome, {
+    allowOtherHosts: true,
+  })) {
+    const url = new URL(link);
+    if (url.host === listingHost || NON_EVENT_HOSTS.test(url.hostname)) continue;
+    if (FILE_EXTENSION.test(url.pathname)) continue;
+    for (const key of [...url.searchParams.keys()]) {
+      if (TRACKING_PARAM.test(key)) url.searchParams.delete(key);
+    }
+    links.add(url.toString());
   }
   return [...links];
 }

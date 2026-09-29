@@ -1,5 +1,7 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
+  findAggregatorLinks,
   findEventPageLinks,
   findNextListingPage,
 } from '../../../src/lib/discovery/parsers/listing';
@@ -74,5 +76,21 @@ describe('findNextListingPage', () => {
       findNextListingPage('<a rel="next" href="https://other.example/page/2/">n</a>', listing),
     ).toBeUndefined();
     expect(findNextListingPage(`<link rel="next" href="${listing}">`, listing)).toBeUndefined();
+  });
+});
+
+describe('findAggregatorLinks', () => {
+  const html = readFileSync('tests/discovery/fixtures/pages/labinitio-conferences.html', 'utf8');
+  const links = findAggregatorLinks(html, 'https://labinitio.org/explore/comp_chem_conf/');
+
+  it('follows links to other hosts', () => {
+    expect(links).toContain('https://icqc2026.org/');
+  });
+
+  it('drops the aggregator\u2019s own pages, social profiles and the licence', () => {
+    expect(links.every((l) => !l.includes('labinitio.org'))).toBe(true);
+    expect(links.some((l) => /twitter\.com|linkedin\.com|creativecommons\.org/.test(l))).toBe(
+      false,
+    );
   });
 });
