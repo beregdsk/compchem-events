@@ -21,7 +21,12 @@ import { positionFilePath, synthesizePositionDraft } from './position-draft';
 import { politeFetch, type FetchOptions } from './fetch';
 import type { ExtractionInput } from './html';
 import { extractionInputFromPage } from './parsers/page';
-import { findAggregatorLinks, findEventPageLinks, findNextListingPage } from './parsers/listing';
+import {
+  findAggregatorLinks,
+  findEventPageLinks,
+  findNextListingPage,
+  findPositionLinks,
+} from './parsers/listing';
 import { parseFeedItems } from './parsers/rss';
 import { parseGroupListing, type GroupLead } from './parsers/group-listing';
 import { parseICalEvents, type ICalEvent } from './parsers/ical';
@@ -575,6 +580,20 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
           for (const link of findAggregatorLinks(body, source.url)) {
             await fetchAndProcess(link, budget, (pageBody) =>
               processInput(extractionInputFromPage(pageBody, link), link),
+            );
+          }
+          return true;
+        });
+        return;
+      }
+      case 'position-listing': {
+        // A job board: each advert page is a post (position gate first,
+        // falling through to event extraction), fetched once and then left
+        // alone by the usual unchanged-page state.
+        await fetchAndProcess(source.url, budget, async (body) => {
+          for (const link of findPositionLinks(body, source.url, today)) {
+            await fetchAndProcess(link, budget, (pageBody) =>
+              processInput(extractionInputFromPage(pageBody, link), link, 'post'),
             );
           }
           return true;

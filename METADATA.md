@@ -113,7 +113,7 @@ behaviour lives and where tests point.
 | `discovery/http.ts` | `fetchWithTimeout`: every outbound call goes through it, since plain `fetch` can hang forever. |
 | `discovery/state.ts` | The run-to-run state file: each page's ETag and content hash, each host's robots.txt and last request time. Never throws; a bad file starts from scratch. |
 | `discovery/html.ts` | HTML to text, and same-host link extraction. |
-| `discovery/parsers/` | One parser per source kind: `listing.ts` (links to follow), `page.ts`, `rss.ts`, `ical.ts`, `telegram.ts`. |
+| `discovery/parsers/` | One parser per source kind: `listing.ts` (links to follow, including `findPositionLinks` for job boards), `page.ts`, `rss.ts`, `ical.ts`, `telegram.ts`. |
 | `discovery/cecam-client.ts` | Reads CECAM's program from the JSON API its page renders from. |
 | `discovery/mailbox-client.ts` | Read-only IMAP: plaintext bodies from one folder, deduplicated on `Message-ID`. |
 | `discovery/keyword-topics.ts` | Topic slugs from keyword matches against `data/topics.yaml`, so a typed feed needs no LLM call. |

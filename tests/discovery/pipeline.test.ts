@@ -1270,4 +1270,48 @@ describe('runPipeline positions', () => {
     const r = await run([advert], [], '2026-12-01');
     expect(r.positions).toEqual([]);
   });
+  it('position-listing: reads each recent linked advert as a post, and skips adverts over 45 days old', async () => {
+    const calls: string[] = [];
+    const { path: statePath, cleanup } = tmpStatePath();
+    const sources = tmpSourcesFile(
+      '- name: Job board\n  url: https://jobs.example/board/list.html\n  kind: position-listing\n',
+    );
+    const pages: Record<string, string> = {
+      'https://jobs.example/board/list.html':
+        '<html><body><ul>' +
+        '<li><a href="/board/ad1.html">26.09.23 PhD in molecular dynamics</a></li>' +
+        '<li><a href="/board/ad2.html">26.09.10 Winter School</a></li>' +
+        '<li><a href="/board/old.html">26.06.01 Old advert</a></li>' +
+        '</ul></body></html>',
+      'https://jobs.example/board/ad1.html': `<html><body><h1>PhD position</h1><p>${advert}</p></body></html>`,
+      'https://jobs.example/board/ad2.html':
+        '<html><body><h1>Winter School</h1><p>Molecular Dynamics Winter School, 1-3 May 2027. A computational chemistry school.</p></body></html>',
+    };
+    try {
+      const r = await runPipeline({
+        sourcesPath: sources.path,
+        statePath,
+        userAgent: 'Test Agent (+https://example.org)',
+        maxPages: 10,
+        maxTokens: 500_000,
+        today: '2026-09-29',
+        sleepImpl: async () => {},
+        fetchImpl: (async (input: RequestInfo | URL) => {
+          const url = String(input);
+          if (url.endsWith('/robots.txt')) return new Response('', { status: 200 });
+          const body = pages[url];
+          if (body === undefined) throw new Error(`unstubbed url: ${url}`);
+          return new Response(body, { status: 200 });
+        }) as typeof fetch,
+        extract: { apiKey: 'sk-test', model: 'm', fetchImpl: llm(calls) },
+      });
+      expect(r.positions).toHaveLength(1);
+      expect(r.positions[0]!.draft.source_url).toBe('https://jobs.example/board/ad1.html');
+      expect(r.candidates.map((c) => c.title)).toEqual(['Molecular Dynamics Winter School']);
+      expect(r.candidates[0]!.source_url).toBe('https://jobs.example/board/ad2.html');
+    } finally {
+      cleanup();
+      sources.cleanup();
+    }
+  });
 });

@@ -15,6 +15,7 @@ export const SOURCE_KINDS = [
   'telegram-channel',
   'aggregator',
   'group-listing',
+  'position-listing',
 ] as const;
 export type SourceKind = (typeof SOURCE_KINDS)[number];
 

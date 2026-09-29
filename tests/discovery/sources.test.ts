@@ -95,7 +95,7 @@ describe('validateSources', () => {
   });
 });
 
-it.each(['aggregator', 'group-listing'])('accepts kind %s', (kind) => {
+it.each(['aggregator', 'group-listing', 'position-listing'])('accepts kind %s', (kind) => {
   expect(
     validateSources([{ name: 'X', url: 'https://x.example/', kind, last_checked: '2026-09-29' }]),
   ).toEqual([]);

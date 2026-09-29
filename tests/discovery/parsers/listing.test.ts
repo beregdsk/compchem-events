@@ -4,6 +4,7 @@ import {
   findAggregatorLinks,
   findEventPageLinks,
   findNextListingPage,
+  findPositionLinks,
 } from '../../../src/lib/discovery/parsers/listing';
 
 describe('findEventPageLinks', () => {
@@ -92,5 +93,28 @@ describe('findAggregatorLinks', () => {
     expect(links.some((l) => /twitter\.com|linkedin\.com|creativecommons\.org/.test(l))).toBe(
       false,
     );
+  });
+});
+
+describe('findPositionLinks', () => {
+  const html = readFileSync('tests/discovery/fixtures/pages/ccl-joblist.html', 'utf8');
+  const links = findPositionLinks(html, 'https://ccl.net/cca/jobs/joblist.html', '2026-09-29');
+
+  it('follows adverts dated within 45 days', () => {
+    expect(links).toEqual([
+      'https://ccl.net/cca/jobs/joblist/mess0070344.shtml',
+      'https://ccl.net/cca/jobs/joblist/mess0070247.shtml',
+    ]);
+  });
+
+  it('never follows in-page anchors, the submission form or mailto links', () => {
+    expect(links.some((l) => /cgi-bin|#|mailto/.test(l))).toBe(false);
+  });
+
+  it('keeps every link on a page whose links carry no dates', () => {
+    const undated = '<a href="/cca/jobs/joblist/mess1.shtml">Postdoc, no date</a>';
+    expect(
+      findPositionLinks(undated, 'https://ccl.net/cca/jobs/joblist.html', '2026-09-29'),
+    ).toEqual(['https://ccl.net/cca/jobs/joblist/mess1.shtml']);
   });
 });

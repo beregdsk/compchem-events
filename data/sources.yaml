@@ -43,6 +43,8 @@
 #                          pages are extracted (never the aggregator's text)
 #   group-listing          a page listing research groups; read by the groups
 #                          pass, one lead per link (docs/discovery-agent.md)
+#   position-listing       page listing job adverts; each linked advert is read
+#                          as a post, adverts dated over 45 days ago skipped
 #
 # Rules:
 #   - Every url below returned HTTP 200 and was read by a human or agent on
@@ -574,6 +576,13 @@
   added: 2026-09-29
   last_checked: 2026-09-29
   notes: About 113 external group links in tables by research area; many areas (plasmas, X-ray imaging) are out of scope and are rejected at verification. The sitemap's list_of_external_theoretical_groups URL is a 404. robots.txt blocks named AI crawlers, not this agent's user agent.
+
+- name: CCL — jobs offered
+  url: https://ccl.net/cca/jobs/joblist.html
+  kind: position-listing
+  added: 2026-09-29
+  last_checked: 2026-09-29
+  notes: About 25 adverts linked as /cca/jobs/joblist/messNNNNNNN.shtml, dated yy.mm.dd in the link text; academic and industry mixed (the extractor drops industry). robots.txt is a 404.
 # ---------------------------------------------------------------------------
 # Candidates: checked and NOT usable as sources. Kept so nobody re-derives
 # these findings. Each was checked on 2026-09-23.

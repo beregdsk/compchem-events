@@ -119,8 +119,10 @@ re-deriving that judgement by hand.
 ## Positions
 
 Discovery also finds academic job adverts (PhD, postdoc, permanent), which go
-to `/positions/` instead of being dropped. Only three source kinds are routed:
-`rss`, `telegram-channel` and `mailbox`. For each such post the pipeline runs
+to `/positions/` instead of being dropped. Four source kinds are routed:
+`rss`, `telegram-channel`, `mailbox`, and `position-listing` (a job board whose
+linked adverts are each read as a post; adverts dated over 45 days ago are not
+followed). For each such post the pipeline runs
 the keyword gate `looksLikePosition` first; a post that passes goes to
 `extractPosition`. If the gate rejects it, or the extractor finds no position,
 the post continues to the normal event extraction, so an event that merely
