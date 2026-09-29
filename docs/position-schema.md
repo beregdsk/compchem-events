@@ -14,7 +14,7 @@ One YAML file per position at `data/positions/<added-year>/<id>.yaml`. Unknown f
 | `location`    | object   | yes      | `city` (string, 1–100 characters, required), `country` (ISO 3166-1 alpha-2, uppercase, required).                                      |
 | `url`         | string   | yes      | The advert, `https://`. Host not on `data/blocklist.yaml`. Falls back to the post it was found in when that post links no advert.      |
 | `source_url`  | string   | no       | Where it was found. `https://`. Equals `url` when the post linked no advert; that equality is how shared fallback URLs are recognised. |
-| `deadline`    | date     | no       | Application deadline, `YYYY-MM-DD`. Omitted when the advert states none.                                                               |
+| `deadline`    | date     | no       | Application deadline, `YYYY-MM-DD`, a real calendar date (as is `added`). Omitted when the advert states none.                         |
 | `topics`      | string[] | yes      | 1-5 unique slugs from `data/topics.yaml`.                                                                                              |
 | `description` | string   | yes      | Own words, plain text, 1–280 characters.                                                                                               |
 | `added`       | date     | yes      | Date first seen. Not in the future.                                                                                                    |
