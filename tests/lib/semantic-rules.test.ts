@@ -16,7 +16,6 @@ const valid = {
   topics: ['excited-states'],
   description: 'Three days of talks and tutorials on excited-state methods.',
   added: '2026-09-20',
-  last_verified: '2026-09-20',
   fixture: true,
 };
 
@@ -63,21 +62,9 @@ describe('rule 2: end_date is on or after start_date', () => {
   });
 });
 
-describe('rule 3: added and last_verified are sane', () => {
-  it('rejects a future last_verified', () => {
-    expect(errorsFor({ ...valid, last_verified: '2026-09-21' }).join()).toMatch(/future/i);
-  });
-
+describe('rule 3: added is not in the future', () => {
   it('rejects a future added', () => {
-    expect(
-      errorsFor({ ...valid, added: '2026-09-21', last_verified: '2026-09-21' }).join(),
-    ).toMatch(/future/i);
-  });
-
-  it('rejects added after last_verified', () => {
-    expect(
-      errorsFor({ ...valid, added: '2026-09-20', last_verified: '2026-09-19' }).join(),
-    ).toMatch(/added/i);
+    expect(errorsFor({ ...valid, added: '2026-09-21' }).join()).toMatch(/future/i);
   });
 });
 
@@ -269,12 +256,6 @@ describe('warnings', () => {
     expect(
       warningsFor({ ...valid, deadlines: [{ type: 'registration', date: '2027-03-09' }] }).join(),
     ).toMatch(/after the start/i);
-  });
-
-  it('warns when last_verified is over 90 days old and the event has not started', () => {
-    expect(
-      warningsFor({ ...valid, added: '2026-01-01', last_verified: '2026-01-01' }).join(),
-    ).toMatch(/90 days/);
   });
 
   it('warns when the description looks copied', () => {

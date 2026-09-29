@@ -9,5 +9,4 @@ url: http://example.org/x/
 topics: [dft]
 description: The url uses plain http instead of https.
 added: 2026-09-20
-last_verified: 2026-09-20
 fixture: true

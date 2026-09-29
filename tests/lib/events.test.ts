@@ -5,7 +5,6 @@ import {
   eventsWithTopic,
   hasOpenDeadline,
   hasOpenTravelGrant,
-  isStale,
   loadEvents,
   pastEvents,
   seriesEditions,
@@ -28,7 +27,6 @@ const stub = (over: Partial<RawEvent>): RawEvent =>
     topics: ['dft'],
     description: 'd',
     added: '2026-09-20',
-    last_verified: '2026-09-20',
     ...over,
   }) as RawEvent;
 
@@ -146,18 +144,6 @@ describe('hasOpenDeadline', () => {
   });
 });
 
-describe('isStale', () => {
-  const events = loadEvents(opts);
-
-  it('is false when recently verified', () => {
-    expect(isStale(events[0]!, '2026-09-20')).toBe(false);
-  });
-
-  it('is true more than 90 days after last_verified, before the event starts', () => {
-    expect(isStale(events[0]!, '2027-01-05')).toBe(true);
-  });
-});
-
 describe('memoisation', () => {
   it('caches a bare loadEvents() call and returns the same array reference', () => {
     const a = loadEvents();
@@ -201,8 +187,8 @@ describe('warnings (do not throw)', () => {
       expect(result).toHaveLength(1);
       expect(warnSpy).toHaveBeenCalledTimes(1);
       const message = warnSpy.mock.calls[0]!.join(' ');
-      expect(message).toContain('stale-warning-2027.yaml');
-      expect(message).toMatch(/90 days/);
+      expect(message).toContain('bare-homepage-warning-2027.yaml');
+      expect(message).toMatch(/bare homepage/);
     } finally {
       warnSpy.mockRestore();
     }

@@ -78,7 +78,7 @@ export interface DraftInput {
 
 /**
  * Builds a structurally complete `RawEvent` from extracted fields: `id` from
- * title + start year, `added`/`last_verified` set to the run date. This is
+ * title + start year, `added` set to the run date. This is
  * exactly what the later, separate PR-opening step would set anyway — see
  * docs/superpowers/specs/2026-09-23-discovery-source-parsing-design.md,
  * "Validation and the candidate draft".
@@ -97,7 +97,6 @@ export function synthesizeDraft(input: DraftInput, today: ISODate): RawEvent {
     topics: input.topics,
     description: input.description,
     added: today,
-    last_verified: today,
   };
   if (input.location) draft.location = input.location;
   if (input.organizer) draft.organizer = input.organizer;

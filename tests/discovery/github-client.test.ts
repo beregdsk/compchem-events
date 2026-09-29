@@ -191,7 +191,7 @@ describe('putFile', () => {
 
   // I4 from the final review: without this, a rerun that re-extracts the
   // same unchanged candidate commits an identical file every time, and
-  // resets `added`/`last_verified` over a reviewer's own edits to the PR.
+  // resets `added` over a reviewer's own edits to the PR.
   it('skips the commit entirely when the existing content already matches', async () => {
     const { impl, calls } = stubGitHub({
       'GET /repos/acme/compchem-events/contents/data/events/2027/some-event-2027.yaml?ref=discovery/some-event-2027':

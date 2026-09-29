@@ -14,8 +14,7 @@
     "url",
     "topics",
     "description",
-    "added",
-    "last_verified"
+    "added"
   ],
   "properties": {
     "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*-\\d{4}$" },
@@ -54,7 +53,6 @@
     "status": { "enum": ["scheduled", "postponed", "cancelled"] },
     "status_note": { "type": "string", "minLength": 1, "maxLength": 200 },
     "added": { "$ref": "#/$defs/date" },
-    "last_verified": { "$ref": "#/$defs/date" },
     "fixture": { "type": "boolean" }
   },
   "allOf": [

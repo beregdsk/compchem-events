@@ -588,3 +588,16 @@ Worker's immutable id, so they followed the rename.
 crawler's user agent. Cloudflare Email Routing forwards it to the maintainer's inbox: one
 literal rule on the zone, no mailbox and no cost. It only receives. Replying from the
 address would need an outbound provider, which nothing here needs yet.
+
+## 2026-09-29 — `last_verified` removed from the event schema
+
+The maintainer asked to drop the field. Nobody re-checked events on a schedule,
+so the date only ever recorded when a file was written — the same as `added` —
+and the 90-day "check the official page" notes it drove were noise rather than
+a signal. Removed with it: the future-date and added-after-verified errors, the
+stale-verification warning, `isStale` and both visitor-facing notes, the date
+field on the submission issue form, and the field in discovery drafts. The
+trust rule stands without it: `AGENTS.md` rule 1 still requires an official
+`url`/`source_url` read at the time of adding. Old specs and plans keep their
+references as history. A file that still carries the field now fails
+validation as an unknown property.

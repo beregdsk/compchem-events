@@ -19,7 +19,6 @@ const candidate: RawEvent = {
   topics: ['photochemistry'],
   description: 'A symposium on excited-state photochemistry.',
   added: '2026-09-25',
-  last_verified: '2026-09-25',
 };
 
 function bodyWithConfidence(confidence: number): string {

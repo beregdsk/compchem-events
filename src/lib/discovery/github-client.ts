@@ -130,8 +130,8 @@ interface ContentsInfo {
 /**
  * Skips the commit entirely when the branch already has this exact content
  * at this path — otherwise a rerun that re-extracts an unchanged candidate
- * would commit an identical file every time and reset `added`/
- * `last_verified` over whatever a reviewer already edited on the PR (final
+ * would commit an identical file every time and reset `added`
+ * over whatever a reviewer already edited on the PR (final
  * review finding I4). GitHub's Contents API returns `content` base64-
  * encoded with embedded newlines every ~60 characters, hence the strip
  * before decoding.

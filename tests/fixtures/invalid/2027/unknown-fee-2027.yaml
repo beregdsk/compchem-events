@@ -10,5 +10,4 @@ fee: cheap
 topics: [dft]
 description: A fee value outside the free/paid vocabulary.
 added: 2026-09-20
-last_verified: 2026-09-20
 fixture: true

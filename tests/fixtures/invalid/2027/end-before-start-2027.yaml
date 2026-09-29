@@ -9,5 +9,4 @@ url: https://example.org/end-before-start-2027/
 topics: [dft]
 description: The end date precedes the start date.
 added: 2026-09-20
-last_verified: 2026-09-20
 fixture: true

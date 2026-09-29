@@ -32,7 +32,7 @@ Run lint, typecheck, validate and test before every commit.
 
 ## Ground rules
 
-1. **Never invent data.** Do not add an event from memory. Every real event needs a `source_url` on the organiser's official site, and `last_verified` must be the date you actually checked it. If you cannot verify something, leave it out and say so.
+1. **Never invent data.** Do not add an event from memory. Every real event needs a `url` (and, if the dates come from elsewhere, a `source_url`) on the organiser's official site, read by you, not recalled. If you cannot verify something, leave it out and say so.
 2. **Respect copyright.** Do not paste text from organiser websites. Write `description` in your own words, 280 characters or fewer.
 3. **Static only.** No server code, no runtime database, no serverless functions in this task. Anything dynamic must be an external service reached by a plain link.
 4. **No tracking.** No analytics, cookies, third-party scripts, external fonts or CDNs. Everything is self-hosted in the build output.

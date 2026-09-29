@@ -19,7 +19,7 @@ A small VDS owned by the maintainer, as a scheduled job (daily or weekly cron). 
 5. **Validate**: run the output through `validateEvent` from `scripts/validate.ts`. Discard anything that fails, and log why.
 6. **Deduplicate** against existing events and blocklist (same URL, or same title plus start date, or fuzzy title match on the same dates). Implemented in `src/lib/discovery/classify-candidate.ts`; see `docs/superpowers/specs/2026-09-23-discovery-event-classifier-design.md`.
 7. **Screen** against `docs/curation-policy.md`: apply the blocklist, and flag events with red-flag signals for the reviewer instead of silently dropping them. Implemented in `src/lib/discovery/classify-candidate.ts`; see `docs/superpowers/specs/2026-09-23-discovery-event-classifier-design.md`.
-8. **Open a PR** on a branch named `discovery/YYYY-MM-DD`, one YAML file per candidate event, with a body listing for each event the source URL, confidence and any flags. Add the label `needs-review`. Set `added` and `last_verified` to the run date and note that the reviewer must confirm them.
+8. **Open a PR** on a branch named `discovery/YYYY-MM-DD`, one YAML file per candidate event, with a body listing for each event the source URL, confidence and any flags. Add the label `needs-review`. Set `added` to the run date.
 
 ## Security model
 

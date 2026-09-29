@@ -9,5 +9,4 @@ url: https://example.org/wrong-year-folder-2027/
 topics: [dft]
 description: This file lives in the 2026 folder despite starting in 2027.
 added: 2026-09-20
-last_verified: 2026-09-20
 fixture: true

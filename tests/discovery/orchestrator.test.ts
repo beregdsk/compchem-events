@@ -21,7 +21,6 @@ const candidate: RawEvent = {
   topics: ['photochemistry', 'excited-states'],
   description: 'A three-day symposium on excited-state photochemistry.',
   added: '2026-09-25',
-  last_verified: '2026-09-25',
 };
 
 const classification = {
@@ -158,7 +157,6 @@ function candidateEvent(overrides: Partial<RawEvent> = {}): RawEvent {
     topics: ['photochemistry'],
     description: 'A symposium on excited-state photochemistry.',
     added: '2026-09-25',
-    last_verified: '2026-09-25',
     ...overrides,
   };
 }
