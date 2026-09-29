@@ -5,15 +5,13 @@
 import Base from '../layouts/Base.astro';
 import ViewSwitch from '../components/ViewSwitch.astro';
 import { loadEvents } from '../lib/events';
-import { formatDateRange } from '../lib/dates';
-import { buildEventGraph, clusters, shortLabel } from '../lib/event-graph';
+import { buildEventGraph, shortLabel } from '../lib/event-graph';
 import { graphPayload, layoutGraph } from '../lib/graph-layout';
 import { NODE_RADIUS, shapeFor, shapePath } from '../lib/graph-shapes';
 
 const graph = buildEventGraph(loadEvents());
 const layout = layoutGraph(graph);
 const at = new Map(layout.positions.map((p) => [p.id, p]));
-const groups = clusters(graph);
 const LEGEND = [
   ['circle', 'Conference'],
   ['square', 'Workshop'],
@@ -136,21 +134,6 @@ const LEGEND = [
         id="event-graph-data"
         set:html={graphPayload(graph, layout)}
       ></script>
-      <h2>Clusters</h2>
-      <ol class="graph-clusters">
-        {groups.map((group) => (
-          <li>
-            <ul>
-              {group.map((n) => (
-                <li class:list={{ muted: n.status === 'past' }}>
-                  <a href={n.href}>{n.title}</a>{' '}
-                  <span class="mono">{formatDateRange(n.start_date, n.end_date)}</span>
-                </li>
-              ))}
-            </ul>
-          </li>
-        ))}
-      </ol>
     </>
   )}
 </Base>

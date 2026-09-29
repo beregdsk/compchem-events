@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildEventGraph,
-  clusters,
   organizerKeys,
   relatedEvents,
   shortLabel,
@@ -171,32 +170,6 @@ describe('buildEventGraph', () => {
 
   it('is empty for no events', () => {
     expect(buildEventGraph([])).toEqual({ nodes: [], edges: [] });
-  });
-});
-
-describe('clusters', () => {
-  it('groups connected events, largest first, and keeps singletons', () => {
-    const g = buildEventGraph([
-      ev('a'),
-      ev('b'),
-      ev('c'),
-      ev('x', { topics: ['catalysis'] }),
-      ev('y', { topics: ['catalysis'] }),
-      ev('lonely', { topics: ['soft-matter'] }),
-    ]);
-    expect(clusters(g).map((c) => c.map((n) => n.id).sort())).toEqual([
-      ['a', 'b', 'c'],
-      ['x', 'y'],
-      ['lonely'],
-    ]);
-  });
-
-  it('orders events within a cluster newest first', () => {
-    const g = buildEventGraph([
-      ev('old', { start_date: '2024-01-01', end_date: '2024-01-02' }),
-      ev('new', { start_date: '2027-01-01', end_date: '2027-01-02' }),
-    ]);
-    expect(clusters(g)[0]!.map((n) => n.id)).toEqual(['new', 'old']);
   });
 });
 

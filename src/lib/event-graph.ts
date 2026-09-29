@@ -1,7 +1,7 @@
 // Similarity between events, and the graph built from it, for the graph view
 // at /graph/. Pure: no DOM, no layout. Spec: docs/superpowers/specs/
 // 2026-09-28-event-graph-design.md.
-import { compareISO, type ISODate } from './dates';
+import type { ISODate } from './dates';
 import type { DerivedStatus, EventType, LoadedEvent } from './types';
 
 /** Weights of the three similarity signals. They sum to 1. */
@@ -151,38 +151,4 @@ export function relatedEvents(graph: EventGraph, id: string): string[] {
     .map((e) => ({ id: e.source === id ? e.target : e.source, weight: e.weight }))
     .sort((a, b) => b.weight - a.weight || titles.get(a.id)!.localeCompare(titles.get(b.id)!))
     .map((r) => r.id);
-}
-
-/**
- * Connected components, largest first; within one, newest event first. The
- * graph view lists these under the graph as its text equivalent.
- */
-export function clusters(graph: EventGraph): GraphNode[][] {
-  const adjacent = new Map<string, string[]>(graph.nodes.map((n) => [n.id, []]));
-  for (const e of graph.edges) {
-    adjacent.get(e.source)!.push(e.target);
-    adjacent.get(e.target)!.push(e.source);
-  }
-  const byId = new Map(graph.nodes.map((n) => [n.id, n]));
-  const seen = new Set<string>();
-  const groups: GraphNode[][] = [];
-  for (const start of graph.nodes) {
-    if (seen.has(start.id)) continue;
-    const group: GraphNode[] = [];
-    const stack = [start.id];
-    seen.add(start.id);
-    while (stack.length) {
-      const id = stack.pop()!;
-      group.push(byId.get(id)!);
-      for (const next of adjacent.get(id)!) {
-        if (!seen.has(next)) {
-          seen.add(next);
-          stack.push(next);
-        }
-      }
-    }
-    group.sort((a, b) => compareISO(b.start_date, a.start_date) || a.title.localeCompare(b.title));
-    groups.push(group);
-  }
-  return groups.sort((a, b) => b.length - a.length || a[0]!.title.localeCompare(b[0]!.title));
 }
