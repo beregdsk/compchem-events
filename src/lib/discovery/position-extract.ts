@@ -20,8 +20,8 @@ import { MAX_TOPICS } from './keyword-topics';
  */
 export const POSITION_PATTERNS: readonly RegExp[] = [
   /\bph\.?\s?d\.?\s+(positions?|studentships?|scholarships?|openings?|student\s+positions?)\b/i,
-  /\bdoctoral\s+(positions?|studentships?|candidates?)\b/i,
-  /\bpost-?doc(toral)?\s+(positions?|fellows?(hips?)?|researchers?|openings?|associates?)\b/i,
+  /\bdoctoral\s+(positions?|studentships?)\b/i,
+  /\bpost-?doc(toral)?\s+(positions?|fellowships?|openings?)\b/i,
   /\btenure[- ]track\b/i,
   /\bfaculty\s+(positions?|openings?)\b/i,
   /\blectureships?\b/i,
@@ -125,26 +125,47 @@ interface RawPosition {
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
+function nonEmpty(v: unknown): v is string {
+  return typeof v === 'string' && v.trim().length > 0;
+}
+
+function isRealDate(v: unknown): boolean {
+  if (typeof v !== 'string' || !ISO_DATE.test(v)) return false;
+  const d = new Date(`${v}T00:00:00Z`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === v;
+}
+
+/** The url only when the input text itself contains it (host + path, case-insensitive). */
+function groundedUrl(url: string | null, text: string): string | null {
+  if (url === null) return null;
+  const u = new URL(url);
+  const key = `${u.host}${u.pathname.replace(/\/+$/, '')}`.toLowerCase();
+  return text.toLowerCase().includes(key) ? url : null;
+}
+
 function isRawPosition(value: unknown): value is RawPosition {
   if (typeof value !== 'object' || value === null) return false;
   const p = value as Record<string, unknown>;
   const loc = p.location as Record<string, unknown> | null;
   return (
-    typeof p.title === 'string' &&
+    nonEmpty(p.title) &&
     (POSITION_LEVELS as readonly string[]).includes(p.level as string) &&
-    typeof p.institution === 'string' &&
+    nonEmpty(p.institution) &&
     (p.group === null || typeof p.group === 'string') &&
     typeof loc === 'object' &&
     loc !== null &&
-    typeof loc.city === 'string' &&
+    nonEmpty(loc.city) &&
     typeof loc.country === 'string' &&
+    /^[A-Za-z]{2}$/.test(loc.country) &&
     (p.url === null || typeof p.url === 'string') &&
     // A non-ISO deadline gets another attempt instead of a dropped position.
-    (p.deadline === null || (typeof p.deadline === 'string' && ISO_DATE.test(p.deadline))) &&
+    (p.deadline === null || isRealDate(p.deadline)) &&
     Array.isArray(p.topics) &&
     p.topics.every((t) => typeof t === 'string') &&
-    typeof p.description === 'string' &&
-    typeof p.confidence === 'number'
+    nonEmpty(p.description) &&
+    typeof p.confidence === 'number' &&
+    p.confidence >= 0 &&
+    p.confidence <= 1
   );
 }
 
@@ -154,13 +175,17 @@ function isResponse(value: unknown): value is { found: boolean; position: RawPos
   return typeof v.found === 'boolean' && (v.position === null || isRawPosition(v.position));
 }
 
-function normalize(raw: RawPosition, vocabulary: readonly string[]): ExtractedPosition {
+function normalize(
+  raw: RawPosition,
+  vocabulary: readonly string[],
+  text: string,
+): ExtractedPosition {
   const out: ExtractedPosition = {
     title: clip(raw.title, 140),
     level: raw.level as PositionLevel,
     institution: clip(raw.institution, 140),
     location: { city: clip(raw.location.city, 100), country: raw.location.country.toUpperCase() },
-    url: normalizeEventUrl(raw.url),
+    url: groundedUrl(normalizeEventUrl(raw.url), text),
     topics: [...new Set(raw.topics)].filter((t) => vocabulary.includes(t)).slice(0, MAX_TOPICS),
     description: clip(raw.description, 280),
     confidence: raw.confidence,
@@ -187,6 +212,6 @@ export async function extractPosition(
       );
     }
     if (!parsed.found || !parsed.position) return null;
-    return normalize(parsed.position, options.topics);
+    return normalize(parsed.position, options.topics, text);
   });
 }

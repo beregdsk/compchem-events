@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { extractPosition, looksLikePosition } from '../../src/lib/discovery/position-extract';
-import type { ExtractOptions } from '../../src/lib/discovery/extract-client';
+import { EXTRACT_ATTEMPTS, type ExtractOptions } from '../../src/lib/discovery/extract-client';
 
 const post = (name: string) => readFileSync(`tests/discovery/fixtures/posts/${name}.txt`, 'utf8');
 
@@ -21,6 +21,18 @@ describe('looksLikePosition', () => {
     'Two doctoral positions in quantum dynamics',
   ])('matches %s', (text) => {
     expect(looksLikePosition(text)).toBe(true);
+  });
+
+  it('does not match a school that only mentions PhD grants', () => {
+    expect(looksLikePosition(post('school-with-phd-grants'))).toBe(false);
+  });
+
+  it.each([
+    'The school is aimed at PhD students and postdoctoral researchers.',
+    'Postdoctoral fellows are encouraged to attend.',
+    'Doctoral candidates may present posters.',
+  ])('does not match event-audience text: %s', (text) => {
+    expect(looksLikePosition(text)).toBe(false);
   });
 
   it.each([
@@ -117,10 +129,42 @@ describe('extractPosition', () => {
     expect(seen.system).toMatch(/deadline/);
   });
 
-  it('retries a malformed deadline and then gives up with an error', async () => {
+  it('retries a malformed deadline for every attempt and then gives up with an error', async () => {
     const bad = { found: true, position: { ...found.position, deadline: '15 Nov 2026' } };
+    let calls = 0;
+    const inner = stubLlm(bad);
+    const counting = ((...args: Parameters<typeof fetch>) => {
+      calls++;
+      return inner(...args);
+    }) as typeof fetch;
+    await expect(extractPosition(post('phd-advert'), options(counting))).rejects.toThrow(
+      /expected shape/,
+    );
+    expect(calls).toBe(EXTRACT_ATTEMPTS);
+  });
+
+  it.each([
+    ['a country name', { location: { city: 'Vienna', country: 'Austria' } }],
+    ['an impossible date', { deadline: '2026-02-30' }],
+    ['confidence above 1', { confidence: 5 }],
+    ['an empty title', { title: '  ' }],
+  ])('rejects %s as malformed', async (_label, patch) => {
+    const bad = { found: true, position: { ...found.position, ...patch } };
     await expect(extractPosition(post('phd-advert'), options(stubLlm(bad)))).rejects.toThrow(
       /expected shape/,
     );
+  });
+
+  it('drops a url the input text does not contain', async () => {
+    const r = await extractPosition(
+      post('phd-advert'),
+      options(
+        stubLlm({
+          found: true,
+          position: { ...found.position, url: 'https://phish.example/apply' },
+        }),
+      ),
+    );
+    expect(r?.url).toBeNull();
   });
 });
