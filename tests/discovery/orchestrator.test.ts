@@ -551,6 +551,9 @@ describe('runDiscoveryRun positions', () => {
   const newPrStubs = (id: string, pr: number) => ({
     ...DEFAULT_BRANCH_STUBS,
     [`GET /repos/acme/compchem-events/git/ref/heads/${branchPath(id)}`]: { status: 404 },
+    [`GET /repos/acme/compchem-events/git/ref/heads/${branchPath(id.replace(/2026$/, '2025'))}`]: {
+      status: 404,
+    },
     'POST /repos/acme/compchem-events/git/refs': { status: 201, body: {} },
     [`GET /repos/acme/compchem-events/contents/data/positions/2026/${id}.yaml?ref=${branchPath(id)}`]:
       { status: 404 },
@@ -675,6 +678,62 @@ describe('runDiscoveryRun positions', () => {
       }),
     );
     expect(result.skipped).toEqual([{ id: position().id, reason: 'blocklisted' }]);
+  });
+
+  // Re-sighting an advert whose PR is still open must not rewrite it: the
+  // file's `added` date is when the advert was first seen.
+  it('leaves an already open position PR untouched', async () => {
+    const p = position({ added: '2026-10-20' });
+    const failureIssue = {
+      'GET /repos/acme/compchem-events/issues?state=open&labels=discovery-failures': {
+        status: 200,
+        body: [],
+      },
+    };
+    const { impl, calls } = stubGitHub({
+      ...failureIssue,
+      [`GET /repos/acme/compchem-events/git/ref/heads/${branchPath(p.id.replace(/2026$/, '2025'))}`]:
+        { status: 404 },
+      [`GET /repos/acme/compchem-events/git/ref/heads/${branchPath(p.id)}`]: {
+        status: 200,
+        body: { object: { sha: 'sha-branch' } },
+      },
+      [`GET /repos/acme/compchem-events/pulls?state=all&head=acme:${branchPath(p.id)}`]: {
+        status: 200,
+        body: [{ number: 40, state: 'open' }],
+      },
+    });
+    const result = await runDiscoveryRun(
+      baseOptions({
+        positions: [{ draft: p, confidence: 0.9 }],
+        github: { token: 'gh-test', repo: 'acme/compchem-events', fetchImpl: impl },
+      }),
+    );
+    expect(result.skipped).toEqual([{ id: p.id, reason: 'already proposed' }]);
+    expect(result.prsUpdated).toBe(0);
+    expect(calls.some((c) => c.method === 'PUT' || c.method === 'PATCH')).toBe(false);
+  });
+
+  it('skips an advert first proposed under the previous year id', async () => {
+    const p = position();
+    const { impl, calls } = stubGitHub({
+      'GET /repos/acme/compchem-events/issues?state=open&labels=discovery-failures': {
+        status: 200,
+        body: [],
+      },
+      [`GET /repos/acme/compchem-events/git/ref/heads/${branchPath(p.id.replace(/2026$/, '2025'))}`]:
+        { status: 200, body: { object: { sha: 'sha-old' } } },
+      [`GET /repos/acme/compchem-events/pulls?state=all&head=acme:${branchPath(p.id.replace(/2026$/, '2025'))}`]:
+        { status: 200, body: [{ number: 12, state: 'closed' }] },
+    });
+    const result = await runDiscoveryRun(
+      baseOptions({
+        positions: [{ draft: p, confidence: 0.9 }],
+        github: { token: 'gh-test', repo: 'acme/compchem-events', fetchImpl: impl },
+      }),
+    );
+    expect(result.skipped).toEqual([{ id: p.id, reason: 'already proposed' }]);
+    expect(calls.some((c) => c.url.endsWith('/pulls'))).toBe(false);
   });
 
   it('defers positions once MAX_PRS is used up', async () => {

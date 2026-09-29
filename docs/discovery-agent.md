@@ -125,7 +125,10 @@ The orchestrator handles positions after events, sharing the same `MAX_PRS`
 and `MAX_TOKENS` budgets. Positions skip the jev classifier. Each candidate
 is checked mechanically and skipped for one of these reasons: `low confidence`
 (below 0.5), `duplicate-url`, `duplicate-title-institution`, `blocklisted`,
-`already reviewed`, or `MAX_PRS reached`. Survivors become PRs on the branch
+`already reviewed`, `already proposed`, or `MAX_PRS reached`. `already
+proposed` means a PR for the same id is still open, or the advert was proposed
+under last year's id: an open position PR is never rewritten, so its `added`
+date stays the day the advert was first seen. Survivors become PRs on the branch
 `discovery/position/<id>`, labelled `needs-review` and `position`, with
 `Confidence: 0.xx` as the first line of the body. `auto-approve.ts` reads that
 line, so high-confidence position PRs get the `high-confidence` label and

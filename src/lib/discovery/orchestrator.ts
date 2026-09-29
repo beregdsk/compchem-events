@@ -194,6 +194,7 @@ export async function runDiscoveryRun(options: OrchestratorOptions): Promise<Orc
   type Proposal =
     | { outcome: 'opened'; pr: number }
     | { outcome: 'updated'; pr: number }
+    | { outcome: 'proposed'; pr: number }
     | { outcome: 'reviewed' };
 
   /**
@@ -210,8 +211,13 @@ export async function runDiscoveryRun(options: OrchestratorOptions): Promise<Orc
     message: string;
     body: string;
     labels: readonly string[];
+    /** false leaves an open PR exactly as it is (see the position loop). */
+    refresh?: boolean;
   }): Promise<Proposal> {
     const status = await getBranchStatus(file.branch, options.github);
+    if (status.exists && status.openPr !== undefined && file.refresh === false) {
+      return { outcome: 'proposed', pr: status.openPr };
+    }
     if (status.exists && status.openPr !== undefined) {
       // Refresh content and body, and re-assert the labels in case an
       // earlier run's addLabel call itself failed after opening the PR.
@@ -326,6 +332,16 @@ export async function runDiscoveryRun(options: OrchestratorOptions): Promise<Orc
         log(`skipping position ${draft.id}: MAX_PRS (${options.maxPrs}) reached`);
         continue;
       }
+      // An advert re-seen after 1 January gets a new id (the id carries the
+      // year it was added), so last year's branch is checked too.
+      const lastYear = `discovery/position/${draft.id.slice(0, -4)}${Number(draft.id.slice(-4)) - 1}`;
+      if ((await getBranchStatus(lastYear, options.github)).exists) {
+        skipped.push({ id: draft.id, reason: 'already proposed' });
+        log(`skipping position ${draft.id}: already proposed on ${lastYear}`);
+        continue;
+      }
+      // refresh: false — a re-sighting must not rewrite an open PR, or its
+      // `added` date ("first seen") would move and restart the 45/90-day clock.
       const proposal = await proposeFile({
         branch: `discovery/position/${draft.id}`,
         path: positionFilePath(draft),
@@ -334,7 +350,13 @@ export async function runDiscoveryRun(options: OrchestratorOptions): Promise<Orc
         message: `Add candidate position: ${draft.title}`,
         body: buildPositionPrBody(draft, confidence),
         labels: ['needs-review', 'position'],
+        refresh: false,
       });
+      if (proposal.outcome === 'proposed') {
+        skipped.push({ id: draft.id, reason: 'already proposed' });
+        log(`skipping position ${draft.id}: PR #${proposal.pr} is already open`);
+        continue;
+      }
       if (proposal.outcome === 'reviewed') {
         skipped.push({ id: draft.id, reason: 'already reviewed' });
         log(
