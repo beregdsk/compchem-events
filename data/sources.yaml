@@ -364,6 +364,40 @@
     biomolecular-simulation workshop at Hünfeld monastery, run from MPI for
     Multidisciplinary Sciences. One stable page per year's edition.
 
+- name: WE-Heraeus-Seminars (Wilhelm und Else Heraeus-Stiftung)
+  url: https://www.we-heraeus-stiftung.de/veranstaltungen/kategorie/we-heraeus-seminar/
+  kind: listing-page
+  added: 2026-09-29
+  last_checked: 2026-09-29
+  notes: >-
+    The foundation's own seminar series, mostly at Physikzentrum Bad Honnef:
+    small, invitation-style physics meetings, a few squarely chemical physics
+    (chirality-induced spin selectivity, molecules for quantum technologies).
+    Page 1 held 10 upcoming seminars and marks rel="next" (3 pages when
+    checked, ordered by date). German site chrome, English event pages.
+    Mostly physics and astronomy, so screen hard. No robots.txt (404).
+
+- name: Binational WE-Heraeus-Seminars
+  url: https://www.we-heraeus-stiftung.de/veranstaltungen/kategorie/binationales-we-heraeus-seminar/
+  kind: listing-page
+  added: 2026-09-29
+  last_checked: 2026-09-29
+  notes: >-
+    Same foundation, seminars co-run with a partner country (Israeli-,
+    North-American-, Argentinian-German, …), in Germany or abroad. 7 upcoming
+    when checked, one page. Mostly condensed-matter and quantum physics.
+
+- name: WE-Heraeus physics schools
+  url: https://www.we-heraeus-stiftung.de/veranstaltungen/kategorie/physikschule/
+  kind: listing-page
+  added: 2026-09-29
+  last_checked: 2026-09-29
+  notes: >-
+    Schools the foundation co-funds, e.g. Les Houches and joint ICTP colleges
+    — PhD- and postdoc-level, the school format this site lists. 3 upcoming
+    when checked. The foundation's teacher-training (Lehrerfortbildung) and
+    "Sonstiges" categories are deliberately left out.
+
 - name: Chimica 4.0 (University of Turin) schools
   url: https://www.chimica4-0.unito.it/category/summerschool/
   kind: listing-page
