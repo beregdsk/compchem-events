@@ -22,7 +22,7 @@ export function isPublicHttpsUrl(url: string): boolean {
     return false;
   }
   if (u.protocol !== 'https:') return false;
-  const host = u.hostname.toLowerCase();
+  const host = u.hostname.toLowerCase().replace(/\.+$/, '');
   if (host.startsWith('[') || /^\d+(\.\d+){3}$/.test(host)) return false;
   if (host === 'localhost' || !host.includes('.')) return false;
   return !/\.(local|localhost|internal|lan|home|arpa)$/.test(host);

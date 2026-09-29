@@ -26,6 +26,9 @@ describe('isPublicHttpsUrl', () => {
     'https://[::1]/',
     'https://10.0.0.2/',
     'https://printer.local/',
+    'https://localhost./',
+    'https://printer.local./',
+    'https://metadata.google.internal./',
     'not a url',
   ])('rejects %s', (u) => {
     expect(isPublicHttpsUrl(u)).toBe(false);
@@ -33,6 +36,10 @@ describe('isPublicHttpsUrl', () => {
 
   it('accepts a public https host', () => {
     expect(isPublicHttpsUrl('https://www.epfl.ch/labs/cosmo/')).toBe(true);
+  });
+
+  it('accepts a public host written with a trailing dot', () => {
+    expect(isPublicHttpsUrl('https://www.epfl.ch./labs/cosmo/')).toBe(true);
   });
 });
 
