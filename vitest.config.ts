@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { getViteConfig } from 'astro/config';
 
 // getViteConfig adds Astro's Vite plugins, so tests can render .astro
