@@ -30,13 +30,13 @@ already be filled" after 45 days and moves to the archive after 90.
 
 ### Blocklist
 
-`data/blocklist.yaml` lists organiser domains that are not listed. Each entry has the domain, the date added, and at least one **public evidence link** (for example a recognised checklist, a published report, or documented complaints). Entries require maintainer approval in a PR. We describe conduct and evidence, not motives. Anyone can request a review by opening an issue.
+`data/blocklist.yaml` lists organiser domains that are not listed. Each entry has the domain, the date added, and at least one **public evidence link** (for example a recognised checklist, a published report, or documented complaints). We describe conduct and evidence, not motives. Anyone can request a review by opening an issue.
 
 ### Corrections and reports
 
 - Every event page has a "Suggest a correction" link (public GitHub issue) and a "Report this event" link (private form).
 - Reports are read by maintainers only. We do not publish reporter identities or report contents.
-- A single report does not remove an event. Maintainers check the evidence and record the outcome in the PR or issue that changes the listing.
+- A single report does not remove an event.
 - Organisers can ask for corrections to their own listing at any time.
 
 ### Copyright and text reuse
