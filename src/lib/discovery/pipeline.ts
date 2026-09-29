@@ -5,7 +5,8 @@ import {
   type ValidationContext,
 } from '../validation';
 import { compareISO, todayUTC, type ISODate } from '../dates';
-import type { RawEvent } from '../types';
+import { validatePosition } from '../position-validation';
+import type { RawEvent, RawPosition } from '../types';
 import { draftFilePath, synthesizeDraft } from './draft';
 import { cecamEventText, cecamEventUrl, fetchCecamEvents } from './cecam-client';
 import {
@@ -15,6 +16,8 @@ import {
   type ExtractOptions,
 } from './extract-client';
 import { keywordTopics } from './keyword-topics';
+import { extractPosition, looksLikePosition } from './position-extract';
+import { positionFilePath, synthesizePositionDraft } from './position-draft';
 import { politeFetch, type FetchOptions } from './fetch';
 import type { ExtractionInput } from './html';
 import { extractionInputFromPage } from './parsers/page';
@@ -167,8 +170,16 @@ interface SourceBudget {
   pagesFetched: number;
 }
 
+/** A position the pipeline accepted, with the extractor's confidence (no classifier runs on positions). */
+export interface PositionCandidate {
+  draft: RawPosition;
+  confidence: number;
+}
+
 export interface PipelineResult {
   candidates: RawEvent[];
+  /** Accepted position adverts from RSS, Telegram and mailbox items; see `processInput`'s `'post'` mode. */
+  positions: PositionCandidate[];
   errors: Array<{ source: string; message: string }>;
   tokensUsed: number;
   /**
@@ -200,6 +211,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
   };
 
   const candidates: RawEvent[] = [];
+  const positions: PositionCandidate[] = [];
   /** Candidate id → the `state.pages` keys it was extracted from. */
   const origins = new Map<string, Set<string>>();
   /** `state.pages` key → its value before this run touched it, for `requeue`. */
@@ -281,6 +293,24 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
     addCandidate(draft, origin);
   }
 
+  function acceptPosition(draft: RawPosition, confidence: number, origin: string): void {
+    if (draft.deadline && compareISO(draft.deadline, today) < 0) {
+      log(
+        `skipping closed position from ${draft.source_url}: ${draft.title} (deadline ${draft.deadline})`,
+      );
+      return;
+    }
+    const errors = validatePosition({ file: positionFilePath(draft), data: draft }, ctx).errors;
+    if (errors.length > 0) {
+      log(`dropped position from ${draft.source_url}: ${errors.map((e) => e.message).join('; ')}`);
+      return;
+    }
+    positions.push({ draft, confidence });
+    const keys = origins.get(draft.id) ?? new Set<string>();
+    keys.add(origin);
+    origins.set(draft.id, keys);
+  }
+
   function draftFromFields(fields: ExtractedFields, sourceUrl: string): RawEvent {
     return synthesizeDraft(
       {
@@ -329,11 +359,15 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
    *
    * `mode: 'listing'` treats the text as an inline listing: every event it
    * states is extracted in one call, and each becomes its own candidate.
+   *
+   * `mode: 'post'` is a single item from a feed, channel or mailbox: likely
+   * job adverts go to the position extractor first, and only fall through to
+   * event extraction when it finds no position.
    */
   async function processInput(
     input: ExtractionInput,
     origin: string,
-    mode: 'single' | 'listing' = 'single',
+    mode: 'single' | 'listing' | 'post' = 'single',
   ): Promise<boolean> {
     if (tokensUsed >= options.maxTokens) {
       log(`max tokens (${options.maxTokens}) reached, skipping ${input.sourceUrl}`);
@@ -350,8 +384,23 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
       return true;
     }
     try {
+      if (mode === 'post' && looksLikePosition(input.text)) {
+        const position = await extractPosition(truncateForExtraction(input.text), extractOptions);
+        if (position) {
+          const topics =
+            position.topics.length > 0
+              ? position.topics
+              : keywordTopics(`${position.title} ${position.description}`, vocabulary);
+          acceptPosition(
+            synthesizePositionDraft(position, input.sourceUrl, topics, today),
+            position.confidence,
+            origin,
+          );
+          return true;
+        }
+      }
       const found =
-        mode === 'single'
+        mode !== 'listing'
           ? [await extractEvent(truncateForExtraction(input.text), extractOptions)]
           : await extractEvents(
               truncateForExtraction(input.text, LISTING_EXTRACTION_TEXT_LIMIT),
@@ -449,7 +498,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
         await fetchAndProcess(source.url, budget, async (body) => {
           let allOk = true;
           for (const input of parseFeedItems(body, source.url)) {
-            if (!(await processInput(input, source.url))) allOk = false;
+            if (!(await processInput(input, source.url, 'post'))) allOk = false;
           }
           return allOk;
         });
@@ -515,7 +564,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
         await fetchAndProcess(source.url, budget, async (body) => {
           let allOk = true;
           for (const input of extractionInputsFromChannel(body)) {
-            if (!(await processInput(input, source.url))) allOk = false;
+            if (!(await processInput(input, source.url, 'post'))) allOk = false;
           }
           return allOk;
         });
@@ -565,7 +614,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
             // and the schema requires source_url to be https://. This is
             // safe because source_url is only used for the blocklist host
             // check and PR-body display, never for dedup identity.
-            ok = await processInput({ text: message.text, sourceUrl: source.url }, url);
+            ok = await processInput({ text: message.text, sourceUrl: source.url }, url, 'post');
           } catch (err) {
             restorePageState(url, previous);
             throw err;
@@ -605,5 +654,5 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
     saveState(options.statePath, state);
   }
 
-  return { candidates, errors, tokensUsed, requeue };
+  return { candidates, positions, errors, tokensUsed, requeue };
 }

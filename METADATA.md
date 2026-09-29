@@ -102,7 +102,7 @@ behaviour lives and where tests point.
 | `discovery/jev-client.ts` | Thin client for OpenRouter's Decisions API (the `jev` model): builds the request, checks for a 2xx response and an `answers` field, otherwise throws. |
 | `discovery/classify-candidate.ts` | Decides add/skip for one candidate event: a mechanical dedupe/blocklist pre-filter, then a single jev call scoring relevance, red flags, and credibility as three independent criteria (organiser, programme, cost). Never publishes anything — produces the verdict `orchestrator.ts` acts on. See `docs/superpowers/specs/2026-09-23-discovery-event-classifier-design.md`. |
 | `discovery/sources.ts` | Loads `data/sources.yaml` (skipping malformed entries at run time) and validates it (`validateSources`, the CI gate). Owns `SOURCE_KINDS`. |
-| `discovery/pipeline.ts` | Fetch → parse → extract → validate for every source, four at a time, under page and token caps. Returns candidates and per-source errors. |
+| `discovery/pipeline.ts` | Fetch → parse → extract → validate for every source, four at a time, under page and token caps. Routes RSS, Telegram and mailbox items that look like job adverts to position extraction first. Returns event candidates, position candidates and per-source errors. |
 | `discovery/fetch.ts` | Polite fetching: robots.txt, per-host rate limit, ETag/hash caching, and a browser fallback when a page looks like a bot challenge. |
 | `discovery/browser-fetch.ts` | Renders a page in the system's Chrome via Playwright, for sites that block plain HTTP clients. |
 | `discovery/http.ts` | `fetchWithTimeout`: every outbound call goes through it, since plain `fetch` can hang forever. |
@@ -115,6 +115,7 @@ behaviour lives and where tests point.
 | `discovery/extract-client.ts` | The extraction LLM call (chat completions, JSON output, no tools). Page text goes in as delimited data. |
 | `discovery/position-extract.ts` | The position keyword gate and its LLM extraction (own schema and prompt, no tools). Fetched text goes in as data. |
 | `discovery/draft.ts` | Turns an extraction into a schema-shaped event: id slug (with Cyrillic transliteration), file path, YAML. |
+| `discovery/position-draft.ts` | Turns a position extraction into a schema-shaped `RawPosition`: institution+title id slug with the added year, file path. |
 | `discovery/orchestrator.ts` | Classifies candidates and opens one pull request each, with the candidate-controlled text rendered inert in the PR body. |
 | `discovery/github-client.ts` | The GitHub REST calls the orchestrator needs: branches, files, pull requests, labels, issues. |
 | `discovery/auto-approve.ts` | Labels open discovery PRs `high-confidence` when confidence ≥ 0.90 and CI passed. Never merges. |

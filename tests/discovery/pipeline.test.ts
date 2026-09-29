@@ -1062,3 +1062,116 @@ describe('runPipeline', () => {
     });
   });
 });
+
+describe('runPipeline positions', () => {
+  const feed = (items: string[]) => `<?xml version="1.0"?><rss version="2.0"><channel>
+    <title>Jobs</title><link>https://example.org/</link>
+    ${items
+      .map(
+        (d, i) =>
+          `<item><title>Item ${i}</title><link>https://example.org/item-${i}</link><description>${d}</description></item>`,
+      )
+      .join('')}
+  </channel></rss>`;
+
+  const advert =
+    'PhD position in molecular dynamics at Utrecht University. Apply at https://example.org/jobs/phd-md by 2026-11-15.';
+  // Trips the gate ("PhD positions") although it is an event, not an advert.
+  const school =
+    'Molecular Dynamics Winter School, 1-3 May 2027. Open PhD positions in the organising groups are listed on https://example.org/school.';
+  const notAJob = 'Vacancy notice: molecular dynamics seminar room booking changes.';
+
+  function llm(calls: string[]) {
+    return (async (_input: RequestInfo | URL, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body)) as {
+        messages: Array<{ content: string }>;
+        response_format: { json_schema: { name: string } };
+      };
+      const kind = body.response_format.json_schema.name;
+      const text = body.messages[1]!.content;
+      calls.push(`${kind}:${text.slice(0, 20)}`);
+      let content: unknown;
+      if (kind === 'candidate_position') {
+        content = text.includes('PhD position in molecular dynamics')
+          ? {
+              found: true,
+              position: {
+                title: 'PhD position in molecular dynamics',
+                level: 'phd',
+                institution: 'Utrecht University',
+                group: null,
+                location: { city: 'Utrecht', country: 'NL' },
+                url: 'https://example.org/jobs/phd-md',
+                deadline: '2026-11-15',
+                topics: ['molecular-dynamics'],
+                description: 'A funded PhD project in molecular dynamics.',
+                confidence: 0.85,
+              },
+            }
+          : { found: false, position: null };
+      } else {
+        content = text.includes('Winter School')
+          ? extractedFor('Molecular Dynamics Winter School')
+          : { found: false, event: null };
+      }
+      return new Response(
+        JSON.stringify({ choices: [{ message: { content: JSON.stringify(content) } }] }),
+        {
+          status: 200,
+        },
+      );
+    }) as typeof fetch;
+  }
+
+  async function run(items: string[], calls: string[], today = '2026-09-29') {
+    const { path: statePath, cleanup } = tmpStatePath();
+    const sources = tmpSourcesFile(
+      `- name: Jobs feed\n  url: https://example.org/jobs.xml\n  kind: rss\n`,
+    );
+    try {
+      return await runPipeline({
+        sourcesPath: sources.path,
+        statePath,
+        userAgent: 'Test Agent (+https://example.org)',
+        maxPages: 10,
+        maxTokens: 500_000,
+        today,
+        sleepImpl: async () => {},
+        fetchImpl: (async (input: RequestInfo | URL) => {
+          const url = String(input);
+          if (url.endsWith('/robots.txt')) return new Response('', { status: 200 });
+          if (url === 'https://example.org/jobs.xml')
+            return new Response(feed(items), { status: 200 });
+          throw new Error(`unstubbed url: ${url}`);
+        }) as typeof fetch,
+        extract: { apiKey: 'sk-test', model: 'm', fetchImpl: llm(calls) },
+      });
+    } finally {
+      cleanup();
+      sources.cleanup();
+    }
+  }
+
+  it('routes a job advert to positions, not events', async () => {
+    const calls: string[] = [];
+    const r = await run([advert], calls);
+    expect(r.positions.map((p) => p.draft.title)).toEqual(['PhD position in molecular dynamics']);
+    expect(r.positions[0]!.confidence).toBe(0.85);
+    expect(r.candidates).toEqual([]);
+    expect(calls.every((c) => c.startsWith('candidate_position'))).toBe(true);
+  });
+
+  // Review focus 2: a passing mention of PhD students must not lose the event.
+  it('falls back to event extraction when the gate matches but no position is found', async () => {
+    const calls: string[] = [];
+    const r = await run([school, notAJob], calls);
+    expect(r.positions).toEqual([]);
+    expect(r.candidates.map((c) => c.title)).toEqual(['Molecular Dynamics Winter School']);
+    expect(calls.filter((c) => c.startsWith('candidate_position'))).toHaveLength(2);
+  });
+
+  it('drops a position whose deadline has already passed', async () => {
+    const r = await run([advert], [], '2026-12-01');
+    expect(r.positions).toEqual([]);
+  });
+});
