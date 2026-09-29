@@ -3,6 +3,8 @@
 // listing entry that is already known, as a single batched pull request.
 // Spec: docs/superpowers/specs/2026-09-29-groups-registry-design.md, "Backfill".
 import { pathToFileURL } from 'node:url';
+import { parse } from 'yaml';
+import { normaliseGroupName } from '../../src/lib/group-validation';
 import { todayUTC, type ISODate } from '../../src/lib/dates';
 import { loadEvents } from '../../src/lib/events';
 import { loadGroups } from '../../src/lib/groups';
@@ -12,9 +14,9 @@ import { loadValidationContext } from '../../src/lib/validation';
 import { fetchWithBrowser } from '../../src/lib/discovery/browser-fetch';
 import { ADD_THRESHOLD } from '../../src/lib/discovery/classify-candidate';
 import { serializeDraft } from '../../src/lib/discovery/draft';
-import type { ExtractOptions } from '../../src/lib/discovery/extract-client';
+import { clip, type ExtractOptions } from '../../src/lib/discovery/extract-client';
 import { politeFetch, type FetchOptions } from '../../src/lib/discovery/fetch';
-import type { GitHubOptions } from '../../src/lib/discovery/github-client';
+import { listFilesOnBranch, type GitHubOptions } from '../../src/lib/discovery/github-client';
 import { groupFilePath } from '../../src/lib/discovery/group-draft';
 import {
   buildRegistryIndex,
@@ -36,6 +38,9 @@ import { buildConfig } from './run';
 
 const DEFAULT_MAX_SEARCHES = 200;
 const DEFAULT_MAX_PAGES = 500;
+// GitHub rejects a PR body over 65,536 characters, after the files are already written.
+const FOUND_AS_MAX = 80;
+const SKIPPED_LISTED = 100;
 
 export interface BackfillArgs {
   maxSearches?: number;
@@ -63,6 +68,19 @@ export function parseBackfillArgs(argv: string[]): BackfillArgs {
   return args;
 }
 
+/** The lookup keys a draft was cached under: its name, aliases and pi (what a person lead normalises to). */
+function ownLookupKeys(drafts: readonly unknown[]): string[] {
+  const keys: string[] = [];
+  for (const d of drafts) {
+    if (typeof d !== 'object' || d === null) continue;
+    const g = d as Partial<RawGroup>;
+    for (const name of [g.name, ...(g.aliases ?? []), g.pi]) {
+      if (typeof name === 'string') keys.push(normaliseGroupName(name));
+    }
+  }
+  return keys;
+}
+
 /** A table cell: inline code with `|` escaped so a hostile value cannot end the cell. */
 const cell = (text: string) => inlineCode(text).replace(/\|/g, '\\|');
 
@@ -81,7 +99,7 @@ export function buildBackfillPrBody(
       cell(c.draft.kind),
       cell(c.draft.website),
       cell(c.confidence.toFixed(2)),
-      cell(c.lead.text),
+      cell(clip(c.lead.text, FOUND_AS_MAX)),
     ].join(' | '),
   );
   return [
@@ -93,7 +111,14 @@ export function buildBackfillPrBody(
     ...rows.map((r) => `| ${r} |`),
     '',
     `Skipped (${skipped.length}):`,
-    ...(skipped.length === 0 ? ['- (none)'] : skipped.map((s) => `- ${cell(s.name)}: ${s.reason}`)),
+    ...(skipped.length === 0
+      ? ['- (none)']
+      : skipped
+          .slice(0, SKIPPED_LISTED)
+          .map((s) => `- ${cell(clip(s.name, FOUND_AS_MAX))}: ${s.reason}`)),
+    ...(skipped.length > SKIPPED_LISTED
+      ? [`…and ${skipped.length - SKIPPED_LISTED} more skipped (see the run log)`]
+      : []),
   ].join('\n');
 }
 
@@ -125,13 +150,11 @@ export async function runBackfill(deps: BackfillDeps): Promise<BackfillResult> {
   const log = deps.log ?? (() => {});
   const state = loadState(deps.statePath);
   // A re-run must re-propose its own earlier drafts, whose 'drafted' lookups
-  // would otherwise be served from the negative cache.
-  forgetLookups(
-    state,
-    Object.entries(state.groupLookups)
-      .filter(([, l]) => l.outcome === 'drafted')
-      .map(([k]) => k),
-  );
+  // would otherwise be served from the negative cache. Only the batch's own
+  // files are forgotten: every other entry (a rejected group PR, a scheduled
+  // run's draft) is still the guard against searching that name again.
+  const own = await listFilesOnBranch(BACKFILL_BRANCH, 'data/groups', deps.github);
+  forgetLookups(state, ownLookupKeys(own.map((f) => parse(f.content))));
 
   const leads: GroupLead[] = [
     ...leadsFromEvents(deps.events ?? loadEvents({ includeFixtures: false })),

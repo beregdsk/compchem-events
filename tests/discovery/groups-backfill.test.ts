@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -8,6 +8,8 @@ import {
   runBackfill,
   type BackfillDeps,
 } from '../../scripts/discovery/groups-backfill';
+import { normaliseGroupName } from '../../src/lib/group-validation';
+import type { DiscoveryState } from '../../src/lib/discovery/state';
 import type { GroupCandidate } from '../../src/lib/discovery/groups';
 import type { Source } from '../../src/lib/discovery/sources';
 
@@ -89,20 +91,22 @@ function stubGitHub(responses: Record<string, StubResponse>) {
 }
 
 const FILES = ['coote-group', 'smith-group'];
-const fileStubs = (status: number): Record<string, StubResponse> =>
+const fileStubs = (status: number, ids = FILES): Record<string, StubResponse> =>
   Object.fromEntries(
-    FILES.flatMap((id) => [
+    ids.flatMap((id) => [
       [`GET ${R}/contents/data/groups/${id}.yaml?ref=${BRANCH}`, { status: 404 }],
       [`PUT ${R}/contents/data/groups/${id}.yaml`, { status, body: {} }],
     ]),
   );
 
+const BRANCH_DIR = `GET ${R}/contents/data/groups?ref=${BRANCH}`;
 const OPEN_LIST = `GET ${R}/pulls?state=open&per_page=100`;
 const NEW_BATCH: Record<string, StubResponse> = {
   [OPEN_LIST]: { status: 200, body: [] },
   [`GET ${R}`]: { status: 200, body: { default_branch: 'main' } },
   [`GET ${R}/git/ref/heads/main`]: { status: 200, body: { object: { sha: 'sha-main' } } },
   [`GET ${R}/git/ref/heads/${BRANCH}`]: { status: 404 },
+  [BRANCH_DIR]: { status: 404 },
   [`POST ${R}/git/refs`]: { status: 201, body: {} },
   ...fileStubs(201),
   [`POST ${R}/pulls`]: { status: 201, body: { number: 60 } },
@@ -205,6 +209,36 @@ describe('buildBackfillPrBody', () => {
   });
 });
 
+describe('buildBackfillPrBody size', () => {
+  it('lists at most 100 skipped names and clips a long organiser string', () => {
+    const skipped = Array.from({ length: 300 }, (_, i) => ({
+      name: `Name ${i}`,
+      reason: 'duplicate-name',
+    }));
+    const long: GroupCandidate = {
+      draft: {
+        id: 'x-group',
+        name: 'X Group',
+        kind: 'group',
+        website: 'https://x.org/',
+        topics: ['electronic-structure'],
+        description: 'd',
+        added: '2026-09-29',
+      },
+      confidence: 0.8,
+      lead: { text: 'Organiser '.repeat(50), origin: LISTING, fromListing: false },
+      lookupKey: 'x',
+      considered: [],
+    };
+    const body = buildBackfillPrBody([long], skipped);
+    expect(body.split('\n').filter((l) => l.startsWith('- `Name '))).toHaveLength(100);
+    expect(body).toContain('…and 200 more skipped (see the run log)');
+    const row = body.split('\n').find((l) => l.includes('x-group'))!;
+    expect(row).toContain('…');
+    expect(row.length).toBeLessThan(300);
+  });
+});
+
 describe('runBackfill', () => {
   it('writes every accepted draft to one branch and one PR, listing the duplicate as skipped', async () => {
     const gh = stubGitHub(NEW_BATCH);
@@ -226,25 +260,60 @@ describe('runBackfill', () => {
   });
 
   it('updates the same PR on a re-run and does not skip its own earlier files', async () => {
-    await runBackfill(deps(stubGitHub(NEW_BATCH).impl));
+    const first = stubGitHub(NEW_BATCH);
+    await runBackfill(deps(first.impl));
+    const written = first.calls.filter((c) => c.key.startsWith('PUT '));
     const gh = stubGitHub({
       [OPEN_LIST]: OPEN_BATCH_LIST,
-      // The backfill branch's own files are never listed: no contents stub for them.
+      // The batch's own files are read once, to forget their cache entries.
+      [BRANCH_DIR]: {
+        status: 200,
+        body: FILES.map((id) => ({ path: `data/groups/${id}.yaml`, type: 'file' })),
+      },
+      ...Object.fromEntries(
+        written.map((c) => [
+          `GET ${R}/contents/data/groups/${c.key.split('/').pop()}?ref=${BRANCH}`,
+          {
+            status: 200,
+            body: { content: (c.body as { content: string }).content, sha: 's' },
+          },
+        ]),
+      ),
       ...EXISTING_BRANCH,
-      ...fileStubs(200),
       [`PATCH ${R}/pulls/60`]: { status: 200, body: {} },
       [`POST ${R}/issues/60/labels`]: { status: 200, body: {} },
     });
     const result = await runBackfill(deps(gh.impl));
-    expect(result).toEqual({ proposal: { outcome: 'updated', pr: 60 }, accepted: 2, skipped: 1 });
+    // The mirror was skipped as a duplicate last time and stays cached, so it is not re-listed.
+    expect(result).toEqual({ proposal: { outcome: 'updated', pr: 60 }, accepted: 2, skipped: 0 });
     expect(gh.keys().some((k) => k === `POST ${R}/pulls`)).toBe(false);
-    expect(gh.keys().filter((k) => k.startsWith('PUT '))).toHaveLength(2);
+    // Unchanged files are not written again.
+    expect(gh.keys().filter((k) => k.startsWith('PUT '))).toHaveLength(0);
+  });
+
+  it('leaves a name cached as drafted elsewhere skipped, and keeps its cache entry', async () => {
+    const d = deps(stubGitHub({}).impl);
+    const key = normaliseGroupName('Jane Smith');
+    const entry = { triedAt: new Date().toISOString(), outcome: 'drafted' };
+    writeFileSync(
+      d.statePath,
+      JSON.stringify({ hosts: {}, pages: {}, groupLookups: { [key]: entry } }),
+    );
+    const gh = stubGitHub({ ...NEW_BATCH, ...fileStubs(201, ['coote-group']) });
+    const result = await runBackfill({ ...d, github: { ...d.github, fetchImpl: gh.impl } });
+    expect(result).toMatchObject({ proposal: { outcome: 'opened' }, accepted: 1 });
+    expect(gh.keys().filter((k) => k.startsWith('PUT '))).toEqual([
+      `PUT ${R}/contents/data/groups/coote-group.yaml`,
+    ]);
+    const saved = JSON.parse(readFileSync(d.statePath, 'utf8')) as DiscoveryState;
+    expect(saved.groupLookups[key]).toEqual(entry);
   });
 
   it('writes nothing when the batch PR was already closed', async () => {
     const gh = stubGitHub({
       [OPEN_LIST]: { status: 200, body: [] },
       [`GET ${R}/git/ref/heads/${BRANCH}`]: { status: 200, body: { object: { sha: 'sha-b' } } },
+      [BRANCH_DIR]: { status: 404 },
       [`GET ${R}/pulls?state=all&head=acme:${BRANCH}`]: {
         status: 200,
         body: [{ number: 60, state: 'closed' }],
