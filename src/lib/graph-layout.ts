@@ -10,7 +10,6 @@ import {
   forceSimulation,
   forceX,
   forceY,
-  type Force,
   type Simulation,
   type SimulationLinkDatum,
   type SimulationNodeDatum,
@@ -23,46 +22,13 @@ export type SimLink = SimulationLinkDatum<SimNode> & { weight: number };
 const SEED = 0x5eed;
 /** Enough for 20–100 nodes to settle; checked by eye on the real data. */
 const TICKS = 300;
-/** viewBox margin; the right side leaves room for labels. */
-const PAD = { left: 40, right: 220, top: 40, bottom: 40 };
-/** Approximate extent of a node's label (28 characters at 13px), in simulation units. */
-export const LABEL_WIDTH = 190;
-export const LABEL_HEIGHT = 20;
+/** viewBox margin. Labels only appear on hover, and flip left near the right edge. */
+const PAD = { left: 40, right: 40, top: 40, bottom: 40 };
 
 /** Deterministic PRNG for d3's jiggle and tie-breaking. */
 function lcg(seed: number): () => number {
   let s = seed >>> 0;
   return () => (s = (Math.imul(1664525, s) + 1013904223) >>> 0) / 2 ** 32;
-}
-
-/**
- * Circular collision can't see labels: they are wide, short and run to the
- * right of their node, so two nodes a comfortable circle apart can still print
- * one title over another. This pushes such pairs apart vertically — the cheap
- * direction, since stacking rows costs far less room than spreading columns.
- */
-function forceLabelGap(): Force<SimNode, SimLink> {
-  let nodes: SimNode[] = [];
-  // Like forceCollide, not scaled by alpha: an overlap is resolved in full
-  // however cool the simulation is, or the link forces win as it settles.
-  const force = () => {
-    for (let i = 0; i < nodes.length; i++) {
-      for (let j = i + 1; j < nodes.length; j++) {
-        const a = nodes[i]!;
-        const b = nodes[j]!;
-        const dx = b.x! - a.x!;
-        const dy = b.y! - a.y!;
-        if (Math.abs(dx) >= LABEL_WIDTH || Math.abs(dy) >= LABEL_HEIGHT) continue;
-        const push = (LABEL_HEIGHT - Math.abs(dy)) * 0.5 * (dy < 0 ? -1 : 1);
-        a.vy! -= push;
-        b.vy! += push;
-      }
-    }
-  };
-  force.initialize = (n: SimNode[]) => {
-    nodes = n;
-  };
-  return force;
 }
 
 export function createSimulation(
@@ -76,20 +42,20 @@ export function createSimulation(
   }));
   // Short-range repulsion (charge with distanceMax): enough to part neighbours,
   // not enough to fling clusters apart, so related events stay together.
+  // Labels are hidden until hover, so nodes only need room for their shapes.
   return forceSimulation<SimNode, SimLink>(nodes)
     .randomSource(lcg(SEED))
     .force(
       'link',
       forceLink<SimNode, SimLink>(links)
         .id((d) => d.id)
-        .distance(60)
+        .distance(35)
         .strength((l) => Math.min(1, l.weight * 1.5)),
     )
-    .force('charge', forceManyBody<SimNode>().strength(-300).distanceMax(400))
-    .force('x', forceX<SimNode>(0).strength(0.1))
-    .force('y', forceY<SimNode>(0).strength(0.1))
-    .force('collide', forceCollide<SimNode>(42))
-    .force('labels', forceLabelGap())
+    .force('charge', forceManyBody<SimNode>().strength(-90).distanceMax(250))
+    .force('x', forceX<SimNode>(0).strength(0.04))
+    .force('y', forceY<SimNode>(0).strength(0.06))
+    .force('collide', forceCollide<SimNode>(16))
     .stop();
 }
 

@@ -4,6 +4,7 @@
 // enhancement — without it the page is a working map of links.
 import type { GraphPayload, SimNode } from '../lib/graph-layout';
 import { createSimulation } from '../lib/graph-layout';
+import { NODE_RADIUS } from '../lib/graph-shapes';
 
 const figure = document.querySelector<HTMLElement>('figure.graph');
 const svg = document.querySelector<SVGSVGElement>('#event-graph');
@@ -24,6 +25,8 @@ function readPayload(): GraphPayload | null {
 const DRAG_SLOP = 4;
 const ZOOM_MIN = 0.25;
 const ZOOM_MAX = 3;
+/** Gap between a node's centre and its label; matches graph.astro. */
+const LABEL_OFFSET = NODE_RADIUS + 7;
 
 function enhance(figure: HTMLElement, svg: SVGSVGElement, payload: GraphPayload) {
   // Pointer state, declared first: the highlight handlers below read `dragging`.
@@ -50,6 +53,7 @@ function enhance(figure: HTMLElement, svg: SVGSVGElement, payload: GraphPayload)
   function highlight(id: string | null) {
     if (id === lit) return;
     if (lit) setLabel(lit, 'short');
+    if (lit) nodeEls.get(lit)?.classList.remove('is-hovered');
     lit = id;
     figure.classList.toggle('is-highlighting', id !== null);
     const near = id ? (neighbours.get(id) ?? new Set<string>()) : new Set<string>();
@@ -60,11 +64,21 @@ function enhance(figure: HTMLElement, svg: SVGSVGElement, payload: GraphPayload)
         id !== null && (el.dataset.source === id || el.dataset.target === id),
       );
     }
-    if (id) setLabel(id, 'full');
+    if (id) {
+      setLabel(id, 'full');
+      nodeEls.get(id)?.classList.add('is-hovered');
+    }
   }
   function setLabel(id: string, which: 'short' | 'full') {
     const text = nodeEls.get(id)?.querySelector<SVGTextElement>('.graph-node__label');
-    if (text) text.textContent = text.dataset[which] ?? text.textContent;
+    if (!text) return;
+    text.textContent = text.dataset[which] ?? text.textContent;
+    // A node in the right half of the view prints its label to the left, so a
+    // long title is not cut off by the edge of the map.
+    const node = simById.get(id);
+    const left = which === 'full' && node !== undefined && node.x! > vb[0] + vb[2] / 2;
+    text.setAttribute('text-anchor', left ? 'end' : 'start');
+    text.setAttribute('x', String(left ? -LABEL_OFFSET : LABEL_OFFSET));
   }
   const nodeOf = (t: EventTarget | null) =>
     t instanceof Element ? t.closest<SVGAElement>('a.graph-node') : null;
