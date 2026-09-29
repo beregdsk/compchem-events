@@ -206,6 +206,31 @@ Initial entries, each fetched 2026-09-29 before being added:
   rule rejects. Its robots.txt disallows a list of named AI crawlers and
   allows every other user agent, the discovery agent's included.
 
+- curlie.org — Science/Chemistry/Computational/Research_Groups,
+  `https://curlie.org/Science/Chemistry/Computational/Research_Groups/`.
+  34 entries, each a `.site-title` link to the group's site, most of them
+  old `http://` URLs (the directory descends from DMOZ), so many are stale
+  and fall through to search. robots.txt allows the page and asks
+  `Crawl-delay: 1000`; one fetch per daily run is well inside it.
+
+A listing link is upgraded from `http://` to `https://` before it is
+fetched (as `normalizeEventUrl` does for events), since `website` must be
+https.
+
+### Position-listing sources
+
+New source kind `position-listing`: a page listing job adverts, each linked
+to its own page on the same site. Each linked page goes through the existing
+position path (`mode: 'post'`: keyword gate, position extractor, falling
+through to event extraction when no position is found). A link whose anchor
+text starts with a `yy.mm.dd` date older than 45 days (the positions page's
+stale threshold) is not followed, so an old advert is never proposed as new
+with today's `added`. Initial entry, fetched 2026-09-29: CCL's job list,
+`https://ccl.net/cca/jobs/joblist.html` (about 25 adverts on
+`/cca/jobs/joblist/messNNNNNNN.shtml`, dated in the link text; its
+robots.txt is a 404, so everything is allowed). Positions it yields carry a
+`group` like any other, so they also feed the groups pass.
+
 ### Aggregator event sources
 
 New source kind `aggregator`: another site's curated list of events. Like
@@ -306,4 +331,5 @@ vitest, with no real API calls in CI:
    conference list.
 3. The discovery groups pass, with `group-listing` sources.
 4. The backfill script.
-5. Running the backfill, producing the batched PR for review.
+5. `position-listing` sources (CCL's job list).
+6. Running the backfill, producing the batched PR for review.
