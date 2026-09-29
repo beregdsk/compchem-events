@@ -1,0 +1,17 @@
+id: cosmo-epfl
+name: Laboratory of Computational Science and Modeling
+aliases:
+  - COSMO
+kind: group
+pi: Michele Ceriotti
+parent: EPFL
+website: https://www.epfl.ch/labs/cosmo/
+location:
+  city: Lausanne
+  country: CH
+topics:
+  - ml-potentials
+  - ml-chemistry
+description: Develops machine-learning models and simulation methods for atomistic modelling of molecules and materials.
+added: '2026-09-29'
+fixture: true

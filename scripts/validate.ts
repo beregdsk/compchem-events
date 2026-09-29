@@ -16,6 +16,11 @@ import {
   validatePosition,
   validatePositionCollection,
 } from '../src/lib/position-validation';
+import {
+  readGroupFiles,
+  validateGroup,
+  validateGroupCollection,
+} from '../src/lib/group-validation';
 import { validateSources } from '../src/lib/discovery/sources';
 
 // Re-exported so the discovery agent (docs/discovery-agent.md) can depend on a
@@ -65,13 +70,20 @@ function main(): void {
     all.warnings.push(...r.warnings);
   }
   all.errors.push(...validatePositionCollection(positions).errors);
+  const groups = readGroupFiles();
+  for (const entry of groups) {
+    const r = validateGroup(entry, ctx);
+    all.errors.push(...r.errors);
+    all.warnings.push(...r.warnings);
+  }
+  all.errors.push(...validateGroupCollection(groups).errors);
   all.errors.push(...validateSources(parse(readFileSync(SOURCES_FILE, 'utf8')), SOURCES_FILE));
 
   const report = formatProblems(all);
   if (report) console.log(report);
 
   console.log(
-    `\nvalidate: ${entries.length} event file(s), ${positions.length} position file(s), ${all.errors.length} error(s), ${all.warnings.length} warning(s)`,
+    `\nvalidate: ${entries.length} event file(s), ${positions.length} position file(s), ${groups.length} group file(s), ${all.errors.length} error(s), ${all.warnings.length} warning(s)`,
   );
   process.exit(all.errors.length > 0 ? 1 : 0);
 }

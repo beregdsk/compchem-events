@@ -124,3 +124,38 @@ describe('blocklist', () => {
     expect(raw ?? []).toEqual([]);
   });
 });
+
+describe('group schema', () => {
+  let validateGroupSchema: ValidateFunction;
+  const group = {
+    id: 'example-lab',
+    name: 'Example Lab',
+    kind: 'network',
+    website: 'https://example.org/',
+    topics: ['dft'],
+    description: 'A network.',
+    added: '2026-09-20',
+  };
+
+  beforeAll(() => {
+    const ajv = new Ajv2020({ allErrors: true });
+    addFormats(ajv);
+    validateGroupSchema = ajv.compile(JSON.parse(readFileSync('schema/group.schema.json', 'utf8')));
+  });
+
+  it('accepts a network without a location', () => {
+    expect(validateGroupSchema(group)).toBe(true);
+  });
+
+  it('rejects a malformed id', () => {
+    expect(validateGroupSchema({ ...group, id: 'Example_Lab' })).toBe(false);
+  });
+
+  it('rejects an unknown field', () => {
+    expect(validateGroupSchema({ ...group, logo: 'x.png' })).toBe(false);
+  });
+
+  it('requires a location on an institute', () => {
+    expect(validateGroupSchema({ ...group, kind: 'institute' })).toBe(false);
+  });
+});
