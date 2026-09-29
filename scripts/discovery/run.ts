@@ -11,10 +11,11 @@ import { DEFAULT_JEV_BASE_URL } from '../../src/lib/discovery/jev-client';
 import { fetchWithBrowser } from '../../src/lib/discovery/browser-fetch';
 import type { MailboxCredentials } from '../../src/lib/discovery/mailbox-client';
 import { leadsFromEvents, leadsFromPositions } from '../../src/lib/discovery/group-match';
-import { runGroupsPass } from '../../src/lib/discovery/groups-pass';
+import { passLevelErrors, runGroupsPass } from '../../src/lib/discovery/groups-pass';
 import { todayUTC } from '../../src/lib/dates';
 import { runDiscoveryRun, type OrchestratorOptions } from '../../src/lib/discovery/orchestrator';
 import { runPipeline, type PipelineOptions } from '../../src/lib/discovery/pipeline';
+import { syncFailureIssue } from '../../src/lib/discovery/github-client';
 import { autoApproveHighConfidencePrs } from '../../src/lib/discovery/auto-approve';
 
 export interface ResolvedConfig {
@@ -201,6 +202,20 @@ async function main(): Promise<void> {
     log,
   });
   for (const error of groups.errors) log(`ERROR groups ${error.source}: ${error.message}`);
+  // The orchestrator synced the tracking issue before the groups pass ran, so
+  // a pass that failed as a whole is added by a second call (which replaces
+  // the first's body). Per-name failures stay in the log and JSON only.
+  const passErrors = passLevelErrors(groups.errors);
+  if (passErrors.length > 0) {
+    try {
+      await syncFailureIssue(
+        [...pipelineResult.errors, ...result.errors, ...passErrors],
+        cfg.github,
+      );
+    } catch (err) {
+      log(`failed to sync the failure issue: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
 
   // A separate phase, deliberately run after and independent of the loop
   // above: it revisits *all* currently-open discovery PRs (not just this

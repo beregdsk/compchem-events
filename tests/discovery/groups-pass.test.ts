@@ -3,7 +3,11 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { normaliseGroupName } from '../../src/lib/group-validation';
-import { openGroupDrafts, runGroupsPass } from '../../src/lib/discovery/groups-pass';
+import {
+  openGroupDrafts,
+  passLevelErrors,
+  runGroupsPass,
+} from '../../src/lib/discovery/groups-pass';
 import type { GroupLead } from '../../src/lib/discovery/parsers/group-listing';
 import { type DiscoveryState } from '../../src/lib/discovery/state';
 import type { RawGroup } from '../../src/lib/types';
@@ -286,5 +290,20 @@ describe('runGroupsPass', () => {
     expect(result.errors).toHaveLength(1);
     expect(result.errors[0]!.message).toContain('failed to list open pull requests');
     expect(world.seen.llmCalls).toBe(0);
+  });
+});
+
+describe('passLevelErrors', () => {
+  it('keeps only the error of a pass that failed as a whole', async () => {
+    const world = stubWorld();
+    const { impl } = stubGitHub({ [`GET ${R}/pulls?state=open&per_page=100`]: { status: 500 } });
+    const { errors } = await runGroupsPass(passOptions(world, impl));
+    expect(passLevelErrors(errors).map((e) => e.source)).toEqual(['groups']);
+    const perName = [
+      { source: 'coote-group', message: 'HTTP 500' },
+      { source: LISTING, message: 'split failed' },
+    ];
+    expect(passLevelErrors(perName)).toEqual([]);
+    expect(passLevelErrors([...perName, ...errors])).toEqual(errors);
   });
 });

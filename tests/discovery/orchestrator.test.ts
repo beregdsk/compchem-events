@@ -522,13 +522,17 @@ describe('runDiscoveryRun', () => {
       const url = String(input);
       return url.includes('/issues') ? issueImpl(input, init) : failingImpl(input, init);
     };
-    await runDiscoveryRun(
+    const result = await runDiscoveryRun(
       baseOptions({
         candidates: [candidateEvent()],
         sourceErrors: [{ source: 'https://example.org/dead', message: 'HTTP 500' }],
         github: { token: 'gh-test', repo: 'acme/compchem-events', fetchImpl: combined },
       }),
     );
+    // Only the orchestrator's own errors are returned; source errors are the caller's.
+    expect(result.errors).toEqual([
+      { source: 'excited-states-symposium-2027', message: 'network down' },
+    ]);
     const created = calls.find((c) => c.method === 'POST' && c.url.endsWith('/issues'));
     const body = (created?.body as { body: string } | undefined)?.body ?? '';
     expect(body).toContain('https://example.org/dead');

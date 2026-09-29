@@ -174,7 +174,8 @@ considered with its verdict. Skip reasons: `low confidence` (below 0.5),
 `duplicate-website`, `duplicate-name`, `blocklisted`, `already reviewed`,
 `already proposed`, and `MAX_PRS reached`. An open group PR is never rewritten.
 The pass never rejects: a failure is logged and reported under `groups` in the
-run's JSON output.
+run's JSON output. A pass that fails as a whole is also added to the
+failure-tracking issue; per-name failures are only logged and in that JSON.
 
 ## Testing
 

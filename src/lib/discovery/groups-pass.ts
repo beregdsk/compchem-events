@@ -13,6 +13,8 @@ import { proposeGroups } from './orchestrator';
 import type { GroupLead } from './parsers/group-listing';
 import { loadState, saveState } from './state';
 
+/** The `source` of the error `runGroupsPass` returns when the whole pass fails. */
+export const GROUPS_PASS_SOURCE = 'groups';
 const BACKFILL_BRANCH = 'discovery/groups-backfill';
 const GROUP_BRANCH_PREFIX = 'discovery/group/';
 
@@ -108,7 +110,16 @@ export async function runGroupsPass(options: GroupsPassOptions): Promise<GroupsP
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     log(`groups pass failed: ${message}`);
-    result.errors.push({ source: 'groups', message });
+    result.errors.push({ source: GROUPS_PASS_SOURCE, message });
   }
   return result;
+}
+
+/**
+ * Only a pass that failed as a whole belongs in the failure-tracking issue;
+ * per-name failures (a site down, a bad page, one PR error) stay in the log
+ * and the run's JSON output, so the issue does not churn.
+ */
+export function passLevelErrors<T extends { source: string }>(errors: readonly T[]): T[] {
+  return errors.filter((e) => e.source === GROUPS_PASS_SOURCE);
 }

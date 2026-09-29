@@ -270,6 +270,8 @@ export interface OrchestratorResult {
   /** Candidates judged `add`, whether or not a PR opened for them. */
   accepted: RawEvent[];
   tokensUsed: number;
+  /** This orchestrator's own per-candidate errors (source: the candidate's id). */
+  errors: Array<{ source: string; message: string }>;
 }
 
 function skipReasonFor(classification: ClassificationResult): string {
@@ -441,5 +443,13 @@ export async function runDiscoveryRun(options: OrchestratorOptions): Promise<Orc
 
   await syncFailureIssue([...options.sourceErrors, ...orchestratorErrors], options.github);
 
-  return { prsOpened, prsUpdated, skipped, deferred, accepted, tokensUsed };
+  return {
+    prsOpened,
+    prsUpdated,
+    skipped,
+    deferred,
+    accepted,
+    tokensUsed,
+    errors: orchestratorErrors,
+  };
 }
