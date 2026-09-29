@@ -1,0 +1,4 @@
+PhD position in machine-learned force fields
+The Computational Materials Physics group at the University of Vienna invites applications for a fully funded PhD position on machine-learned interatomic potentials for heterogeneous catalysis.
+Deadline for applications: 15 November 2026.
+Details and application: https://jobs.univie.ac.at/example-phd-ml-force-fields

@@ -113,6 +113,7 @@ behaviour lives and where tests point.
 | `discovery/mailbox-client.ts` | Read-only IMAP: plaintext bodies from one folder, deduplicated on `Message-ID`. |
 | `discovery/keyword-topics.ts` | Topic slugs from keyword matches against `data/topics.yaml`, so a typed feed needs no LLM call. |
 | `discovery/extract-client.ts` | The extraction LLM call (chat completions, JSON output, no tools). Page text goes in as delimited data. |
+| `discovery/position-extract.ts` | The position keyword gate and its LLM extraction (own schema and prompt, no tools). Fetched text goes in as data. |
 | `discovery/draft.ts` | Turns an extraction into a schema-shaped event: id slug (with Cyrillic transliteration), file path, YAML. |
 | `discovery/orchestrator.ts` | Classifies candidates and opens one pull request each, with the candidate-controlled text rendered inert in the PR body. |
 | `discovery/github-client.ts` | The GitHub REST calls the orchestrator needs: branches, files, pull requests, labels, issues. |
@@ -196,6 +197,7 @@ Vitest. Run with `npm test`.
 | `tests/cli/validate-guard.test.ts` | The validator CLI exits non-zero on bad data. |
 | `tests/discovery/*.test.ts` | The discovery agent, one file per module: sources, fetching, parsers, extraction, drafting, classification, the orchestrator and the CLIs. Every LLM, GitHub and IMAP call is stubbed; CI never calls a real API. |
 | `tests/discovery/fixtures/candidates/` | Candidate events covering a clean add, each mechanical skip reason, and an adversarial prompt-injection attempt. |
+| `tests/discovery/fixtures/posts/` | Raw post texts for position gating and extraction: a PhD advert, a school that only mentions PhD grants, and an injection attempt. |
 | `tests/smoke.test.ts` | `site.config.ts` sanity (Vitest, not a browser). |
 | `tests/e2e/*.spec.ts` | Playwright, against a production build: `smoke.spec.ts` (the home page loads, choosing a topic reduces the list, the URL updates), `graph.spec.ts` (the event map) and `related.spec.ts` (related events on an event page) and `positions.spec.ts` (the positions pages and their links). Run with `npm run test:e2e`; not part of `npm test`. |
 | `tests/fixtures/valid/` | Events that must pass, covering the minimal, full and cancelled shapes. |
