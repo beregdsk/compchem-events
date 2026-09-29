@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { EventGraph } from '../../src/lib/event-graph';
-import { graphPayload, LABEL_HEIGHT, LABEL_WIDTH, layoutGraph } from '../../src/lib/graph-layout';
+import { graphPayload, layoutGraph } from '../../src/lib/graph-layout';
 
 const node = (id: string, title = id) => ({
   id,
@@ -72,29 +72,5 @@ describe('graphPayload', () => {
     const json = graphPayload(hostile, layoutGraph(hostile));
     expect(json).not.toContain('<');
     expect(JSON.parse(json).nodes[0].id).toBe('x</script><b>');
-  });
-});
-
-describe('label spacing', () => {
-  it('keeps labels of a dense cluster from printing over each other', () => {
-    const ids = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-    const dense: EventGraph = {
-      nodes: ids.map((id) => node(id)),
-      edges: ids.flatMap((s, i) =>
-        ids.slice(i + 1).map((t) => ({ source: s, target: t, weight: 0.6 })),
-      ),
-    };
-    const { positions } = layoutGraph(dense);
-    const clashes: string[] = [];
-    for (let i = 0; i < positions.length; i++) {
-      for (let j = i + 1; j < positions.length; j++) {
-        const [p, q] = [positions[i]!, positions[j]!];
-        // A label runs ~LABEL_WIDTH to the right of its node and is one line tall.
-        if (Math.abs(p.x - q.x) < LABEL_WIDTH * 0.8 && Math.abs(p.y - q.y) < LABEL_HEIGHT * 0.8) {
-          clashes.push(`${p.id}/${q.id}`);
-        }
-      }
-    }
-    expect(clashes).toEqual([]);
   });
 });

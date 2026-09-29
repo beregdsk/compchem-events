@@ -63,11 +63,11 @@ data/events/*.yaml → loadEvents() → buildEventGraph() → layoutGraph()
 
 ### `src/lib/graph-layout.ts` (build time)
 
-Thin wrapper over d3-force: link (strength ∝ weight, distance 110),
-many-body charge (−650), weak x/y centering (0.06), collide (radius 42), and a
-custom label-gap force that pushes apart nodes within one label width
-(190) horizontally and one line (20) vertically, since circular collision can't
-see the wide labels (tuned 2026-09-28 against the real data); `randomSource` seeded from a fixed constant; a
+Thin wrapper over d3-force: link (strength ∝ weight, distance 35),
+short-range many-body charge (−90, max distance 250), weak x/y centering
+(0.04/0.06) and collide (radius 16). Labels are hidden until hover, so the
+layout only makes room for shapes and similar events can sit close together
+(retuned 2026-09-29 against the real data); `randomSource` seeded from a fixed constant; a
 fixed number of ticks run synchronously. Returns `{ id, x, y }` per node,
 fitted into a fixed square viewBox. Same input → identical output, so rebuilds
 don't churn.
@@ -77,7 +77,9 @@ don't churn.
 - Loads events (fixtures excluded as in production), builds and lays out the
   graph, renders inline SVG.
 - Each node is an `<a href="/events/<id>/">` containing its shape, a `<title>`
-  with the full event title, and a label truncated to ~28 characters.
+  with the full event title, and a label truncated to ~28 characters. The label
+  is shown only for the hovered or focused node (full title when the script
+  runs, printed to the left for nodes in the right half of the view).
 - Edge stroke opacity scales with weight.
 - Node positions and edges are embedded as `<script type="application/json">`
   for the client.

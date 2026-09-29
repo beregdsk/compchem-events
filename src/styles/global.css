@@ -894,8 +894,8 @@ a:hover {
 }
 
 .graph__edge {
-  stroke: var(--rule-strong);
-  stroke-width: 1.2;
+  stroke: var(--fg-muted);
+  stroke-width: 1;
 }
 
 .graph-node__shape {
@@ -917,9 +917,24 @@ a:hover {
 }
 
 .graph-node__label {
+  display: none;
   fill: var(--fg);
   font-family: var(--font-sans);
   font-size: 13px;
+  /* A halo in the map's background keeps the label legible over edges. */
+  paint-order: stroke;
+  stroke: var(--bg-raise);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+/* Labels appear only for the node under the pointer or focus; the script adds
+   .is-hovered, and :hover covers the page without JavaScript. */
+.graph-node:hover .graph-node__label,
+.graph-node:focus-visible .graph-node__label,
+.graph-node.is-hovered .graph-node__label {
+  display: inline;
 }
 
 .graph-node--past .graph-node__shape {
