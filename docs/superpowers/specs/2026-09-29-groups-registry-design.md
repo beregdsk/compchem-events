@@ -1,6 +1,7 @@
 # Groups registry (labs, institutes, networks, societies) — design
 
-Date: 2026-09-29. Status: approved in brainstorming; awaiting plan.
+Date: 2026-09-29. Status: approved 2026-09-29, amended the same day with group sources and
+aggregator sources; plan in docs/superpowers/plans/2026-09-29-groups-registry.md.
 
 ## Intent
 
@@ -25,6 +26,18 @@ Agreed with the maintainer:
   draft exists.
 - **Backfill:** the same code path, run once over every merged event and
   position, delivered as **one batched PR**.
+- **Group sources:** groups get their own sources in `data/sources.yaml`
+  (new kind `group-listing`): pages that list groups, such as labinitio.org's
+  Australian computational chemistry groups and European XFEL's list of
+  external theory groups. A listing only supplies leads (a name, maybe a
+  link, the heading it sits under); every field is rechecked on the group's
+  own site.
+- **Other aggregators are sources, not off-limits.** The old rule
+  ("coverage comparison only, do not scrape another site's curation") is
+  dropped. An aggregator may point us at events and groups, but every fact
+  is taken from, and linked to, the official page, and none of the
+  aggregator's text is copied. labinitio.org's conference list becomes an
+  event source (new kind `aggregator`).
 
 Non-goals: linking events or positions to registry ids (`organizer_id`);
 detail pages per group; "groups for this topic" blocks on topic pages;
@@ -103,32 +116,48 @@ orchestration helpers) and `src/lib/discovery/group-extract.ts` (page →
 draft). The orchestrator runs the pass after positions, sharing the
 `MAX_PRS`, `MAX_TOKENS` and `MAX_PAGES` budgets of the run.
 
-1. **Collect names.** `organizer` from this run's event candidates that the
-   classifier accepted (so an off-topic event's organiser never reaches the
-   registry), and `group` from this run's position candidates. A position's
-   `institution` is not used.
+1. **Collect leads.** A lead is `{text, link?, context?, origin}`. Three
+   inputs: `organizer` from this run's event candidates that the classifier
+   accepted (so an off-topic event's organiser never reaches the registry);
+   `group` from this run's position candidates (a position's `institution`
+   is not used); and every entry of every `group-listing` source (see
+   *Group sources*).
 2. **Match.** Split the string on `;` and `,`, normalise each part with
    `normaliseGroupName`, and match it whole against `name`, `aliases` and `pi`
    of every entry in `data/groups/` and of every open `discovery/group/*` PR.
    If every part matches, stop. Otherwise one LLM call (no tools, the string
    passed as delimited data) splits the unmatched text into
    `{name, type: person | organisation}` items; each item is matched again.
-3. **Search.** For each item still unknown and not in the negative cache, one
+   A listing lead is already one name (its anchor text) and never goes to
+   the split call; it counts as a person when the listing links it to a
+   profile host (step 3), otherwise as an organisation.
+3. **Listing link first.** A lead from a group listing whose link is not a
+   profile or aggregator page (hosts `scholar.google.*`, `researchgate.net`,
+   `linkedin.com`, `orcid.org`, `x.com`, `twitter.com`, or the listing's own
+   host) goes straight to step 5 with that link as its only candidate; if
+   verification rejects it, the lead falls through to search.
+4. **Search.** For each item still unknown and not in the negative cache, one
    OpenRouter chat-completions call with the `web` plugin (5 results). A
    person is searched as `"<name>" research group`; an organisation by name,
    with the event or advert title as context. **Only URLs from the
    response's `url_citation` annotations are kept**; the response text is
    discarded, so no URL the model typed can be used. Kept URLs must be
    https, not blocklisted, and not a private, loopback or link-local host.
-4. **Fetch and verify.** Up to 2 candidate URLs, in citation order, fetched
+5. **Fetch and verify.** Up to 2 candidate URLs, in citation order, fetched
    through the existing `fetch.ts` path (robots, per-host rate limit,
    `MAX_PAGES`, blocklist). `group-extract.ts` sends the page text to the
    extraction model (no tools, delimited, told to ignore instructions in it)
-   and returns either `null` (not this group, or not a registry body: a
-   university, faculty or department) or `name`, `kind`, `pi`, `parent`,
+   (with the lead's `context`, e.g. the listing heading, as an unverified
+   hint) and returns either `null` (not this group; not a registry body such
+   as a university, faculty or department; or outside the site's scope: the
+   body must do computational or theoretical chemistry or materials work
+   that fits at least one topic in `data/topics.yaml`) or `name`, `kind`, `pi`, `parent`,
    `city`, `country`, `topics`, `description` and `confidence`. `website` is
-   the final URL after redirects. The first candidate returning a draft wins.
-5. **Validate and propose.** The draft gets `id` (slug of `name`, with a
+   the final URL after redirects (`politeFetch` gains a `finalUrl` on its
+   result, and a `force` option that returns the body even when the page is
+   unchanged since the last run). The first candidate returning a draft
+   wins.
+6. **Validate and propose.** The draft gets `id` (slug of `name`, with a
    numeric suffix on collision), `aliases` (the matched text, when it differs
    from `name`) and `added` (the run date), and goes through `validateGroup`
    plus the registry-wide duplicate checks against merged entries and open
@@ -141,21 +170,68 @@ draft). The orchestrator runs the pass after positions, sharing the
    the text as it appeared, the event or position that referenced it (title
    and URL), and every search result considered with the verdict for each.
    An open group PR is never rewritten.
-6. **Negative cache.** `DiscoveryState` gains
+7. **Negative cache.** `DiscoveryState` gains
    `groupLookups: Record<normalisedName, { triedAt: string; outcome: string }>`.
    A name with any outcome other than a PR opened is not searched again for
    90 days. `loadState` treats a state file without the key as having an
    empty map, so existing state files keep working.
-7. **Cap.** New env var `MAX_SEARCHES` (default 20), validated in
+8. **Cap.** New env var `MAX_SEARCHES` (default 20), validated in
    `buildConfig` like the other caps. The pass stops searching and logs when
    it is reached; unsearched names are left out of the negative cache so the
    next run tries them.
 
+### Group sources
+
+New source kind `group-listing` in `SOURCE_KINDS`. The pipeline fetches each
+such page on every run with `force` (it is one page per source; unresolved
+leads must be retried even when the page is unchanged) and parses it with
+`parsers/group-listing.ts`, a deterministic parser with no LLM: every link in
+the main content (site chrome dropped, reusing `listing.ts`'s chrome filter,
+external hosts allowed) becomes a lead with the anchor text as `text`, the
+link, and the nearest preceding heading, table caption or `<strong>` as
+`context`. Leads go to the groups pass; the pipeline result gains
+`groupLeads`.
+
+Initial entries, each fetched 2026-09-29 before being added:
+
+- labinitio.org — Australian computational chemistry groups,
+  `https://labinitio.org/explore/aust_comp_chem/`. PIs listed under
+  institution headings, most linked to Google Scholar profiles, so most
+  resolve through search. Content CC BY 4.0; we copy none of it.
+- European XFEL — list of external theory groups,
+  `https://www.xfel.eu/organization/scientific_and_technical_groups/theory/list_of_external_theory_groups/index_eng.html`
+  (the URL in the site's sitemap, `list_of_external_theoretical_groups`,
+  is a 404). About 113 external links in tables captioned by research area;
+  many areas (plasmas, X-ray imaging) are out of scope, which step 5's scope
+  rule rejects. Its robots.txt disallows a list of named AI crawlers and
+  allows every other user agent, the discovery agent's included.
+
+### Aggregator event sources
+
+New source kind `aggregator`: another site's curated list of events. Like
+`listing-page`, but links to other hosts are followed (a curated list links
+to each event's own site), and only the linked page is extracted, never the
+aggregator's text, so every event's `url` is its official page. The
+aggregator is recorded in neither `url` nor `source_url`. Initial entry:
+labinitio.org — computational chemistry conferences,
+`https://labinitio.org/explore/comp_chem_conf/`. `https://labinitio.org/explore`
+itself is only an index of these pages and is not a source.
+
+The "coverage comparison only" rule is removed from
+`docs/discovery-agent.md` and `data/sources.yaml`, and replaced by: an
+aggregator may be a source; every fact is rechecked on the official page;
+none of its text is copied. `docs/decisions.md` records the reversal. The
+aggregators previously rejected under the old rule (lcpq.ups-tlse.fr/congres,
+uregina.ca/~eastalla/conf.html, quantumdynamicsconferences.wikidot.com) are
+marked in `data/sources.yaml` as rejected under a rule since dropped; adding
+them is a separate task.
+
 ### Backfill
 
 `scripts/discovery/groups-backfill.ts`, run as
-`npm run discover:groups-backfill`. It collects names from every merged event
-(`organizer`) and position (`group`), and runs steps 2–5 with the caps passed
+`npm run discover:groups-backfill`. It collects leads from every merged event
+(`organizer`), every merged position (`group`) and every `group-listing`
+source, and runs steps 2–6 with the caps passed
 as flags (`--max-searches`, `--max-pages`, `--max-tokens`). Instead of one PR
 per group it writes every surviving draft to the single branch
 `discovery/groups-backfill` and opens one PR, labelled `needs-review` and
@@ -202,6 +278,11 @@ vitest, with no real API calls in CI:
   expiry), `MAX_SEARCHES`, and a second run on unchanged input opening no
   PR.
 - Backfill: all drafts on one branch; a re-run updates the same PR.
+- Group listings: recorded labinitio and XFEL pages parse into leads with
+  the right context; chrome links dropped; profile-host links not used as
+  candidates.
+- Aggregator kind: cross-host links followed, the extracted event's `url`
+  is the linked page, never the aggregator.
 - Page: `GroupRow` rendered through the Astro container API; `/groups/` added
   to the Playwright smoke test; the page checked in a browser in light and
   dark mode.
@@ -213,12 +294,16 @@ vitest, with no real API calls in CI:
   *Security model*, `MAX_SEARCHES` in *Configuration*.
 - `METADATA.md` and `README.md` entries for `data/groups/`, the schema and
   the page.
-- `docs/decisions.md`: OpenRouter search on the existing key (no new
+- `data/sources.yaml` format comment: the `group-listing` and `aggregator`
+  kinds.
+- `docs/decisions.md`: aggregators allowed as sources (rechecked); OpenRouter search on the existing key (no new
   credential); citation URLs only; `kind` field rather than groups only.
 
 ## Delivery order
 
 1. Schema, validator, loader and `/groups/` page, with fixture entries.
-2. The discovery groups pass.
-3. The backfill script.
-4. Running the backfill, producing the batched PR for review.
+2. Drop the aggregator rule; the `aggregator` kind and labinitio's
+   conference list.
+3. The discovery groups pass, with `group-listing` sources.
+4. The backfill script.
+5. Running the backfill, producing the batched PR for review.
