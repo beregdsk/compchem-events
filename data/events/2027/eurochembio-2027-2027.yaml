@@ -1,0 +1,21 @@
+id: eurochembio-2027-2027
+title: EuroChemBio 2027
+type: conference
+start_date: 2027-10-05
+end_date: 2027-10-10
+format: in-person
+url: https://www.euchems.eu/events/eurochembio-2027/
+source_url: https://www.euchems.eu/events/eurochembio-2027/
+topics:
+  - drug-design
+  - cheminformatics
+description: The inaugural EuroChemBio congress in Milan, uniting the European
+  Chemical Biology Symposium and the EFMC International Symposium on Chemical
+  Biology to foster collaboration and innovation in chemical biology.
+added: 2026-09-28
+location:
+  city: Milan
+  country: IT
+  venue: Palazzo della Regione Lombardia
+organizer: EuChemS, EFMC, EU-OPENSCREEN, Swiss Chemical Society, and the
+  International Chemical Biology Society
