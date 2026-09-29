@@ -648,3 +648,21 @@
 #   iframe, not the page — no static fetch will ever see real content here.
 #   Distinct from the already-dead acscomp.org entry above (division site,
 #   different URL, different failure: that one doesn't resolve at all).
+- name: Lab Initio — Australian computational chemistry groups
+  url: https://labinitio.org/explore/aust_comp_chem/
+  kind: group-listing
+  added: 2026-09-29
+  last_checked: 2026-09-29
+  notes: PIs under institution headings, mostly linked to Google Scholar, so most resolve through search. CC BY 4.0; none of it is copied.
+- name: curlie — computational chemistry research groups
+  url: https://curlie.org/Science/Chemistry/Computational/Research_Groups/
+  kind: group-listing
+  added: 2026-09-29
+  last_checked: 2026-09-29
+  notes: 34 group links (DMOZ descendant), mostly old http:// URLs, so many are stale and resolve through search. robots.txt sets Crawl-delay 1000; one fetch per daily run.
+- name: European XFEL — list of external theory groups
+  url: https://www.xfel.eu/organization/scientific_and_technical_groups/theory/list_of_external_theory_groups/index_eng.html
+  kind: group-listing
+  added: 2026-09-29
+  last_checked: 2026-09-29
+  notes: About 113 external group links in tables by research area; many areas (plasmas, X-ray imaging) are out of scope and are rejected at verification. The sitemap's list_of_external_theoretical_groups URL is a 404. robots.txt blocks named AI crawlers, not this agent's user agent.

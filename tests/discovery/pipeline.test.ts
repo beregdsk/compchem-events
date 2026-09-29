@@ -707,6 +707,60 @@ describe('runPipeline', () => {
     }
   });
 
+  it('group-listing: yields a lead per external link on every run, without calling the model', async () => {
+    const { path: statePath, cleanup: cleanupState } = tmpStatePath();
+    const { path: sourcesPath, cleanup: cleanupSources } = tmpSourcesFile(
+      '- name: Groups\n  url: https://list.example/groups/\n  kind: group-listing\n',
+    );
+    try {
+      const listing =
+        '<html><body><main><h3>Some University</h3><ul>' +
+        '<li><a href="https://lab-one.example/">Alice Smith</a></li>' +
+        '<li><a href="https://lab-two.example/">Bob Jones</a></li>' +
+        '<li><a href="/groups/own-page">Own page</a></li>' +
+        '</ul></main></body></html>';
+      const pageFetch: typeof fetch = async (input) => {
+        const url = String(input);
+        if (url.endsWith('/robots.txt')) return new Response('', { status: 200 });
+        if (url === 'https://list.example/groups/') return new Response(listing, { status: 200 });
+        throw new Error(`unstubbed url: ${url}`);
+      };
+      let extractCalls = 0;
+      const extractFetch: typeof fetch = async () => {
+        extractCalls += 1;
+        throw new Error('the model must not be called for a group listing');
+      };
+      const runOnce = () =>
+        runPipeline({
+          sourcesPath,
+          statePath,
+          userAgent: 'Test Agent (+https://example.org)',
+          maxPages: 100,
+          maxTokens: 500_000,
+          sleepImpl: async () => {},
+          fetchImpl: pageFetch,
+          extract: { apiKey: 'sk-test', model: 'test-model', fetchImpl: extractFetch },
+        });
+      const first = await runOnce();
+      const second = await runOnce();
+      for (const result of [first, second]) {
+        expect(result.groupLeads.map((l) => l.text)).toEqual(['Alice Smith', 'Bob Jones']);
+        expect(result.groupLeads[0]).toMatchObject({
+          link: 'https://lab-one.example/',
+          context: 'Some University',
+          origin: 'https://list.example/groups/',
+          fromListing: true,
+        });
+        expect(result.pagesFetched).toBe(1);
+        expect(result.errors).toEqual([]);
+      }
+      expect(extractCalls).toBe(0);
+    } finally {
+      cleanupState();
+      cleanupSources();
+    }
+  });
+
   it('runs sources concurrently without overshooting maxPages', async () => {
     const { path: statePath, cleanup: cleanupState } = tmpStatePath();
     const hosts = ['a', 'b', 'c', 'd', 'e'].map((h) => `${h}.example`);

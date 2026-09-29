@@ -23,6 +23,7 @@ import type { ExtractionInput } from './html';
 import { extractionInputFromPage } from './parsers/page';
 import { findAggregatorLinks, findEventPageLinks, findNextListingPage } from './parsers/listing';
 import { parseFeedItems } from './parsers/rss';
+import { parseGroupListing, type GroupLead } from './parsers/group-listing';
 import { parseICalEvents, type ICalEvent } from './parsers/ical';
 import { extractionInputsFromChannel } from './parsers/telegram';
 import {
@@ -182,6 +183,10 @@ export interface PipelineResult {
   positions: PositionCandidate[];
   errors: Array<{ source: string; message: string }>;
   tokensUsed: number;
+  /** Leads from `group-listing` sources, for the groups pass. */
+  groupLeads: GroupLead[];
+  /** Pages fetched this run, so the groups pass can take only what is left of `maxPages`. */
+  pagesFetched: number;
   /**
    * Rolls back, and saves, the state of every page or mailbox message the
    * given candidates came from, so the next run fetches and extracts them
@@ -217,6 +222,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
   /** `state.pages` key → its value before this run touched it, for `requeue`. */
   const previousStates = new Map<string, PageState | undefined>();
   const errors: Array<{ source: string; message: string }> = [];
+  const groupLeads: GroupLead[] = [];
   let pagesFetched = 0;
   /** URLs already fetched (or being fetched) this run, by any source. */
   const claimedUrls = new Set<string>();
@@ -575,9 +581,18 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
         });
         return;
       }
-      case 'group-listing':
-        // Read by the groups pass (Task 5 fills this in).
+      case 'group-listing': {
+        // Fetched every run (force): the leads it holds are resolved a few
+        // per run under MAX_SEARCHES, so an unchanged page still has work.
+        const result = await politeFetch(source.url, { ...fetchOpts, force: true });
+        if (result.status === 'fetched') {
+          pagesFetched += 1;
+          groupLeads.push(...parseGroupListing(result.body, source.url));
+        } else if (result.status === 'error') {
+          errors.push({ source: source.url, message: result.error });
+        }
         return;
+      }
       case 'telegram-channel': {
         await fetchAndProcess(source.url, budget, async (body) => {
           let allOk = true;
@@ -672,5 +687,5 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
     saveState(options.statePath, state);
   }
 
-  return { candidates, positions, errors, tokensUsed, requeue };
+  return { candidates, positions, errors, tokensUsed, groupLeads, pagesFetched, requeue };
 }
