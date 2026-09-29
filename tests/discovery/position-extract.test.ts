@@ -19,6 +19,14 @@ describe('looksLikePosition', () => {
     'Tenure-track faculty position in theoretical chemistry',
     'Открыта вакансия младшего научного сотрудника',
     'Two doctoral positions in quantum dynamics',
+    'Postdoctoral Research Associate in computational chemistry',
+    'Postdoc in computational chemistry at ETH Zurich',
+    'Fully funded PhD in quantum chemistry',
+    'PhD opportunity in machine learning for materials',
+    'PhD-position in DFT',
+    'Research Fellow in theoretical chemistry',
+    'Assistant Professor in theoretical chemistry',
+    'Professorship in computational chemistry',
   ])('matches %s', (text) => {
     expect(looksLikePosition(text)).toBe(true);
   });

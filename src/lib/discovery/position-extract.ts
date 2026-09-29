@@ -13,15 +13,29 @@ import {
 import { MAX_TOPICS } from './keyword-topics';
 
 /**
- * Phrases that mark a job advert. Deliberately narrow: bare "professor",
- * "lecturer" or "applications are invited" appear in ordinary event posts
- * (speaker titles, school calls), and every false match costs an extra LLM
- * call before the post falls back to event extraction.
+ * Phrases that mark a job advert. Every pattern is anchored on a job noun
+ * ("position", "fellowship", "professorship", "PhD project") or a job title
+ * followed by "in <field>", as advert headlines read. Bare "professor",
+ * "assistant professor", "research fellow", "postdoctoral researchers",
+ * "lecturer", "apply by" or "applications are invited" are left out: they
+ * appear in ordinary event posts (speaker lists, audience text, registration
+ * calls), and every false match costs an extra LLM call before the post falls
+ * back to event extraction.
  */
 export const POSITION_PATTERNS: readonly RegExp[] = [
   /\bph\.?\s?d\.?\s+(positions?|studentships?|scholarships?|openings?|student\s+positions?)\b/i,
   /\bdoctoral\s+(positions?|studentships?)\b/i,
+  /\bph\.?\s?d\.?-positions?\b/i,
+  /\b(fully\s+)?funded\s+ph\.?\s?d\b/i,
+  /\bph\.?\s?d\.?\s+(projects?|opportunit(y|ies))\b/i,
   /\bpost-?doc(toral)?\s+(positions?|fellowships?|openings?)\b/i,
+  /\bpost-?doc(toral)?\s+in\b/i,
+  /\bpostdoctoral\s+research\s+(associates?|fellows?(hips?)?)\b/i,
+  /\bpostdoctoral\s+researchers?\s+(positions?|wanted|in)\b/i,
+  /\bresearch\s+fellow(ship)?s?\s+(positions?|in)\b/i,
+  /\bprofessorships?\b/i,
+  /\bprofessor\s+positions?\b/i,
+  /\b(assistant|associate)\s+professor\s+in\b/i,
   /\btenure[- ]track\b/i,
   /\bfaculty\s+(positions?|openings?)\b/i,
   /\blectureships?\b/i,
