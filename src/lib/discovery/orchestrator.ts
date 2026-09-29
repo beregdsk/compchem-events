@@ -23,7 +23,7 @@ import { Proposer } from './propose';
  * and whitespace runs collapse to one space so a blank line can't end the
  * list item and start markdown of its own.
  */
-function inlineCode(text: string): string {
+export function inlineCode(text: string): string {
   return `\`${text.replace(/`/g, '´').replace(/\s+/g, ' ').trim()}\``;
 }
 

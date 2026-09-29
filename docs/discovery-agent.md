@@ -177,6 +177,15 @@ The pass never rejects: a failure is logged and reported under `groups` in the
 run's JSON output. A pass that fails as a whole is also added to the
 failure-tracking issue; per-name failures are only logged and in that JSON.
 
+**Backfill.** `npm run discover:groups-backfill [--max-searches N] [--max-pages N] [--max-tokens N]`
+(defaults 200 searches, 500 pages, `MAX_TOKENS`) proposes an entry for every
+organiser of a merged event, every group of a merged position and every
+`group-listing` source entry, as one PR from the branch
+`discovery/groups-backfill` (labels `needs-review` and `group`). Its body is a
+table of entries followed by the skipped names, and has no `Confidence:` line,
+so auto-approve never flags the batch. Run once by hand, not by cron; a re-run
+updates the same PR. It needs the same environment as `discover:run`.
+
 ## Testing
 
 - Record real pages as fixtures in `tests/discovery/fixtures/` and test extraction with a stubbed LLM client returning canned JSON. CI must never call the real API.

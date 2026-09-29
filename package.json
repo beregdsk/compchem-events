@@ -18,7 +18,8 @@
     "validate": "tsx scripts/validate.ts",
     "check-links": "tsx scripts/check-links.ts",
     "discover": "tsx scripts/discovery/parse-sources.ts",
-    "discover:run": "tsx scripts/discovery/run.ts"
+    "discover:run": "tsx scripts/discovery/run.ts",
+    "discover:groups-backfill": "tsx scripts/discovery/groups-backfill.ts"
   },
   "dependencies": {
     "ajv": "^8.20.0",

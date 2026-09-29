@@ -35,6 +35,7 @@ npm run check-links  # fetch every event's url/source_url and report the dead on
 npm run discover     # discovery dry run: fetch and extract every source, print candidates (needs LLM_API_KEY,
                      #   LLM_MODEL_EXTRACT, STATE_PATH)
 npm run discover:run # the full discovery run that opens pull requests; see docs/discovery-agent.md
+npm run discover:groups-backfill # one-off: propose registry entries for every existing organiser, group and group listing as one PR (needs the discover:run environment)
 ```
 
 ## Documentation

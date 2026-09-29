@@ -15,13 +15,18 @@ import { loadState, saveState } from './state';
 
 /** The `source` of the error `runGroupsPass` returns when the whole pass fails. */
 export const GROUPS_PASS_SOURCE = 'groups';
-const BACKFILL_BRANCH = 'discovery/groups-backfill';
+/** The single branch (and PR) the one-off backfill writes every draft to. */
+export const BACKFILL_BRANCH = 'discovery/groups-backfill';
 const GROUP_BRANCH_PREFIX = 'discovery/group/';
 
 /** The groups in open group PRs (one per `discovery/group/*` branch, many on the backfill branch). */
-export async function openGroupDrafts(github: GitHubOptions): Promise<RawGroup[]> {
+export async function openGroupDrafts(
+  github: GitHubOptions,
+  options: { excludeBranch?: string } = {},
+): Promise<RawGroup[]> {
   const drafts: RawGroup[] = [];
   for (const pr of await listOpenDiscoveryPrs(github)) {
+    if (pr.headRef === options.excludeBranch) continue;
     if (!pr.headRef.startsWith(GROUP_BRANCH_PREFIX) && pr.headRef !== BACKFILL_BRANCH) continue;
     for (const file of await listFilesOnBranch(pr.headRef, 'data/groups', github)) {
       const data: unknown = parse(file.content);
