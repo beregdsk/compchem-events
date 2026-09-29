@@ -4,21 +4,21 @@ The JSON Schema in `schema/position.schema.json` must implement this document ex
 
 One YAML file per position at `data/positions/<added-year>/<id>.yaml`. Unknown fields are errors. To close a position early, set `deadline` to a past date.
 
-| Field         | Type     | Required | Rules                                                                                                                             |
-| ------------- | -------- | -------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `id`          | string   | yes      | `^[a-z0-9]+(-[a-z0-9]+)*-\d{4}$`, ending with the year of `added`. Equals the file name without `.yaml`.                          |
-| `title`       | string   | yes      | 5-140 characters.                                                                                                                 |
-| `level`       | enum     | yes      | `phd`, `postdoc`, `permanent` (research scientist, lecturer, faculty).                                                            |
-| `institution` | string   | yes      | 2-140 characters.                                                                                                                 |
-| `group`       | string   | no       | Research group or PI, 2-140 characters.                                                                                           |
-| `location`    | object   | yes      | `city` (string, required), `country` (ISO 3166-1 alpha-2, uppercase, required).                                                   |
-| `url`         | string   | yes      | The advert, `https://`. Host not on `data/blocklist.yaml`. Falls back to the post it was found in when that post links no advert. |
-| `source_url`  | string   | no       | Where it was found, if different from `url`. `https://`.                                                                          |
-| `deadline`    | date     | no       | Application deadline, `YYYY-MM-DD`. Omitted when the advert states none.                                                          |
-| `topics`      | string[] | yes      | 1-5 unique slugs from `data/topics.yaml`.                                                                                         |
-| `description` | string   | yes      | Own words, plain text, 280 characters or fewer.                                                                                   |
-| `added`       | date     | yes      | Date first seen. Not in the future.                                                                                               |
-| `fixture`     | boolean  | no       | Development data; excluded from production builds.                                                                                |
+| Field         | Type     | Required | Rules                                                                                                                                  |
+| ------------- | -------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`          | string   | yes      | `^[a-z0-9]+(-[a-z0-9]+)*-\d{4}$`, ending with the year of `added`. Equals the file name without `.yaml`.                               |
+| `title`       | string   | yes      | 5-140 characters.                                                                                                                      |
+| `level`       | enum     | yes      | `phd`, `postdoc`, `permanent` (research scientist, lecturer, faculty).                                                                 |
+| `institution` | string   | yes      | 2-140 characters.                                                                                                                      |
+| `group`       | string   | no       | Research group or PI, 2-140 characters.                                                                                                |
+| `location`    | object   | yes      | `city` (string, 1–100 characters, required), `country` (ISO 3166-1 alpha-2, uppercase, required).                                      |
+| `url`         | string   | yes      | The advert, `https://`. Host not on `data/blocklist.yaml`. Falls back to the post it was found in when that post links no advert.      |
+| `source_url`  | string   | no       | Where it was found. `https://`. Equals `url` when the post linked no advert; that equality is how shared fallback URLs are recognised. |
+| `deadline`    | date     | no       | Application deadline, `YYYY-MM-DD`. Omitted when the advert states none.                                                               |
+| `topics`      | string[] | yes      | 1-5 unique slugs from `data/topics.yaml`.                                                                                              |
+| `description` | string   | yes      | Own words, plain text, 1–280 characters.                                                                                               |
+| `added`       | date     | yes      | Date first seen. Not in the future.                                                                                                    |
+| `fixture`     | boolean  | no       | Development data; excluded from production builds.                                                                                     |
 
 ## Derived status
 
