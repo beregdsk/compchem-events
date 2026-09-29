@@ -46,8 +46,37 @@ describe('synthesizePositionDraft', () => {
       ['dft'],
       '2026-09-29',
     );
-    expect(d.id.length).toBeLessThanOrEqual(85);
+    expect(d.id.length).toBeLessThanOrEqual(95);
     expect(d.id).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*-2026$/);
+  });
+
+  it('keeps long titles that share an 80-character prefix apart', () => {
+    const inst = 'Max Planck Institute for Chemical Energy Conversion';
+    const a = synthesizePositionDraft(
+      {
+        ...fields,
+        institution: inst,
+        title: 'PhD position in computational chemistry of transition-metal catalysts',
+      },
+      'https://x.org',
+      ['dft'],
+      '2026-09-29',
+    );
+    const b = synthesizePositionDraft(
+      {
+        ...fields,
+        institution: inst,
+        title: 'PhD position in computational chemistry of battery electrolytes',
+      },
+      'https://x.org',
+      ['dft'],
+      '2026-09-29',
+    );
+    expect(a.id).not.toBe(b.id);
+    for (const id of [a.id, b.id]) {
+      expect(id).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*-\d{4}$/);
+      expect(id.length).toBeLessThanOrEqual(95);
+    }
   });
 
   it('omits optional fields that were not extracted', () => {

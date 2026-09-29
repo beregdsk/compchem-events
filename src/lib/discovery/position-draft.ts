@@ -1,9 +1,13 @@
+import { createHash } from 'node:crypto';
 import type { ISODate } from '../dates';
 import type { RawPosition } from '../types';
 import { slugifyTitle } from './draft';
 import type { ExtractedPosition } from './position-extract';
 
-/** Longest slug kept before the `-<year>` suffix, so ids and branch names stay readable. */
+/**
+ * Longest slug kept before the `-<hash>-<year>` suffix, so ids and branch names
+ * stay readable; ids stay within 80 + 9 + 5 = 94 characters.
+ */
 const MAX_SLUG = 80;
 
 /**
@@ -19,7 +23,15 @@ export function synthesizePositionDraft(
   today: ISODate,
 ): RawPosition {
   let slug = slugifyTitle(`${fields.institution} ${fields.title}`);
-  if (slug.length > MAX_SLUG) slug = slug.slice(0, MAX_SLUG).replace(/-[^-]*$/, '');
+  if (slug.length > MAX_SLUG) {
+    // Truncation can make distinct long titles share a prefix, so a short hash
+    // of the full institution and title keeps their ids apart.
+    const hash = createHash('sha256')
+      .update(`${fields.institution}|${fields.title}`)
+      .digest('hex')
+      .slice(0, 8);
+    slug = `${slug.slice(0, MAX_SLUG).replace(/-[^-]*$/, '')}-${hash}`;
+  }
   const draft: RawPosition = {
     id: `${slug}-${today.slice(0, 4)}`,
     title: fields.title,
