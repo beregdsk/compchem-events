@@ -112,10 +112,15 @@ export async function resolveGroupLeads(options: ResolveOptions): Promise<Resolv
     }));
   }
 
+  /** A group's website is never a profile page, nor on the host the lead came from. */
+  const onOtherHost = (url: string, originHost: string) =>
+    !isProfileHost(url) && new URL(url).host.toLowerCase() !== originHost;
+
   /** Fetches one URL and asks the model whether it is this item's homepage; `capped` when MAX_PAGES stopped it. */
   async function verify(
     url: string,
     item: Item,
+    originHost: string,
     considered: Considered,
   ): Promise<Verified | 'capped' | undefined> {
     if (result.pagesFetched >= options.maxPages) {
@@ -135,6 +140,10 @@ export async function resolveGroupLeads(options: ResolveOptions): Promise<Resolv
       considered.push({ url, verdict: 'redirected to a non-public host' });
       return undefined;
     }
+    if (!onOtherHost(page.finalUrl, originHost)) {
+      considered.push({ url, verdict: 'redirected to a profile or origin host' });
+      return undefined;
+    }
     const pageText = extractionInputFromPage(page.body, page.finalUrl).text;
     const fields = await extractGroup(pageText, item, extract);
     considered.push({ url, verdict: fields ? 'drafted' : 'not this group' });
@@ -147,9 +156,10 @@ export async function resolveGroupLeads(options: ResolveOptions): Promise<Resolv
     item: Item,
     considered: Considered,
   ): Promise<Verified | 'capped' | undefined> {
+    const originHost = new URL(lead.origin).host.toLowerCase();
     const link = lead.link ? normalizeEventUrl(lead.link) : null;
-    if (link && !isProfileHost(link) && new URL(link).host !== new URL(lead.origin).host) {
-      const found = await verify(link, item, considered);
+    if (link && isPublicHttpsUrl(link) && onOtherHost(link, originHost)) {
+      const found = await verify(link, item, originHost, considered);
       if (found) return found;
     }
     if (result.searches >= options.maxSearches) {
@@ -162,8 +172,11 @@ export async function resolveGroupLeads(options: ResolveOptions): Promise<Resolv
       item.type === 'person'
         ? `"${item.name}" research group${context}`
         : `"${item.name}"${context}`;
-    for (const url of (await searchGroupWebsites(query, extract)).slice(0, SEARCH_CANDIDATES)) {
-      const found = await verify(url, item, considered);
+    const urls = (await searchGroupWebsites(query, extract)).filter((u) =>
+      onOtherHost(u, originHost),
+    );
+    for (const url of urls.slice(0, SEARCH_CANDIDATES)) {
+      const found = await verify(url, item, originHost, considered);
       if (found) return found;
     }
     return undefined;

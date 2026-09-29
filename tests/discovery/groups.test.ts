@@ -72,6 +72,8 @@ function chat(content: unknown): Response {
 function world(w: World = {}) {
   const seen = {
     pages: [] as string[],
+    /** Every page-side request, robots.txt included. */
+    requests: [] as string[],
     queries: [] as string[],
     splits: [] as string[],
     verifications: 0,
@@ -79,6 +81,7 @@ function world(w: World = {}) {
   };
   const pageFetch = (async (input: RequestInfo | URL) => {
     const url = String(input);
+    seen.requests.push(url);
     if (url.endsWith('/robots.txt')) return new Response('', { status: 404 });
     seen.pages.push(url);
     const body = PAGES[url];
@@ -259,6 +262,49 @@ describe('resolveGroupLeads', () => {
       ]);
     },
   );
+
+  it('drops profile and origin hosts from search results before taking the first two', async () => {
+    const w = world({
+      searches: {
+        '"Michelle Coote" research group Flinders University': [
+          'https://www.linkedin.com/in/coote',
+          'https://labinitio.org/people/coote',
+          'https://cootelab.com/',
+        ],
+      },
+      verdicts: { 'https://cootelab.com/': COOTE },
+    });
+    const result = await resolveGroupLeads(
+      options(w, [cooteLead('https://scholar.google.com.au/citations?user=x')]),
+    );
+    expect(w.seen.requests.some((u) => u.includes('linkedin.com'))).toBe(false);
+    expect(w.seen.requests.some((u) => u.includes('labinitio.org'))).toBe(false);
+    expect(result.candidates.map((c) => c.draft.website)).toEqual(['https://cootelab.com/']);
+  });
+
+  it('never drafts from a listing link that redirected to a profile host', async () => {
+    const w = world({
+      redirects: { 'https://cootelab.com/': 'https://www.linkedin.com/in/coote' },
+      searches: { '"Michelle Coote" Flinders University': ['https://www.epfl.ch/labs/cosmo/'] },
+      verdicts: { 'https://cootelab.com/': COOTE, 'https://www.epfl.ch/labs/cosmo/': COSMO },
+    });
+    const result = await resolveGroupLeads(options(w, [cooteLead('https://cootelab.com/')]));
+    expect(w.seen.verifications).toBe(1);
+    expect(result.candidates.map((c) => c.draft.website)).toEqual([
+      'https://www.epfl.ch/labs/cosmo/',
+    ]);
+    expect(result.candidates[0]!.considered[0]).toEqual({
+      url: 'https://cootelab.com/',
+      verdict: 'redirected to a profile or origin host',
+    });
+  });
+
+  it('never fetches a listing link on a local or private host', async () => {
+    const w = world();
+    const result = await resolveGroupLeads(options(w, [cooteLead('https://intranet.local/')]));
+    expect(w.seen.requests.some((u) => u.includes('intranet.local'))).toBe(false);
+    expect(result.searches).toBe(1);
+  });
 
   it('records not found in the cache and does not search again within 90 days', async () => {
     const w = world();
