@@ -62,6 +62,7 @@ publishing workflow.
 | --- | --- |
 | `data/events/<start-year>/<id>.yaml` | One file per event. The folder must match the event's start year and the filename must match its `id`; the validator enforces both. |
 | `data/positions/<added-year>/<id>.yaml` | One file per position (PhD, postdoc or permanent academic job). Created by the first merged position PR; the folder must match the year of `added` and the filename must match its `id`. |
+| `data/groups/<id>.yaml` | One file per research group, institute, network or society, listed on `/groups/`. The filename must match its `id`; the folder does not exist until the first group is merged. |
 | `data/topics.yaml` | Controlled vocabulary of topic slugs and labels. Adding a slug is a schema-level change. |
 | `data/blocklist.yaml` | Organiser domains that must never be listed, each with public evidence. Intentionally empty until there is something to add. Matches a registrable host and its subdomains. |
 | `data/sources.yaml` | Pages, feeds, channels and mailing lists the discovery agent watches, each verified by fetch. Read by `src/lib/discovery/sources.ts`, listed publicly on `/sources/`, and checked by `npm run validate`. Unusable candidates are kept in a commented block at the bottom so nobody re-checks them. |
@@ -73,12 +74,13 @@ publishing workflow.
 | --- | --- |
 | `schema/event.schema.json` | JSON Schema for an event file. The contract. Changing it means changing the validator, `docs/data-schema.md`, the fixtures and the tests in the same pull request. |
 | `schema/position.schema.json` | JSON Schema for a position file. Must match `docs/position-schema.md` exactly. |
+| `schema/group.schema.json` | JSON Schema for a group file. Must match `docs/group-schema.md` exactly. |
 
 ## `scripts/`
 
 | Path | What it is |
 | --- | --- |
-| `scripts/validate.ts` | CLI entry point for `npm run validate`. Walks `data/events/` and `data/positions/` and checks `data/sources.yaml`, reports problems and exits non-zero on any error. Thin: the logic is in `src/lib/validation.ts` and `src/lib/discovery/sources.ts` so the discovery agent can import it as a library. |
+| `scripts/validate.ts` | CLI entry point for `npm run validate`. Walks `data/events/`, `data/positions/` and `data/groups/` and checks `data/sources.yaml`, reports problems and exits non-zero on any error. Thin: the logic is in `src/lib/validation.ts` and `src/lib/discovery/sources.ts` so the discovery agent can import it as a library. |
 | `scripts/discovery/run.ts` | The discovery agent's cron entry point (`npm run discover:run`): validates its environment, then runs fetch → extract → classify → open pull requests → label high-confidence ones. |
 | `scripts/discovery/parse-sources.ts` | Dry run (`npm run discover`): fetches and extracts from every source and prints the candidates as JSON. No classification, no GitHub calls. |
 | `scripts/discovery/classify.ts` | CLI: reads one candidate event file (YAML or JSON), classifies it against `data/events/` and `data/blocklist.yaml` via `src/lib/discovery/classify-candidate.ts`, prints the verdict as JSON. Useful for checking one candidate by hand; `orchestrator.ts` calls the same classifier in a real run. |
@@ -96,6 +98,8 @@ behaviour lives and where tests point.
 | `validation.ts` | Schema validation (Ajv) plus the semantic rules the schema cannot express — end before start, deadline after end, unknown topic or country, a future `added`, id/filename/folder agreement. Exported as `validateEvent` for reuse. |
 | `position-validation.ts` | The same for positions: schema, id/filename/folder agreement, topics, country, blocklist, plus cross-file duplicate checks. Exports `validatePosition`, `validatePositionCollection` and `readPositionFiles`. |
 | `positions.ts` | The positions loader. Reads and validates `data/positions/`, derives each position's open, stale or archived status from the build date (45 and 90 days for positions without a deadline), and orders each list. |
+| `group-validation.ts` | The same for groups: schema, id/filename agreement, topics, country, blocklist, plus cross-file duplicate checks. Exports `validateGroup`, `validateGroupCollection` and `readGroupFiles`. |
+| `groups.ts` | The groups loader. Reads and validates `data/groups/`, drops fixtures in production builds, and groups the result into sections by kind. |
 | `event-graph.ts` | Similarity between events (shared topics, series, organiser) and the graph built from it. Feeds `/graph/` and the related events on each event page. |
 | `graph-layout.ts` | Seeded d3-force layout for the event map, run at build time; the browser script reuses its force configuration. |
 | `graph-shapes.ts` | SVG path per event type for the map: type is carried by shape, not colour. |
@@ -144,6 +148,7 @@ One file per URL. Pages stay thin; they compose `src/lib/`.
 | `archive.astro` | `/archive` — past events. |
 | `positions.astro` | `/positions/` — open positions, plus those that may already be filled. |
 | `positions/archive.astro` | `/positions/archive/` — closed positions, grouped by year. |
+| `groups.astro` | `/groups/` — research groups, institutes, networks and societies, one section per kind. |
 | `about.astro` | `/about` — what this is, plus the curation policy. |
 | `submit.astro` | `/submit` — how to add or correct an event. |
 | `404.astro` | Not-found page. |
@@ -161,6 +166,7 @@ One file per URL. Pages stay thin; they compose `src/lib/`.
 | `layouts/Base.astro` | The page shell: masthead, footer, metadata, global stylesheet. |
 | `components/EventRow.astro` | One event in a list, with its dates, place and topics. |
 | `components/PositionRow.astro` | One position in a list: deadline or "no deadline", level, institution, place, topics, and a stale note. |
+| `components/GroupRow.astro` | One group in a list: linked name, PI, parent, place, description and topics. |
 | `components/DeadlineList.astro` | An event's deadlines. |
 | `components/OrbitalField.astro` | Renders the orbital plate as inline SVG at build time — inline so the dots can follow the theme tokens, which an external image could not. |
 | `components/PageActions.astro` | The row of per-page actions (subscribe, export, submit). |
@@ -201,10 +207,11 @@ Vitest. Run with `npm test`.
 | `tests/discovery/fixtures/candidates/` | Candidate events covering a clean add, each mechanical skip reason, and an adversarial prompt-injection attempt. |
 | `tests/discovery/fixtures/posts/` | Raw post texts for position gating and extraction: a PhD advert, a school that only mentions PhD grants, and an injection attempt. |
 | `tests/smoke.test.ts` | `site.config.ts` sanity (Vitest, not a browser). |
-| `tests/e2e/*.spec.ts` | Playwright, against a production build: `smoke.spec.ts` (the home page loads, choosing a topic reduces the list, the URL updates), `graph.spec.ts` (the event map) and `related.spec.ts` (related events on an event page) and `positions.spec.ts` (the positions pages and their links). Run with `npm run test:e2e`; not part of `npm test`. |
+| `tests/e2e/*.spec.ts` | Playwright, against a production build: `smoke.spec.ts` (the home page loads, choosing a topic reduces the list, the URL updates), `graph.spec.ts` (the event map) and `related.spec.ts` (related events on an event page) and `positions.spec.ts` (the positions pages and their links) and `groups.spec.ts` (the groups page and its navigation link). Run with `npm run test:e2e`; not part of `npm test`. |
 | `tests/fixtures/valid/` | Events that must pass, covering the minimal, full and cancelled shapes. |
 | `tests/fixtures/invalid/` | One file per rule that must fail, named for the rule it breaks. Add a file here whenever you add a rule. |
 | `tests/fixtures/warnings/` | Events that pass but should warn, such as a bare-homepage `url`. |
+| `tests/fixtures/groups/` | Valid group files (`valid/`) used by the group tests. |
 | `tests/fixtures/positions/` | Valid position files (`valid/<year>/`) used by `tests/lib/position-validation.test.ts`. |
 | `tests/fixtures/cli/validate.ts` | Helper for driving the validator in tests. |
 
@@ -214,6 +221,7 @@ Vitest. Run with `npm test`.
 | --- | --- |
 | `docs/data-schema.md` | Every event field explained, for contributors. |
 | `docs/position-schema.md` | Every position field explained, the derived-status rules and the validation rules. |
+| `docs/group-schema.md` | Every group field explained and the validation rules. |
 | `docs/curation-policy.md` | What gets listed, what does not, and how the blocklist works. |
 | `docs/discovery-agent.md` | The discovery agent: pipeline, security model, configuration, sources and deployment. Implemented and running. Read it with `data/sources.yaml`. |
 | `docs/decisions.md` | Running log of decisions and their reasons, newest last. Every deviation from the brief is recorded here. |

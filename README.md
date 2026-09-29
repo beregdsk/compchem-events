@@ -12,6 +12,7 @@ Events are listed with topics, location, format and deadlines, and can be filter
 - The site is built with Astro into static files and hosted on Cloudflare (a git-connected Worker serving static assets — see `wrangler.jsonc`). There is no server or database.
 - Feeds: `/events.ics`, `/deadlines.ics`, `/feed.xml` and `/events.json`, plus a calendar and Atom feed per topic (`/topics/<slug>.ics`, `/topics/<slug>.xml`) listed on `/topics/`.
 - Browsing: every topic has a page at `/topics/<slug>/`, a recurring series with two or more listed editions has one at `/series/<slug>/`, and `/graph/` maps similar events close together.
+- Groups: `/groups/` lists research groups, institutes, networks and societies from `data/groups/`, validated against `schema/group.schema.json`.
 - A discovery agent finds candidate events on the sources in [`data/sources.yaml`](data/sources.yaml) and opens pull requests. It never publishes; a maintainer merges.
 - Anyone can add or correct an event with a pull request or an issue. See [CONTRIBUTING.md](CONTRIBUTING.md).
 

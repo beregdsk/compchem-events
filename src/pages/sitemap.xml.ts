@@ -13,6 +13,7 @@ export const STATIC_PATHS = [
   '/graph/',
   '/positions/',
   '/positions/archive/',
+  '/groups/',
   '/topics/',
 ];
 

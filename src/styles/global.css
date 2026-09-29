@@ -587,6 +587,11 @@ a:hover {
   border-block-end: 1px solid var(--rule);
 }
 
+/* A group row has no date column, so its body takes the full width. */
+.event.group {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .event__when {
   margin: 0;
   padding-block-start: 0.25rem;

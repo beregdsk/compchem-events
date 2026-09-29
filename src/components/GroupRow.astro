@@ -1,0 +1,33 @@
+---
+import { nameOf } from '../lib/regions';
+import type { RawGroup } from '../lib/types';
+
+interface Props {
+  group: RawGroup;
+}
+
+const { group: g } = Astro.props;
+const place = g.location
+  ? `${g.location.city}, ${nameOf(g.location.country) ?? g.location.country}`
+  : undefined;
+const meta = [g.pi, g.parent, place].filter(Boolean).join(' · ');
+---
+
+<li class="event group" id={g.id}>
+  <div class="event__body">
+    <h3 class="event__title">
+      <a href={g.website} rel="noopener">
+        {g.name}
+      </a>
+    </h3>
+    {meta && <p class="mono muted event__meta">{meta}</p>}
+    <p class="event__desc">{g.description}</p>
+    <p class="event__tags">
+      {g.topics.map((t) => (
+        <a class="pill pill--topic" href={`/topics/${t}/`}>
+          {t}
+        </a>
+      ))}
+    </p>
+  </div>
+</li>
