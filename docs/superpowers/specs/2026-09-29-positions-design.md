@@ -33,8 +33,9 @@ inline listing).
 
 ## Constraints from the repo
 
-- `AGENTS.md` rule 1: nothing from memory; every position needs an official
-  `url` and a real `last_verified`.
+- `AGENTS.md` rule 1: nothing from memory; every position needs a `url` it
+  was actually found at. (`last_verified` is being removed from events in a
+  separate change first, so positions never get it.)
 - Rule 2: `description` in our own words, 280 characters or fewer.
 - Rule 3: static only; status is derived at build time. `rebuild.yml` already
   rebuilds daily, so open/stale/archived move on schedule.
@@ -56,13 +57,12 @@ validated against `schema/position.schema.json`, documented in
 | `institution` | string | yes | 2–140 characters. |
 | `group` | string | no | Research group or PI, 2–140 characters. |
 | `location` | object | yes | `city` (string, required), `country` (ISO 3166-1 alpha-2, uppercase, required). |
-| `url` | string | yes | Official advert, `https://`. Host not on `data/blocklist.yaml`. |
+| `url` | string | yes | The advert, `https://`. Host not on `data/blocklist.yaml`. Falls back to the post it was found in when that post links no advert. |
 | `source_url` | string | no | Where it was found, if different from `url`. `https://`. |
 | `deadline` | date | no | Application deadline, `YYYY-MM-DD`. Omitted when the advert states none. |
 | `topics` | string[] | yes | 1–5 unique slugs from `data/topics.yaml`. |
 | `description` | string | yes | Own words, plain text, 280 characters or fewer. |
 | `added` | date | yes | Date first seen. Not in the future. |
-| `last_verified` | date | yes | Date someone last checked the advert. Not in the future. |
 | `fixture` | boolean | no | Development data; excluded from production builds. |
 
 Unknown fields are errors, as for events. To close a position early, set
@@ -97,9 +97,9 @@ messages) are eligible. After the existing `looksRelevant` topic check:
 3. If it returns a position: build a draft (topics fall back to
    `keywordTopics`), validate it with the position validator, drop it if its
    deadline has passed, otherwise add it to the run's position candidates.
-   Unlike events, `url` does **not** fall back to the fetched item's URL: a
-   position whose text states no advert URL is dropped (logged), because a
-   mailing-list message or Telegram post is not an official advert.
+   As for events, `url` falls back to the fetched item's URL (the list
+   message or channel post) when the text states no advert URL; the
+   extractor never invents one.
 4. If it returns nothing, the item continues to `extractEvent` as today.
 
 `PipelineResult` gains `positions: RawPosition[]` (with the extractor's
@@ -177,13 +177,13 @@ beyond the shared copied-description check: a position leaves the page within
   89 (stale), 90 (archived) days; ordering of each list; fixtures excluded
   in production.
 - **Unit, validation:** rejects unknown `level`, `http://` url, off-vocabulary
-  topic, id/file-name mismatch, future `last_verified`, unknown field.
+  topic, id/file-name mismatch, future `added`, unknown field.
 - **Discovery:** `looksLikePosition` on recorded job and event posts;
   `extractPosition` with a stubbed LLM (canned JSON), including a
   prompt-injection fixture and an invented-deadline case; pipeline routes a
   job post to positions, leaves an event post unchanged, falls back to
-  events when the gate matches but no position is found, and drops a position
-  with no stated advert URL; orchestrator
+  events when the gate matches but no position is found, and falls back to
+  the item's URL when no advert URL is stated; orchestrator
   duplicate skips, confidence floor, branch name and labels. CI never calls a
   real LLM.
 - **E2E (Playwright):** `/positions/` shows fixture rows in open-then-stale
@@ -197,5 +197,5 @@ In the same PR: `docs/position-schema.md`; a `docs/decisions.md` entry
 positions); `docs/discovery-agent.md` (position routing and PRs);
 `docs/curation-policy.md` gains a "Positions" section — academic PhD, postdoc
 and permanent roles in computational or theoretical chemistry; no recruiters,
-agencies or industry roles; the advert must be on the institution's own site
-or an official job portal.
+agencies or industry roles; link the institution's advert when one exists,
+otherwise the announcement it was found in.
