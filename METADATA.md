@@ -95,6 +95,7 @@ behaviour lives and where tests point.
 | `events.ts` | The single data loader. Reads and parses the YAML tree, derives each event's status, and splits upcoming from past. Also computes upcoming deadlines. |
 | `validation.ts` | Schema validation (Ajv) plus the semantic rules the schema cannot express — end before start, deadline after end, unknown topic or country, a future `added`, id/filename/folder agreement. Exported as `validateEvent` for reuse. |
 | `position-validation.ts` | The same for positions: schema, id/filename/folder agreement, topics, country, blocklist, plus cross-file duplicate checks. Exports `validatePosition`, `validatePositionCollection` and `readPositionFiles`. |
+| `positions.ts` | The positions loader. Reads and validates `data/positions/`, derives each position's open, stale or archived status from the build date (45 and 90 days for positions without a deadline), and orders each list. |
 | `event-graph.ts` | Similarity between events (shared topics, series, organiser) and the graph built from it. Feeds `/graph/` and the related events on each event page. |
 | `graph-layout.ts` | Seeded d3-force layout for the event map, run at build time; the browser script reuses its force configuration. |
 | `graph-shapes.ts` | SVG path per event type for the map: type is carried by shape, not colour. |
