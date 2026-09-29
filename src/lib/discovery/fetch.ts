@@ -3,7 +3,7 @@ import { fetchWithTimeout } from './http';
 import type { DiscoveryState } from './state';
 
 export type FetchResult =
-  | { status: 'fetched'; body: string }
+  | { status: 'fetched'; body: string; finalUrl: string }
   | { status: 'unchanged' }
   | { status: 'skipped'; reason: 'robots-disallowed' }
   | { status: 'error'; error: string };
@@ -23,6 +23,8 @@ export interface FetchOptions {
    * is returned as before.
    */
   browserFetchImpl?: (url: string, userAgent: string) => Promise<string>;
+  /** Return the body even when unchanged since the last run, and skip If-None-Match. For pages read every run (group listings) and one-off verification fetches. */
+  force?: boolean;
 }
 
 /**
@@ -171,7 +173,7 @@ export async function politeFetch(url: string, options: FetchOptions): Promise<F
 
   const cached = state.pages[url];
   const headers: Record<string, string> = { 'User-Agent': options.userAgent };
-  if (cached?.etag) headers['If-None-Match'] = cached.etag;
+  if (cached?.etag && !options.force) headers['If-None-Match'] = cached.etag;
 
   let response: Response;
   try {
@@ -187,15 +189,15 @@ export async function politeFetch(url: string, options: FetchOptions): Promise<F
     return { status: 'unchanged' };
   }
 
-  function finalize(body: string, etag: string | undefined): FetchResult {
+  function finalize(body: string, etag: string | undefined, finalUrl: string): FetchResult {
     const contentHash = hashOf(body);
     const fetchedAt = now().toISOString();
-    if (cached?.contentHash === contentHash) {
+    if (cached?.contentHash === contentHash && !options.force) {
       state.pages[url] = { ...cached, fetchedAt };
       return { status: 'unchanged' };
     }
     state.pages[url] = { etag, contentHash, fetchedAt };
-    return { status: 'fetched', body };
+    return { status: 'fetched', body, finalUrl };
   }
 
   async function viaBrowserFallback(): Promise<FetchResult | undefined> {
@@ -204,7 +206,7 @@ export async function politeFetch(url: string, options: FetchOptions): Promise<F
       const rendered = await options.browserFetchImpl(url, options.userAgent);
       // Never cache under the ETag of the challenge response we just
       // discarded — it describes the shell, not the rendered content.
-      return finalize(rendered, undefined);
+      return finalize(rendered, undefined, url);
     } catch (err) {
       return { status: 'error', error: err instanceof Error ? err.message : String(err) };
     }
@@ -224,5 +226,5 @@ export async function politeFetch(url: string, options: FetchOptions): Promise<F
     const fallback = await viaBrowserFallback();
     if (fallback) return fallback;
   }
-  return finalize(body, response.headers.get('etag') ?? undefined);
+  return finalize(body, response.headers.get('etag') ?? undefined, response.url || url);
 }

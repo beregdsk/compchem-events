@@ -71,7 +71,11 @@ describe('politeFetch', () => {
     });
     const options = baseOptions({ fetchImpl: impl });
     const result = await politeFetch('https://example.org/page', options);
-    expect(result).toEqual({ status: 'fetched', body: 'hello' });
+    expect(result).toEqual({
+      status: 'fetched',
+      body: 'hello',
+      finalUrl: 'https://example.org/page',
+    });
     expect(calls).toContain('https://example.org/page');
     expect(options.state.pages['https://example.org/page']!.etag).toBe('W/"abc"');
     expect(options.state.hosts['example.org']!.lastRequestAt).toBe('2026-09-23T00:00:00.000Z');
@@ -188,6 +192,7 @@ describe('politeFetch', () => {
     expect(result).toEqual({
       status: 'fetched',
       body: '<html><body><h1>Real rendered content</h1></body></html>',
+      finalUrl: 'https://example.org/page',
     });
     expect(browserCalls).toEqual(['https://example.org/page']);
   });
@@ -206,6 +211,7 @@ describe('politeFetch', () => {
     expect(result).toEqual({
       status: 'fetched',
       body: '<html><body><h1>Real content</h1></body></html>',
+      finalUrl: 'https://example.org/page',
     });
   });
 
@@ -366,6 +372,65 @@ describe('looksLikeBotChallenge', () => {
       baseOptions({ fetchImpl: impl, state, now: () => new Date('2026-09-23T00:00:00.000Z') }),
     );
     expect(robotsCalls).toBe(0);
-    expect(result).toEqual({ status: 'fetched', body: 'ok' });
+    expect(result).toEqual({
+      status: 'fetched',
+      body: 'ok',
+      finalUrl: 'https://example.org/other/page',
+    });
+  });
+});
+
+describe('politeFetch force and finalUrl', () => {
+  const url = 'https://example.org/page';
+
+  function recordingFetch(makeResponse: () => Response) {
+    const headersSeen: Array<HeadersInit | undefined> = [];
+    const impl = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      if (String(input).endsWith('/robots.txt')) return new Response('', { status: 200 });
+      headersSeen.push(init?.headers);
+      return makeResponse();
+    }) as typeof fetch;
+    return { impl, headersSeen };
+  }
+
+  it('returns the body of an unchanged page when forced', async () => {
+    const { impl } = stubFetch({
+      'https://example.org/robots.txt': { status: 200, body: '' },
+      [url]: { status: 200, body: '<p>same</p>' },
+    });
+    const options = baseOptions({ fetchImpl: impl });
+    expect((await politeFetch(url, options)).status).toBe('fetched');
+    expect((await politeFetch(url, options)).status).toBe('unchanged');
+    const forced = await politeFetch(url, { ...options, force: true });
+    expect(forced).toMatchObject({ status: 'fetched', body: '<p>same</p>' });
+  });
+
+  it('does not send If-None-Match when forced', async () => {
+    const { impl, headersSeen } = recordingFetch(
+      () => new Response('body', { status: 200, headers: { etag: '"v1"' } }),
+    );
+    const options = baseOptions({ fetchImpl: impl });
+    await politeFetch(url, options);
+    await politeFetch(url, options);
+    await politeFetch(url, { ...options, force: true });
+    expect(headersSeen).toHaveLength(3);
+    expect((headersSeen[1] as Record<string, string>)['If-None-Match']).toBe('"v1"');
+    expect(headersSeen[2] as Record<string, string>).not.toHaveProperty('If-None-Match');
+  });
+
+  it('reports the final URL after redirects', async () => {
+    const { impl } = recordingFetch(() => {
+      const res = new Response('body', { status: 200 });
+      Object.defineProperty(res, 'url', { value: 'https://b.example/final' });
+      return res;
+    });
+    const result = await politeFetch(url, baseOptions({ fetchImpl: impl }));
+    expect(result).toMatchObject({ status: 'fetched', finalUrl: 'https://b.example/final' });
+  });
+
+  it('falls back to the requested URL when the response has no url', async () => {
+    const { impl } = recordingFetch(() => new Response('body', { status: 200 }));
+    const result = await politeFetch(url, baseOptions({ fetchImpl: impl }));
+    expect(result).toMatchObject({ status: 'fetched', finalUrl: url });
   });
 });

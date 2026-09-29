@@ -16,12 +16,18 @@ afterEach(() => {
 });
 
 describe('emptyState', () => {
-  it('has empty hosts and pages maps', () => {
-    expect(emptyState()).toEqual({ hosts: {}, pages: {} });
+  it('has empty hosts, pages and groupLookups maps', () => {
+    expect(emptyState()).toEqual({ hosts: {}, pages: {}, groupLookups: {} });
   });
 });
 
 describe('loadState', () => {
+  it('adds an empty groupLookups map to an older state file', () => {
+    const path = tmpPath('old.json');
+    writeFileSync(path, JSON.stringify({ hosts: {}, pages: {} }));
+    expect(loadState(path).groupLookups).toEqual({});
+  });
+
   it('returns an empty state when the file does not exist', () => {
     expect(loadState(tmpPath('nested/state.json'))).toEqual(emptyState());
   });
@@ -52,6 +58,9 @@ describe('saveState / loadState round trip', () => {
           contentHash: 'abc',
           fetchedAt: '2026-09-23T00:00:00.000Z',
         },
+      },
+      groupLookups: {
+        'some group': { triedAt: '2026-09-23T00:00:00.000Z', outcome: 'no-homepage' },
       },
     };
     saveState(path, state);
