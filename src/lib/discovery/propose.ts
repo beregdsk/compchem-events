@@ -28,6 +28,15 @@ export interface ProposedFile {
   refresh?: boolean;
 }
 
+export interface ProposedBatch {
+  branch: string;
+  files: Array<{ path: string; content: string }>;
+  title: string;
+  message: string;
+  body: string;
+  labels: readonly string[];
+}
+
 export class Proposer {
   // Resolved lazily, on the first proposal that actually needs to create a
   // branch, and memoized after that — never fetched at all for a run where
@@ -72,6 +81,32 @@ export class Proposer {
     await putFile(file.branch, file.path, file.content, file.message, this.github);
     const pr = await openPr(file.branch, branchInfo.name, file.title, file.body, this.github);
     for (const label of file.labels) await addLabel(pr.number, label, this.github);
+    return { outcome: 'opened', pr: pr.number };
+  }
+
+  /** Like proposeFile, for one PR carrying several files. An open PR is always refreshed. */
+  async proposeBatch(batch: ProposedBatch): Promise<Proposal> {
+    const status = await getBranchStatus(batch.branch, this.github);
+    if (status.exists && status.openPr === undefined && status.everHadPr) {
+      return { outcome: 'reviewed' };
+    }
+    const openPrNumber = status.exists ? status.openPr : undefined;
+    let base: DefaultBranch | undefined;
+    if (!status.exists) {
+      base = await this.ensureDefaultBranch();
+      await createBranch(batch.branch, base.sha, this.github);
+    }
+    for (const file of batch.files) {
+      await putFile(batch.branch, file.path, file.content, batch.message, this.github);
+    }
+    if (openPrNumber !== undefined) {
+      await updatePrBody(openPrNumber, batch.body, this.github);
+      for (const label of batch.labels) await addLabel(openPrNumber, label, this.github);
+      return { outcome: 'updated', pr: openPrNumber };
+    }
+    base ??= await this.ensureDefaultBranch();
+    const pr = await openPr(batch.branch, base.name, batch.title, batch.body, this.github);
+    for (const label of batch.labels) await addLabel(pr.number, label, this.github);
     return { outcome: 'opened', pr: pr.number };
   }
 }

@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { stringify } from 'yaml';
 import type { ISODate } from '../dates';
-import type { RawEvent, RawPosition } from '../types';
+import type { RawEvent, RawGroup, RawPosition } from '../types';
 
 /**
  * Russian Cyrillic to Latin, so a title from a Russian-language source
@@ -126,6 +126,6 @@ export function draftFilePath(draft: RawEvent): string {
  * wrap — so a generated draft would fail `npm run lint`'s `prettier --check`
  * in CI on every such PR.
  */
-export function serializeDraft(draft: RawEvent | RawPosition): string {
+export function serializeDraft(draft: RawEvent | RawPosition | RawGroup): string {
   return stringify(draft, { singleQuote: true });
 }

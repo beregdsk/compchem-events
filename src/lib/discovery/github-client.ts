@@ -108,6 +108,39 @@ export async function getBranchStatus(
   return { exists: true, openPr, everHadPr: pullsRes.data.length > 0 };
 }
 
+/** The files directly under `dir` on `branch`; empty when the folder does not exist there. */
+export async function listFilesOnBranch(
+  branch: string,
+  dir: string,
+  options: GitHubOptions,
+): Promise<Array<{ path: string; content: string }>> {
+  const list = await githubRequest<Array<{ path: string; type: string }>>(
+    options,
+    'GET',
+    `/contents/${dir}?ref=${branch}`,
+  );
+  if (list.status === 404) return [];
+  if (list.status !== 200) {
+    throw new Error(`failed to list "${dir}" on "${branch}": HTTP ${list.status}`);
+  }
+  const files: Array<{ path: string; content: string }> = [];
+  for (const entry of list.data.filter((e) => e.type === 'file' && e.path.endsWith('.yaml'))) {
+    const res = await githubRequest<{ content: string }>(
+      options,
+      'GET',
+      `/contents/${entry.path}?ref=${branch}`,
+    );
+    if (res.status !== 200) {
+      throw new Error(`failed to read "${entry.path}" on "${branch}": HTTP ${res.status}`);
+    }
+    files.push({
+      path: entry.path,
+      content: Buffer.from(res.data.content.replace(/\s/g, ''), 'base64').toString('utf8'),
+    });
+  }
+  return files;
+}
+
 export async function createBranch(
   branch: string,
   fromSha: string,

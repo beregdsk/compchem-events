@@ -5,6 +5,7 @@ import {
   getBranchStatus,
   getCheckRunConclusions,
   getDefaultBranch,
+  listFilesOnBranch,
   listOpenDiscoveryPrs,
   openPr,
   postReview,
@@ -404,5 +405,42 @@ describe('postReview', () => {
       'POST /repos/acme/compchem-events/pulls/5/reviews': { status: 422, body: {} },
     });
     await expect(postReview(5, 'COMMENT', 'body', options(impl))).rejects.toThrow(/422/);
+  });
+});
+
+describe('listFilesOnBranch', () => {
+  const b64 = (text: string) => Buffer.from(text, 'utf8').toString('base64');
+
+  it('returns the decoded YAML files directly under the folder', async () => {
+    const { impl } = stubGitHub({
+      'GET /repos/acme/compchem-events/contents/data/groups?ref=discovery/x': {
+        status: 200,
+        body: [
+          { path: 'data/groups/a.yaml', type: 'file' },
+          { path: 'data/groups/README.md', type: 'file' },
+          { path: 'data/groups/sub', type: 'dir' },
+          { path: 'data/groups/b.yaml', type: 'file' },
+        ],
+      },
+      'GET /repos/acme/compchem-events/contents/data/groups/a.yaml?ref=discovery/x': {
+        status: 200,
+        body: { content: `${b64('id: a\n').slice(0, 4)}\n${b64('id: a\n').slice(4)}` },
+      },
+      'GET /repos/acme/compchem-events/contents/data/groups/b.yaml?ref=discovery/x': {
+        status: 200,
+        body: { content: b64('id: b\n') },
+      },
+    });
+    expect(await listFilesOnBranch('discovery/x', 'data/groups', options(impl))).toEqual([
+      { path: 'data/groups/a.yaml', content: 'id: a\n' },
+      { path: 'data/groups/b.yaml', content: 'id: b\n' },
+    ]);
+  });
+
+  it('returns nothing when the folder does not exist on the branch', async () => {
+    const { impl } = stubGitHub({
+      'GET /repos/acme/compchem-events/contents/data/groups?ref=discovery/x': { status: 404 },
+    });
+    expect(await listFilesOnBranch('discovery/x', 'data/groups', options(impl))).toEqual([]);
   });
 });

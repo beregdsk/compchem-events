@@ -1,4 +1,5 @@
-import { POSITION_LEVEL_LABELS, type RawEvent, type RawPosition } from '../types';
+import { normaliseGroupName, websiteKey } from '../group-validation';
+import { POSITION_LEVEL_LABELS, type RawEvent, type RawGroup, type RawPosition } from '../types';
 import { isBlocked, normaliseTitle } from '../validation';
 import {
   ADD_THRESHOLD,
@@ -7,6 +8,8 @@ import {
   type CriteriaScores,
 } from './classify-candidate';
 import { draftFilePath, serializeDraft } from './draft';
+import { groupFilePath } from './group-draft';
+import type { GroupCandidate } from './groups';
 import { getBranchStatus, syncFailureIssue, type GitHubOptions } from './github-client';
 import type { PositionCandidate } from './pipeline';
 import { positionFilePath } from './position-draft';
@@ -113,6 +116,130 @@ export function positionSkipReason(
   return undefined;
 }
 
+/**
+ * Mechanical duplicate and blocklist checks for a proposed group, against
+ * the registry and the groups accepted earlier in the same run.
+ */
+export function groupSkipReason(
+  draft: RawGroup,
+  known: readonly RawGroup[],
+  blockedHosts: ReadonlySet<string>,
+): 'duplicate-website' | 'duplicate-name' | 'blocklisted' | undefined {
+  if (isBlocked(draft.website, blockedHosts)) return 'blocklisted';
+  const site = websiteKey(draft.website);
+  const names = new Set([draft.name, ...(draft.aliases ?? [])].map(normaliseGroupName));
+  for (const k of known) {
+    if (websiteKey(k.website) === site) return 'duplicate-website';
+    if ([k.name, ...(k.aliases ?? [])].some((n) => names.has(normaliseGroupName(n)))) {
+      return 'duplicate-name';
+    }
+  }
+  return undefined;
+}
+
+export function buildGroupPrBody(c: GroupCandidate): string {
+  const g = c.draft;
+  const optional = (t: string | undefined) => (t === undefined ? '(none)' : inlineCode(t));
+  return [
+    `Confidence: ${c.confidence.toFixed(2)}`,
+    'Registry entry proposed by the groups pass. Check every field against the website before merging.',
+    '',
+    `- **name:** ${inlineCode(g.name)}`,
+    `- **kind:** ${inlineCode(g.kind)}`,
+    `- **pi:** ${optional(g.pi)}`,
+    `- **parent:** ${optional(g.parent)}`,
+    `- **website:** ${link(g.website)}`,
+    `- **location:** ${g.location ? inlineCode(`${g.location.city}, ${g.location.country}`) : '(none)'}`,
+    `- **topics:** ${inlineCode(g.topics.join(', '))}`,
+    `- **description:** ${inlineCode(g.description)}`,
+    `- **aliases:** ${optional(g.aliases?.join('; '))}`,
+    '',
+    `Found as ${inlineCode(c.lead.text)} in ${link(c.lead.origin)}${c.lead.context ? ` (${inlineCode(c.lead.context)})` : ''}.`,
+    '',
+    'Pages considered:',
+    ...c.considered.map((x) => `- ${link(x.url)}: ${inlineCode(x.verdict)}`),
+  ].join('\n');
+}
+
+export interface ProposeGroupsOptions {
+  candidates: readonly GroupCandidate[];
+  known: readonly RawGroup[];
+  blockedHosts: ReadonlySet<string>;
+  github: GitHubOptions;
+  maxPrs: number;
+  log?: (message: string) => void;
+}
+
+export interface ProposeGroupsResult {
+  prsOpened: number;
+  skipped: Array<{ id: string; reason: string }>;
+  /** Lookup keys of candidates skipped only because MAX_PRS ran out. */
+  deferredKeys: string[];
+  errors: Array<{ source: string; message: string }>;
+}
+
+export async function proposeGroups(options: ProposeGroupsOptions): Promise<ProposeGroupsResult> {
+  const log = options.log ?? (() => {});
+  const proposer = new Proposer(options.github);
+  const known: RawGroup[] = [...options.known];
+  const skipped: ProposeGroupsResult['skipped'] = [];
+  const deferredKeys: string[] = [];
+  const errors: ProposeGroupsResult['errors'] = [];
+  let prsOpened = 0;
+  for (const c of options.candidates) {
+    const { draft } = c;
+    try {
+      if (c.confidence < ADD_THRESHOLD) {
+        skipped.push({ id: draft.id, reason: 'low confidence' });
+        log(`skipping group ${draft.id}: low confidence (${c.confidence.toFixed(2)})`);
+        continue;
+      }
+      const reason = groupSkipReason(draft, known, options.blockedHosts);
+      if (reason) {
+        skipped.push({ id: draft.id, reason });
+        log(`skipping group ${draft.id}: ${reason}`);
+        continue;
+      }
+      // Two drafts in one call can resolve to the same website; only the first may open a PR.
+      known.push(draft);
+      if (prsOpened >= options.maxPrs) {
+        skipped.push({ id: draft.id, reason: 'MAX_PRS reached' });
+        deferredKeys.push(c.lookupKey);
+        log(`skipping group ${draft.id}: MAX_PRS (${options.maxPrs}) reached`);
+        continue;
+      }
+      const proposal = await proposer.proposeFile({
+        branch: `discovery/group/${draft.id}`,
+        path: groupFilePath(draft),
+        content: serializeDraft(draft),
+        title: `Group: ${draft.name}`,
+        message: `Add candidate group: ${draft.name}`,
+        body: buildGroupPrBody(c),
+        labels: ['needs-review', 'group'],
+        refresh: false,
+      });
+      if (proposal.outcome === 'proposed') {
+        skipped.push({ id: draft.id, reason: 'already proposed' });
+        log(`skipping group ${draft.id}: PR #${proposal.pr} is already open`);
+        continue;
+      }
+      if (proposal.outcome === 'reviewed') {
+        skipped.push({ id: draft.id, reason: 'already reviewed' });
+        log(`skipping group ${draft.id}: branch exists with a closed/merged PR (already reviewed)`);
+        continue;
+      }
+      prsOpened += 1;
+      log(`${proposal.outcome} PR #${proposal.pr} for group ${draft.id}`);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      skipped.push({ id: draft.id, reason: `error: ${message}` });
+      errors.push({ source: draft.id, message });
+      log(`error processing group ${draft.id}: ${message}`);
+    }
+  }
+  return { prsOpened, skipped, deferredKeys, errors };
+}
+
 export interface OrchestratorOptions {
   candidates: readonly RawEvent[];
   existingEvents: readonly RawEvent[];
@@ -140,6 +267,8 @@ export interface OrchestratorResult {
    * message they came from stays "seen" and they are never retried.
    */
   deferred: string[];
+  /** Candidates judged `add`, whether or not a PR opened for them. */
+  accepted: RawEvent[];
   tokensUsed: number;
 }
 
@@ -169,6 +298,7 @@ export async function runDiscoveryRun(options: OrchestratorOptions): Promise<Orc
   // with PRs #16 and #21 (merged): both opened in the same run, same event,
   // same url, from two different sources.
   const knownEvents: RawEvent[] = [...options.existingEvents];
+  const accepted: RawEvent[] = [];
 
   const proposer = new Proposer(options.github);
 
@@ -205,6 +335,7 @@ export async function runDiscoveryRun(options: OrchestratorOptions): Promise<Orc
       // Before any MAX_PRS/GitHub step, so a later duplicate is still
       // caught even if this one itself gets skipped by MAX_PRS.
       knownEvents.push(candidate);
+      accepted.push(candidate);
 
       if (prsOpened + prsUpdated >= options.maxPrs) {
         skipped.push({ id: candidate.id, reason: 'MAX_PRS reached' });
@@ -310,5 +441,5 @@ export async function runDiscoveryRun(options: OrchestratorOptions): Promise<Orc
 
   await syncFailureIssue([...options.sourceErrors, ...orchestratorErrors], options.github);
 
-  return { prsOpened, prsUpdated, skipped, deferred, tokensUsed };
+  return { prsOpened, prsUpdated, skipped, deferred, accepted, tokensUsed };
 }
