@@ -323,7 +323,7 @@ const RATE_LIMIT_DEFAULT_WAIT_MS = 20_000;
 const RATE_LIMIT_MAX_WAIT_MS = 60_000;
 
 /** An error worth another attempt, and how long to wait before it. Never a bad key or request. */
-class RetryableExtractError extends Error {
+export class RetryableExtractError extends Error {
   constructor(
     message: string,
     readonly waitMs = 0,
@@ -361,7 +361,10 @@ function isTransientNetworkError(err: unknown): boolean {
 }
 
 /** Runs `attempt` up to `EXTRACT_ATTEMPTS` times while it fails in a retryable way. */
-async function withRetries<T>(options: ExtractOptions, attempt: () => Promise<T>): Promise<T> {
+export async function withRetries<T>(
+  options: ExtractOptions,
+  attempt: () => Promise<T>,
+): Promise<T> {
   const sleep = options.sleepImpl ?? ((ms: number) => new Promise((r) => setTimeout(r, ms)));
   let lastError: unknown;
   for (let n = 1; n <= EXTRACT_ATTEMPTS; n++) {
@@ -386,7 +389,11 @@ export async function extractEvent(
   options: ExtractOptions,
 ): Promise<ExtractedFields | null> {
   return withRetries(options, async () => {
-    const { parsed, content } = await complete(text, options, 'single');
+    const { parsed, content } = await completeJson(text, options, {
+      system: systemPrompt(options.topics, 'single'),
+      name: 'candidate_event',
+      schema: RESPONSE_SCHEMA,
+    });
     if (!isRawResponse(parsed)) {
       throw new RetryableExtractError(
         `extract response did not match the expected shape: ${content}`,
@@ -406,7 +413,11 @@ export async function extractEvents(
   options: ExtractOptions,
 ): Promise<ExtractedFields[]> {
   return withRetries(options, async () => {
-    const { parsed, content } = await complete(text, options, 'listing');
+    const { parsed, content } = await completeJson(text, options, {
+      system: systemPrompt(options.topics, 'listing'),
+      name: 'candidate_events',
+      schema: EVENTS_RESPONSE_SCHEMA,
+    });
     if (!isRawEventsResponse(parsed)) {
       throw new RetryableExtractError(
         `extract response did not match the expected shape: ${content}`,
@@ -416,11 +427,15 @@ export async function extractEvents(
   });
 }
 
-/** One chat-completion call; returns the response's JSON content, parsed but not yet shape-checked. */
-async function complete(
+/**
+ * One chat-completion call with the given system prompt and JSON schema;
+ * returns the response's JSON content, parsed but not yet shape-checked.
+ * Shared by event and position extraction.
+ */
+export async function completeJson(
   text: string,
   options: ExtractOptions,
-  mode: 'single' | 'listing',
+  request: { system: string; name: string; schema: object },
 ): Promise<{ parsed: unknown; content: string }> {
   const fetchImpl = options.fetchImpl ?? fetch;
   const baseUrl = options.baseUrl ?? DEFAULT_EXTRACT_BASE_URL;
@@ -437,15 +452,12 @@ async function complete(
       body: JSON.stringify({
         model: options.model,
         messages: [
-          { role: 'system', content: systemPrompt(options.topics, mode) },
+          { role: 'system', content: request.system },
           { role: 'user', content: text },
         ],
         response_format: {
           type: 'json_schema',
-          json_schema:
-            mode === 'single'
-              ? { name: 'candidate_event', strict: true, schema: RESPONSE_SCHEMA }
-              : { name: 'candidate_events', strict: true, schema: EVENTS_RESPONSE_SCHEMA },
+          json_schema: { name: request.name, strict: true, schema: request.schema },
         },
       }),
     },

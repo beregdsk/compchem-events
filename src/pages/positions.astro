@@ -1,0 +1,50 @@
+---
+import Base from '../layouts/Base.astro';
+import PageActions from '../components/PageActions.astro';
+import PositionRow from '../components/PositionRow.astro';
+import { loadPositions, openPositions, stalePositions } from '../lib/positions';
+
+const positions = loadPositions();
+const open = openPositions(positions);
+const stale = stalePositions(positions);
+---
+
+<Base
+  title="Positions"
+  description="Open PhD, postdoc and permanent academic positions in computational and theoretical chemistry."
+  path="/positions/"
+>
+  <h1>Positions</h1>
+  <p class="muted">
+    PhD, postdoc and permanent academic positions, gathered from the same sources as the events and
+    reviewed before they appear. Always check the official advert before applying.
+  </p>
+
+  <PageActions
+    actions={[
+      { href: '/positions/archive/', label: 'Archive of positions' },
+      { href: '/', label: 'Upcoming events' },
+    ]}
+  />
+
+  {open.length === 0 && <p class="muted">No open positions right now.</p>}
+  {open.length > 0 && (
+    <ul class="event-list">
+      {open.map((p) => (
+        <PositionRow position={p} />
+      ))}
+    </ul>
+  )}
+
+  {stale.length > 0 && (
+    <section>
+      <h2>May already be filled</h2>
+      <p class="muted">These adverts gave no deadline and were posted over 45 days ago.</p>
+      <ul class="event-list">
+        {stale.map((p) => (
+          <PositionRow position={p} />
+        ))}
+      </ul>
+    </section>
+  )}
+</Base>

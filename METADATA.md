@@ -43,7 +43,7 @@ data/events/*.yaml  →  scripts/validate.ts  (gate: build fails on invalid data
 | `site.config.ts` | Every site-specific setting: name, domain, form URLs. The only place such values belong. |
 | `astro.config.ts` | Astro build configuration. |
 | `tsconfig.json` | TypeScript configuration (strict). |
-| `vitest.config.ts` | Test runner configuration. |
+| `vitest.config.ts` | Test runner configuration, wrapped in Astro's `getViteConfig` so tests can render `.astro` components. |
 | `playwright.config.ts` | Config for the one browser-driven smoke test. Builds against a production build via `npm run preview`. |
 | `eslint.config.js` | Lint rules. |
 | `.prettierrc.json` / `.prettierignore` | Formatting rules, and the pre-existing docs exempted from them. |
@@ -61,6 +61,7 @@ publishing workflow.
 | Path | What it is |
 | --- | --- |
 | `data/events/<start-year>/<id>.yaml` | One file per event. The folder must match the event's start year and the filename must match its `id`; the validator enforces both. |
+| `data/positions/<added-year>/<id>.yaml` | One file per position (PhD, postdoc or permanent academic job). Created by the first merged position PR; the folder must match the year of `added` and the filename must match its `id`. |
 | `data/topics.yaml` | Controlled vocabulary of topic slugs and labels. Adding a slug is a schema-level change. |
 | `data/blocklist.yaml` | Organiser domains that must never be listed, each with public evidence. Intentionally empty until there is something to add. Matches a registrable host and its subdomains. |
 | `data/sources.yaml` | Pages, feeds, channels and mailing lists the discovery agent watches, each verified by fetch. Read by `src/lib/discovery/sources.ts`, listed publicly on `/sources/`, and checked by `npm run validate`. Unusable candidates are kept in a commented block at the bottom so nobody re-checks them. |
@@ -71,12 +72,13 @@ publishing workflow.
 | Path | What it is |
 | --- | --- |
 | `schema/event.schema.json` | JSON Schema for an event file. The contract. Changing it means changing the validator, `docs/data-schema.md`, the fixtures and the tests in the same pull request. |
+| `schema/position.schema.json` | JSON Schema for a position file. Must match `docs/position-schema.md` exactly. |
 
 ## `scripts/`
 
 | Path | What it is |
 | --- | --- |
-| `scripts/validate.ts` | CLI entry point for `npm run validate`. Walks `data/events/` and checks `data/sources.yaml`, reports problems and exits non-zero on any error. Thin: the logic is in `src/lib/validation.ts` and `src/lib/discovery/sources.ts` so the discovery agent can import it as a library. |
+| `scripts/validate.ts` | CLI entry point for `npm run validate`. Walks `data/events/` and `data/positions/` and checks `data/sources.yaml`, reports problems and exits non-zero on any error. Thin: the logic is in `src/lib/validation.ts` and `src/lib/discovery/sources.ts` so the discovery agent can import it as a library. |
 | `scripts/discovery/run.ts` | The discovery agent's cron entry point (`npm run discover:run`): validates its environment, then runs fetch → extract → classify → open pull requests → label high-confidence ones. |
 | `scripts/discovery/parse-sources.ts` | Dry run (`npm run discover`): fetches and extracts from every source and prints the candidates as JSON. No classification, no GitHub calls. |
 | `scripts/discovery/classify.ts` | CLI: reads one candidate event file (YAML or JSON), classifies it against `data/events/` and `data/blocklist.yaml` via `src/lib/discovery/classify-candidate.ts`, prints the verdict as JSON. Useful for checking one candidate by hand; `orchestrator.ts` calls the same classifier in a real run. |
@@ -92,13 +94,15 @@ behaviour lives and where tests point.
 | `dates.ts` | The only place dates are parsed. ISO `YYYY-MM-DD` strings handled as UTC calendar dates, never through the local timezone. Parsing, arithmetic, comparison, formatting. |
 | `events.ts` | The single data loader. Reads and parses the YAML tree, derives each event's status, and splits upcoming from past. Also computes upcoming deadlines. |
 | `validation.ts` | Schema validation (Ajv) plus the semantic rules the schema cannot express — end before start, deadline after end, unknown topic or country, a future `added`, id/filename/folder agreement. Exported as `validateEvent` for reuse. |
+| `position-validation.ts` | The same for positions: schema, id/filename/folder agreement, topics, country, blocklist, plus cross-file duplicate checks. Exports `validatePosition`, `validatePositionCollection` and `readPositionFiles`. |
+| `positions.ts` | The positions loader. Reads and validates `data/positions/`, derives each position's open, stale or archived status from the build date (45 and 90 days for positions without a deadline), and orders each list. |
 | `event-graph.ts` | Similarity between events (shared topics, series, organiser) and the graph built from it. Feeds `/graph/` and the related events on each event page. |
 | `graph-layout.ts` | Seeded d3-force layout for the event map, run at build time; the browser script reuses its force configuration. |
 | `graph-shapes.ts` | SVG path per event type for the map: type is carried by shape, not colour. |
 | `discovery/jev-client.ts` | Thin client for OpenRouter's Decisions API (the `jev` model): builds the request, checks for a 2xx response and an `answers` field, otherwise throws. |
 | `discovery/classify-candidate.ts` | Decides add/skip for one candidate event: a mechanical dedupe/blocklist pre-filter, then a single jev call scoring relevance, red flags, and credibility as three independent criteria (organiser, programme, cost). Never publishes anything — produces the verdict `orchestrator.ts` acts on. See `docs/superpowers/specs/2026-09-23-discovery-event-classifier-design.md`. |
 | `discovery/sources.ts` | Loads `data/sources.yaml` (skipping malformed entries at run time) and validates it (`validateSources`, the CI gate). Owns `SOURCE_KINDS`. |
-| `discovery/pipeline.ts` | Fetch → parse → extract → validate for every source, four at a time, under page and token caps. Returns candidates and per-source errors. |
+| `discovery/pipeline.ts` | Fetch → parse → extract → validate for every source, four at a time, under page and token caps. Routes RSS, Telegram and mailbox items that look like job adverts to position extraction first. Returns event candidates, position candidates and per-source errors. |
 | `discovery/fetch.ts` | Polite fetching: robots.txt, per-host rate limit, ETag/hash caching, and a browser fallback when a page looks like a bot challenge. |
 | `discovery/browser-fetch.ts` | Renders a page in the system's Chrome via Playwright, for sites that block plain HTTP clients. |
 | `discovery/http.ts` | `fetchWithTimeout`: every outbound call goes through it, since plain `fetch` can hang forever. |
@@ -109,7 +113,9 @@ behaviour lives and where tests point.
 | `discovery/mailbox-client.ts` | Read-only IMAP: plaintext bodies from one folder, deduplicated on `Message-ID`. |
 | `discovery/keyword-topics.ts` | Topic slugs from keyword matches against `data/topics.yaml`, so a typed feed needs no LLM call. |
 | `discovery/extract-client.ts` | The extraction LLM call (chat completions, JSON output, no tools). Page text goes in as delimited data. |
+| `discovery/position-extract.ts` | The position keyword gate and its LLM extraction (own schema and prompt, no tools). Fetched text goes in as data. |
 | `discovery/draft.ts` | Turns an extraction into a schema-shaped event: id slug (with Cyrillic transliteration), file path, YAML. |
+| `discovery/position-draft.ts` | Turns a position extraction into a schema-shaped `RawPosition`: institution+title id slug with the added year, file path. |
 | `discovery/orchestrator.ts` | Classifies candidates and opens one pull request each, with the candidate-controlled text rendered inert in the PR body. |
 | `discovery/github-client.ts` | The GitHub REST calls the orchestrator needs: branches, files, pull requests, labels, issues. |
 | `discovery/auto-approve.ts` | Labels open discovery PRs `high-confidence` when confidence ≥ 0.90 and CI passed. Never merges. |
@@ -136,6 +142,8 @@ One file per URL. Pages stay thin; they compose `src/lib/`.
 | `sources.astro` | `/sources/` — the public list of what the discovery agent reads. |
 | `donate.astro` | `/donate/` — what running the site costs, and how to help. |
 | `archive.astro` | `/archive` — past events. |
+| `positions.astro` | `/positions/` — open positions, plus those that may already be filled. |
+| `positions/archive.astro` | `/positions/archive/` — closed positions, grouped by year. |
 | `about.astro` | `/about` — what this is, plus the curation policy. |
 | `submit.astro` | `/submit` — how to add or correct an event. |
 | `404.astro` | Not-found page. |
@@ -152,6 +160,7 @@ One file per URL. Pages stay thin; they compose `src/lib/`.
 | --- | --- |
 | `layouts/Base.astro` | The page shell: masthead, footer, metadata, global stylesheet. |
 | `components/EventRow.astro` | One event in a list, with its dates, place and topics. |
+| `components/PositionRow.astro` | One position in a list: deadline or "no deadline", level, institution, place, topics, and a stale note. |
 | `components/DeadlineList.astro` | An event's deadlines. |
 | `components/OrbitalField.astro` | Renders the orbital plate as inline SVG at build time — inline so the dots can follow the theme tokens, which an external image could not. |
 | `components/PageActions.astro` | The row of per-page actions (subscribe, export, submit). |
@@ -181,6 +190,7 @@ Vitest. Run with `npm test`.
 | Path | What it covers |
 | --- | --- |
 | `tests/lib/*.test.ts` | One file per `src/lib/` module: dates, events, filter, ical, orbital, regions, validation, and the semantic rules. |
+| `tests/components/*.test.ts` | Astro components rendered with the container API (`experimental_AstroContainer`); `position-row.test.ts` covers a position row's level label, advert link, deadline and stale label. Production builds carry no position data, so this is where a rendered row is checked. |
 | `tests/schema/schema.test.ts` | The JSON Schema itself. |
 | `tests/endpoints/` | The generated outputs: both `.ics` files parsed with a real iCalendar parser, plus the feed, JSON and sitemap. |
 | `tests/pages/links.test.ts` | Internal links resolve. |
@@ -189,11 +199,13 @@ Vitest. Run with `npm test`.
 | `tests/cli/validate-guard.test.ts` | The validator CLI exits non-zero on bad data. |
 | `tests/discovery/*.test.ts` | The discovery agent, one file per module: sources, fetching, parsers, extraction, drafting, classification, the orchestrator and the CLIs. Every LLM, GitHub and IMAP call is stubbed; CI never calls a real API. |
 | `tests/discovery/fixtures/candidates/` | Candidate events covering a clean add, each mechanical skip reason, and an adversarial prompt-injection attempt. |
+| `tests/discovery/fixtures/posts/` | Raw post texts for position gating and extraction: a PhD advert, a school that only mentions PhD grants, and an injection attempt. |
 | `tests/smoke.test.ts` | `site.config.ts` sanity (Vitest, not a browser). |
-| `tests/e2e/*.spec.ts` | Playwright, against a production build: `smoke.spec.ts` (the home page loads, choosing a topic reduces the list, the URL updates), `graph.spec.ts` (the event map) and `related.spec.ts` (related events on an event page). Run with `npm run test:e2e`; not part of `npm test`. |
+| `tests/e2e/*.spec.ts` | Playwright, against a production build: `smoke.spec.ts` (the home page loads, choosing a topic reduces the list, the URL updates), `graph.spec.ts` (the event map) and `related.spec.ts` (related events on an event page) and `positions.spec.ts` (the positions pages and their links). Run with `npm run test:e2e`; not part of `npm test`. |
 | `tests/fixtures/valid/` | Events that must pass, covering the minimal, full and cancelled shapes. |
 | `tests/fixtures/invalid/` | One file per rule that must fail, named for the rule it breaks. Add a file here whenever you add a rule. |
 | `tests/fixtures/warnings/` | Events that pass but should warn, such as a bare-homepage `url`. |
+| `tests/fixtures/positions/` | Valid position files (`valid/<year>/`) used by `tests/lib/position-validation.test.ts`. |
 | `tests/fixtures/cli/validate.ts` | Helper for driving the validator in tests. |
 
 ## `docs/`
@@ -201,6 +213,7 @@ Vitest. Run with `npm test`.
 | Path | What it is |
 | --- | --- |
 | `docs/data-schema.md` | Every event field explained, for contributors. |
+| `docs/position-schema.md` | Every position field explained, the derived-status rules and the validation rules. |
 | `docs/curation-policy.md` | What gets listed, what does not, and how the blocklist works. |
 | `docs/discovery-agent.md` | The discovery agent: pipeline, security model, configuration, sources and deployment. Implemented and running. Read it with `data/sources.yaml`. |
 | `docs/decisions.md` | Running log of decisions and their reasons, newest last. Every deviation from the brief is recorded here. |

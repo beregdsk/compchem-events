@@ -1,0 +1,15 @@
+id: phd-uni-vienna-ml-force-fields-2026
+title: PhD position in machine-learned force fields
+level: phd
+institution: University of Vienna
+group: Computational Materials Physics
+location:
+  city: Vienna
+  country: AT
+url: https://jobs.univie.ac.at/example-phd-ml-force-fields
+source_url: https://example.org/list-info
+deadline: 2026-11-15
+topics: [ml-potentials, molecular-dynamics]
+description: A funded PhD project developing machine-learned interatomic potentials for catalysis.
+added: 2026-09-20
+fixture: true

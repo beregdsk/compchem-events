@@ -1,0 +1,39 @@
+---
+import Base from '../../layouts/Base.astro';
+import PageActions from '../../components/PageActions.astro';
+import PositionRow from '../../components/PositionRow.astro';
+import { archivedPositions, loadPositions } from '../../lib/positions';
+
+const archived = archivedPositions(loadPositions());
+const byYear = new Map<string, typeof archived>();
+for (const p of archived) {
+  const year = p.added.slice(0, 4);
+  byYear.set(year, [...(byYear.get(year) ?? []), p]);
+}
+const years = [...byYear.keys()].sort().reverse();
+---
+
+<Base
+  title="Archive of positions"
+  description="Closed PhD, postdoc and academic positions in computational chemistry, grouped by year."
+  path="/positions/archive/"
+>
+  <h1>Archive of positions</h1>
+  <p class="muted">
+    Positions whose deadline has passed, or that were posted over 90 days ago without one.
+  </p>
+
+  <PageActions actions={[{ href: '/positions/', label: 'Open positions' }]} />
+
+  {years.length === 0 && <p class="muted">Nothing has been archived yet.</p>}
+  {years.map((year) => (
+    <section>
+      <h2 class="mono">{year}</h2>
+      <ul class="event-list">
+        {byYear.get(year)!.map((p) => (
+          <PositionRow position={p} />
+        ))}
+      </ul>
+    </section>
+  ))}
+</Base>

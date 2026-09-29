@@ -1,0 +1,4 @@
+Summer School on Enhanced Sampling 2027
+Lausanne, 7-11 June 2027. Lectures and hands-on tutorials on metadynamics and replica exchange.
+Travel grants are available for PhD students and postdocs.
+Registration: https://example.org/sampling-school-2027

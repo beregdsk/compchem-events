@@ -601,3 +601,25 @@ trust rule stands without it: `AGENTS.md` rule 1 still requires an official
 `url`/`source_url` read at the time of adding. Old specs and plans keep their
 references as history. A file that still carries the field now fails
 validation as an unknown property.
+
+## 2026-09-29 — Positions: a second data type, discovered from posts
+
+The discovery sources also carry job adverts, which the event extractor threw
+away. They now go to `/positions/`, as `data/positions/<added-year>/<id>.yaml`
+under `schema/position.schema.json` (`docs/position-schema.md`). Scope is PhD,
+postdoc and permanent academic roles; industry jobs are out because they are
+recruiter-heavy and hard to screen. A position with no deadline stays listed:
+marked "may already be filled" at 45 days and archived at 90; with a deadline,
+it is archived the day after. Only RSS items, Telegram posts and mailbox
+messages are routed: a keyword gate (`looksLikePosition`) sends likely adverts
+to a separate extractor, and anything it rejects falls through to the
+unchanged event extractor, so an event that mentions PhD students is not lost.
+Positions skip the jev classifier, whose criteria (programme, registration
+cost) do not fit an advert; mechanical duplicate and blocklist checks plus the
+0.5 confidence floor apply, and a human still merges every PR. A `url` equal
+to its `source_url` is the fallback for a post without an advert link and is
+not treated as a duplicate on its own. A post advertising several positions
+yields only the first, and a post that yields a position is not also extracted
+as an event. Rendered rows are covered by a container-API test
+(`tests/components/position-row.test.ts`), since production builds carry no
+position data.

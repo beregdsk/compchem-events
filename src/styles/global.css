@@ -507,6 +507,14 @@ a:hover {
   color: var(--time);
   background: var(--lobe-pos-soft);
 }
+.pill--level {
+  color: var(--fg);
+  border-color: var(--rule-strong);
+}
+.pill--stale {
+  color: var(--fg-muted);
+  border-style: dashed;
+}
 .pill--status {
   border-color: var(--time);
   color: var(--time);

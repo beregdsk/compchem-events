@@ -1,0 +1,13 @@
+id: postdoc-no-deadline-2026
+title: Postdoctoral researcher in excited-state dynamics
+level: postdoc
+institution: Example Institute of Chemistry
+location:
+  city: Utrecht
+  country: NL
+url: https://example.org/list-info
+source_url: https://example.org/list-info
+topics: [excited-states]
+description: A two-year postdoc on nonadiabatic dynamics; open until filled.
+added: 2026-09-01
+fixture: true

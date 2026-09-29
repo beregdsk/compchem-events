@@ -1,0 +1,49 @@
+---
+import { formatDate } from '../lib/dates';
+import { nameOf } from '../lib/regions';
+import { POSITION_LEVEL_LABELS, type LoadedPosition } from '../lib/types';
+
+interface Props {
+  position: LoadedPosition;
+}
+
+const { position: p } = Astro.props;
+const place = `${p.location.city}, ${nameOf(p.location.country) ?? p.location.country}`;
+---
+
+<li class="event position">
+  <p class="mono event__when">
+    {p.deadline ? (
+      <>
+        apply by <time datetime={p.deadline}>{formatDate(p.deadline)}</time>
+      </>
+    ) : (
+      'no deadline'
+    )}
+  </p>
+
+  <div class="event__body">
+    <h3 class="event__title">
+      <a href={p.url} rel="noopener">
+        {p.title}
+      </a>
+      <span class="pill pill--level">{POSITION_LEVEL_LABELS[p.level]}</span>
+    </h3>
+
+    <p class="mono muted event__meta">
+      {p.institution}
+      {p.group && <> · {p.group}</>} · {place}
+    </p>
+
+    <p class="event__desc">{p.description}</p>
+
+    <p class="event__tags">
+      {p.topics.map((t) => (
+        <span class="pill pill--topic">{t}</span>
+      ))}
+      {p.status_derived === 'stale' && (
+        <span class="pill pill--stale">posted {p.age_days} days ago · may be filled</span>
+      )}
+    </p>
+  </div>
+</li>

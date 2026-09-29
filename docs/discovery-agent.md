@@ -109,6 +109,28 @@ events are still never published without a human clicking merge.** It only
 lets a maintainer skim straight to the highest-confidence PRs instead of
 re-deriving that judgement by hand.
 
+## Positions
+
+Discovery also finds academic job adverts (PhD, postdoc, permanent), which go
+to `/positions/` instead of being dropped. Only three source kinds are routed:
+`rss`, `telegram-channel` and `mailbox`. For each such post the pipeline runs
+the keyword gate `looksLikePosition` first; a post that passes goes to
+`extractPosition`. If the gate rejects it, or the extractor finds no position,
+the post continues to the normal event extraction, so an event that merely
+mentions PhD students is not lost. The extractor keeps an advert URL only if
+it appears in the post text; otherwise the draft's `url` falls back to the
+item's own URL.
+
+The orchestrator handles positions after events, sharing the same `MAX_PRS`
+and `MAX_TOKENS` budgets. Positions skip the jev classifier. Each candidate
+is checked mechanically and skipped for one of these reasons: `low confidence`
+(below 0.5), `duplicate-url`, `duplicate-title-institution`, `blocklisted`,
+`already reviewed`, or `MAX_PRS reached`. Survivors become PRs on the branch
+`discovery/position/<id>`, labelled `needs-review` and `position`, with
+`Confidence: 0.xx` as the first line of the body. `auto-approve.ts` reads that
+line, so high-confidence position PRs get the `high-confidence` label and
+comment like event PRs; it never merges anything.
+
 ## Testing
 
 - Record real pages as fixtures in `tests/discovery/fixtures/` and test extraction with a stubbed LLM client returning canned JSON. CI must never call the real API.

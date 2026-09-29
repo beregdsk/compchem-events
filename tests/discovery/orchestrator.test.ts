@@ -4,7 +4,7 @@ import {
   runDiscoveryRun,
   type OrchestratorOptions,
 } from '../../src/lib/discovery/orchestrator';
-import type { RawEvent } from '../../src/lib/types';
+import type { RawEvent, RawPosition } from '../../src/lib/types';
 
 const candidate: RawEvent = {
   id: 'excited-states-symposium-2027',
@@ -139,6 +139,8 @@ function baseOptions(overrides: Partial<OrchestratorOptions> = {}): Orchestrator
     maxPrs: 20,
     maxTokens: 500_000,
     tokensUsedSoFar: 0,
+    positions: [],
+    existingPositions: [],
     log: () => {},
     ...overrides,
   };
@@ -528,5 +530,167 @@ describe('runDiscoveryRun', () => {
     expect(body).toContain('https://example.org/dead');
     expect(body).toContain('excited-states-symposium-2027');
     expect(body).toContain('network down');
+  });
+});
+
+describe('runDiscoveryRun positions', () => {
+  const position = (over: Partial<RawPosition> = {}): RawPosition => ({
+    id: 'utrecht-university-phd-position-in-molecular-dynamics-2026',
+    title: 'PhD position in molecular dynamics',
+    level: 'phd',
+    institution: 'Utrecht University',
+    location: { city: 'Utrecht', country: 'NL' },
+    url: 'https://example.org/jobs/phd-md',
+    source_url: 'https://example.org/jobs.xml',
+    topics: ['molecular-dynamics'],
+    description: 'A funded PhD project.',
+    added: '2026-09-29',
+    ...over,
+  });
+  const branchPath = (id: string) => `discovery/position/${id}`;
+  const newPrStubs = (id: string, pr: number) => ({
+    ...DEFAULT_BRANCH_STUBS,
+    [`GET /repos/acme/compchem-events/git/ref/heads/${branchPath(id)}`]: { status: 404 },
+    'POST /repos/acme/compchem-events/git/refs': { status: 201, body: {} },
+    [`GET /repos/acme/compchem-events/contents/data/positions/2026/${id}.yaml?ref=${branchPath(id)}`]:
+      { status: 404 },
+    [`PUT /repos/acme/compchem-events/contents/data/positions/2026/${id}.yaml`]: {
+      status: 201,
+      body: {},
+    },
+    'POST /repos/acme/compchem-events/pulls': { status: 201, body: { number: pr } },
+    [`POST /repos/acme/compchem-events/issues/${pr}/labels`]: { status: 200, body: {} },
+    'GET /repos/acme/compchem-events/issues?state=open&labels=discovery-failures': {
+      status: 200,
+      body: [],
+    },
+  });
+
+  it('opens a labelled PR for a new position, with the confidence line first', async () => {
+    const p = position();
+    const { impl, calls } = stubGitHub(newPrStubs(p.id, 30));
+    const result = await runDiscoveryRun(
+      baseOptions({
+        positions: [{ draft: p, confidence: 0.85 }],
+        github: { token: 'gh-test', repo: 'acme/compchem-events', fetchImpl: impl },
+      }),
+    );
+    expect(result.prsOpened).toBe(1);
+    const labels = calls
+      .filter((c) => c.url.endsWith('/issues/30/labels'))
+      .flatMap((c) => (c.body as { labels: string[] }).labels);
+    expect(labels).toEqual(['needs-review', 'position']);
+    const pr = calls.find((c) => c.url.endsWith('/pulls'))!.body as { body: string; head: string };
+    expect(pr.head).toBe(branchPath(p.id));
+    expect(pr.body.split('\n')[0]).toBe('Confidence: 0.85');
+  });
+
+  it('skips a position below the confidence floor without calling GitHub', async () => {
+    const { impl, calls } = stubGitHub({
+      'GET /repos/acme/compchem-events/issues?state=open&labels=discovery-failures': {
+        status: 200,
+        body: [],
+      },
+    });
+    const result = await runDiscoveryRun(
+      baseOptions({
+        positions: [{ draft: position(), confidence: 0.3 }],
+        github: { token: 'gh-test', repo: 'acme/compchem-events', fetchImpl: impl },
+      }),
+    );
+    expect(result.skipped).toEqual([{ id: position().id, reason: 'low confidence' }]);
+    expect(calls.some((c) => c.url.endsWith('/pulls'))).toBe(false);
+  });
+
+  it('skips a position already on main by url', async () => {
+    const { impl } = stubGitHub({
+      'GET /repos/acme/compchem-events/issues?state=open&labels=discovery-failures': {
+        status: 200,
+        body: [],
+      },
+    });
+    const result = await runDiscoveryRun(
+      baseOptions({
+        positions: [{ draft: position({ id: 'other-2026', title: 'Renamed' }), confidence: 0.9 }],
+        existingPositions: [position()],
+        github: { token: 'gh-test', repo: 'acme/compchem-events', fetchImpl: impl },
+      }),
+    );
+    expect(result.skipped).toEqual([{ id: 'other-2026', reason: 'duplicate-url' }]);
+  });
+
+  // Review focus 1: two mailbox adverts with no advert link share the fallback url.
+  it('does not treat a shared fallback url as a duplicate', async () => {
+    const fallback = 'https://example.org/list-info';
+    const a = position({ url: fallback, source_url: fallback });
+    const b = position({
+      id: 'eth-zurich-postdoc-in-dft-2026',
+      title: 'Postdoc in DFT',
+      institution: 'ETH Zurich',
+      url: fallback,
+      source_url: fallback,
+    });
+    const { impl } = stubGitHub({ ...newPrStubs(a.id, 31), ...newPrStubs(b.id, 31) });
+    const result = await runDiscoveryRun(
+      baseOptions({
+        positions: [
+          { draft: a, confidence: 0.9 },
+          { draft: b, confidence: 0.9 },
+        ],
+        github: { token: 'gh-test', repo: 'acme/compchem-events', fetchImpl: impl },
+      }),
+    );
+    expect(result.prsOpened).toBe(2);
+    expect(result.skipped).toEqual([]);
+  });
+
+  it('skips a same-run duplicate by title and institution', async () => {
+    const first = position();
+    const second = position({ id: 'dup-2026', url: 'https://example.org/jobs/other' });
+    const { impl } = stubGitHub(newPrStubs(first.id, 32));
+    const result = await runDiscoveryRun(
+      baseOptions({
+        positions: [
+          { draft: first, confidence: 0.9 },
+          { draft: second, confidence: 0.9 },
+        ],
+        github: { token: 'gh-test', repo: 'acme/compchem-events', fetchImpl: impl },
+      }),
+    );
+    expect(result.skipped).toEqual([{ id: 'dup-2026', reason: 'duplicate-title-institution' }]);
+  });
+
+  it('skips a blocklisted advert host', async () => {
+    const { impl } = stubGitHub({
+      'GET /repos/acme/compchem-events/issues?state=open&labels=discovery-failures': {
+        status: 200,
+        body: [],
+      },
+    });
+    const result = await runDiscoveryRun(
+      baseOptions({
+        positions: [{ draft: position(), confidence: 0.9 }],
+        blockedHosts: new Set(['example.org']),
+        github: { token: 'gh-test', repo: 'acme/compchem-events', fetchImpl: impl },
+      }),
+    );
+    expect(result.skipped).toEqual([{ id: position().id, reason: 'blocklisted' }]);
+  });
+
+  it('defers positions once MAX_PRS is used up', async () => {
+    const { impl } = stubGitHub({
+      'GET /repos/acme/compchem-events/issues?state=open&labels=discovery-failures': {
+        status: 200,
+        body: [],
+      },
+    });
+    const result = await runDiscoveryRun(
+      baseOptions({
+        maxPrs: 0,
+        positions: [{ draft: position(), confidence: 0.9 }],
+        github: { token: 'gh-test', repo: 'acme/compchem-events', fetchImpl: impl },
+      }),
+    );
+    expect(result.deferred).toEqual([position().id]);
   });
 });
