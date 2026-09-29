@@ -58,7 +58,7 @@ Work phase by phase. One branch and one PR per phase (`feat/phase-N-<slug>`). Do
 - Tests: `tests/fixtures/valid/` and `tests/fixtures/invalid/`. Each invalid fixture has a comment naming the expected error, and a test asserts it is reported.
 - **Seed data:**
   - Add 3 clearly fake `fixture: true` events (use `example.org` URLs) for development.
-  - If you have web access, also add 15-30 **real** upcoming events (start date after 2026-09-20) from official organiser pages. Every real event needs `source_url` on the organiser's own site, and `last_verified` set to the date you actually checked. Write descriptions in your own words (see AGENTS.md).
+  - If you have web access, also add 15-30 **real** upcoming events (start date after 2026-09-20) from official organiser pages. Every real event needs `source_url` on the organiser's own site, read on the day it was added. Write descriptions in your own words (see AGENTS.md).
   - If you have no web access, ship the fixtures only and say so in your final report. **Never invent or "recall" real events from memory.**
 
 **Acceptance:** validator passes on valid data, reports every expected error on the invalid fixtures, and unit tests cover the loader and `regionOf`.
@@ -68,7 +68,7 @@ Work phase by phase. One branch and one PR per phase (`feat/phase-N-<slug>`). Do
 Routes:
 
 - `/`: upcoming and ongoing events, sorted by start date. Filters: free-text (title, organiser, city), topics (multi-select), region and country, format, type, date range, and a "has open deadline" toggle. Show the result count in an `aria-live` region and a "Clear filters" control. Filter state is written to and read from the URL.
-- `/events/<id>/`: full details, deadlines table (show the timezone; `AoE` means Anywhere on Earth), "Report this event" link (built from `site.config.ts` with the event ID and URL prefilled), "Suggest a correction" link (prefilled GitHub issue URL), last-verified date, and schema.org `Event` JSON-LD.
+- `/events/<id>/`: full details, deadlines table (show the timezone; `AoE` means Anywhere on Earth), "Report this event" link (built from `site.config.ts` with the event ID and URL prefilled), "Suggest a correction" link (prefilled GitHub issue URL), and schema.org `Event` JSON-LD.
 - `/deadlines/`: upcoming deadlines across all events, soonest first, with the same topic filter.
 - `/archive/`: past events grouped by year.
 - `/about/`, `/submit/` (the three ways to add an event, from `CONTRIBUTING.md`), `/policy/` (renders `docs/curation-policy.md`), `404`.
@@ -77,7 +77,6 @@ Routes:
 Behaviour details:
 
 - Deadline countdowns ("closes in 12 days") are computed **client-side** from ISO dates so they don't go stale between builds. The server-rendered HTML shows the plain date.
-- Events not verified within 90 days before their start date show a subtle "dates last verified on X, check the official page" note.
 - Cancelled and postponed events stay listed, visibly marked.
 
 Non-functional requirements:

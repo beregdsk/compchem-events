@@ -50,11 +50,10 @@ const fullInput: DraftInput = {
 };
 
 describe('synthesizeDraft', () => {
-  it('derives id from title and start year, and sets added/last_verified to today', () => {
+  it('derives id from title and start year, and sets added to today', () => {
     const draft = synthesizeDraft(fullInput, '2026-09-23');
     expect(draft.id).toBe('new-symposium-on-excited-state-photochemistry-2027');
     expect(draft.added).toBe('2026-09-23');
-    expect(draft.last_verified).toBe('2026-09-23');
     expect(draft.location).toEqual({ city: 'Testville', country: 'DE' });
     expect(draft.organizer).toBe('Test Organiser');
     expect(draft.cost).toBe('Free');

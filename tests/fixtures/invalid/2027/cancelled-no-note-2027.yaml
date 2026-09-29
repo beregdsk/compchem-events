@@ -10,5 +10,4 @@ topics: [dft]
 description: The event is cancelled but no status_note explains why.
 status: cancelled
 added: 2026-09-20
-last_verified: 2026-09-20
 fixture: true

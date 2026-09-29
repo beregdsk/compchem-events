@@ -71,7 +71,6 @@ export interface RawEvent {
   status?: EventStatus;
   status_note?: string;
   added: ISODate;
-  last_verified: ISODate;
   fixture?: boolean;
 }
 

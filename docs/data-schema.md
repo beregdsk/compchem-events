@@ -25,7 +25,6 @@ One YAML file per event at `data/events/<start-year>/<id>.yaml`. The JSON Schema
 | `status` | enum | no | `scheduled` (default), `postponed`, `cancelled`. |
 | `status_note` | string | if `status` is not `scheduled` | Short explanation, 200 characters or fewer. |
 | `added` | date | yes | Date the entry was first added. |
-| `last_verified` | date | yes | Date someone last checked the official page. Must not be in the future. |
 | `fixture` | boolean | no | `true` for fake development data. Excluded from production builds. |
 
 ### Deadline objects
@@ -45,7 +44,7 @@ Errors (fail validation):
 
 1. `id` equals the file name stem and ends with the year of `start_date`; the file sits in the folder for that year.
 2. `end_date` is on or after `start_date`.
-3. `last_verified` and `added` are not in the future; `added` is not after `last_verified`.
+3. `added` is not in the future.
 4. `topics` are all in `data/topics.yaml`; `country` is a valid ISO alpha-2 code.
 5. No two events share the same `id`, the same `url`, or the same normalised title plus start date.
 6. `url` and `source_url` use `https://` and their host is not in `data/blocklist.yaml`.
@@ -55,9 +54,8 @@ Errors (fail validation):
 Warnings (reported, do not fail):
 
 1. A deadline falls after `start_date`.
-2. `last_verified` is more than 90 days old for an event that has not yet started.
-3. `description` looks copied (for example, longer than 200 characters with no full stop, or identical to another event's).
-4. `url` is a bare homepage with no path, which often means the event page isn't ready.
+2. `description` looks copied (for example, longer than 200 characters with no full stop, or identical to another event's).
+3. `url` is a bare homepage with no path, which often means the event page isn't ready.
 
 ## Controlled vocabulary (initial `data/topics.yaml`)
 
@@ -95,7 +93,6 @@ deadlines:
     timezone: UTC
 status: scheduled
 added: 2026-09-20
-last_verified: 2026-09-20
 fixture: true
 ```
 

@@ -15,7 +15,7 @@
 - [ ] Description is in my own words and 280 characters or fewer
 - [ ] Deadlines match the official page, with the correct timezone (`AoE` if unstated)
 - [ ] Topics are from `data/topics.yaml`
-- [ ] `added` and `last_verified` are set, and `last_verified` is the date I actually checked
+- [ ] `added` is set to today's date
 - [ ] The event fits [docs/curation-policy.md](../docs/curation-policy.md)
 - [ ] `npm run validate` passes
 

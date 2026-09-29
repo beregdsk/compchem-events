@@ -121,7 +121,6 @@ const ev = (id: string, over: Partial<LoadedEvent> = {}): LoadedEvent =>
     topics: ['dft'],
     description: 'd',
     added: '2026-09-20',
-    last_verified: '2026-09-20',
     region: 'Online',
     status_derived: 'upcoming',
     ...over,

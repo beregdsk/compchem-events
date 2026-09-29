@@ -9,5 +9,4 @@ url: https://example.org/missing-location-2027/
 topics: [dft]
 description: An in-person event with no location given at all.
 added: 2026-09-20
-last_verified: 2026-09-20
 fixture: true

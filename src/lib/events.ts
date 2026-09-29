@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse } from 'yaml';
-import { compareISO, daysBetween, todayUTC, type ISODate } from './dates';
+import { compareISO, todayUTC, type ISODate } from './dates';
 import { regionOf, type DisplayRegion } from './regions';
 import {
   formatProblems,
@@ -154,11 +154,6 @@ export function upcomingDeadlines(events: LoadedEvent[], today: ISODate): Upcomi
       (a, b) =>
         compareISO(a.deadline.date, b.deadline.date) || a.event.title.localeCompare(b.event.title),
     );
-}
-
-/** True when the dates need re-checking: unverified for 90 days and not yet started. */
-export function isStale(event: LoadedEvent, today: ISODate): boolean {
-  return compareISO(event.start_date, today) > 0 && daysBetween(event.last_verified, today) > 90;
 }
 
 /** True when a travel-grant deadline is still open: the filter students ask for most. */

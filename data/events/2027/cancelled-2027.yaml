@@ -13,5 +13,4 @@ description: A cancelled event, which must stay listed and visibly marked.
 status: cancelled
 status_note: Cancelled by the organisers; see the official page.
 added: 2026-09-20
-last_verified: 2026-09-20
 fixture: true

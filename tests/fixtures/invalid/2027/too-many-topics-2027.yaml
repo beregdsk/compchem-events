@@ -17,5 +17,4 @@ topics:
   ]
 description: Six valid topic slugs, one more than the schema allows.
 added: 2026-09-20
-last_verified: 2026-09-20
 fixture: true

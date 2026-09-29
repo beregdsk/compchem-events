@@ -32,7 +32,6 @@ const existingEvents: RawEvent[] = [
     topics: ['molecular-dynamics'],
     description: 'The baseline event already on the calendar.',
     added: '2026-09-20',
-    last_verified: '2026-09-20',
   },
 ];
 

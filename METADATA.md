@@ -90,8 +90,8 @@ behaviour lives and where tests point.
 | Path | What it does |
 | --- | --- |
 | `dates.ts` | The only place dates are parsed. ISO `YYYY-MM-DD` strings handled as UTC calendar dates, never through the local timezone. Parsing, arithmetic, comparison, formatting. |
-| `events.ts` | The single data loader. Reads and parses the YAML tree, derives each event's status, and splits upcoming from past. Also computes upcoming deadlines and staleness. |
-| `validation.ts` | Schema validation (Ajv) plus the semantic rules the schema cannot express — end before start, deadline after end, unknown topic or country, `added` after `last_verified`, id/filename/folder agreement. Exported as `validateEvent` for reuse. |
+| `events.ts` | The single data loader. Reads and parses the YAML tree, derives each event's status, and splits upcoming from past. Also computes upcoming deadlines. |
+| `validation.ts` | Schema validation (Ajv) plus the semantic rules the schema cannot express — end before start, deadline after end, unknown topic or country, a future `added`, id/filename/folder agreement. Exported as `validateEvent` for reuse. |
 | `event-graph.ts` | Similarity between events (shared topics, series, organiser) and the graph built from it. Feeds `/graph/` and the related events on each event page. |
 | `graph-layout.ts` | Seeded d3-force layout for the event map, run at build time; the browser script reuses its force configuration. |
 | `graph-shapes.ts` | SVG path per event type for the map: type is carried by shape, not colour. |
@@ -151,7 +151,7 @@ One file per URL. Pages stay thin; they compose `src/lib/`.
 | Path | What it is |
 | --- | --- |
 | `layouts/Base.astro` | The page shell: masthead, footer, metadata, global stylesheet. |
-| `components/EventRow.astro` | One event in a list, with its dates, place, topics and staleness note. |
+| `components/EventRow.astro` | One event in a list, with its dates, place and topics. |
 | `components/DeadlineList.astro` | An event's deadlines. |
 | `components/OrbitalField.astro` | Renders the orbital plate as inline SVG at build time — inline so the dots can follow the theme tokens, which an external image could not. |
 | `components/PageActions.astro` | The row of per-page actions (subscribe, export, submit). |
@@ -193,7 +193,7 @@ Vitest. Run with `npm test`.
 | `tests/e2e/*.spec.ts` | Playwright, against a production build: `smoke.spec.ts` (the home page loads, choosing a topic reduces the list, the URL updates), `graph.spec.ts` (the event map) and `related.spec.ts` (related events on an event page). Run with `npm run test:e2e`; not part of `npm test`. |
 | `tests/fixtures/valid/` | Events that must pass, covering the minimal, full and cancelled shapes. |
 | `tests/fixtures/invalid/` | One file per rule that must fail, named for the rule it breaks. Add a file here whenever you add a rule. |
-| `tests/fixtures/warnings/` | Events that pass but should warn, such as a stale `last_verified`. |
+| `tests/fixtures/warnings/` | Events that pass but should warn, such as a bare-homepage `url`. |
 | `tests/fixtures/cli/validate.ts` | Helper for driving the validator in tests. |
 
 ## `docs/`

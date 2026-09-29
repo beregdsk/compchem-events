@@ -82,10 +82,3 @@ body:
       description: A sentence or two, in your own words — not copied from the event page.
     validations:
       required: true
-  - type: input
-    id: verified
-    attributes:
-      label: Date you checked the official page
-      placeholder: '2026-09-25'
-    validations:
-      required: true

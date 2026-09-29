@@ -20,7 +20,6 @@ const base = {
   topics: ['excited-states'],
   description: 'Three days of talks and tutorials.',
   added: '2026-09-20',
-  last_verified: '2026-09-20',
 };
 
 beforeAll(() => {

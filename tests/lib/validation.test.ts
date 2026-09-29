@@ -20,7 +20,6 @@ const valid = {
   topics: ['excited-states'],
   description: 'Three days of talks and tutorials on excited-state methods.',
   added: '2026-09-20',
-  last_verified: '2026-09-20',
   fixture: true,
 };
 

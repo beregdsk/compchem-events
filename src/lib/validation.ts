@@ -5,7 +5,7 @@ import addFormats from 'ajv-formats';
 import type { ValidateFunction } from 'ajv';
 import { parse } from 'yaml';
 import type { ISODate } from './dates';
-import { compareISO, daysBetween, todayUTC } from './dates';
+import { compareISO, todayUTC } from './dates';
 import { regionOf } from './regions';
 import type { RawEvent, Topic } from './types';
 
@@ -59,15 +59,9 @@ function semanticRules(entry: EventFile, ctx: ValidationContext, out: Validation
     err('end_date', `end_date ${e.end_date} is before start_date ${e.start_date}`);
   }
 
-  // Rule 3: added and last_verified are sane.
-  if (compareISO(e.last_verified, ctx.today) > 0) {
-    err('last_verified', `last_verified ${e.last_verified} is in the future`);
-  }
+  // Rule 3: added is not in the future.
   if (compareISO(e.added, ctx.today) > 0) {
     err('added', `added ${e.added} is in the future`);
-  }
-  if (compareISO(e.added, e.last_verified) > 0) {
-    err('added', `added ${e.added} is after last_verified ${e.last_verified}`);
   }
 
   // Rule 4: topics and country are known.
@@ -123,17 +117,12 @@ function semanticRules(entry: EventFile, ctx: ValidationContext, out: Validation
     }
   }
 
-  // Warning 2: stale verification for an event that has not started.
-  if (compareISO(e.start_date, ctx.today) > 0 && daysBetween(e.last_verified, ctx.today) > 90) {
-    warn('last_verified', `last verified more than 90 days ago (${e.last_verified})`);
-  }
-
-  // Warning 3: the description looks copied.
+  // Warning 2: the description looks copied.
   if (e.description.length > 200 && !e.description.includes('.')) {
     warn('description', 'description looks copied: over 200 characters with no full stop');
   }
 
-  // Warning 4: a bare homepage usually means the event page is not ready.
+  // Warning 3: a bare homepage usually means the event page is not ready.
   try {
     const u = new URL(e.url);
     if (u.pathname === '/' && !u.search) {

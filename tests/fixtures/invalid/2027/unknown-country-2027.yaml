@@ -12,5 +12,4 @@ url: https://example.org/unknown-country-2027/
 topics: [dft]
 description: The country code is not present in the region table.
 added: 2026-09-20
-last_verified: 2026-09-20
 fixture: true

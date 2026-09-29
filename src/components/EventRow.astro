@@ -1,6 +1,6 @@
 ---
 import type { LoadedEvent } from '../lib/types';
-import { hasOpenDeadline, hasOpenTravelGrant, isStale } from '../lib/events';
+import { hasOpenDeadline, hasOpenTravelGrant } from '../lib/events';
 import { compareISO, formatDate, formatDateRange, type ISODate } from '../lib/dates';
 
 interface Props {
@@ -75,11 +75,6 @@ const place =
 
     {event.status && event.status !== 'scheduled' && event.status_note && (
       <p class="warn">{event.status_note}</p>
-    )}
-    {isStale(event, today) && (
-      <p class="warn">
-        Dates last verified on {formatDate(event.last_verified)}. Check the official page.
-      </p>
     )}
   </div>
 </li>
