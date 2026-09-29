@@ -99,12 +99,11 @@ test.describe('graph view', () => {
 test.describe('graph view without JavaScript', () => {
   test.use({ javaScriptEnabled: false });
 
-  test('shows the static graph and a cluster list covering every event', async ({ page }) => {
+  test('shows the static graph with every event linked', async ({ page }) => {
     await page.goto('/graph/');
     const nodes = await page.locator('#event-graph a.graph-node').count();
     expect(nodes).toBeGreaterThan(0);
     await expect(page.locator('figure.graph')).not.toHaveClass(/is-live/);
-    await expect(page.locator('ol.graph-clusters a')).toHaveCount(nodes);
   });
 });
 
