@@ -652,3 +652,13 @@ is dropped. Curated lists such as labinitio.org's are useful leads, so they
 are read as sources, but only the official pages they link to are extracted:
 every fact is rechecked there, and none of the aggregator's text is copied.
 The new source kind `aggregator` does this for events.
+
+## 2026-09-29 — Group homepages found by OpenRouter web search, citations only
+
+The groups pass finds a group's website with OpenRouter's `web` plugin on the
+existing `LLM_API_KEY`: no new credential or dependency, and the key's
+spending cap covers it. It is the first discovery call with a tool, so only
+the response's citation URLs are used, never URLs in its prose, and each
+page is fetched and verified by the no-tools extractor before a draft
+exists. `MAX_SEARCHES` (default 20) caps searches per run, and names that
+found nothing are not searched again for 90 days.

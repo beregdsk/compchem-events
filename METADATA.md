@@ -122,6 +122,14 @@ behaviour lives and where tests point.
 | `discovery/position-draft.ts` | Turns a position extraction into a schema-shaped `RawPosition`: institution+title id slug with the added year, file path. |
 | `discovery/orchestrator.ts` | Classifies candidates and opens one pull request each, with the candidate-controlled text rendered inert in the PR body. |
 | `discovery/github-client.ts` | The GitHub REST calls the orchestrator needs: branches, files, pull requests, labels, issues. |
+| `discovery/propose.ts` | The `Proposer`: opens (or, for events, refreshes) one branch, file and labelled pull request; shared by events, positions and groups. |
+| `discovery/group-match.ts` | Matches a name against the registry's `name`, `aliases` and `pi` (and open group drafts), splits organiser strings, and collects group leads from accepted events and positions. |
+| `discovery/group-extract.ts` | The two group LLM calls, both with no tools: splitting an organiser string into people and organisations, and verifying that a fetched page is a group's homepage. Page text goes in as delimited data. |
+| `discovery/group-search.ts` | The one discovery call with a tool: OpenRouter's `web` plugin, used to find candidate homepages. Keeps only public `https://` URLs from `url_citation` annotations and discards the response text. |
+| `discovery/group-draft.ts` | Turns a verified extraction into a schema-shaped `RawGroup`: id slug with a numeric suffix on collision, aliases, `added`, file path. |
+| `discovery/groups.ts` | Resolves group leads into validated drafts: registry match, name split, listing link or search, forced fetch, verification, and the 90-day negative cache. Under `MAX_SEARCHES`, `MAX_PAGES` and `MAX_TOKENS`. |
+| `discovery/groups-pass.ts` | The groups pass of a scheduled run: reads open group PRs, resolves this run's leads, proposes drafts as pull requests, and forgets cached names whose PR was not opened. Never rejects. |
+| `discovery/parsers/group-listing.ts` | Deterministic parser (no LLM) for `group-listing` sources: every link in the main content becomes a group lead with its heading as context. |
 | `discovery/auto-approve.ts` | Labels open discovery PRs `high-confidence` when confidence ≥ 0.90 and CI passed. Never merges. |
 | `types.ts` | The shared vocabulary: event types, formats, deadline types, statuses, and the loaded-event shape. |
 | `filter.ts` | Filter state and matching. Parses and serialises the query string, and decides whether a row matches. Shared verbatim between the server render and the browser so both agree. |
@@ -204,6 +212,7 @@ Vitest. Run with `npm test`.
 | `tests/styles/contrast.test.ts` | Every WCAG contrast pair in both themes, and that the duplicated palettes agree. |
 | `tests/cli/validate-guard.test.ts` | The validator CLI exits non-zero on bad data. |
 | `tests/discovery/*.test.ts` | The discovery agent, one file per module: sources, fetching, parsers, extraction, drafting, classification, the orchestrator and the CLIs. Every LLM, GitHub and IMAP call is stubbed; CI never calls a real API. |
+| `tests/discovery/groups-pass.test.ts` | The groups pass: a verified lead opens one PR, open group PRs count as known, MAX_PRS and GitHub failures leave the name out of the negative cache, and a listing failure is returned, not thrown. |
 | `tests/discovery/fixtures/candidates/` | Candidate events covering a clean add, each mechanical skip reason, and an adversarial prompt-injection attempt. |
 | `tests/discovery/fixtures/posts/` | Raw post texts for position gating and extraction: a PhD advert, a school that only mentions PhD grants, and an injection attempt. |
 | `tests/smoke.test.ts` | `site.config.ts` sanity (Vitest, not a browser). |

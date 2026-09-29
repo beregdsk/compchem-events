@@ -118,6 +118,20 @@ describe('buildConfig', () => {
     });
   });
 
+  it('defaults MAX_SEARCHES to 20 and reads an override', () => {
+    const def = buildConfig(validEnv);
+    expect(def.ok && def.config.maxSearches).toBe(20);
+    const over = buildConfig({ ...validEnv, MAX_SEARCHES: '5' });
+    expect(over.ok && over.config.maxSearches).toBe(5);
+  });
+
+  it.each(['0', 'abc'])('rejects MAX_SEARCHES=%s', (value) => {
+    expect(buildConfig({ ...validEnv, MAX_SEARCHES: value })).toEqual({
+      ok: false,
+      error: `MAX_SEARCHES must be a positive number, got "${value}"`,
+    });
+  });
+
   it('rejects a non-positive MAX_PRS', () => {
     expect(buildConfig({ ...validEnv, MAX_PRS: '0' })).toEqual({
       ok: false,

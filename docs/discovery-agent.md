@@ -27,6 +27,7 @@ Web pages are hostile input. The extraction step must be unable to do anything e
 
 - The extraction call has **no tools**, no browsing, and no access to secrets beyond the API key. Page text is passed as clearly delimited data, and the prompt says instructions inside it must be ignored.
 - Never execute, evaluate or render fetched content. Fetch text only.
+- **One call has a tool.** The groups pass's search call uses OpenRouter's `web` plugin to find candidate homepages. Only the URLs in the response's `url_citation` annotations are used, filtered to public `https://` DNS names; the response text is discarded. Every page reached this way goes through the same no-tools extraction as any other page, as untrusted data, and the draft must pass schema validation. Search is billed to `LLM_API_KEY`, under its spending cap.
 - Output is accepted only if it validates against the schema. Free-text fields are length-limited and stripped of markup.
 - Run the job as an unprivileged user or in a container with no other credentials on the machine.
 - **Credentials:** the LLM API key must have a spending cap set in the provider console. The GitHub token must be fine-grained, limited to this one repository, with only the permissions needed to push a branch, open a PR and file the failure-tracking issue (contents write, pull requests write, issues write). It must not be able to merge or change settings. Store both as environment variables or a root-only file, never in the repo.
@@ -49,6 +50,7 @@ All configuration by environment variables, validated by `scripts/discovery/run.
 | `MAX_PAGES` | no | 200 |
 | `MAX_TOKENS` | no | 500000 |
 | `MAX_PRS` | no | 20 |
+| `MAX_SEARCHES` | no | 20 |
 | `IMAP_HOST` | no (all three or none — see below) | — |
 | `IMAP_USER` | no | — |
 | `IMAP_PASSWORD` | no | — |
@@ -139,6 +141,41 @@ date stays the day the advert was first seen. Survivors become PRs on the branch
 line, so high-confidence position PRs get the `high-confidence` label and
 comment like event PRs; it never merges anything.
 
+## Groups
+
+After events and positions, the run resolves group names into registry
+drafts (`src/lib/discovery/groups-pass.ts`, `groups.ts`). Leads come from the
+organisers of events the classifier accepted, from the `group` of accepted
+positions, and from every `group-listing` source. A `group-listing` source is
+one page, fetched on every run even when unchanged, and parsed
+deterministically with no LLM: each link in its main content is a lead with the
+anchor text as the name and the nearest heading or table caption as context.
+Each name is matched whole against `name`, `aliases` and `pi` of `data/groups/`
+and of every open `discovery/group/*` (or `discovery/groups-backfill`) PR; a
+name that matches is done. Otherwise one no-tools call splits the unmatched
+text into people and organisations.
+
+For each unknown name the pass tries the listing's own link first (unless it is
+a profile page such as Google Scholar or the listing's own host), then one web
+search (`MAX_SEARCHES`, default 20). It fetches up to two candidate URLs
+through the normal polite-fetch path (robots.txt, rate limit, `MAX_PAGES`,
+blocklist) and asks the extraction model whether the page is that group's
+homepage and inside the site's scope. The draft's `website` is the final URL
+after redirects. The draft then goes through `validateGroup`. A name that finds
+nothing, or is invalid, is not looked up again for 90 days; a name cut off by
+`MAX_SEARCHES`, `MAX_PAGES`, `MAX_TOKENS` or `MAX_PRS`, or whose PR failed on a
+GitHub error, is left out of that cache so the next run tries it.
+
+Survivors become PRs on `discovery/group/<id>`, labelled `needs-review` and
+`group`, with `Confidence: 0.xx` as the first line of the body (so
+`auto-approve.ts` handles them like any other PR), followed by the text as it
+appeared, the event, position or listing it came from, and every URL
+considered with its verdict. Skip reasons: `low confidence` (below 0.5),
+`duplicate-website`, `duplicate-name`, `blocklisted`, `already reviewed`,
+`already proposed`, and `MAX_PRS reached`. An open group PR is never rewritten.
+The pass never rejects: a failure is logged and reported under `groups` in the
+run's JSON output.
+
 ## Testing
 
 - Record real pages as fixtures in `tests/discovery/fixtures/` and test extraction with a stubbed LLM client returning canned JSON. CI must never call the real API.
@@ -187,7 +224,7 @@ the mounted volume above, so state survives between runs), `GITHUB_TOKEN`,
 `GITHUB_REPO`, and optionally `LLM_BASE_URL` (extraction only),
 `LLM_BASE_URL_CLASSIFY` (classification only — these are two different
 endpoints and must be set independently when proxying either one),
-`LLM_MODEL`, `MAX_PAGES`, `MAX_TOKENS`, `MAX_PRS`, and — for the
+`LLM_MODEL`, `MAX_PAGES`, `MAX_TOKENS`, `MAX_PRS`, `MAX_SEARCHES`, and — for the
 `kind: mailbox` sources (see *Mailing lists*) — `IMAP_HOST`, `IMAP_USER`,
 `IMAP_PASSWORD` and optionally `IMAP_PORT`/`IMAP_SECURE` — see
 *Configuration* above for what each does and its default.

@@ -2,13 +2,17 @@
 import { pathToFileURL } from 'node:url';
 import { site } from '../../site.config';
 import { loadEvents } from '../../src/lib/events';
+import { loadGroups } from '../../src/lib/groups';
 import { loadPositions } from '../../src/lib/positions';
 import { loadValidationContext } from '../../src/lib/validation';
-import { DEFAULT_JEV_MODEL } from '../../src/lib/discovery/classify-candidate';
+import { ADD_THRESHOLD, DEFAULT_JEV_MODEL } from '../../src/lib/discovery/classify-candidate';
 import { DEFAULT_EXTRACT_BASE_URL } from '../../src/lib/discovery/extract-client';
 import { DEFAULT_JEV_BASE_URL } from '../../src/lib/discovery/jev-client';
 import { fetchWithBrowser } from '../../src/lib/discovery/browser-fetch';
 import type { MailboxCredentials } from '../../src/lib/discovery/mailbox-client';
+import { leadsFromEvents, leadsFromPositions } from '../../src/lib/discovery/group-match';
+import { runGroupsPass } from '../../src/lib/discovery/groups-pass';
+import { todayUTC } from '../../src/lib/dates';
 import { runDiscoveryRun, type OrchestratorOptions } from '../../src/lib/discovery/orchestrator';
 import { runPipeline, type PipelineOptions } from '../../src/lib/discovery/pipeline';
 import { autoApproveHighConfidencePrs } from '../../src/lib/discovery/auto-approve';
@@ -19,6 +23,7 @@ export interface ResolvedConfig {
   maxPagesPerSource: number;
   maxTokens: number;
   maxPrs: number;
+  maxSearches: number;
   userAgent: string;
   extract: { apiKey: string; baseUrl: string; model: string };
   classify: { apiKey: string; baseUrl: string; model: string };
@@ -65,6 +70,13 @@ export function buildConfig(env: Record<string, string | undefined>): ConfigResu
   if (!Number.isFinite(maxPrs) || maxPrs <= 0) {
     return { ok: false, error: `MAX_PRS must be a positive number, got "${env.MAX_PRS}"` };
   }
+  const maxSearches = env.MAX_SEARCHES ? Number(env.MAX_SEARCHES) : 20;
+  if (!Number.isFinite(maxSearches) || maxSearches <= 0) {
+    return {
+      ok: false,
+      error: `MAX_SEARCHES must be a positive number, got "${env.MAX_SEARCHES}"`,
+    };
+  }
 
   // Fully optional: a mailbox account is a human-only operational step (see
   // docs/discovery-agent.md, "Mailing lists"), so none of these three set at
@@ -102,6 +114,7 @@ export function buildConfig(env: Record<string, string | undefined>): ConfigResu
       maxPagesPerSource,
       maxTokens,
       maxPrs,
+      maxSearches,
       userAgent: `${site.name} Discovery Agent (+${site.repoUrl}; ${site.contactEmail})`,
       extract: {
         apiKey,
@@ -164,6 +177,31 @@ async function main(): Promise<void> {
   pipelineResult.requeue(result.deferred);
   if (result.deferred.length > 0) log(`requeued ${result.deferred.length} deferred candidate(s)`);
 
+  const acceptedPositions = pipelineResult.positions
+    .filter((p) => p.confidence >= ADD_THRESHOLD)
+    .map((p) => p.draft);
+  const groups = await runGroupsPass({
+    leads: [
+      ...leadsFromEvents(result.accepted),
+      ...leadsFromPositions(acceptedPositions),
+      ...pipelineResult.groupLeads,
+    ],
+    existingGroups: loadGroups({ includeFixtures: false }),
+    statePath: cfg.statePath,
+    fetch: { userAgent: cfg.userAgent, browserFetchImpl: fetchWithBrowser },
+    extract: { ...cfg.extract, topics: [...ctx.topics] },
+    github: cfg.github,
+    maxSearches: cfg.maxSearches,
+    maxPages: Math.max(0, cfg.maxPages - pipelineResult.pagesFetched),
+    maxPrs: Math.max(0, cfg.maxPrs - result.prsOpened - result.prsUpdated),
+    maxTokens: cfg.maxTokens,
+    tokensUsedSoFar: result.tokensUsed,
+    blockedHosts: ctx.blockedHosts,
+    today: todayUTC(),
+    log,
+  });
+  for (const error of groups.errors) log(`ERROR groups ${error.source}: ${error.message}`);
+
   // A separate phase, deliberately run after and independent of the loop
   // above: it revisits *all* currently-open discovery PRs (not just this
   // run's candidates), since CI on a PR opened days ago finishes long after
@@ -171,7 +209,7 @@ async function main(): Promise<void> {
   // human review for PRs that already look done. See auto-approve.ts.
   const autoApprove = await autoApproveHighConfidencePrs({ ...cfg.github, log });
 
-  console.log(JSON.stringify({ ...result, autoApprove }, null, 2));
+  console.log(JSON.stringify({ ...result, groups, autoApprove }, null, 2));
 }
 
 // Only run when invoked directly — see scripts/discovery/parse-sources.ts for
