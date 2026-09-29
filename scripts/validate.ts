@@ -11,6 +11,11 @@ import {
   type EventFile,
   type ValidationResult,
 } from '../src/lib/validation';
+import {
+  readPositionFiles,
+  validatePosition,
+  validatePositionCollection,
+} from '../src/lib/position-validation';
 import { validateSources } from '../src/lib/discovery/sources';
 
 // Re-exported so the discovery agent (docs/discovery-agent.md) can depend on a
@@ -53,13 +58,20 @@ function main(): void {
   const collection = validateCollection(entries, ctx);
   all.errors.push(...collection.errors);
   all.warnings.push(...collection.warnings);
+  const positions = readPositionFiles();
+  for (const entry of positions) {
+    const r = validatePosition(entry, ctx);
+    all.errors.push(...r.errors);
+    all.warnings.push(...r.warnings);
+  }
+  all.errors.push(...validatePositionCollection(positions).errors);
   all.errors.push(...validateSources(parse(readFileSync(SOURCES_FILE, 'utf8')), SOURCES_FILE));
 
   const report = formatProblems(all);
   if (report) console.log(report);
 
   console.log(
-    `\nvalidate: ${entries.length} file(s), ${all.errors.length} error(s), ${all.warnings.length} warning(s)`,
+    `\nvalidate: ${entries.length} event file(s), ${positions.length} position file(s), ${all.errors.length} error(s), ${all.warnings.length} warning(s)`,
   );
   process.exit(all.errors.length > 0 ? 1 : 0);
 }

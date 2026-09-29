@@ -84,3 +84,39 @@ export interface Topic {
   slug: string;
   label: string;
 }
+
+export const POSITION_LEVELS = ['phd', 'postdoc', 'permanent'] as const;
+export type PositionLevel = (typeof POSITION_LEVELS)[number];
+
+/** How each level reads on the page. `permanent` covers research scientist, lecturer and faculty. */
+export const POSITION_LEVEL_LABELS: Readonly<Record<PositionLevel, string>> = {
+  phd: 'PhD',
+  postdoc: 'Postdoc',
+  permanent: 'Permanent',
+};
+
+/** A position exactly as it appears in its YAML file. See docs/position-schema.md. */
+export interface RawPosition {
+  id: string;
+  title: string;
+  level: PositionLevel;
+  institution: string;
+  group?: string;
+  location: { city: string; country: string };
+  url: string;
+  source_url?: string;
+  deadline?: ISODate;
+  topics: string[];
+  description: string;
+  added: ISODate;
+  fixture?: boolean;
+}
+
+/** Derived from the build date, never stored. */
+export type PositionStatus = 'open' | 'stale' | 'archived';
+
+export interface LoadedPosition extends RawPosition {
+  status_derived: PositionStatus;
+  /** Whole days from `added` to the build date. */
+  age_days: number;
+}

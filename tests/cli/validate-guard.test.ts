@@ -22,6 +22,6 @@ describe('scripts/validate.ts direct-invocation guard', () => {
     expect(result.stdout).toContain('FIXTURE: imported validateEvent, did not call it: function');
     // The CLI summary line is main()'s signature; its absence proves main()
     // did not run as a side effect of the import.
-    expect(result.stdout).not.toMatch(/validate: \d+ file\(s\)/);
+    expect(result.stdout).not.toMatch(/validate: \d+ event file\(s\)/);
   });
 });
