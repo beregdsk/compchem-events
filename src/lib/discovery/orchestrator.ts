@@ -7,20 +7,10 @@ import {
   type CriteriaScores,
 } from './classify-candidate';
 import { draftFilePath, serializeDraft } from './draft';
-import {
-  addLabel,
-  createBranch,
-  getBranchStatus,
-  getDefaultBranch,
-  openPr,
-  putFile,
-  syncFailureIssue,
-  updatePrBody,
-  type DefaultBranch,
-  type GitHubOptions,
-} from './github-client';
+import { getBranchStatus, syncFailureIssue, type GitHubOptions } from './github-client';
 import type { PositionCandidate } from './pipeline';
 import { positionFilePath } from './position-draft';
+import { Proposer } from './propose';
 
 /**
  * Renders candidate-controlled text (extracted from a hostile page — see
@@ -180,64 +170,7 @@ export async function runDiscoveryRun(options: OrchestratorOptions): Promise<Orc
   // same url, from two different sources.
   const knownEvents: RawEvent[] = [...options.existingEvents];
 
-  // Resolved lazily, on the first candidate that actually needs to create a
-  // branch, and memoized after that — never fetched at all for a run where
-  // every candidate is skipped or only updates an existing PR, and, just as
-  // importantly, called from *inside* the per-candidate try/catch below so
-  // a failure here is isolated to that one candidate, not the whole run.
-  let defaultBranch: DefaultBranch | undefined;
-  async function ensureDefaultBranch(): Promise<DefaultBranch> {
-    if (!defaultBranch) defaultBranch = await getDefaultBranch(options.github);
-    return defaultBranch;
-  }
-
-  type Proposal =
-    | { outcome: 'opened'; pr: number }
-    | { outcome: 'updated'; pr: number }
-    | { outcome: 'proposed'; pr: number }
-    | { outcome: 'reviewed' };
-
-  /**
-   * Opens or refreshes the PR for one candidate file. Shared by events and
-   * positions so both follow the same rules: refresh an open PR, never
-   * reopen one a human already closed or merged, and resume a branch whose
-   * PR was never opened (a run that crashed in between).
-   */
-  async function proposeFile(file: {
-    branch: string;
-    path: string;
-    content: string;
-    title: string;
-    message: string;
-    body: string;
-    labels: readonly string[];
-    /** false leaves an open PR exactly as it is (see the position loop). */
-    refresh?: boolean;
-  }): Promise<Proposal> {
-    const status = await getBranchStatus(file.branch, options.github);
-    if (status.exists && status.openPr !== undefined && file.refresh === false) {
-      return { outcome: 'proposed', pr: status.openPr };
-    }
-    if (status.exists && status.openPr !== undefined) {
-      // Refresh content and body, and re-assert the labels in case an
-      // earlier run's addLabel call itself failed after opening the PR.
-      await putFile(file.branch, file.path, file.content, file.message, options.github);
-      await updatePrBody(status.openPr, file.body, options.github);
-      for (const label of file.labels) await addLabel(status.openPr, label, options.github);
-      return { outcome: 'updated', pr: status.openPr };
-    }
-    if (status.exists && status.everHadPr) return { outcome: 'reviewed' };
-    // Either the branch doesn't exist yet, or it does but no PR was ever
-    // opened for it (a prior run crashed between createBranch and openPr) —
-    // both resume from here rather than being permanently mistaken for
-    // "already reviewed".
-    const branchInfo = await ensureDefaultBranch();
-    if (!status.exists) await createBranch(file.branch, branchInfo.sha, options.github);
-    await putFile(file.branch, file.path, file.content, file.message, options.github);
-    const pr = await openPr(file.branch, branchInfo.name, file.title, file.body, options.github);
-    for (const label of file.labels) await addLabel(pr.number, label, options.github);
-    return { outcome: 'opened', pr: pr.number };
-  }
+  const proposer = new Proposer(options.github);
 
   for (const candidate of options.candidates) {
     try {
@@ -280,7 +213,7 @@ export async function runDiscoveryRun(options: OrchestratorOptions): Promise<Orc
         continue;
       }
 
-      const proposal = await proposeFile({
+      const proposal = await proposer.proposeFile({
         branch: `discovery/${candidate.id}`,
         path: draftFilePath(candidate),
         content: serializeDraft(candidate),
@@ -342,7 +275,7 @@ export async function runDiscoveryRun(options: OrchestratorOptions): Promise<Orc
       }
       // refresh: false — a re-sighting must not rewrite an open PR, or its
       // `added` date ("first seen") would move and restart the 45/90-day clock.
-      const proposal = await proposeFile({
+      const proposal = await proposer.proposeFile({
         branch: `discovery/position/${draft.id}`,
         path: positionFilePath(draft),
         content: serializeDraft(draft),
