@@ -398,6 +398,16 @@
     when checked. The foundation's teacher-training (Lehrerfortbildung) and
     "Sonstiges" categories are deliberately left out.
 
+- name: WE-Heraeus conferences and workshops (Tagung)
+  url: https://www.we-heraeus-stiftung.de/veranstaltungen/kategorie/tagung/
+  kind: listing-page
+  added: 2026-09-29
+  last_checked: 2026-09-29
+  notes: >-
+    The foundation's "Tagung" category: larger meetings, when checked two
+    Les Houches - WE Heraeus Workshops in 2027 (search dynamics, optical
+    nanofibers). Physics, rarely in scope — screen hard.
+
 - name: Chimica 4.0 (University of Turin) schools
   url: https://www.chimica4-0.unito.it/category/summerschool/
   kind: listing-page
