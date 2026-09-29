@@ -1,0 +1,19 @@
+id: sustainable-computing-in-biophysics-2026
+title: Sustainable Computing in Biophysics
+type: webinar
+start_date: 2026-10-21
+end_date: 2026-10-21
+format: online
+url: https://my.biophysics.org/Events/Calendar-Of-Events/Meeting-Home-Page?meetingid=ead6140e-aaa7-f111-b8de-000d3a1e6cfc
+source_url: https://jmhutson.webspace.durham.ac.uk/mdn/
+topics:
+  - biomolecular-simulation
+  - molecular-dynamics
+  - ml-chemistry
+  - software-hpc
+description: A webinar on sustainable computing in biophysics, discussing
+  resource use in supercomputing for AlphaFold, molecular dynamics, and AI
+  models, hidden costs like water and energy, and policy. Features speakers Loïc
+  Lannelongue, Alexandre Bonvin, Rommie Amaro. Free registration.
+added: 2026-09-29
+organizer: Biophysical Society Committee on Sustainability
