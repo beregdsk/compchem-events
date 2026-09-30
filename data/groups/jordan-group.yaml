@@ -1,0 +1,22 @@
+id: jordan-group
+name: Jordan Group
+kind: group
+website: https://www.sydney.edu.au/science/schools/school-of-chemistry/research/jordan-group.html
+topics:
+  - electronic-structure
+  - quantum-dynamics
+  - molecular-dynamics
+  - drug-design
+  - spectroscopy
+description: The Jordan Group, led by Professor Meredith Jordan, uses
+  theoretical and computational chemistry methods, such as potential energy
+  surface interpolation and quantum Monte Carlo, to study molecular
+  interactions, chemical reactions, spectroscopy, and computational drug design.
+added: 2026-09-30
+aliases:
+  - Meredith Jordan
+pi: Professor Meredith Jordan
+parent: University of Wollongong
+location:
+  city: Wollongong
+  country: AU
