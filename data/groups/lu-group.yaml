@@ -1,0 +1,16 @@
+id: lu-group
+name: Lu group
+kind: group
+website: https://www.chemie.uni-bonn.de/lu/de
+topics:
+  - catalysis
+description: The Lu group, led by Prof. Dr. Connie C. Lu at the University of
+  Bonn, focuses on creating and studying metal-metal bonding between first-row
+  transition metals and main group metals to develop bimetallic complexes for
+  small-molecule catalysis.
+added: 2026-09-30
+pi: Prof. Dr. Connie C. Lu
+parent: Universität Bonn
+location:
+  city: Bonn
+  country: DE
