@@ -63,6 +63,8 @@ Warnings (reported, do not fail):
 
 Each entry has `slug` and a human-readable `label`. Adding a topic is a schema-level change: keep the list short and reject near-duplicates.
 
+An entry may carry `openalex`: a list of OpenAlex topic ids (`T` plus digits) that sit under it, used only for the statistics on `/topics/` (see `docs/topic-stats.md`). The same OpenAlex topic under two slugs is allowed and warned about. Events, groups and positions are never tagged with OpenAlex ids.
+
 ## Region derivation
 
 `regionOf(country)` maps ISO alpha-2 codes to one of: `Europe`, `North America`, `Latin America`, `Asia`, `Middle East`, `Africa`, `Oceania`, plus `Online` when the format is online. Keep the lookup table in `src/lib/regions.ts` with a test that every code in the table is valid.

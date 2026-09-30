@@ -22,6 +22,7 @@ import {
   validateGroupCollection,
 } from '../src/lib/group-validation';
 import { validateSources } from '../src/lib/discovery/sources';
+import { validateTopics } from '../src/lib/topic-validation';
 
 // Re-exported so the discovery agent (docs/discovery-agent.md) can depend on a
 // stable entry point, as promised by TASK.md section 7.
@@ -78,6 +79,10 @@ function main(): void {
   }
   all.errors.push(...validateGroupCollection(groups).errors);
   all.errors.push(...validateSources(parse(readFileSync(SOURCES_FILE, 'utf8')), SOURCES_FILE));
+
+  const topicsResult = validateTopics(parse(readFileSync('data/topics.yaml', 'utf8')));
+  all.errors.push(...topicsResult.errors);
+  all.warnings.push(...topicsResult.warnings);
 
   const report = formatProblems(all);
   if (report) console.log(report);

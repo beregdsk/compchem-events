@@ -83,6 +83,8 @@ export interface LoadedEvent extends RawEvent {
 export interface Topic {
   slug: string;
   label: string;
+  /** OpenAlex topic ids (`T11948`) under this site topic; see docs/topic-stats.md. */
+  openalex?: string[];
 }
 
 export const POSITION_LEVELS = ['phd', 'postdoc', 'permanent'] as const;
