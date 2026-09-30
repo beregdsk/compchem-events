@@ -218,3 +218,13 @@ export function buildMapPrBody(
     '🤖 Generated with [Claude Code](https://claude.com/claude-code)',
   ].join('\n');
 }
+
+/**
+ * The edited file in the repo's Prettier style, so the proposed PR passes
+ * `npm run lint` (the yaml library prints flow lists as `[ T1, T2 ]` and
+ * does not wrap long lines the way Prettier does).
+ */
+export async function formatForRepo(text: string, filepath: string): Promise<string> {
+  const { format, resolveConfig } = await import('prettier');
+  return format(text, { ...(await resolveConfig(filepath)), filepath });
+}

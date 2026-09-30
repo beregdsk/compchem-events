@@ -4,6 +4,7 @@ import {
   buildMapPrBody,
   classifyTopics,
   fetchCandidates,
+  formatForRepo,
 } from '../../src/lib/topics/propose-map';
 import type { CandidateTopic } from '../../src/lib/topics/map-rules';
 
@@ -118,5 +119,16 @@ describe('buildMapPrBody', () => {
     expect(body).toContain('| T1 | `Density things` | s | 10 | rule |');
     expect(body).toContain('Relevant, no slug');
     expect(body).toContain('`Quantum <b>thing</b>`');
+  });
+});
+
+describe('formatForRepo', () => {
+  it('formats the edited topics.yaml the way the repo lint expects', async () => {
+    const edited = applyMapping(YAML, new Map([['dft', ['T2', 'T1']]]));
+    const formatted = await formatForRepo(edited, 'data/topics.yaml');
+    const { check, resolveConfig } = await import('prettier');
+    const options = { ...(await resolveConfig('data/topics.yaml')), filepath: 'data/topics.yaml' };
+    expect(await check(formatted, options)).toBe(true);
+    expect(formatted).toContain('# Keep this comment.');
   });
 });
