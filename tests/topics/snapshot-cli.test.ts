@@ -47,7 +47,12 @@ describe('runSnapshot', () => {
     });
     expect(r).toEqual({ outcome: 'opened', pr: 70 });
     const put = g.calls.find((c) => c.key.startsWith('PUT '))!.body as { content: string };
-    const written = JSON.parse(Buffer.from(put.content, 'base64').toString('utf8'));
+    const text = Buffer.from(put.content, 'base64').toString('utf8');
+    // Written in the repo's Prettier style, so the PR passes lint.
+    const { check, resolveConfig } = await import('prettier');
+    const file = 'data/topic-stats.json';
+    expect(await check(text, { ...(await resolveConfig(file)), filepath: file })).toBe(true);
+    const written = JSON.parse(text);
     expect(written.topics.dft.works_by_year).toHaveLength(15);
     const labels = g.calls.find((c) => c.key.endsWith('/labels'))!.body as { labels: string[] };
     expect(labels.labels).toEqual(['data']);
