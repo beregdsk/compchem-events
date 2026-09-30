@@ -173,6 +173,25 @@ describe('autoApproveHighConfidencePrs', () => {
     expect(result.skipped).toEqual([{ number: 5, reason: 'checks not green: check' }]);
   });
 
+  it('leaves a possible duplicate for a human, however confident', async () => {
+    const { impl, calls } = stubGitHub({
+      'GET /repos/acme/compchem-events/pulls?state=open&per_page=100': {
+        status: 200,
+        body: [
+          {
+            number: 5,
+            body: bodyWithConfidence(0.99),
+            head: { ref: 'discovery/excited-states-symposium-2027', sha: 'sha-5' },
+            labels: [{ name: 'possible-duplicate' }],
+          },
+        ],
+      },
+    });
+    const result = await autoApproveHighConfidencePrs(githubOptions(impl));
+    expect(result.skipped).toEqual([{ number: 5, reason: 'possible duplicate' }]);
+    expect(calls).toHaveLength(1);
+  });
+
   it('never re-approves a PR that already carries the high-confidence label', async () => {
     const { impl, calls } = stubGitHub({
       'GET /repos/acme/compchem-events/pulls?state=open&per_page=100': {

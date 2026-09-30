@@ -762,6 +762,150 @@ describe('runDiscoveryRun positions', () => {
   });
 });
 
+describe('runDiscoveryRun duplicates in PRs', () => {
+  const R = 'acme/compchem-events';
+  const ID = 'excited-states-symposium-2027';
+  const BRANCH = `discovery/${ID}`;
+  const FILE = `data/events/2027/${ID}.yaml`;
+  const ISSUE = {
+    [`GET /repos/${R}/issues?state=open&labels=discovery-failures`]: { status: 200, body: [] },
+  };
+  const newPr = {
+    ...DEFAULT_BRANCH_STUBS,
+    ...ISSUE,
+    [`GET /repos/${R}/git/ref/heads/${BRANCH}`]: { status: 404 },
+    [`POST /repos/${R}/git/refs`]: { status: 201, body: {} },
+    [`GET /repos/${R}/contents/${FILE}?ref=${BRANCH}`]: { status: 404 },
+    [`PUT /repos/${R}/contents/${FILE}`]: { status: 201, body: {} },
+    [`POST /repos/${R}/pulls`]: { status: 201, body: { number: 11 } },
+    [`POST /repos/${R}/issues/11/labels`]: { status: 200, body: {} },
+  };
+  const run = (impl: typeof fetch, over: Partial<OrchestratorOptions>) => {
+    const logs: string[] = [];
+    const result = runDiscoveryRun(
+      baseOptions({
+        candidates: [candidateEvent()],
+        github: { token: 'gh-test', repo: R, fetchImpl: impl },
+        log: (m) => logs.push(m),
+        ...over,
+      }),
+    );
+    return { result, logs };
+  };
+
+  it('skips an event another source already put in an open PR, naming it', async () => {
+    const { impl, calls } = stubGitHub(ISSUE);
+    const other = candidateEvent({ id: 'other-2027', title: 'The Symposium' });
+    const { result, logs } = run(impl, {
+      prDrafts: {
+        events: [{ entry: other, where: '#85 (open)', branch: 'discovery/other-2027' }],
+        positions: [],
+      },
+    });
+    expect((await result).skipped).toEqual([{ id: ID, reason: 'duplicate-url' }]);
+    expect(logs).toContain(`skipping ${ID}: duplicate-url of #85 (open)`);
+    expect(calls.some((c) => c.url.includes('/git/'))).toBe(false);
+  });
+
+  it('never re-proposes an event from a PR a reviewer closed', async () => {
+    const { impl } = stubGitHub(ISSUE);
+    const { result } = run(impl, {
+      prDrafts: {
+        events: [{ entry: candidateEvent(), where: '#108 (closed without merging)' }],
+        positions: [],
+      },
+    });
+    expect((await result).skipped).toEqual([{ id: ID, reason: 'duplicate-url' }]);
+  });
+
+  it('still refreshes its own open PR', async () => {
+    const { impl } = stubGitHub({
+      ...DEFAULT_BRANCH_STUBS,
+      ...ISSUE,
+      [`GET /repos/${R}/git/ref/heads/${BRANCH}`]: { status: 200, body: { object: { sha: 'b' } } },
+      [`GET /repos/${R}/pulls?state=all&head=acme:${BRANCH}`]: {
+        status: 200,
+        body: [{ number: 5, state: 'open' }],
+      },
+      [`GET /repos/${R}/contents/${FILE}?ref=${BRANCH}`]: { status: 200, body: { sha: 'f' } },
+      [`PUT /repos/${R}/contents/${FILE}`]: { status: 200, body: {} },
+      [`PATCH /repos/${R}/pulls/5`]: { status: 200, body: {} },
+      [`POST /repos/${R}/issues/5/labels`]: { status: 200, body: {} },
+    });
+    const { result } = run(impl, {
+      prDrafts: {
+        events: [{ entry: candidateEvent(), where: '#5 (open)', branch: BRANCH }],
+        positions: [],
+      },
+    });
+    expect(await result).toMatchObject({ prsUpdated: 1, skipped: [] });
+  });
+
+  it('flags a likely duplicate in the PR body and labels it', async () => {
+    const { impl, calls } = stubGitHub(newPr);
+    const { result } = run(impl, {
+      candidates: [
+        candidateEvent({
+          title: 'Large Language Models in Drug Discovery: From Promise to Practical Impact',
+        }),
+      ],
+      existingEvents: [
+        candidateEvent({
+          id: 'discngine-2027',
+          title: 'Discngine Meetup Vol. 6 — Large Language Models in Drug Discovery',
+          url: 'https://event.discngine.com/meetup-6',
+        }),
+      ],
+    });
+    expect((await result).prsOpened).toBe(1);
+    const pr = calls.find((c) => c.url.endsWith('/pulls'))!.body as { body: string };
+    expect(pr.body.split('\n')[0]).toMatch(/^Confidence: /);
+    expect(pr.body).toContain('**Possible duplicate** (0.63) of main: `Discngine Meetup Vol. 6');
+    const labels = calls
+      .filter((c) => c.url.endsWith('/issues/11/labels'))
+      .flatMap((c) => (c.body as { labels: string[] }).labels);
+    expect(labels).toEqual(['needs-review', 'possible-duplicate']);
+  });
+
+  it('skips the same advert read twice from one post (PRs #105 and #110)', async () => {
+    const { impl } = stubGitHub(ISSUE);
+    const post = 'https://t.me/quant_chem_and_stuff/668';
+    const advert = (over: Partial<RawPosition>): RawPosition => ({
+      id: 'inma-phd-2026',
+      title: 'PhD in Computational Chemistry',
+      level: 'phd',
+      institution:
+        'Instituto de Nanociencia y Materiales de Aragón (CSIC) - Universidad de Zaragoza',
+      location: { city: 'Zaragoza', country: 'ES' },
+      url: post,
+      source_url: post,
+      topics: ['molecular-dynamics'],
+      description: 'd',
+      added: '2026-09-29',
+      ...over,
+    });
+    const { result } = run(impl, {
+      candidates: [],
+      positions: [
+        {
+          draft: advert({
+            id: 'inma-cages-2026',
+            title: 'PhD in Computational Chemistry for Porous Organic Cages',
+            institution:
+              'Instituto de Nanociencia y Materiales de Aragón, CSIC, Universidad de Zaragoza',
+          }),
+          confidence: 0.9,
+        },
+      ],
+      prDrafts: {
+        events: [],
+        positions: [{ entry: advert({}), where: '#105 (open)', branch: 'discovery/position/x' }],
+      },
+    });
+    expect((await result).skipped).toEqual([{ id: 'inma-cages-2026', reason: 'duplicate-likely' }]);
+  });
+});
+
 describe('runDiscoveryRun accepted', () => {
   it('returns the candidates judged add, even when MAX_PRS stops their PR', async () => {
     const { impl } = stubGitHub({

@@ -108,6 +108,19 @@ export async function getBranchStatus(
   return { exists: true, openPr, everHadPr: pullsRes.data.length > 0 };
 }
 
+/** One file's text at `ref`, a branch name or a commit sha. */
+async function readFileAt(path: string, ref: string, options: GitHubOptions): Promise<string> {
+  const res = await githubRequest<{ content: string }>(
+    options,
+    'GET',
+    `/contents/${path}?ref=${ref}`,
+  );
+  if (res.status !== 200) {
+    throw new Error(`failed to read "${path}" on "${ref}": HTTP ${res.status}`);
+  }
+  return Buffer.from(res.data.content.replace(/\s/g, ''), 'base64').toString('utf8');
+}
+
 /** The files directly under `dir` on `branch`; empty when the folder does not exist there. */
 export async function listFilesOnBranch(
   branch: string,
@@ -125,20 +138,65 @@ export async function listFilesOnBranch(
   }
   const files: Array<{ path: string; content: string }> = [];
   for (const entry of list.data.filter((e) => e.type === 'file' && e.path.endsWith('.yaml'))) {
-    const res = await githubRequest<{ content: string }>(
-      options,
-      'GET',
-      `/contents/${entry.path}?ref=${branch}`,
-    );
-    if (res.status !== 200) {
-      throw new Error(`failed to read "${entry.path}" on "${branch}": HTTP ${res.status}`);
-    }
-    files.push({
-      path: entry.path,
-      content: Buffer.from(res.data.content.replace(/\s/g, ''), 'base64').toString('utf8'),
-    });
+    files.push({ path: entry.path, content: await readFileAt(entry.path, branch, options) });
   }
   return files;
+}
+
+/**
+ * The YAML files a PR adds or changes under any of `dirs`, read at the PR's
+ * head commit — which stays readable after a closed PR's branch is deleted.
+ */
+export async function listPrYamlFiles(
+  pr: number,
+  headSha: string,
+  dirs: readonly string[],
+  options: GitHubOptions,
+): Promise<Array<{ path: string; content: string }>> {
+  const res = await githubRequest<Array<{ filename: string; status: string }>>(
+    options,
+    'GET',
+    `/pulls/${pr}/files?per_page=100`,
+  );
+  if (res.status !== 200) {
+    throw new Error(`failed to list the files of PR #${pr}: HTTP ${res.status}`);
+  }
+  const files: Array<{ path: string; content: string }> = [];
+  for (const f of res.data) {
+    if (f.status === 'removed' || !f.filename.endsWith('.yaml')) continue;
+    if (!dirs.some((d) => f.filename.startsWith(d))) continue;
+    files.push({ path: f.filename, content: await readFileAt(f.filename, headSha, options) });
+  }
+  return files;
+}
+
+export interface ClosedPrSummary {
+  number: number;
+  headRef: string;
+  headSha: string;
+}
+
+/** Pages of closed PRs read at most; 100 each. */
+const CLOSED_PR_PAGES = 10;
+
+/** PRs on `discovery/*` branches that were closed without being merged: rejected by a reviewer. */
+export async function listRejectedDiscoveryPrs(options: GitHubOptions): Promise<ClosedPrSummary[]> {
+  const rejected: ClosedPrSummary[] = [];
+  for (let page = 1; page <= CLOSED_PR_PAGES; page += 1) {
+    const res = await githubRequest<
+      Array<{ number: number; merged_at: string | null; head: { ref: string; sha: string } }>
+    >(options, 'GET', `/pulls?state=closed&per_page=100&page=${page}`);
+    if (res.status !== 200) {
+      throw new Error(`failed to list closed pull requests: HTTP ${res.status}`);
+    }
+    for (const pr of res.data) {
+      if (pr.merged_at === null && pr.head.ref.startsWith('discovery/')) {
+        rejected.push({ number: pr.number, headRef: pr.head.ref, headSha: pr.head.sha });
+      }
+    }
+    if (res.data.length < 100) break;
+  }
+  return rejected;
 }
 
 export async function createBranch(

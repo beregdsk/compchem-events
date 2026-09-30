@@ -662,3 +662,16 @@ the response's citation URLs are used, never URLs in its prose, and each
 page is fetched and verified by the no-tools extractor before a draft
 exists. `MAX_SEARCHES` (default 20) caps searches per run, and names that
 found nothing are not searched again for 90 days.
+
+## 2026-09-30 — Duplicates checked against open and rejected PRs, near misses flagged
+
+Duplicate checks used to see only `main` and the current run, so a second
+source on a later night opened a second PR for the same event (PRs #53 and
+#85), and an event a reviewer closed could come back under another id. They
+now also see the drafts in open discovery PRs and in PRs closed without
+merging. Near misses are not skipped on a guess: they are scored and, at 0.6
+or more, opened with a `possible-duplicate` label and a line naming the match,
+so the maintainer only checks those. The score uses shared title words, not
+the mechanical skip's character bigrams, which score unrelated titles up to
+0.55. No LLM judge for now: add one for the flagged band only if it stays
+noisy.

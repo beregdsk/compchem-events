@@ -104,11 +104,33 @@ no separate checklist, since one would only restate the fields already shown
 above it. A reviewer checks those fields against the event's official page
 and `docs/curation-policy.md` directly before merging.
 
+### Duplicates
+
+Every event and position candidate is compared with what is on `main`, with
+the drafts in every open discovery PR, with the drafts of discovery PRs
+closed without merging (a reviewer rejected them), and with what this run
+already accepted (`src/lib/discovery/duplicates.ts`, `pr-drafts.ts`). A
+candidate's own open PR is left out, so it can still be refreshed; a rejected
+PR is not, so a rejected event never returns under its own or another id.
+Open PRs are read each run; a rejected PR's files are read once and kept in
+the state file's `rejectedPrs`.
+
+- The mechanical skips above drop a clear duplicate (same URL, same title and
+  date, fuzzy title on the same dates; for positions also a score of 0.95 or
+  more, `duplicate-likely`, such as the same advert read twice from one post).
+  The log names what it duplicates, e.g. `duplicate-url of #85 (open)`.
+- Anything else is scored 0–1 against its closest match: shared title words
+  on start dates within three days for events; shared title and institution
+  words, plus a shared source post, for positions. At 0.6 or more the PR body
+  gets a `**Possible duplicate** (0.63) of main: …` line and the
+  `possible-duplicate` label, and auto-approve never flags it.
+
 After each run, a separate pass (`auto-approve.ts`) revisits every currently
 open discovery PR — not just this run's candidates, since CI on a PR opened
 days ago finishes long after that run has exited — and adds a
 `high-confidence` label plus an explanatory comment on any whose recorded
-confidence is at least 0.90 and whose `check`/`e2e` CI jobs both passed.
+confidence is at least 0.90, whose `check`/`e2e` CI jobs both passed, and
+which is not labelled `possible-duplicate`.
 It's a comment, not a formal GitHub approval: GitHub rejects an actor
 approving its own PR, and the same token opens every discovery PR. This
 never merges anything and never replaces review: **automatically discovered
@@ -133,7 +155,7 @@ item's own URL.
 The orchestrator handles positions after events, sharing the same `MAX_PRS`
 and `MAX_TOKENS` budgets. Positions skip the jev classifier. Each candidate
 is checked mechanically and skipped for one of these reasons: `low confidence`
-(below 0.5), `duplicate-url`, `duplicate-title-institution`, `blocklisted`,
+(below 0.5), `duplicate-url`, `duplicate-title-institution`, `duplicate-likely`, `blocklisted`,
 `already reviewed`, `already proposed`, or `MAX_PRS reached`. `already
 proposed` means a PR for the same id is still open, or the advert was proposed
 under last year's id: an open position PR is never rewritten, so its `added`

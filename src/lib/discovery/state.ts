@@ -20,15 +20,25 @@ export interface GroupLookup {
   outcome: string;
 }
 
+/** The event and position files of one PR closed without merging, parsed. */
+export interface RejectedPrDrafts {
+  files: Array<{ path: string; data: unknown }>;
+}
+
 export interface DiscoveryState {
   hosts: Record<string, HostState>;
   pages: Record<string, PageState>;
   /** Normalised group name → last lookup; see groups.ts's negative cache. */
   groupLookups: Record<string, GroupLookup>;
+  /**
+   * PR number → its drafts, read once when the PR is first seen closed
+   * without merging; see pr-drafts.ts. A closed PR never changes again.
+   */
+  rejectedPrs: Record<string, RejectedPrDrafts>;
 }
 
 export function emptyState(): DiscoveryState {
-  return { hosts: {}, pages: {}, groupLookups: {} };
+  return { hosts: {}, pages: {}, groupLookups: {}, rejectedPrs: {} };
 }
 
 function isDiscoveryState(data: unknown): data is DiscoveryState {
@@ -46,7 +56,7 @@ export function loadState(path: string): DiscoveryState {
   try {
     const data: unknown = JSON.parse(readFileSync(path, 'utf8'));
     return isDiscoveryState(data)
-      ? { ...data, groupLookups: data.groupLookups ?? {} }
+      ? { ...data, groupLookups: data.groupLookups ?? {}, rejectedPrs: data.rejectedPrs ?? {} }
       : emptyState();
   } catch {
     return emptyState();
