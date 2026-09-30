@@ -1,0 +1,15 @@
+id: international-chemical-biology-society
+name: International Chemical Biology Society
+kind: society
+website: https://www.chemical-biology.org/
+topics:
+  - drug-design
+  - biomolecular-simulation
+  - spectroscopy
+  - education-training
+  - cheminformatics
+description: The official website of the International Chemical Biology Society
+  (ICBS), a global scientific society advancing chemical biology. It organizes
+  international conferences, supports young scientists with awards, and provides
+  educational and career resources.
+added: 2026-09-30
