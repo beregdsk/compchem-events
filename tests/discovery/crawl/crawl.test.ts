@@ -234,4 +234,39 @@ describe('runCrawl', () => {
       'http://10.0.0.5/',
     ]);
   });
+
+  it('keeps fetching other hosts while one page is slow (no batch barrier)', async () => {
+    const done: string[] = [];
+    let releaseSlow: () => void = () => {};
+    const slowGate = new Promise<void>((r) => (releaseSlow = r));
+    const fetchImpl = (async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.endsWith('/robots.txt')) return new Response('', { status: 404 });
+      if (url === 'https://slow.example/') await slowGate;
+      done.push(url);
+      // Release the slow page only once eight fast ones have finished: with a
+      // batch barrier the fast workers would wait for it and this never happens.
+      if (done.length === 8) releaseSlow();
+      return new Response('<html><body><p>x</p></body></html>', { status: 200 });
+    }) as typeof fetch;
+    const w = world();
+    const x = deps(w, { maxPages: 12 });
+    x.d.fetch = { ...x.d.fetch, fetchImpl };
+    enqueue(
+      x.crawl,
+      [
+        { url: 'https://slow.example/', priority: 9, depth: 0, seedHost: 'slow.example' },
+        ...Array.from({ length: 11 }, (_, i) => ({
+          url: `https://f${i}.example/`,
+          priority: 1,
+          depth: 0,
+          seedHost: `f${i}.example`,
+        })),
+      ],
+      '2026-10-01',
+    );
+    const r = await runCrawl(x.d);
+    expect(r.pagesFetched).toBe(12);
+    expect(done.indexOf('https://slow.example/')).toBeGreaterThanOrEqual(8);
+  }, 5000);
 });
