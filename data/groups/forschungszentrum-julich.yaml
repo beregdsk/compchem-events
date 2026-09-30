@@ -1,0 +1,18 @@
+id: forschungszentrum-julich
+name: Forschungszentrum Jülich
+kind: institute
+website: https://www.fz-juelich.de/de
+topics:
+  - dft
+  - materials-modeling
+  - software-hpc
+  - quantum-computing-chemistry
+  - electrochemistry
+description: Forschungszentrum Jülich is a major German research institute
+  focusing on energy, climate, information, and bioeconomy. It hosts numerous
+  institutes specializing in high-performance computing, quantum technologies,
+  materials science, and electrochemistry.
+added: 2026-09-30
+location:
+  city: Jülich
+  country: DE
