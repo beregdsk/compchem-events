@@ -1,0 +1,22 @@
+id: spencer-group
+name: Spencer Group
+kind: group
+website: https://spencergroup.org/people/
+topics:
+  - dft
+  - materials-modeling
+  - catalysis
+  - electrochemistry
+  - molecular-dynamics
+description: The Spencer Group at RMIT University, led by Prof. Michelle J.S.
+  Spencer, focuses on computational materials chemistry for electronic devices,
+  sensors, catalysis, and batteries, using DFT, molecular dynamics, and machine
+  learning.
+added: 2026-09-30
+aliases:
+  - Michelle Spencer
+pi: Prof. Michelle J.S. Spencer
+parent: RMIT University
+location:
+  city: Melbourne
+  country: AU
