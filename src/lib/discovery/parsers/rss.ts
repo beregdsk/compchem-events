@@ -34,17 +34,6 @@ function pickLinkValue(entry: EntryLike): string | undefined {
  * back to the feed's own URL when resolution fails or the result isn't
  * http(s), rather than pass through an arbitrary unvalidated string.
  */
-/**
- * An RSS/Atom description/summary is a bare HTML fragment, not a full
- * document — linkedom's HTML parser only builds a normal `<body>` when the
- * input already establishes one, so a tag-less (or root-fragment) input
- * leaves `documentElement`/`body` empty and `htmlToText` would see no text
- * at all. Wrap the fragment in a minimal document shell before parsing it.
- */
-function htmlFragmentToText(fragment: string): string {
-  return htmlToText(parseHTML(`<html><body>${fragment}</body></html>`));
-}
-
 function resolveItemUrl(value: string | undefined, feedUrl: string): string {
   if (value) {
     try {
@@ -73,7 +62,7 @@ export function parseFeedItems(feedText: string, sourceUrl: string): ExtractionI
       entry.querySelector('description')?.textContent?.trim() ||
       entry.querySelector('summary')?.textContent?.trim() ||
       '';
-    const description = rawDescription ? htmlFragmentToText(rawDescription) : '';
+    const description = rawDescription ? htmlToText(parseHTML(rawDescription)) : '';
     const link = resolveItemUrl(pickLinkValue(entry), sourceUrl);
     inputs.push({ text: `${title}\n\n${description}`, sourceUrl: link });
   }

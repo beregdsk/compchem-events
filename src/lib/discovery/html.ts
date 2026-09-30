@@ -5,8 +5,16 @@ export interface ExtractionInput {
   sourceUrl: string;
 }
 
+/**
+ * linkedom only builds a document when the input establishes one: plain
+ * text, JSON or a PDF body leaves `documentElement` null (every query then
+ * throws), and a bare fragment becomes the root element with its text
+ * outside `body` (lost). Such input is parsed again inside a minimal shell.
+ */
 export function parseHTML(html: string) {
-  return new DOMParser().parseFromString(html, 'text/html');
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  if (doc.documentElement?.tagName === 'HTML' && doc.body) return doc;
+  return new DOMParser().parseFromString(`<html><body>${html}</body></html>`, 'text/html');
 }
 
 export function parseXML(xml: string) {

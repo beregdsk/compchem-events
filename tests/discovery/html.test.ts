@@ -47,6 +47,20 @@ describe('htmlToText', () => {
   });
 });
 
+describe('parseHTML', () => {
+  it.each(['', 'plain text', '{"a": 1}', '%PDF-1.4', '<!-- only a comment -->'])(
+    'gives a queryable document for input with no document of its own: %j',
+    (input) => {
+      expect(() => htmlToText(parseHTML(input))).not.toThrow();
+    },
+  );
+
+  it('keeps the text of a bare fragment and of plain text', () => {
+    expect(htmlToText(parseHTML('<p>Fragment text</p>'))).toBe('Fragment text');
+    expect(htmlToText(parseHTML('Just words'))).toBe('Just words');
+  });
+});
+
 describe('splitTelegramPosts', () => {
   it('keeps line breaks and the targets of worded links in a post', () => {
     const doc = parseHTML(`
