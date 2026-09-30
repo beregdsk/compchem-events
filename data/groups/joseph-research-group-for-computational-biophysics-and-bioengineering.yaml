@@ -1,0 +1,19 @@
+id: joseph-research-group-for-computational-biophysics-and-bioengineering
+name: Joseph Research Group for Computational Biophysics and Bioengineering
+kind: group
+website: https://josephgroup.princeton.edu/publications/keyword/biomolecular-condensates
+topics:
+  - biomolecular-simulation
+  - molecular-dynamics
+  - soft-matter
+  - enhanced-sampling
+description: The Joseph Research Group at Princeton University, led by Jerelle
+  Joseph, focuses on computational biophysics and bioengineering, studying
+  biomolecular condensates, disordered proteins, and thermoresponsive phase
+  behavior.
+added: 2026-09-30
+pi: Jerelle Joseph
+parent: Princeton University
+location:
+  city: Princeton
+  country: US
