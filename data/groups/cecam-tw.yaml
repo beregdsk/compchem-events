@@ -1,0 +1,21 @@
+id: cecam-tw
+name: CECAM-TW
+kind: network
+website: https://tw.cecam.org/
+topics:
+  - electronic-structure
+  - quantum-dynamics
+  - materials-modeling
+  - ml-chemistry
+  - soft-matter
+description: The official webpage of the CECAM-TW node, hosted at Academia
+  Sinica in Taipei, Taiwan. It promotes fundamental research in advanced
+  computational methods, with scientific interests in electronic structure,
+  quantum dynamics, materials modeling, machine learning, and soft matter.
+added: 2026-09-30
+aliases:
+  - CECAM Taiwan node
+parent: Academia Sinica
+location:
+  city: Taipei
+  country: TW
