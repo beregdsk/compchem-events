@@ -1,0 +1,21 @@
+id: institute-for-molecular-science
+name: Institute for Molecular Science
+kind: institute
+website: https://www.ims.ac.jp/en/about/message_know.html
+topics:
+  - electronic-structure
+  - spectroscopy
+  - materials-modeling
+  - biomolecular-simulation
+  - molecular-dynamics
+description: The Institute for Molecular Science (IMS) is a Japanese
+  inter-university research institute based in Okazaki, promoting leading
+  research in molecular science, including theoretical and computational
+  chemistry, photonic, materials, and life sciences, while providing advanced…
+added: 2026-09-30
+aliases:
+  - Institute for Molecular Science (IMS)
+parent: National Institutes of Natural Sciences
+location:
+  city: Okazaki
+  country: JP
