@@ -1,0 +1,19 @@
+id: coote-group
+name: Coote Group
+kind: group
+website: https://cootelab.com/
+topics:
+  - catalysis
+  - electrochemistry
+  - photochemistry
+  - electronic-structure
+  - dft
+description: The Coote Group, led by Michelle Coote at Flinders University,
+  focuses on computer-aided chemical design, using theoretical and experimental
+  approaches to develop new synthetic methods via electricity and light.
+added: 2026-09-30
+pi: Michelle Coote
+parent: Flinders University
+location:
+  city: Bedford Park, South Australia
+  country: AU
