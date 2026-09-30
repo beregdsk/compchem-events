@@ -1,0 +1,20 @@
+id: yu-group-uow
+name: Yu Group @ UOW
+kind: group
+website: https://haiboyugroup.github.io/
+topics:
+  - molecular-dynamics
+  - biomolecular-simulation
+  - soft-matter
+description: Research group at the University of Wollongong working on
+  computational chemistry and biophysics, including simulations of biomolecular
+  condensates. Affiliated with the School of Science, Molecular Horizons and the
+  ARC Centre of Excellence in Quantum Biotechnology; hosts MM2023…
+added: 2026-09-30
+aliases:
+  - Haibo Yu
+pi: Prof Yu
+parent: University of Wollongong
+location:
+  city: Wollongong
+  country: AU

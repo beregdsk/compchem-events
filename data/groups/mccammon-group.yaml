@@ -1,0 +1,22 @@
+id: mccammon-group
+name: McCammon Group
+kind: group
+website: https://mccammon.ucsd.edu/
+topics:
+  - molecular-dynamics
+  - biomolecular-simulation
+  - drug-design
+  - enhanced-sampling
+  - software-hpc
+description: The McCammon Group at UCSD develops and applies computational and
+  theoretical methods to molecular and biomolecular problems, including
+  molecular dynamics, free-energy calculations, computer-aided drug discovery,
+  and high-performance simulation software.
+added: 2026-09-30
+aliases:
+  - McCammon, J. Andrew
+pi: J. Andrew McCammon
+parent: University of California San Diego
+location:
+  city: La Jolla
+  country: US

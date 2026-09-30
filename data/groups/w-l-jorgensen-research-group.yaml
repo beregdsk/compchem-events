@@ -1,0 +1,22 @@
+id: w-l-jorgensen-research-group
+name: W. L. Jorgensen Research Group
+kind: group
+website: https://jorgensenresearch.com/
+topics:
+  - drug-design
+  - enhanced-sampling
+  - molecular-dynamics
+  - electronic-structure
+  - software-hpc
+description: Yale chemistry group led by William L. Jorgensen, developing OPLS
+  force fields, TIP water models, BOSS/MCPRO Monte Carlo software and
+  free-energy perturbation methods, and applying them to structure-based drug
+  design of enzyme inhibitors.
+added: 2026-09-30
+aliases:
+  - Jorgensen, William L.
+pi: William L. Jorgensen
+parent: Yale University
+location:
+  city: New Haven
+  country: US

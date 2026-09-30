@@ -1,0 +1,22 @@
+id: the-dong-theoretical-and-computational-chemistry-lab
+name: The Dong Theoretical and Computational Chemistry Lab
+kind: group
+website: https://sdonglab.org/
+topics:
+  - electronic-structure
+  - excited-states
+  - photochemistry
+  - quantum-computing-chemistry
+  - catalysis
+description: Official homepage of Dr. Sijia Dong's Theoretical and Computational
+  Chemistry Lab at Northeastern University. The group develops physics-based and
+  data-driven methods for electronic structure, excited-state chemistry,
+  photoenzymes, catalysis, and quantum computing.
+added: 2026-09-30
+aliases:
+  - The Dong Lab
+pi: Sijia Dong
+parent: Northeastern University
+location:
+  city: Boston
+  country: US

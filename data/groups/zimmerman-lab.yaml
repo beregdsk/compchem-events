@@ -1,0 +1,22 @@
+id: zimmerman-lab
+name: Zimmerman Lab
+kind: group
+website: https://sites.lsa.umich.edu/zimmerman-lab/
+topics:
+  - electronic-structure
+  - wavefunction-methods
+  - dft
+  - catalysis
+  - photochemistry
+description: The Zimmerman Research Group is a computational chemistry lab at
+  the University of Michigan. It develops electronic-structure and wavefunction
+  methods, studies catalysis and solar chemistry, and simulates complex
+  reactions.
+added: 2026-09-30
+aliases:
+  - Zimmerman Lab | Chemistry Department
+pi: Paul M. Zimmerman
+parent: University of Michigan
+location:
+  city: Ann Arbor
+  country: US
