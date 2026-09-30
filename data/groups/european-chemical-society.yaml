@@ -1,0 +1,17 @@
+id: european-chemical-society
+name: European Chemical Society
+kind: society
+website: https://en.wikipedia.org/wiki/European_Association_for_Chemical_and_Molecular_Sciences
+topics:
+  - electronic-structure
+  - dft
+  - education-training
+  - materials-modeling
+  - spectroscopy
+description: The European Chemical Society (EuChemS) is a Brussels-based
+  non-profit organisation promoting collaboration among European chemical
+  societies. Representing over 160,000 chemists, it provides scientific policy
+  advice and organises various divisions, including computational…
+added: 2026-09-30
+aliases:
+  - EuChemS
