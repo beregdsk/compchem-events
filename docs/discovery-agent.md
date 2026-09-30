@@ -279,6 +279,21 @@ The cron entry itself (e.g. a daily line in the `discovery` user's
 crontab running the `docker run` command above) is set up on the VDS by
 the maintainer; it is infrastructure outside this repository.
 
+### Topic statistics (monthly)
+
+The same host refreshes the literature statistics on `/topics/`
+(`docs/topic-stats.md`) once a month. `~/discovery-agent/topic-stats.sh`
+loads `.env`, runs `scripts/topics/snapshot.ts` from the `/home/egor/agg`
+checkout and appends to `~/discovery-agent/topic-stats.log`; crontab line
+`17 4 2 * * /home/egor/discovery-agent/topic-stats.sh` (the 2nd, 04:17
+local, clear of the nightly run). It needs `GITHUB_TOKEN`, `GITHUB_REPO`
+and, for the $1/day OpenAlex tier, `OPENALEX_API_KEY` in `.env`. It opens
+or updates the PR `data/topic-stats-<YYYY-MM>`; a failed month proposes
+nothing, keeps last month's file, and opens or updates its own issue
+(label `topic-stats-failures`, separate from the nightly run's
+`discovery-failures`, so neither job's run closes the other's); a good
+month closes it.
+
 ### Running without Docker
 
 If the VDS has no Docker (and no root to install it), run `run.ts`

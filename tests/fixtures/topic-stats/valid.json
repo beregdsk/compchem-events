@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-10-02",
+  "source": "OpenAlex",
+  "topics": {
+    "ml-potentials": {
+      "openalex": ["T11948"],
+      "works_by_year": [
+        { "year": 2023, "works": 9000 },
+        { "year": 2024, "works": 13428 },
+        { "year": 2025, "works": 21753 }
+      ],
+      "works_total": 120409,
+      "growth_5y": 2.4,
+      "citations_total": 1102096,
+      "top_institutions": [
+        {
+          "id": "I27837315",
+          "name": "University of Michigan",
+          "country": "US",
+          "homepage": "https://www.umich.edu",
+          "works": 212
+        },
+        { "id": "I1", "name": "No Homepage Institute", "works": 90 }
+      ],
+      "top_venues": [
+        { "id": "S1", "name": "Journal of Chemical Theory and Computation", "works": 640 }
+      ],
+      "top_papers": [
+        { "title": "A paper", "year": 2024, "doi": "https://doi.org/10.1/x", "citations": 1794 },
+        { "title": "No DOI paper", "year": 2023, "citations": 10 }
+      ],
+      "subtopics": [
+        {
+          "id": "T11948",
+          "name": "Machine Learning in Materials Science",
+          "works": 120409,
+          "citations": 1102096
+        }
+      ]
+    }
+  }
+}

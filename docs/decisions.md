@@ -675,3 +675,14 @@ so the maintainer only checks those. The score uses shared title words, not
 the mechanical skip's character bigrams, which score unrelated titles up to
 0.55. No LLM judge for now: add one for the flagged band only if it stays
 noisy.
+
+## 2026-09-30 — OpenAlex statistics per topic, two-level topics
+
+`/topics/` shows literature statistics from OpenAlex (CC0), refreshed monthly
+into `data/topic-stats.json` through a PR, so the site stays static. Site
+topics stay broad filters; each maps to OpenAlex topics underneath (the
+`openalex` field), and nothing on events, groups or positions is re-tagged.
+The trend is papers per year: OpenAlex topics have no per-year citation
+counts, so citations are a total, summed over a slug's topics (a paper under
+two of them counts twice, and the page says so). See
+docs/superpowers/specs/2026-09-30-openalex-topics-design.md.

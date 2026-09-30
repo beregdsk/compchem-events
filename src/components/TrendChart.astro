@@ -1,0 +1,54 @@
+---
+import { barGeometry } from '../lib/charts';
+
+interface Props {
+  series: Array<{ label: string; value: number }>;
+  title: string;
+  width?: number;
+  height?: number;
+}
+const { series, title, width = 600, height = 120 } = Astro.props;
+// Room above the bars for the maximum's label, and below for the year labels.
+const TOP = 16;
+const { bars, max } = barGeometry(series, width, height);
+const first = series[0]?.label;
+const last = series.at(-1)?.label;
+---
+
+<figure class="trend">
+  <svg
+    viewBox={`0 0 ${width} ${TOP + height + 18}`}
+    role="img"
+    aria-label={title}
+    class="trend__svg"
+  >
+    <title>{title}</title>
+    {bars.map((b) => (
+      <rect x={b.x} y={b.y + TOP} width={b.width} height={b.height} class="trend__bar">
+        <title>{`${b.label}: ${b.value.toLocaleString('en')}`}</title>
+      </rect>
+    ))}
+    <text x="0" y={TOP + height + 14} class="trend__axis">
+      {first}
+    </text>
+    <text x={width} y={TOP + height + 14} text-anchor="end" class="trend__axis">
+      {last}
+    </text>
+    <text x={width} y="11" text-anchor="end" class="trend__axis">
+      {max.toLocaleString('en')}
+    </text>
+  </svg>
+  <table class="visually-hidden">
+    <caption>{title}</caption>
+    <tr>
+      <th>Year</th>
+      <th>Papers</th>
+    </tr>
+    {series.map((s) => (
+      <tr>
+        <td>{s.label}</td>
+        <td>{s.value}</td>
+      </tr>
+    ))}
+  </table>
+</figure>

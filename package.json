@@ -19,7 +19,9 @@
     "check-links": "tsx scripts/check-links.ts",
     "discover": "tsx scripts/discovery/parse-sources.ts",
     "discover:run": "tsx scripts/discovery/run.ts",
-    "discover:groups-backfill": "tsx scripts/discovery/groups-backfill.ts"
+    "discover:groups-backfill": "tsx scripts/discovery/groups-backfill.ts",
+    "topics:snapshot": "tsx scripts/topics/snapshot.ts",
+    "topics:propose-map": "tsx scripts/topics/propose-map.ts"
   },
   "dependencies": {
     "ajv": "^8.20.0",

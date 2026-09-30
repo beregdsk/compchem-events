@@ -22,6 +22,9 @@ import {
   validateGroupCollection,
 } from '../src/lib/group-validation';
 import { validateSources } from '../src/lib/discovery/sources';
+import { validateTopics } from '../src/lib/topic-validation';
+import { TOPIC_STATS_FILE, validateTopicStats } from '../src/lib/topic-stats';
+import { loadTopics } from '../src/lib/validation';
 
 // Re-exported so the discovery agent (docs/discovery-agent.md) can depend on a
 // stable entry point, as promised by TASK.md section 7.
@@ -78,6 +81,18 @@ function main(): void {
   }
   all.errors.push(...validateGroupCollection(groups).errors);
   all.errors.push(...validateSources(parse(readFileSync(SOURCES_FILE, 'utf8')), SOURCES_FILE));
+
+  const topicsResult = validateTopics(parse(readFileSync('data/topics.yaml', 'utf8')));
+  all.errors.push(...topicsResult.errors);
+  all.warnings.push(...topicsResult.warnings);
+  if (existsSync(TOPIC_STATS_FILE)) {
+    const statsResult = validateTopicStats(
+      JSON.parse(readFileSync(TOPIC_STATS_FILE, 'utf8')),
+      loadTopics(),
+    );
+    all.errors.push(...statsResult.errors);
+    all.warnings.push(...statsResult.warnings);
+  }
 
   const report = formatProblems(all);
   if (report) console.log(report);

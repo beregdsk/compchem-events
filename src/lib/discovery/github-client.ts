@@ -389,8 +389,16 @@ export async function postReview(
   }
 }
 
-const FAILURE_ISSUE_TITLE = 'Discovery agent source failures';
-const FAILURE_ISSUE_LABEL = 'discovery-failures';
+/** Which tracking issue a job reports to: each job owns one, so one job's clean run never closes another's. */
+export interface FailureIssue {
+  title: string;
+  label: string;
+}
+
+const DISCOVERY_ISSUE: FailureIssue = {
+  title: 'Discovery agent source failures',
+  label: 'discovery-failures',
+};
 
 interface IssueSummary {
   number: number;
@@ -405,22 +413,23 @@ interface IssueSummary {
 export async function syncFailureIssue(
   errors: readonly { source: string; message: string }[],
   options: GitHubOptions,
+  issue: FailureIssue = DISCOVERY_ISSUE,
 ): Promise<void> {
   const listRes = await githubRequest<IssueSummary[]>(
     options,
     'GET',
-    `/issues?state=open&labels=${FAILURE_ISSUE_LABEL}`,
+    `/issues?state=open&labels=${issue.label}`,
   );
   if (listRes.status !== 200) {
     throw new Error(`failed to list open issues: HTTP ${listRes.status}`);
   }
-  const existing = listRes.data.find((issue) => issue.title === FAILURE_ISSUE_TITLE);
+  const existing = listRes.data.find((i) => i.title === issue.title);
 
   if (errors.length === 0) {
     if (!existing) return;
     const res = await githubRequest(options, 'PATCH', `/issues/${existing.number}`, {
       state: 'closed',
-      body: 'All sources fetched successfully on the latest run. Closing.',
+      body: 'The latest run succeeded. Closing.',
     });
     if (res.status !== 200) {
       throw new Error(`failed to close issue #${existing.number}: HTTP ${res.status}`);
@@ -446,9 +455,9 @@ export async function syncFailureIssue(
   }
 
   const res = await githubRequest(options, 'POST', '/issues', {
-    title: FAILURE_ISSUE_TITLE,
+    title: issue.title,
     body,
-    labels: [FAILURE_ISSUE_LABEL],
+    labels: [issue.label],
   });
   if (res.status !== 201) {
     throw new Error(`failed to create the failure-tracking issue: HTTP ${res.status}`);

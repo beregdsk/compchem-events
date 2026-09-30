@@ -1,0 +1,88 @@
+---
+// /topics/: one row per site topic, sorted by papers last year; topics
+// without statistics show dashes and sort last. src/scripts/sort-table.ts
+// makes the headers sort by each cell's data-sort.
+import { sparklinePoints } from '../lib/charts';
+import type { Coverage } from '../lib/topic-coverage';
+import type { SlugStats } from '../lib/topic-stats';
+import type { Topic } from '../lib/types';
+
+interface Props {
+  rows: Array<{ topic: Topic; stats?: SlugStats; coverage: Coverage }>;
+}
+const lastYear = (s?: SlugStats) => s?.works_by_year.at(-1)?.works ?? -1;
+/** An empty data-sort marks "no value": sort-table.ts keeps those rows last. */
+const key = (v: number | null | undefined) => (v === null || v === undefined ? '' : v);
+const rows = [...Astro.props.rows].sort(
+  (a, b) => lastYear(b.stats) - lastYear(a.stats) || a.topic.label.localeCompare(b.topic.label),
+);
+const n = (v: number) => v.toLocaleString('en');
+const cols = [
+  'Topic',
+  'Papers last year',
+  'Growth, 5 years',
+  'Trend',
+  'Citations',
+  'Events',
+  'Groups',
+  'Positions',
+];
+---
+
+<div class="topics-table__wrap">
+  <table class="topics-table" data-sortable>
+    <thead>
+      <tr>
+        {cols.map((c, i) => (
+          <th scope="col">
+            <button type="button" data-sort-col={i}>
+              {c}
+            </button>
+          </th>
+        ))}
+      </tr>
+    </thead>
+    <tbody>
+      {rows.map(({ topic, stats, coverage }) => (
+        <tr>
+          <th scope="row" data-sort={topic.label}>
+            <a href={`/topics/${topic.slug}/`}>{topic.label}</a>
+          </th>
+          <td class="mono" data-sort={key(stats && lastYear(stats))}>
+            {stats ? n(lastYear(stats)) : '—'}
+          </td>
+          <td class="mono" data-sort={key(stats?.growth_5y)}>
+            {stats?.growth_5y != null ? `${stats.growth_5y.toFixed(2)}×` : '—'}
+          </td>
+          <td data-sort={key(stats && lastYear(stats))}>
+            {stats ? (
+              <svg viewBox="0 0 80 20" width="80" height="20" aria-hidden="true" class="spark">
+                <polyline
+                  points={sparklinePoints(
+                    stats.works_by_year.map((y) => y.works),
+                    80,
+                    20,
+                  )}
+                />
+              </svg>
+            ) : (
+              '—'
+            )}
+          </td>
+          <td class="mono" data-sort={key(stats?.citations_total)}>
+            {stats ? n(stats.citations_total) : '—'}
+          </td>
+          <td class="mono" data-sort={coverage.events}>
+            {coverage.events}
+          </td>
+          <td class="mono" data-sort={coverage.groups}>
+            {coverage.groups}
+          </td>
+          <td class="mono" data-sort={coverage.positions}>
+            {coverage.positions}
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>

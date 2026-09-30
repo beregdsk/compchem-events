@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://compchem.observer/schema/topic-stats.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "generated_at", "source", "topics"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "generated_at": { "type": "string", "format": "date" },
+    "source": { "const": "OpenAlex" },
+    "topics": { "type": "object", "additionalProperties": { "$ref": "#/$defs/slug" } }
+  },
+  "$defs": {
+    "count": { "type": "integer", "minimum": 0 },
+    "name": { "type": "string", "minLength": 1, "maxLength": 300 },
+    "url": { "type": "string", "format": "uri" },
+    "slug": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "openalex",
+        "works_by_year",
+        "works_total",
+        "growth_5y",
+        "citations_total",
+        "top_institutions",
+        "top_venues",
+        "top_papers",
+        "subtopics"
+      ],
+      "properties": {
+        "openalex": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^T\\d+$" },
+          "minItems": 1
+        },
+        "works_by_year": {
+          "type": "array",
+          "maxItems": 30,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["year", "works"],
+            "properties": {
+              "year": { "type": "integer", "minimum": 1900 },
+              "works": { "$ref": "#/$defs/count" }
+            }
+          }
+        },
+        "works_total": { "$ref": "#/$defs/count" },
+        "growth_5y": { "type": ["number", "null"], "minimum": 0 },
+        "citations_total": { "$ref": "#/$defs/count" },
+        "top_institutions": {
+          "type": "array",
+          "maxItems": 10,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "name", "works"],
+            "properties": {
+              "id": { "type": "string", "pattern": "^I\\d+$" },
+              "name": { "$ref": "#/$defs/name" },
+              "country": { "type": "string", "pattern": "^[A-Z]{2}$" },
+              "homepage": { "$ref": "#/$defs/url" },
+              "works": { "$ref": "#/$defs/count" }
+            }
+          }
+        },
+        "top_venues": {
+          "type": "array",
+          "maxItems": 10,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "name", "works"],
+            "properties": {
+              "id": { "type": "string", "pattern": "^S\\d+$" },
+              "name": { "$ref": "#/$defs/name" },
+              "works": { "$ref": "#/$defs/count" }
+            }
+          }
+        },
+        "top_papers": {
+          "type": "array",
+          "maxItems": 5,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["title", "year", "citations"],
+            "properties": {
+              "title": { "type": "string", "minLength": 1, "maxLength": 500 },
+              "year": { "type": "integer" },
+              "doi": { "$ref": "#/$defs/url" },
+              "citations": { "$ref": "#/$defs/count" }
+            }
+          }
+        },
+        "subtopics": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "name", "works", "citations"],
+            "properties": {
+              "id": { "type": "string", "pattern": "^T\\d+$" },
+              "name": { "$ref": "#/$defs/name" },
+              "works": { "$ref": "#/$defs/count" },
+              "citations": { "$ref": "#/$defs/count" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,9 +1,14 @@
 ---
 import Base from '../../layouts/Base.astro';
 import EventRow from '../../components/EventRow.astro';
+import TopicStatsBlock from '../../components/TopicStatsBlock.astro';
 import PageActions from '../../components/PageActions.astro';
 import { eventsWithTopic, loadEvents, pastEvents, upcomingEvents } from '../../lib/events';
 import { formatDateRange, todayUTC } from '../../lib/dates';
+import { loadGroups } from '../../lib/groups';
+import { loadPositions, openPositions } from '../../lib/positions';
+import { topicCoverage, type Coverage } from '../../lib/topic-coverage';
+import { loadTopicStats, type SlugStats } from '../../lib/topic-stats';
 import { loadTopics } from '../../lib/validation';
 import type { LoadedEvent, Topic } from '../../lib/types';
 
@@ -11,11 +16,24 @@ import type { LoadedEvent, Topic } from '../../lib/types';
 // to before the first event arrives.
 export function getStaticPaths() {
   const events = loadEvents();
+  const stats = loadTopicStats();
+  const data = {
+    upcoming: upcomingEvents(events),
+    groups: loadGroups(),
+    open: openPositions(loadPositions()),
+  };
   return loadTopics().map((topic) => {
     const tagged = eventsWithTopic(events, topic.slug);
     return {
       params: { slug: topic.slug },
-      props: { topic, upcoming: upcomingEvents(tagged), past: pastEvents(tagged) },
+      props: {
+        topic,
+        upcoming: upcomingEvents(tagged),
+        past: pastEvents(tagged),
+        stats: stats?.topics[topic.slug],
+        generatedAt: stats?.generated_at,
+        coverage: topicCoverage(topic.slug, data),
+      },
     };
   });
 }
@@ -24,9 +42,12 @@ interface Props {
   topic: Topic;
   upcoming: LoadedEvent[];
   past: LoadedEvent[];
+  stats?: SlugStats;
+  generatedAt?: string;
+  coverage: Coverage;
 }
 
-const { topic, upcoming, past } = Astro.props;
+const { topic, upcoming, past, stats, generatedAt, coverage } = Astro.props;
 const today = todayUTC();
 ---
 
@@ -49,6 +70,15 @@ const today = todayUTC();
       ]}
     />
   </div>
+
+  {stats && generatedAt && (
+    <TopicStatsBlock
+      stats={stats}
+      coverage={coverage}
+      slug={topic.slug}
+      generatedAt={generatedAt}
+    />
+  )}
 
   {upcoming.length === 0 && <p class="muted">Nothing upcoming in this topic yet.</p>}
   <ul class="event-list reveal">
