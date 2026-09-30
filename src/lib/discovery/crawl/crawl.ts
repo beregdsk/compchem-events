@@ -171,23 +171,41 @@ export async function runCrawl(deps: CrawlDeps): Promise<CrawlResult> {
     });
   }
 
-  while (result.pagesFetched < deps.maxPages && !outOfTokens()) {
-    const room = Math.min(CONCURRENCY, deps.maxPages - result.pagesFetched);
-    const batch = takeNext(deps.crawl, room, perHost, hostCap, paused);
-    if (batch.length === 0) break;
-    await Promise.all(
-      batch.map((e) =>
-        visit(e).catch((err: unknown) => {
-          result.errors.push(`${e.url}: ${err instanceof Error ? err.message : String(err)}`);
-          markVisited(deps.crawl, e.url, 'error', deps.today);
-        }),
-      ),
-    );
+  // A pool of workers, each taking the next page as soon as it is free: one
+  // slow page (a browser fallback, a slow model call) never holds the others
+  // back. Hosts with a page in flight are skipped, so no two workers ever hit
+  // the same host at once; budgets are counted synchronously in `visit`.
+  const inFlight = new Map<string, Promise<void>>();
+  const maybeSave = () => {
     if (result.pagesFetched - lastSave >= SAVE_EVERY) {
       deps.save();
       lastSave = result.pagesFetched - (result.pagesFetched % SAVE_EVERY);
     }
+  };
+  async function worker(): Promise<void> {
+    for (;;) {
+      if (result.pagesFetched >= deps.maxPages || outOfTokens()) return;
+      const blocked = new Set([...paused, ...inFlight.keys()]);
+      const [entry] = takeNext(deps.crawl, 1, perHost, hostCap, blocked);
+      if (!entry) {
+        // Nothing takeable now; a page in flight may still queue more.
+        if (inFlight.size === 0) return;
+        await Promise.race(inFlight.values());
+        continue;
+      }
+      const host = new URL(entry.url).host;
+      const running = visit(entry)
+        .catch((err: unknown) => {
+          result.errors.push(`${entry.url}: ${err instanceof Error ? err.message : String(err)}`);
+          markVisited(deps.crawl, entry.url, 'error', deps.today);
+        })
+        .finally(() => inFlight.delete(host));
+      inFlight.set(host, running);
+      await running;
+      maybeSave();
+    }
   }
+  await Promise.all(Array.from({ length: CONCURRENCY }, worker));
   enqueue(deps.crawl, deferred, deps.today);
   deps.save();
   log(
