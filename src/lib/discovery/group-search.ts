@@ -3,9 +3,9 @@
 // are kept; the prose is discarded, so no model-typed URL is ever fetched.
 // See docs/discovery-agent.md's Security model.
 import {
+  awaitModelSlot,
   DEFAULT_EXTRACT_BASE_URL,
-  rateLimitWaitMs,
-  RetryableExtractError,
+  failedResponseError,
   withRetries,
   type ExtractOptions,
 } from './extract-client';
@@ -38,6 +38,7 @@ export async function searchGroupWebsites(
   options: ExtractOptions,
 ): Promise<string[]> {
   return withRetries(options, async () => {
+    await awaitModelSlot(options);
     const response = await fetchWithTimeout(
       options.fetchImpl ?? fetch,
       options.baseUrl ?? DEFAULT_EXTRACT_BASE_URL,
@@ -64,12 +65,11 @@ export async function searchGroupWebsites(
     );
     if (!response.ok) {
       const body = await response.text().catch(() => '');
-      const message = `search request failed: ${response.status} ${response.statusText}`;
-      if (response.status === 429) {
-        throw new RetryableExtractError(message, rateLimitWaitMs(response, body));
-      }
-      if (response.status >= 500) throw new RetryableExtractError(message);
-      throw new Error(message);
+      throw failedResponseError(
+        `search request failed: ${response.status} ${response.statusText}`,
+        response,
+        body,
+      );
     }
     const data = (await response.json()) as {
       choices?: Array<{ message?: { annotations?: Annotation[] } }>;

@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
+  awaitModelSlot,
   DEFAULT_EXTRACT_BASE_URL,
   EXTRACT_ATTEMPTS,
+  FREE_MODEL_INTERVAL_MS,
+  failedResponseError,
+  RetryableExtractError,
   clip,
   extractEvent,
   extractEvents,
@@ -425,5 +429,48 @@ describe('normalizeEventUrl', () => {
     expect(normalizeEventUrl('javascript:alert(1)')).toBeNull();
     expect(normalizeEventUrl('see website')).toBeNull();
     expect(normalizeEventUrl(null)).toBeNull();
+  });
+});
+
+describe('awaitModelSlot', () => {
+  // Far past any slot other tests reserved, so the module's shared state never interferes.
+  let clock = 1e15;
+  const opts = (model: string, sleeps: number[]) => ({
+    apiKey: 'k',
+    model,
+    topics: [],
+    sleepImpl: async (ms: number) => void sleeps.push(ms),
+  });
+
+  it('spaces concurrent free-model calls 3.1 s apart', async () => {
+    const sleeps: number[] = [];
+    clock += 1e9;
+    const now = () => clock;
+    await Promise.all([1, 2, 3].map(() => awaitModelSlot(opts('x/y:free', sleeps), now)));
+    expect(sleeps).toEqual([FREE_MODEL_INTERVAL_MS, 2 * FREE_MODEL_INTERVAL_MS]);
+  });
+
+  it('never waits for a paid model', async () => {
+    const sleeps: number[] = [];
+    await Promise.all([1, 2, 3].map(() => awaitModelSlot(opts('x/y', sleeps), () => clock)));
+    expect(sleeps).toEqual([]);
+  });
+});
+
+describe('failedResponseError', () => {
+  const res = (status: number) => new Response('', { status });
+  it('retries a 429, a 5xx and an upstream provider failure, not a plain 400', () => {
+    expect(failedResponseError('m', res(429), '')).toBeInstanceOf(RetryableExtractError);
+    expect(failedResponseError('m', res(502), '')).toBeInstanceOf(RetryableExtractError);
+    expect(
+      failedResponseError(
+        'm',
+        res(400),
+        '{"error":{"message":"Provider returned error","code":400}}',
+      ),
+    ).toBeInstanceOf(RetryableExtractError);
+    expect(failedResponseError('m', res(400), '{"error":"bad schema"}')).not.toBeInstanceOf(
+      RetryableExtractError,
+    );
   });
 });

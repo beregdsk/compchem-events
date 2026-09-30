@@ -280,6 +280,10 @@ spending cap covers it.
 
 - A failed split, search, fetch or extraction for one name is logged and
   recorded in the negative cache with its outcome, and the pass continues.
+  Amended 2026-09-30: an error (rate limit, provider outage, crash) is logged
+  but never cached, since it says nothing about the name; only real outcomes
+  (not found, invalid, drafted) are. Free-model calls are spaced 3.1 s apart
+  per process (OpenRouter's 20 requests a minute).
 - The groups pass runs last and catches errors per name, so it never fails
   the event or position work of the run.
 - Search calls use the extraction client's retry rules (three attempts; a
