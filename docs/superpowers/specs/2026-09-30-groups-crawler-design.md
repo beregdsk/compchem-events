@@ -321,6 +321,21 @@ noted):
 6. Operational: choose the paid model, send the maintainer the estimate,
    run the big crawl, and send the PR links.
 
+## Amendments after review (2026-09-30)
+
+- The resolver verifies a crawled lead on the directory's own site (the
+  usual department layout); crawled lookups are cached by link, not by
+  their often generic link text; a crawled lead whose link does not
+  verify is not found (no search fallback).
+- Found leads are kept in the crawl state until resolved or proposed, and
+  the crawl phase uses at most half the token budget.
+- A 4xx is cached as gone; timeouts, 429 and 5xx are retried on up to
+  three later runs. Directories are re-queued after 30 days from where
+  they were found.
+- The crawl keeps its own fetch state and merges only its changed group
+  lookups into `state.json`, which is now written atomically.
+- A batch never reuses a branch that already exists that day.
+
 ## Out of scope
 
 - Event sources, software, datasets and courses (sub-projects 3–5).

@@ -9,6 +9,7 @@ import {
   isFresh,
   loadCrawlState,
   markVisited,
+  requeueStaleDirectories,
   saveCrawlState,
   takeNext,
   type QueueEntry,
@@ -94,5 +95,24 @@ describe('load / save', () => {
     expect(readFileSync(path, 'utf8')).toContain('"version": 1');
     writeFileSync(path, '{not json');
     expect(loadCrawlState(path)).toEqual(emptyCrawlState());
+  });
+});
+
+describe('requeueStaleDirectories', () => {
+  it('puts a directory back on the queue after 30 days, where it was found', () => {
+    const s = emptyCrawlState();
+    markVisited(s, 'https://a.edu/groups/', 'directory', '2026-08-01', {
+      depth: 2,
+      seedHost: 'a.edu',
+    });
+    markVisited(s, 'https://a.edu/fresh/', 'directory', '2026-09-20', {
+      depth: 1,
+      seedHost: 'a.edu',
+    });
+    markVisited(s, 'https://a.edu/other/', 'neither', '2026-08-01');
+    requeueStaleDirectories(s, '2026-10-01');
+    expect(s.queue).toEqual([
+      { url: 'https://a.edu/groups/', priority: 10, depth: 2, seedHost: 'a.edu' },
+    ]);
   });
 });

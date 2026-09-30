@@ -107,13 +107,22 @@ export function leadsFrom(
   title: string,
 ): GroupLead[] {
   if (result.kind === 'group-homepage') {
-    return [{ text: title, link: pageUrl, origin: pageUrl, fromListing: true }];
+    return [{ text: title, link: pageUrl, origin: pageUrl, fromListing: true, crawled: true }];
   }
   if (result.kind !== 'directory') return [];
   return result.groups.flatMap((i) => {
     const l = links[i];
     return l && l.text
-      ? [{ text: l.text, link: l.url, context: title, origin: pageUrl, fromListing: true }]
+      ? [
+          {
+            text: l.text,
+            link: l.url,
+            context: title,
+            origin: pageUrl,
+            fromListing: true,
+            crawled: true,
+          },
+        ]
       : [];
   });
 }

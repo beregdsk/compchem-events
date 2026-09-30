@@ -23,6 +23,16 @@ const SITE: Record<string, { status: number; body?: string; url?: string }> = {
     body: `<html><body>${many(9)}</body></html>`,
   },
   'https://busy.example/': { status: 429 },
+  'https://self.example/': {
+    status: 200,
+    body: '<html><body><a href="#main">Skip to content</a><a href="/">Home</a><a href="/research/groups/">Research groups</a></body></html>',
+  },
+  'https://self.example/research/groups/': {
+    status: 200,
+    body: '<html><body><a href="#top">Top</a><a href="/">Home</a><a href="/research/groups/">Research groups</a></body></html>',
+  },
+  'https://gone.example/': { status: 404 },
+  'https://down.example/': { status: 503 },
 };
 function world() {
   const fetched: string[] = [];
@@ -119,7 +129,7 @@ describe('runCrawl', () => {
     expect(x.crawl.queue).toEqual([]);
   });
 
-  it('pauses a host that answers 429 and records the error unvisited', async () => {
+  it('pauses a host that answers 429 and keeps the page for a later run', async () => {
     const w = world();
     const x = deps(w);
     enqueue(
@@ -134,7 +144,9 @@ describe('runCrawl', () => {
     expect(w.fetched.filter((u) => u.startsWith('https://busy.example'))).toEqual([
       'https://busy.example/',
     ]);
-    expect(x.crawl.visited['https://busy.example/']?.outcome).toBe('error');
+    // Not visited: it goes back on the queue for a later run.
+    expect(x.crawl.visited['https://busy.example/']).toBeUndefined();
+    expect(x.crawl.queue.find((q) => q.url === 'https://busy.example/')?.retries).toBe(1);
     expect(r.errors[0]).toMatch(/429/);
   });
 
@@ -168,5 +180,58 @@ describe('runCrawl', () => {
     expect(w.fetched.filter((u) => u === 'https://uni.example/theory/')).toHaveLength(1);
     expect(x.crawl.visited['https://uni.example/theory/']).toBeUndefined();
     expect(x.crawl.queue.some((q) => q.url === 'https://uni.example/theory/')).toBe(true);
+  });
+
+  it('fetches each page once even when it links to itself', async () => {
+    const w = world();
+    const x = deps(w);
+    enqueue(
+      x.crawl,
+      [{ url: 'https://self.example/', priority: 5, depth: 0, seedHost: 'self.example' }],
+      '2026-10-01',
+    );
+    await runCrawl(x.d);
+    const counts = new Map<string, number>();
+    for (const u of w.fetched) counts.set(u, (counts.get(u) ?? 0) + 1);
+    expect(counts.get('https://self.example/')).toBe(1);
+    expect(counts.get('https://self.example/research/groups/')).toBe(1);
+  });
+
+  it('treats a 404 as gone, and retries a 503 on later runs up to three times', async () => {
+    const w = world();
+    const x = deps(w);
+    enqueue(
+      x.crawl,
+      [
+        { url: 'https://gone.example/', priority: 5, depth: 0, seedHost: 'gone.example' },
+        { url: 'https://down.example/', priority: 5, depth: 0, seedHost: 'down.example' },
+      ],
+      '2026-10-01',
+    );
+    await runCrawl(x.d);
+    expect(x.crawl.visited['https://gone.example/']?.outcome).toBe('skipped');
+    expect(x.crawl.queue).toEqual([
+      { url: 'https://down.example/', priority: 5, depth: 0, seedHost: 'down.example', retries: 1 },
+    ]);
+    await runCrawl(x.d);
+    await runCrawl(x.d);
+    expect(x.crawl.queue).toEqual([]);
+    expect(x.crawl.visited['https://down.example/']?.outcome).toBe('skipped');
+  });
+
+  it('keeps the leads it found in the crawl state until they are resolved', async () => {
+    const w = world();
+    const x = deps(w);
+    enqueue(
+      x.crawl,
+      [{ url: 'https://uni.example/theory/', priority: 5, depth: 0, seedHost: 'uni.example' }],
+      '2026-10-01',
+    );
+    await runCrawl(x.d);
+    expect(x.crawl.pendingLeads.map((l) => l.link)).toEqual([
+      'https://uni.example/theory/group-0/',
+      'https://smithlab.example/',
+      'http://10.0.0.5/',
+    ]);
   });
 });

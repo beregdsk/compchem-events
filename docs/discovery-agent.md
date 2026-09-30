@@ -241,9 +241,16 @@ feeds their group links into the same resolver. Spec:
   `Confidence:` line). Groups beyond `--max-prs` are left for the next run.
 - **State:** `crawl-state.json` next to `STATE_PATH` (or
   `CRAWL_STATE_PATH`): the queue (≤ 50,000), visited pages (180 days;
-  directories revisited after 30; errors retried), saved atomically every
-  50 pages. `crawl.lock` holds the running crawl's pid; a second crawl,
-  including the nightly slice, skips while it is held.
+  directories re-queued after 30), and the leads found but not yet
+  proposed, so a killed run resumes them. Saved atomically every 50 pages.
+  A 4xx page is gone (not retried); timeouts, 429 and 5xx are retried on
+  up to three later runs. The crawl never writes its page or robots state
+  into `state.json`; it merges only the group lookups it changed onto the
+  file as it is then, so the nightly run's entries survive. The crawl phase
+  uses at most half of `--max-tokens`, leaving the rest for verifying.
+  `crawl.lock` holds the running crawl's pid; a second crawl, including the
+  nightly slice, skips while it is held. Crawled leads may be on the
+  directory's own site, and their lookups are cached by link.
 - **Nightly slice:** `run.ts` runs it last before auto-approve with the
   defaults (200 pages, 40 classifications, 5 searches, at most one PR, the
   free model), only when `MAX_PRS` has room left.

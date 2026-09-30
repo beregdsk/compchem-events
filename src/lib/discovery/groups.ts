@@ -63,6 +63,8 @@ export interface ResolveResult {
   pagesFetched: number;
   tokensUsed: number;
   errors: Array<{ source: string; message: string }>;
+  /** Leads a cap or the token budget stopped before an outcome: nothing is cached for them. */
+  unresolved: GroupLead[];
 }
 
 type Item = NameItem & { context?: string };
@@ -86,6 +88,7 @@ export async function resolveGroupLeads(options: ResolveOptions): Promise<Resolv
     pagesFetched: 0,
     tokensUsed: 0,
     errors: [],
+    unresolved: [],
   };
   const extract: ExtractOptions = {
     ...options.extract,
@@ -173,12 +176,16 @@ export async function resolveGroupLeads(options: ResolveOptions): Promise<Resolv
     item: Item,
     considered: Considered,
   ): Promise<Verified | 'capped' | undefined> {
-    const originHost = new URL(lead.origin).host.toLowerCase();
+    // A crawled lead's group page is usually on the directory's own site; only
+    // profile and reference hosts stay excluded for it.
+    const originHost = lead.crawled ? '' : new URL(lead.origin).host.toLowerCase();
     const link = lead.link ? normalizeEventUrl(lead.link) : null;
     if (link && isPublicHttpsUrl(link) && onOtherHost(link, originHost)) {
       const found = await verify(link, item, originHost, considered);
       if (found) return found;
     }
+    // A crawled lead is its link: one that does not verify is simply not found.
+    if (lead.crawled) return undefined;
     if (result.searches >= options.maxSearches) {
       log(`groups: ${item.name}: MAX_SEARCHES reached, left for the next run`);
       return 'capped';
@@ -219,10 +226,17 @@ export async function resolveGroupLeads(options: ResolveOptions): Promise<Resolv
       });
       return;
     }
+    let capped = false;
     for (const item of items) {
-      if (stopForTokens()) return;
+      if (stopForTokens()) {
+        result.unresolved.push(lead);
+        return;
+      }
       if (matchName(options.index, item.name)) continue;
-      const key = normaliseGroupName(item.name);
+      const key =
+        lead.crawled && lead.link
+          ? `link:${normalizeEventUrl(lead.link) ?? lead.link}`
+          : normaliseGroupName(item.name);
       if (handled.has(key) || fresh(key)) {
         log(`groups: ${item.name}: cached`);
         continue;
@@ -231,7 +245,10 @@ export async function resolveGroupLeads(options: ResolveOptions): Promise<Resolv
       const considered: Considered = [];
       try {
         const verified = await lookUp(lead, item, considered);
-        if (verified === 'capped') continue;
+        if (verified === 'capped') {
+          capped = true;
+          continue;
+        }
         if (!verified) {
           remember(key, 'not found');
           continue;
@@ -267,6 +284,7 @@ export async function resolveGroupLeads(options: ResolveOptions): Promise<Resolv
         result.errors.push({ source: lead.origin, message: `${item.name}: ${message}` });
       }
     }
+    if (capped) result.unresolved.push(lead);
   }
 
   // A fixed pool of workers pulling leads from one queue. Budgets are checked
@@ -282,6 +300,8 @@ export async function resolveGroupLeads(options: ResolveOptions): Promise<Resolv
     }
   }
   await Promise.all(Array.from({ length: LOOKUP_CONCURRENCY }, worker));
+  // Leads never started because the tokens ran out.
+  result.unresolved.push(...options.leads.slice(next));
   result.candidates = perLead.flat();
   return result;
 }

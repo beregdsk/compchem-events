@@ -2,19 +2,28 @@
 // frontier (up to 50,000 URLs) never bloats state.json.
 import { existsSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { daysBetween, type ISODate } from '../../dates';
+import type { GroupLead } from '../parsers/group-listing';
 
 export interface QueueEntry {
   url: string;
   priority: number;
   depth: number;
   seedHost: string;
+  /** Failed fetches so far (timeouts, 429, 5xx); dropped after MAX_RETRIES. */
+  retries?: number;
 }
 export type VisitOutcome =
   'directory' | 'group-homepage' | 'neither' | 'not-classified' | 'skipped' | 'error';
 export interface CrawlState {
   version: 1;
   queue: QueueEntry[];
-  visited: Record<string, { at: ISODate; outcome: VisitOutcome }>;
+  /** For a directory, also where it was found, so it can be re-queued after 30 days. */
+  visited: Record<
+    string,
+    { at: ISODate; outcome: VisitOutcome; depth?: number; seedHost?: string }
+  >;
+  /** Leads found but not yet resolved or proposed: survive a kill between the crawl and proposing. */
+  pendingLeads: GroupLead[];
   openalexSeeds?: { fetchedAt: ISODate; urls: string[] };
   searchCountryIndex: number;
 }
@@ -22,9 +31,12 @@ export interface CrawlState {
 export const MAX_QUEUE = 50_000;
 const REVISIT_DAYS = 180;
 const DIRECTORY_REVISIT_DAYS = 30;
+export const MAX_RETRIES = 3;
+/** Stale directories go back on the queue here: that is where new groups appear. */
+const DIRECTORY_REQUEUE_PRIORITY = 10;
 
 export function emptyCrawlState(): CrawlState {
-  return { version: 1, queue: [], visited: {}, searchCountryIndex: 0 };
+  return { version: 1, queue: [], visited: {}, pendingLeads: [], searchCountryIndex: 0 };
 }
 
 export function loadCrawlState(path: string): CrawlState {
@@ -106,6 +118,19 @@ export function markVisited(
   url: string,
   outcome: VisitOutcome,
   today: ISODate,
+  where?: { depth: number; seedHost: string },
 ): void {
-  state.visited[url] = { at: today, outcome };
+  state.visited[url] =
+    outcome === 'directory' && where ? { at: today, outcome, ...where } : { at: today, outcome };
+}
+
+/** Every directory visited 30 or more days ago goes back on the queue, where it was found. */
+export function requeueStaleDirectories(state: CrawlState, today: ISODate): void {
+  const stale: QueueEntry[] = [];
+  for (const [url, v] of Object.entries(state.visited)) {
+    if (v.outcome !== 'directory' || v.depth === undefined || !v.seedHost) continue;
+    if (isFresh(state, url, today)) continue;
+    stale.push({ url, priority: DIRECTORY_REQUEUE_PRIORITY, depth: v.depth, seedHost: v.seedHost });
+  }
+  enqueue(state, stale, today);
 }

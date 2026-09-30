@@ -94,6 +94,7 @@ describe('leadsFrom', () => {
         context: 'Research groups',
         origin: 'https://a.edu/groups/',
         fromListing: true,
+        crawled: true,
       },
     ]);
     expect(
@@ -109,6 +110,7 @@ describe('leadsFrom', () => {
         link: 'https://a.edu/jones/',
         origin: 'https://a.edu/jones/',
         fromListing: true,
+        crawled: true,
       },
     ]);
     expect(leadsFrom({ kind: 'neither', groups: [0] }, links, 'https://a.edu/', 'x')).toEqual([]);

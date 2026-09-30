@@ -65,6 +65,12 @@ const PAGES: Record<string, string> = {
     '<html><body><h1>Coote Lab</h1><p>https://coote.example/ Radical chemistry.</p></body></html>',
   'https://smith.example/':
     '<html><body><h1>Smith Lab</h1><p>https://smith.example/ Molecular dynamics.</p></body></html>',
+  'https://dept.example/groups/': `<html><title>Groups</title><body><h1>Theoretical and computational chemistry research groups</h1>
+    <a href="/groups/jones/">Jones Lab</a><a href="/groups/smith/">Smith Lab</a></body></html>`,
+  'https://dept.example/groups/jones/':
+    '<html><body><h1>Jones Lab</h1><p>https://dept.example/groups/jones/ Quantum chemistry.</p></body></html>',
+  'https://dept.example/groups/smith/':
+    '<html><body><h1>Smith Lab</h1><p>https://dept.example/groups/smith/ Molecular dynamics.</p></body></html>',
 };
 
 function deps(
@@ -207,5 +213,101 @@ describe('runGroupsCrawl', () => {
     expect(r.status).toBe('locked');
     expect(g.keys).toEqual([]);
     expect(existsSync(join(dir, 'crawl-state.json'))).toBe(false);
+  });
+
+  it('proposes groups whose pages are on the same site as their directory', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'gc-'));
+    const g = github(NEW_BRANCH('discovery/groups-crawl/2026-10-01-1'));
+    const r = await runGroupsCrawl(
+      deps(dir, g.gh, {
+        sources: [
+          { name: 'Dept', url: 'https://dept.example/groups/', kind: 'group-listing' } as never,
+        ],
+      }),
+    );
+    expect(r.accepted).toBe(2);
+  });
+
+  it('resumes leads a killed run found but never proposed', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'gc-'));
+    const crawl = {
+      version: 1,
+      queue: [],
+      visited: {},
+      searchCountryIndex: 0,
+      pendingLeads: [
+        {
+          text: 'Smith Lab',
+          link: 'https://smith.example/',
+          origin: 'https://uni.example/',
+          fromListing: true,
+          crawled: true,
+        },
+      ],
+    };
+    writeFileSync(join(dir, 'crawl-state.json'), JSON.stringify(crawl));
+    const g = github(NEW_BRANCH('discovery/groups-crawl/2026-10-01-1'));
+    const r = await runGroupsCrawl(deps(dir, g.gh, { sources: [] }));
+    expect(r.accepted).toBe(1);
+    expect(g.keys.filter((k) => k.startsWith('PUT '))).toEqual([
+      `PUT ${R}/contents/data/groups/smith-lab.yaml`,
+    ]);
+    expect(JSON.parse(readFileSync(join(dir, 'crawl-state.json'), 'utf8')).pendingLeads).toEqual(
+      [],
+    );
+  });
+
+  it('writes only its lookups into the shared state file, keeping what another process wrote meanwhile', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'gc-'));
+    const statePath = join(dir, 'state.json');
+    const other = { triedAt: '2026-09-30T00:00:00.000Z', outcome: 'not found' };
+    writeFileSync(
+      statePath,
+      JSON.stringify({
+        hosts: {},
+        pages: { 'https://x/': { fetchedAt: 'a' } },
+        groupLookups: { theirs: other },
+      }),
+    );
+    const d = deps(dir, github(NEW_BRANCH('discovery/groups-crawl/2026-10-01-1')).gh);
+    const fetchImpl = d.fetch.fetchImpl!;
+    d.fetch = {
+      ...d.fetch,
+      fetchImpl: (async (input: RequestInfo | URL, init?: RequestInit) => {
+        if (String(input) === 'https://smith.example/') {
+          // The nightly run saves its state while the crawl is verifying.
+          const s = JSON.parse(readFileSync(statePath, 'utf8'));
+          s.groupLookups.mid = other;
+          writeFileSync(statePath, JSON.stringify(s));
+        }
+        return fetchImpl(input, init);
+      }) as typeof fetch,
+    };
+    await runGroupsCrawl(d);
+    const s = JSON.parse(readFileSync(statePath, 'utf8'));
+    expect(Object.keys(s.groupLookups).sort()).toEqual([
+      'link:https://coote.example/',
+      'link:https://smith.example/',
+      'mid',
+      'theirs',
+    ]);
+    expect(Object.keys(s.pages)).toEqual(['https://x/']);
+  });
+
+  it('never reuses a batch branch that already exists today', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'gc-'));
+    const first = 'discovery/groups-crawl/2026-10-01-1';
+    const g = github({
+      ...NEW_BRANCH('discovery/groups-crawl/2026-10-01-2'),
+      [`GET ${R}/git/ref/heads/${first}`]: { status: 200, body: { object: { sha: 'x' } } },
+      [`GET ${R}/pulls?state=all&head=acme:${first}`]: {
+        status: 200,
+        body: [{ number: 150, state: 'open' }],
+      },
+    });
+    await runGroupsCrawl(deps(dir, g.gh));
+    const pr = g.bodies[`POST ${R}/pulls`] as { head: string };
+    expect(pr.head).toBe('discovery/groups-crawl/2026-10-01-2');
+    expect(g.keys.some((k) => k.startsWith('PATCH '))).toBe(false);
   });
 });

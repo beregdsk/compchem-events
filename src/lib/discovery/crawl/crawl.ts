@@ -10,7 +10,14 @@ import { htmlToText, parseHTML } from '../html';
 import type { GroupLead } from '../parsers/group-listing';
 import type { DiscoveryState } from '../state';
 import { classifyPage, leadsFrom, pageLinks, passesGate } from './classify';
-import { enqueue, markVisited, takeNext, type CrawlState, type QueueEntry } from './frontier';
+import {
+  enqueue,
+  markVisited,
+  MAX_RETRIES,
+  takeNext,
+  type CrawlState,
+  type QueueEntry,
+} from './frontier';
 import { inScope, linkScore, MAX_DEPTH, MAX_PAGES_PER_HOST, priorityOf } from './score';
 
 export interface CrawlDeps {
@@ -56,7 +63,9 @@ export async function runCrawl(deps: CrawlDeps): Promise<CrawlResult> {
   };
   const perHost = new Map<string, number>();
   const paused = new Set<string>();
-  const leadLinks = new Set<string>();
+  const leadLinks = new Set(deps.crawl.pendingLeads.flatMap((l) => (l.link ? [l.link] : [])));
+  /** Pages fetched this run (and where they redirected): never queued again this run. */
+  const seen = new Set<string>();
   /** Unvisited pages to try next run; re-queued only after the loop, so this run never refetches them. */
   const deferred: QueueEntry[] = [];
   const hostCap = Math.min(MAX_PAGES_PER_HOST, Math.max(1, Math.floor(deps.maxPages / 4)));
@@ -70,6 +79,7 @@ export async function runCrawl(deps: CrawlDeps): Promise<CrawlResult> {
       return;
     }
     const host = new URL(url).host;
+    seen.add(url);
     result.pagesFetched += 1;
     perHost.set(host, (perHost.get(host) ?? 0) + 1);
     const hadPage = url in deps.fetchState.pages;
@@ -77,15 +87,25 @@ export async function runCrawl(deps: CrawlDeps): Promise<CrawlResult> {
     if (!hadPage) delete deps.fetchState.pages[url];
 
     if (page.status === 'error') {
-      if (/^(429|503)\b/.test(page.error)) paused.add(host);
-      markVisited(deps.crawl, url, 'error', deps.today);
       result.errors.push(`${url}: ${page.error}`);
+      const status = Number(/^(\d{3})\b/.exec(page.error)?.[1]);
+      // A 4xx other than 429 is gone: cached like any visit, so it is not retried every night.
+      if (status >= 400 && status < 500 && status !== 429) {
+        markVisited(deps.crawl, url, 'skipped', deps.today);
+        return;
+      }
+      if (status === 429 || status === 503) paused.add(host);
+      // Timeouts, 429 and 5xx are retried on later runs, a few times.
+      const retries = (entry.retries ?? 0) + 1;
+      if (retries >= MAX_RETRIES) markVisited(deps.crawl, url, 'skipped', deps.today);
+      else deferred.push({ ...entry, retries });
       return;
     }
     if (page.status !== 'fetched') {
       markVisited(deps.crawl, url, 'skipped', deps.today);
       return;
     }
+    seen.add(page.finalUrl);
     if (!isPublicHttpsUrl(page.finalUrl) || !inScope(page.finalUrl, entry.seedHost)) {
       markVisited(deps.crawl, url, 'skipped', deps.today);
       return;
@@ -98,7 +118,7 @@ export async function runCrawl(deps: CrawlDeps): Promise<CrawlResult> {
         deps.crawl,
         links.flatMap((l) => {
           const u = normalizeEventUrl(l.url);
-          return u && inScope(u, entry.seedHost)
+          return u && !seen.has(u) && inScope(u, entry.seedHost)
             ? [
                 {
                   url: u,
@@ -135,8 +155,9 @@ export async function runCrawl(deps: CrawlDeps): Promise<CrawlResult> {
       if (!lead.link || leadLinks.has(lead.link)) continue;
       leadLinks.add(lead.link);
       result.leads.push(lead);
+      deps.crawl.pendingLeads.push(lead);
       const u = normalizeEventUrl(lead.link);
-      if (u && next <= MAX_DEPTH && inScope(u, entry.seedHost)) {
+      if (u && !seen.has(u) && next <= MAX_DEPTH && inScope(u, entry.seedHost)) {
         enqueue(
           deps.crawl,
           [{ url: u, priority: CHOSEN_PRIORITY, depth: next, seedHost: entry.seedHost }],
@@ -144,7 +165,10 @@ export async function runCrawl(deps: CrawlDeps): Promise<CrawlResult> {
         );
       }
     }
-    markVisited(deps.crawl, url, verdict.kind, deps.today);
+    markVisited(deps.crawl, url, verdict.kind, deps.today, {
+      depth: entry.depth,
+      seedHost: entry.seedHost,
+    });
   }
 
   while (result.pagesFetched < deps.maxPages && !outOfTokens()) {

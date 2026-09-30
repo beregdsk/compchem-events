@@ -14,7 +14,12 @@ import { buildBackfillPrBody, CRAWL_INTRO } from '../../src/lib/discovery/batch-
 import { fetchWithBrowser } from '../../src/lib/discovery/browser-fetch';
 import { ADD_THRESHOLD } from '../../src/lib/discovery/classify-candidate';
 import { runCrawl } from '../../src/lib/discovery/crawl/crawl';
-import { enqueue, loadCrawlState, saveCrawlState } from '../../src/lib/discovery/crawl/frontier';
+import {
+  enqueue,
+  loadCrawlState,
+  requeueStaleDirectories,
+  saveCrawlState,
+} from '../../src/lib/discovery/crawl/frontier';
 import {
   listingSeeds,
   openalexSeedUrls,
@@ -28,7 +33,7 @@ import { seedHostOf } from '../../src/lib/discovery/crawl/score';
 import { serializeDraft } from '../../src/lib/discovery/draft';
 import type { ExtractOptions } from '../../src/lib/discovery/extract-client';
 import type { FetchOptions } from '../../src/lib/discovery/fetch';
-import type { GitHubOptions } from '../../src/lib/discovery/github-client';
+import { getBranchStatus, type GitHubOptions } from '../../src/lib/discovery/github-client';
 import { groupFilePath } from '../../src/lib/discovery/group-draft';
 import { buildRegistryIndex } from '../../src/lib/discovery/group-match';
 import {
@@ -38,9 +43,15 @@ import {
 } from '../../src/lib/discovery/groups';
 import { CRAWL_BRANCH_PREFIX, openGroupDrafts } from '../../src/lib/discovery/groups-pass';
 import { groupSkipReason } from '../../src/lib/discovery/orchestrator';
+import type { GroupLead } from '../../src/lib/discovery/parsers/group-listing';
 import { Proposer } from '../../src/lib/discovery/propose';
 import { loadSources, type Source } from '../../src/lib/discovery/sources';
-import { loadState, saveState } from '../../src/lib/discovery/state';
+import {
+  emptyState,
+  loadState,
+  mergeGroupLookups,
+  type DiscoveryState,
+} from '../../src/lib/discovery/state';
 import type { OpenAlexOptions } from '../../src/lib/topics/openalex';
 import { buildConfig } from './config';
 
@@ -151,12 +162,18 @@ export async function runGroupsCrawl(deps: GroupsCrawlDeps): Promise<GroupsCrawl
     return { ...out, status: 'locked' };
   }
   try {
-    const state = loadState(deps.statePath);
+    // state.json is shared with the nightly run, which can save it while a
+    // long crawl runs. The crawl keeps its own politeness and page state for
+    // the run, and writes back only the lookups it changed.
+    const disk = loadState(deps.statePath);
+    const lookupsBefore = structuredClone(disk.groupLookups);
+    const state: DiscoveryState = { ...emptyState(), groupLookups: disk.groupLookups };
     const crawl = loadCrawlState(deps.crawlStatePath);
     const save = () => {
       saveCrawlState(deps.crawlStatePath, crawl);
-      saveState(deps.statePath, state);
+      mergeGroupLookups(deps.statePath, lookupsBefore, state.groupLookups);
     };
+    requeueStaleDirectories(crawl, deps.today);
     const groups = deps.groups ?? loadGroups({ includeFixtures: false });
     const openDrafts = await openGroupDrafts(deps.github);
     const known = [...groups, ...openDrafts];
@@ -219,7 +236,8 @@ export async function runGroupsCrawl(deps: GroupsCrawlDeps): Promise<GroupsCrawl
       today: deps.today,
       maxPages: deps.args.maxPages,
       maxClassify: deps.args.maxClassify,
-      maxTokens: deps.maxTokens,
+      // Half the tokens at most, so the leads it finds can still be verified.
+      maxTokens: Math.floor(deps.maxTokens / 2),
       tokensUsedSoFar: 0,
       save,
       log,
@@ -231,8 +249,9 @@ export async function runGroupsCrawl(deps: GroupsCrawlDeps): Promise<GroupsCrawl
     });
     out.errors.push(...crawled.errors);
 
+    // Every pending lead, this run's and any a killed run left behind.
     const resolved = await resolveGroupLeads({
-      leads: crawled.leads,
+      leads: crawl.pendingLeads,
       index: buildRegistryIndex(known),
       takenIds: new Set(known.map((g) => g.id)),
       state,
@@ -246,6 +265,14 @@ export async function runGroupsCrawl(deps: GroupsCrawlDeps): Promise<GroupsCrawl
       log,
     });
     out.tokensUsed = crawled.tokensUsed + resolved.tokensUsed;
+    const stillPending: GroupLead[] = [...resolved.unresolved];
+    const leaveForNextRun = (chunk: readonly GroupCandidate[]) => {
+      forgetLookups(
+        state,
+        chunk.map((c) => c.lookupKey),
+      );
+      stillPending.push(...chunk.map((c) => c.lead));
+    };
     out.errors.push(...resolved.errors.map((e) => `${e.source}: ${e.message}`));
 
     const accepted: GroupCandidate[] = [];
@@ -261,17 +288,23 @@ export async function runGroupsCrawl(deps: GroupsCrawlDeps): Promise<GroupsCrawl
     const chunks: GroupCandidate[][] = [];
     for (let i = 0; i < accepted.length; i += BATCH) chunks.push(accepted.slice(i, i + BATCH));
     const proposer = new Proposer(deps.github);
+    // Never reuse today's branch of an earlier run: an open one would be
+    // overwritten, a closed one would swallow this batch.
+    let n = 1;
+    const nextBranch = async () => {
+      for (;;) {
+        const branch = `${CRAWL_BRANCH_PREFIX}${deps.today}-${n++}`;
+        if (!(await getBranchStatus(branch, deps.github)).exists) return branch;
+      }
+    };
     for (const [i, chunk] of chunks.entries()) {
       if (i >= deps.args.maxPrs) {
-        forgetLookups(
-          state,
-          chunk.map((c) => c.lookupKey),
-        );
+        leaveForNextRun(chunk);
         continue;
       }
       try {
         const p = await proposer.proposeBatch({
-          branch: `${CRAWL_BRANCH_PREFIX}${deps.today}-${i + 1}`,
+          branch: await nextBranch(),
           files: chunk.map((c) => ({
             path: groupFilePath(c.draft),
             content: serializeDraft(c.draft),
@@ -281,20 +314,14 @@ export async function runGroupsCrawl(deps: GroupsCrawlDeps): Promise<GroupsCrawl
           body: buildBackfillPrBody(chunk, [], [], CRAWL_INTRO),
           labels: ['needs-review', 'group'],
         });
-        if (p.outcome === 'reviewed')
-          forgetLookups(
-            state,
-            chunk.map((c) => c.lookupKey),
-          );
+        if (p.outcome === 'reviewed') leaveForNextRun(chunk);
         else out.prs.push(p.pr);
       } catch (err) {
-        forgetLookups(
-          state,
-          chunk.map((c) => c.lookupKey),
-        );
+        leaveForNextRun(chunk);
         out.errors.push(`batch ${i + 1}: ${err instanceof Error ? err.message : String(err)}`);
       }
     }
+    crawl.pendingLeads = stillPending;
     save();
     return out;
   } finally {
