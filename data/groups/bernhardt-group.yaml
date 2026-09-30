@@ -1,0 +1,21 @@
+id: bernhardt-group
+name: Bernhardt Group
+kind: group
+website: https://aibn.uq.edu.au/profile/2001/debra-bernhardt
+topics:
+  - dft
+  - molecular-dynamics
+  - materials-modeling
+  - electrochemistry
+  - catalysis
+description: The Bernhardt Group, led by Professor Debra Bernhardt, uses
+  theoretical and computational methods to study new materials and fluids,
+  focusing on nonequilibrium systems, transport in nanoporous materials, and
+  sustainable energy applications.
+added: 2026-09-30
+pi: Debra Bernhardt
+parent: Australian Institute for Bioengineering and Nanotechnology, University
+  of Queensland
+location:
+  city: Brisbane
+  country: AU
