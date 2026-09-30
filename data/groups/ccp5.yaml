@@ -1,0 +1,15 @@
+id: ccp5
+name: CCP5
+kind: network
+website: https://www.psdi.ac.uk/community/collaborators/ccp5/
+topics:
+  - molecular-dynamics
+  - materials-modeling
+  - soft-matter
+  - software-hpc
+  - ml-chemistry
+description: CCP5 is a collaborative computational project funded by the EPSRC,
+  focusing on the computer simulation of condensed phase materials like liquids,
+  polymers, solids, and macromolecules. It provides software, training, and
+  community support for molecular modeling and simulation.
+added: 2026-09-30

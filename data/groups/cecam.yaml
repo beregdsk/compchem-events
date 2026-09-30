@@ -1,0 +1,21 @@
+id: cecam
+name: CECAM
+kind: network
+website: https://www.cecam.org/how-apply-node-status
+topics:
+  - molecular-dynamics
+  - biomolecular-simulation
+  - electronic-structure
+  - materials-modeling
+  - enhanced-sampling
+description: CECAM, the European Centre for Atomic and Molecular Calculations,
+  is a consortium and network of nodes dedicated to advancing computational
+  sciences, with core focus on molecular dynamics, quantum chemistry, and
+  materials modeling.
+added: 2026-09-30
+aliases:
+  - CECAM node
+parent: EPFL
+location:
+  city: Lausanne
+  country: CH

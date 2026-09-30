@@ -1,0 +1,22 @@
+id: monash-computational-chemistry-group
+name: Monash Computational Chemistry Group
+kind: group
+website: https://mccg.erc.monash.edu/members/
+topics:
+  - dft
+  - electronic-structure
+  - wavefunction-methods
+  - molecular-dynamics
+  - materials-modeling
+description: The Monash Computational Chemistry Group, led by Professor
+  Ekaterina (Katya) Pas, specializes in developing and assessing cost-effective
+  quantum chemical methods, molecular dynamics simulations, and machine learning
+  approaches to study condensed-phase materials, ionic liquids…
+added: 2026-09-30
+aliases:
+  - Ekaterina (Katya) Pas
+pi: Prof. Ekaterina (Katya) Pas
+parent: Monash University
+location:
+  city: Clayton
+  country: AU

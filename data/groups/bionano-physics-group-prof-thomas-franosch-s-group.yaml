@@ -1,0 +1,18 @@
+id: bionano-physics-group-prof-thomas-franosch-s-group
+name: BioNano-Physics Group (Prof. Thomas Franosch's Group)
+kind: group
+website: https://www.uibk.ac.at/en/th-physik/bio-nano/
+topics:
+  - soft-matter
+  - molecular-dynamics
+  - biomolecular-simulation
+description: The BioNano-Physics Group, led by Prof. Dr. Thomas Franosch at the
+  Department of Theoretical Physics of the Universität Innsbruck, uses
+  theoretical and computational tools to study fundamental questions in
+  biological and nano physics, focusing on complex transport…
+added: 2026-09-30
+pi: Thomas Franosch
+parent: Universität Innsbruck, Department of Theoretical Physics
+location:
+  city: Innsbruck
+  country: AT

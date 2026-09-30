@@ -1,0 +1,20 @@
+id: johnson-lab
+name: Johnson Lab
+kind: group
+website: https://jlab.chem.yale.edu/pub?page=1
+topics:
+  - spectroscopy
+  - molecular-dynamics
+  - electronic-structure
+  - biomolecular-simulation
+  - catalysis
+description: The Johnson Lab at Yale University, led by Prof. Mark A. Johnson,
+  is a physical chemistry research group specializing in the spectroscopy of
+  cryogenically cooled molecular clusters, mass spectrometry, and computational
+  chemistry to investigate proton transfer, hydrogen bonding…
+added: 2026-09-30
+pi: Mark A. Johnson
+parent: Yale University
+location:
+  city: New Haven
+  country: US

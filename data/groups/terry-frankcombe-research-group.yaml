@@ -1,0 +1,20 @@
+id: terry-frankcombe-research-group
+name: Terry Frankcombe Research Group
+kind: group
+website: https://www.unsw.edu.au/staff/terry-frankcombe
+topics:
+  - wavefunction-methods
+  - quantum-dynamics
+  - materials-modeling
+  - photochemistry
+  - dft
+description: Associate Professor Terry Frankcombe leads a research group at UNSW
+  Canberra, School of Science, focusing on theoretical and computational
+  chemistry. Their work spans quantum dynamics, wave function analysis,
+  materials modeling, and photochemistry.
+added: 2026-09-30
+pi: Terry Frankcombe
+parent: UNSW Canberra, School of Science
+location:
+  city: Canberra
+  country: AU

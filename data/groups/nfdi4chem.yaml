@@ -1,0 +1,12 @@
+id: nfdi4chem
+name: NFDI4Chem
+kind: network
+website: https://nfdi4chem.de/
+topics:
+  - cheminformatics
+  - software-hpc
+  - education-training
+description: NFDI4Chem is a German, DFG-funded national consortium supporting
+  chemists in making research data FAIR through services, electronic lab
+  notebooks, repositories, and training.
+added: 2026-09-30

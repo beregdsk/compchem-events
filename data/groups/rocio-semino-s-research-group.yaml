@@ -1,0 +1,20 @@
+id: rocio-semino-s-research-group
+name: Rocio Semino's research group
+kind: group
+website: https://www.rociosemino.com/the-team
+topics:
+  - molecular-dynamics
+  - materials-modeling
+  - ml-potentials
+  - soft-matter
+  - electrochemistry
+description: Rocio Semino's research group at Sorbonne University works on
+  computational chemistry and materials modeling, focusing on metal-organic
+  frameworks, porous materials, proton conduction, polymer composites, and
+  batteries via multiscale simulations and machine learning.
+added: 2026-09-30
+pi: Rocio Semino
+parent: Sorbonne University
+location:
+  city: Paris
+  country: FR

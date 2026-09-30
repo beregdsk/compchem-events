@@ -1,0 +1,17 @@
+id: michaels-group
+name: Michaels Group
+kind: group
+website: https://bc.biol.ethz.ch/research/michaels-group.html
+topics:
+  - soft-matter
+  - biomolecular-simulation
+description: The Michaels group at the Institute of Biochemistry, ETH Zurich,
+  led by Thomas Michaels, conducts theoretical and computational research in
+  soft and living matter physics, focusing on biomolecular aggregation,
+  liquid-liquid phase separation, and membrane biophysics.
+added: 2026-09-30
+pi: Thomas Michaels
+parent: Institute of Biochemistry, ETH Zurich
+location:
+  city: Zürich
+  country: CH

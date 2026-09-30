@@ -1,0 +1,20 @@
+id: ignacio-pagonabarraga
+name: Ignacio Pagonabarraga
+kind: group
+website: https://www.ignasipagonabarraga.eu/
+topics:
+  - soft-matter
+  - molecular-dynamics
+  - software-hpc
+  - materials-modeling
+  - electrochemistry
+description: Professor of Physics at the University of Barcelona leading
+  theoretical and computational research on soft matter out of equilibrium,
+  focusing on active matter, electrokinetics, and mesoscale simulation
+  algorithms.
+added: 2026-09-30
+pi: Ignacio Pagonabarraga
+parent: Universitat de Barcelona
+location:
+  city: Barcelona
+  country: ES

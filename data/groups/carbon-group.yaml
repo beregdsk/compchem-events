@@ -1,0 +1,20 @@
+id: carbon-group
+name: Carbon Group
+kind: group
+website: https://research.curtin.edu.au/scieng/research/carbon-group/our-people/
+topics:
+  - materials-modeling
+  - dft
+  - electronic-structure
+description: The Carbon Group at Curtin University, led by Associate Professor
+  Nigel Marks, conducts research on carbon materials, thin films, surface
+  science, and molecular modeling, integrating computational chemistry and
+  materials science.
+added: 2026-09-30
+aliases:
+  - Irene Suarez-Martinez
+pi: Nigel Marks
+parent: Curtin University
+location:
+  city: Perth
+  country: AU

@@ -1,0 +1,22 @@
+id: condensed-matter-theory-group
+name: Condensed Matter Theory Group
+kind: group
+website: https://condensed.physics.usyd.edu.au/?x=stampfl
+topics:
+  - electronic-structure
+  - quantum-dynamics
+  - molecular-dynamics
+  - ml-potentials
+  - materials-modeling
+description: The Condensed Matter Theory Group at the University of Sydney, led
+  by Professor Catherine Stampfl, specializes in theoretical physics and
+  condensed matter, utilizing quantum mechanical models, molecular simulations,
+  and machine learning techniques.
+added: 2026-09-30
+aliases:
+  - Catherine Stampf
+pi: Catherine Stampfl
+parent: School of Physics, University of Sydney
+location:
+  city: Camperdown
+  country: AU

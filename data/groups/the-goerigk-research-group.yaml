@@ -1,0 +1,20 @@
+id: the-goerigk-research-group
+name: The Goerigk Research Group
+kind: group
+website: https://goerigk.chemistry.unimelb.edu.au/
+topics:
+  - dft
+  - excited-states
+  - electronic-structure
+  - wavefunction-methods
+  - software-hpc
+description: The Goerigk Research Group at the University of Melbourne
+  specializes in theoretical and computational quantum chemistry. Led by A/Prof.
+  Lars Goerigk, the group develops advanced quantum-chemical methods,
+  particularly TD-DFT, and applies them to diverse chemical problems.
+added: 2026-09-30
+pi: Lars Goerigk
+parent: The University of Melbourne
+location:
+  city: Melbourne
+  country: AU

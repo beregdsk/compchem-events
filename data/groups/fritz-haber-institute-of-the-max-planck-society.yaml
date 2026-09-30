@@ -1,0 +1,21 @@
+id: fritz-haber-institute-of-the-max-planck-society
+name: Fritz Haber Institute of the Max Planck Society
+kind: institute
+website: https://en.wikipedia.org/wiki/Fritz_Haber_Institute_of_the_Max_Planck_Society
+topics:
+  - electronic-structure
+  - catalysis
+  - materials-modeling
+  - spectroscopy
+  - electrochemistry
+description: The Fritz Haber Institute of the Max Planck Society is a renowned
+  research institute located in Berlin, Germany. It focuses on advanced research
+  in catalysis, surface science, spectroscopy, theoretical chemistry, and
+  materials science.
+added: 2026-09-30
+aliases:
+  - Fritz Haber Institute
+parent: Max Planck Society
+location:
+  city: Berlin
+  country: DE

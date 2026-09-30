@@ -1,0 +1,21 @@
+id: smith-group
+name: Smith Group
+kind: group
+website: https://scmb-ckan.research.dc.uq.edu.au/organization/about/smith
+topics:
+  - quantum-dynamics
+  - molecular-dynamics
+  - biomolecular-simulation
+  - electronic-structure
+description: The Smith Group utilizes quantum-mechanical methods to understand
+  enzyme mechanisms and molecular mechanical methods to explore protein
+  dynamics, alongside X-ray crystallography to determine structures of protein
+  and small molecule complexes.
+added: 2026-09-30
+aliases:
+  - Brian Smith
+pi: Prof Brian Smith
+parent: La Trobe University
+location:
+  city: Bundoora
+  country: AU

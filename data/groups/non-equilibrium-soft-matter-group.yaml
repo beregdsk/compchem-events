@@ -1,0 +1,21 @@
+id: non-equilibrium-soft-matter-group
+name: Non-Equilibrium Soft Matter group
+kind: group
+website: https://smb.phys.tue.nl/janssen/
+topics:
+  - soft-matter
+  - molecular-dynamics
+  - ml-potentials
+  - materials-modeling
+description: The research group of Liesbeth Janssen at Eindhoven University of
+  Technology, focusing on non-equilibrium soft matter. They use theory, computer
+  simulations, and machine learning to study the properties of materials out of
+  thermodynamic equilibrium.
+added: 2026-09-30
+aliases:
+  - Liesbeth Janssen
+pi: Liesbeth M. C. Janssen
+parent: Eindhoven University of Technology
+location:
+  city: Eindhoven
+  country: NL

@@ -1,0 +1,18 @@
+id: giuntoli-research-group
+name: Giuntoli Research Group
+kind: group
+website: https://giuntoligroup.web.rug.nl/
+topics:
+  - soft-matter
+  - materials-modeling
+  - molecular-dynamics
+  - biomolecular-simulation
+description: The Giuntoli research group specializes in multiscale computational
+  modeling of soft matter and polymers, aiming to design sustainable and
+  biomedical materials through advanced simulations.
+added: 2026-09-30
+pi: Andrea Giuntoli
+parent: University of Groningen
+location:
+  city: Groningen
+  country: NL

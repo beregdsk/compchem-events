@@ -1,0 +1,20 @@
+id: bala-materials-lab
+name: Bala Materials Lab
+kind: group
+website: https://nbalakrishnan0.wixsite.com/n-balakrishnan
+topics:
+  - materials-modeling
+  - ml-chemistry
+  - electrochemistry
+description: Bala Materials Lab is a research group at Keele University led by
+  Dr. Nilanthy Balakrishnan. The group specializes in the discovery and
+  optimization of advanced materials for next-generation energy technologies,
+  integrating computational modelling, machine learning, and…
+added: 2026-09-30
+aliases:
+  - Nilanthy Balakrishnan
+pi: Dr Nilanthy Balakrishnan
+parent: Keele University
+location:
+  city: Newcastle-under-Lyme
+  country: GB

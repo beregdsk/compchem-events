@@ -1,0 +1,21 @@
+id: instituto-de-nanociencia-y-materiales-de-aragon
+name: Instituto de Nanociencia y Materiales de Aragón
+kind: institute
+website: https://inma.unizar-csic.es/
+topics:
+  - materials-modeling
+  - electronic-structure
+  - biomolecular-simulation
+  - catalysis
+  - spectroscopy
+description: The official website of the Instituto de Nanociencia y Materiales
+  de Aragón (INMA), a joint research centre of the CSIC and the University of
+  Zaragoza. It conducts research in nanoscience and advanced materials, focusing
+  on energy, biomedicine, information technologies, and…
+added: 2026-09-30
+aliases:
+  - Instituto de Nanociencia y Materiales de Aragón (INMA)
+parent: CSIC and Universidad de Zaragoza
+location:
+  city: Zaragoza
+  country: ES

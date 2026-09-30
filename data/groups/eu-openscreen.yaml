@@ -1,0 +1,14 @@
+id: eu-openscreen
+name: EU-OPENSCREEN
+kind: network
+website: https://www.eu-openscreen.eu/
+topics:
+  - drug-design
+  - cheminformatics
+  - ml-chemistry
+  - education-training
+description: EU-OPENSCREEN is a not-for-profit European Research Infrastructure
+  Consortium (ERIC) advancing chemical biology and early drug discovery. It
+  offers screening, medicinal chemistry, compound collections, a bioactivity
+  database, and training.
+added: 2026-09-30

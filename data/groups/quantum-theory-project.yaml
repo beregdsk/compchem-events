@@ -1,0 +1,19 @@
+id: quantum-theory-project
+name: Quantum Theory Project
+kind: institute
+website: https://qtp.ufl.edu/
+topics:
+  - electronic-structure
+  - dft
+  - materials-modeling
+  - quantum-dynamics
+  - software-hpc
+description: The Quantum Theory Project is a premier multi-disciplinary research
+  institute at the University of Florida, focusing on theory, modeling, and
+  computation of complex molecular and materials systems through advanced
+  quantum mechanical methods and software.
+added: 2026-09-30
+parent: University of Florida
+location:
+  city: Gainesville
+  country: US

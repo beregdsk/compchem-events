@@ -1,0 +1,15 @@
+id: ccpbiosim
+name: CCPBioSim
+kind: network
+website: https://github.com/CCPBioSim
+topics:
+  - biomolecular-simulation
+  - molecular-dynamics
+  - enhanced-sampling
+  - software-hpc
+  - ml-chemistry
+description: The GitHub organization page for CCPBioSim (Collaborative
+  Computational Project for Biomolecular Simulation), a collaborative UK-based
+  network of researchers developing methods, software, and training for
+  biomolecular simulation.
+added: 2026-09-30

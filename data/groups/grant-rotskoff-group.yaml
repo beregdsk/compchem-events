@@ -1,0 +1,20 @@
+id: grant-rotskoff-group
+name: Grant Rotskoff Group
+kind: group
+website: https://statmech.stanford.edu/research
+topics:
+  - biomolecular-simulation
+  - ml-chemistry
+  - enhanced-sampling
+  - molecular-dynamics
+  - quantum-computing-chemistry
+description: The research group led by Grant Rotskoff at Stanford University
+  focuses on nonequilibrium self-assembly, biophysical dynamics, generative
+  sampling, and machine learning for chemical discovery, leveraging quantum
+  computing and advanced computational methods.
+added: 2026-09-30
+pi: Grant Rotskoff
+parent: Stanford University
+location:
+  city: Stanford
+  country: US
