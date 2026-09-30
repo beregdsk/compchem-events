@@ -86,8 +86,13 @@ export function parseCrawlArgs(argv: string[]): CrawlArgs {
       continue;
     }
     if (!Object.hasOwn(INT_FLAGS, flag)) throw new Error(`unknown argument "${flag}"`);
-    if (value === undefined || !/^[1-9]\d*$/.test(value))
+    // Searches are paid (OpenRouter's web plugin), so they alone may be 0.
+    if (flag === '--max-searches') {
+      if (value === undefined || !/^\d+$/.test(value))
+        throw new Error(`${flag} needs a non-negative integer, got "${value ?? ''}"`);
+    } else if (value === undefined || !/^[1-9]\d*$/.test(value)) {
       throw new Error(`${flag} needs a positive integer, got "${value ?? ''}"`);
+    }
     args[INT_FLAGS[flag as keyof typeof INT_FLAGS]] = Number(value);
   }
   return args;

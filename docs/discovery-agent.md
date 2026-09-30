@@ -258,6 +258,14 @@ feeds their group links into the same resolver. Spec:
   manual `run.sh`:
   `npm run discover:groups-crawl -- --max-pages 20000 --max-classify 3000 --max-searches 50 --max-prs 20 --model <paid model id> --max-tokens <n>`.
   `--max-tokens` is the hard stop; check the model's price first.
+- **Daily free slices** (since 2026-10-01, after the first paid crawl used
+  the key's $5 monthly limit): `~/discovery-agent/crawl-slice.sh` runs at
+  05:37 local, after OpenRouter's free-model daily cap resets, with the free
+  model, `--max-pages 300 --max-classify 200 --max-searches 0 --max-prs 2`.
+  That is at most about 500 model calls (200 classifications, up to 300
+  verifications, pending leads first), leaving the rest of the 1,000 free
+  calls a day to the nightly run. `--max-searches 0` turns off the paid web
+  searches.
 
 ## Testing
 

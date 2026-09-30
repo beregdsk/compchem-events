@@ -23,6 +23,9 @@ describe('parseCrawlArgs', () => {
       model: 'x/y',
     });
     expect(() => parseCrawlArgs(['--max-pages', '0'])).toThrow(/positive integer/);
+    // Searches are paid (OpenRouter's web plugin): 0 turns them off.
+    expect(parseCrawlArgs(['--max-searches', '0'])).toMatchObject({ maxSearches: 0 });
+    expect(() => parseCrawlArgs(['--max-searches', '-1'])).toThrow(/non-negative integer/);
     expect(() => parseCrawlArgs(['--nope'])).toThrow(/unknown argument/);
   });
 });
