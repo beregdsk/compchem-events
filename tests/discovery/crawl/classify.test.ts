@@ -47,7 +47,7 @@ describe('classifyPage', () => {
       { tools?: unknown; plugins?: unknown; messages: Array<{ content: string }> } | undefined;
     const fetchImpl = (async (_u: RequestInfo | URL, init?: RequestInit) => {
       body = JSON.parse(String(init?.body));
-      return reply({ kind: 'directory', groups: [0, 1, 99, -1] })();
+      return reply({ kind: 'directory', groups: [0, 1, 99, -1] })('x');
     }) as typeof fetch;
     const r = await classifyPage(
       'text',
