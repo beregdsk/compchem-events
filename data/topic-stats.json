@@ -361,16 +361,7 @@
       ]
     },
     "dft": {
-      "openalex": [
-        "T10002",
-        "T11025",
-        "T11242",
-        "T12044",
-        "T12191",
-        "T12748",
-        "T12893",
-        "T13013"
-      ],
+      "openalex": ["T10002", "T11025", "T11242", "T12044", "T12191", "T12748", "T12893", "T13013"],
       "works_by_year": [
         {
           "year": 2011,
@@ -642,12 +633,7 @@
       ]
     },
     "wavefunction-methods": {
-      "openalex": [
-        "T10002",
-        "T10037",
-        "T10622",
-        "T12191"
-      ],
+      "openalex": ["T10002", "T10037", "T10622", "T12191"],
       "works_by_year": [
         {
           "year": 2011,
@@ -895,12 +881,7 @@
       ]
     },
     "excited-states": {
-      "openalex": [
-        "T10956",
-        "T11129",
-        "T11240",
-        "T11298"
-      ],
+      "openalex": ["T10956", "T11129", "T11240", "T11298"],
       "works_by_year": [
         {
           "year": 2011,
@@ -1148,15 +1129,7 @@
       ]
     },
     "photochemistry": {
-      "openalex": [
-        "T10306",
-        "T10701",
-        "T10903",
-        "T11129",
-        "T11286",
-        "T12557",
-        "T13253"
-      ],
+      "openalex": ["T10306", "T10701", "T10903", "T11129", "T11286", "T12557", "T13253"],
       "works_by_year": [
         {
           "year": 2011,
@@ -1421,10 +1394,7 @@
       ]
     },
     "quantum-dynamics": {
-      "openalex": [
-        "T11261",
-        "T11804"
-      ],
+      "openalex": ["T11261", "T11804"],
       "works_by_year": [
         {
           "year": 2011,
@@ -1951,11 +1921,7 @@
       ]
     },
     "biomolecular-simulation": {
-      "openalex": [
-        "T11809",
-        "T12381",
-        "T13539"
-      ],
+      "openalex": ["T11809", "T12381", "T13539"],
       "works_by_year": [
         {
           "year": 2011,
@@ -2500,9 +2466,7 @@
       ]
     },
     "ml-potentials": {
-      "openalex": [
-        "T11689"
-      ],
+      "openalex": ["T11689"],
       "works_by_year": [
         {
           "year": 2011,
@@ -2734,13 +2698,7 @@
       ]
     },
     "ml-chemistry": {
-      "openalex": [
-        "T10211",
-        "T10640",
-        "T11948",
-        "T12157",
-        "T13675"
-      ],
+      "openalex": ["T10211", "T10640", "T11948", "T12157", "T13675"],
       "works_by_year": [
         {
           "year": 2011,
@@ -2993,10 +2951,7 @@
       ]
     },
     "cheminformatics": {
-      "openalex": [
-        "T10211",
-        "T13297"
-      ],
+      "openalex": ["T10211", "T13297"],
       "works_by_year": [
         {
           "year": 2011,
@@ -3234,11 +3189,7 @@
       ]
     },
     "drug-design": {
-      "openalex": [
-        "T10211",
-        "T13230",
-        "T14099"
-      ],
+      "openalex": ["T10211", "T13230", "T14099"],
       "works_by_year": [
         {
           "year": 2011,
@@ -3831,13 +3782,7 @@
       ]
     },
     "catalysis": {
-      "openalex": [
-        "T10192",
-        "T10353",
-        "T11747",
-        "T11907",
-        "T12302"
-      ],
+      "openalex": ["T10192", "T10353", "T11747", "T11907", "T12302"],
       "works_by_year": [
         {
           "year": 2011,
@@ -4093,10 +4038,7 @@
       ]
     },
     "electrochemistry": {
-      "openalex": [
-        "T10310",
-        "T12274"
-      ],
+      "openalex": ["T10310", "T12274"],
       "works_by_year": [
         {
           "year": 2011,
@@ -4334,14 +4276,7 @@
       ]
     },
     "spectroscopy": {
-      "openalex": [
-        "T10310",
-        "T10640",
-        "T11025",
-        "T11298",
-        "T12748",
-        "T13126"
-      ],
+      "openalex": ["T10310", "T10640", "T11025", "T11298", "T12748", "T13126"],
       "works_by_year": [
         {
           "year": 2011,
@@ -4602,14 +4537,7 @@
       ]
     },
     "quantum-computing-chemistry": {
-      "openalex": [
-        "T10382",
-        "T10478",
-        "T10612",
-        "T10657",
-        "T10682",
-        "T13126"
-      ],
+      "openalex": ["T10382", "T10478", "T10612", "T10657", "T10682", "T13126"],
       "works_by_year": [
         {
           "year": 2011,
@@ -4869,11 +4797,7 @@
       ]
     },
     "software-hpc": {
-      "openalex": [
-        "T10792",
-        "T13398",
-        "T13567"
-      ],
+      "openalex": ["T10792", "T13398", "T13567"],
       "works_by_year": [
         {
           "year": 2011,
