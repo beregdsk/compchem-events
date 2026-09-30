@@ -1,0 +1,115 @@
+---
+// The literature statistics on a topic page. Every string here came from
+// OpenAlex and is rendered as text; links only when they are https.
+import TrendChart from './TrendChart.astro';
+import type { SlugStats } from '../lib/topic-stats';
+import type { Coverage } from '../lib/topic-coverage';
+
+interface Props {
+  stats: SlugStats;
+  coverage: Coverage;
+  slug: string;
+  generatedAt: string;
+}
+const { stats, coverage, slug, generatedAt } = Astro.props;
+const n = (v: number) => v.toLocaleString('en');
+const https = (u: string | undefined): u is string => u !== undefined && u.startsWith('https://');
+---
+
+<section class="topic-stats" aria-labelledby="stats-heading">
+  <h2 id="stats-heading">In the literature</h2>
+  <TrendChart
+    title="Papers per year"
+    series={stats.works_by_year.map((y) => ({ label: String(y.year), value: y.works }))}
+  />
+  <dl class="topic-stats__totals">
+    <dt>Papers</dt>
+    <dd>{n(stats.works_total)}</dd>
+    <dt>Citations</dt>
+    <dd>
+      {n(stats.citations_total)}{' '}
+      <span class="muted">
+        (citations to papers in these topics; a paper in two of them counts twice)
+      </span>
+    </dd>
+    <dt>Growth over five years</dt>
+    <dd>{stats.growth_5y === null ? '—' : `${stats.growth_5y.toFixed(2)}×`}</dd>
+  </dl>
+
+  <div class="topic-stats__cols">
+    <div>
+      <h3>Top institutions</h3>
+      <ol>
+        {stats.top_institutions.map((i) => (
+          <li>
+            {https(i.homepage) ? (
+              <a href={i.homepage} rel="noopener">
+                {i.name}
+              </a>
+            ) : (
+              i.name
+            )}
+            {i.country && <span class="muted">{i.country}</span>}
+            <span class="mono muted">{n(i.works)}</span>
+          </li>
+        ))}
+      </ol>
+    </div>
+    <div>
+      <h3>Top journals</h3>
+      <ol>
+        {stats.top_venues.map((v) => (
+          <li>
+            {v.name} <span class="mono muted">{n(v.works)}</span>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </div>
+
+  <h3>Most cited recent papers</h3>
+  <ol>
+    {stats.top_papers.map((p) => (
+      <li>
+        {https(p.doi) ? (
+          <a href={p.doi} rel="noopener">
+            {p.title}
+          </a>
+        ) : (
+          p.title
+        )}
+        <span class="muted">({p.year})</span>
+        <span class="mono muted">{n(p.citations)} citations</span>
+      </li>
+    ))}
+  </ol>
+
+  <h3>OpenAlex topics</h3>
+  <ul class="related__list">
+    {stats.subtopics.map((t) => (
+      <li>
+        <a href={`https://openalex.org/${t.id}`} rel="noopener">
+          {t.name}
+        </a>
+        <span class="mono muted related__aside">{n(t.works)} papers</span>
+      </li>
+    ))}
+  </ul>
+
+  <h3>On this site</h3>
+  <p>
+    <a href={`/?topics=${slug}`}>{coverage.events} upcoming events</a>
+    {' · '}
+    <a href="/groups/">{coverage.groups} groups</a>
+    {' · '}
+    <a href="/positions/">{coverage.positions} open positions</a>
+  </p>
+
+  <p class="muted topic-stats__source">
+    Literature data:{' '}
+    <a href="https://openalex.org/" rel="noopener">
+      OpenAlex
+    </a>{' '}
+    (CC0), snapshot of {generatedAt}.
+  </p>
+</section>

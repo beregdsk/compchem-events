@@ -1025,8 +1025,97 @@ a:hover {
 }
 .trend__bar {
   fill: var(--lobe-neg);
+  opacity: 0.75;
 }
 .trend__axis {
   fill: var(--fg-muted);
   font: 11px var(--font-mono);
+}
+
+/* /topics/ table (TopicsTable.astro). */
+.topics-table__wrap {
+  overflow-x: auto;
+  margin-top: var(--space-m);
+}
+.topics-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--step--1);
+}
+.topics-table th,
+.topics-table td {
+  padding: var(--space-xs) var(--space-s);
+  border-bottom: 1px solid var(--rule);
+  text-align: right;
+  white-space: nowrap;
+}
+.topics-table th[scope='row'],
+.topics-table thead th:first-child {
+  text-align: left;
+  white-space: normal;
+  min-width: 12rem;
+}
+.topics-table thead th {
+  border-bottom-color: var(--rule-strong);
+}
+.topics-table thead button {
+  font: inherit;
+  color: var(--fg-muted);
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+.topics-table thead button:hover,
+.topics-table thead button:focus-visible {
+  color: var(--fg);
+  text-decoration: underline;
+}
+.topics-table th[aria-sort] button {
+  color: var(--fg);
+}
+.spark polyline {
+  fill: none;
+  stroke: var(--lobe-neg);
+  stroke-width: 1.5;
+}
+
+/* Literature statistics on a topic page (TopicStatsBlock.astro). */
+.topic-stats {
+  margin: var(--space-l) 0;
+  padding-bottom: var(--space-l);
+  border-bottom: 1px solid var(--rule);
+}
+.topic-stats__totals {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--space-xs) var(--space-m);
+}
+.topic-stats__totals dt {
+  color: var(--fg-muted);
+}
+.topic-stats__totals dd {
+  margin: 0;
+}
+.topic-stats__cols {
+  display: grid;
+  gap: var(--space-m);
+}
+@media (min-width: 48rem) {
+  .topic-stats__cols {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.topic-stats ol {
+  padding-left: 1.4em;
+}
+.topic-stats li {
+  margin-bottom: var(--space-xs);
+}
+.topic-stats li .muted,
+.topic-stats li .mono {
+  margin-left: 0.4em;
+}
+.topic-stats__source {
+  font-size: var(--step--1);
 }

@@ -1,29 +1,47 @@
 ---
 import Base from '../layouts/Base.astro';
-import { eventsWithTopic, loadEvents, upcomingEvents } from '../lib/events';
+import TopicsTable from '../components/TopicsTable.astro';
+import { loadEvents, upcomingEvents } from '../lib/events';
+import { loadGroups } from '../lib/groups';
+import { loadPositions, openPositions } from '../lib/positions';
+import { topicCoverage } from '../lib/topic-coverage';
+import { loadTopicStats } from '../lib/topic-stats';
 import { loadTopics } from '../lib/validation';
 
-const upcoming = upcomingEvents(loadEvents());
-const topics = loadTopics().map((topic) => ({
-  ...topic,
-  count: eventsWithTopic(upcoming, topic.slug).length,
+const data = {
+  upcoming: upcomingEvents(loadEvents()),
+  groups: loadGroups(),
+  open: openPositions(loadPositions()),
+};
+const stats = loadTopicStats();
+const rows = loadTopics().map((topic) => ({
+  topic,
+  stats: stats?.topics[topic.slug],
+  coverage: topicCoverage(topic.slug, data),
 }));
 ---
 
 <Base
   title="Topics"
-  description="Computational chemistry events by topic, each with its own calendar and feed."
+  description="Computational chemistry topics: papers and citations from OpenAlex, and the events, groups and positions listed here."
   path="/topics/"
 >
   <h1>Topics</h1>
-  <p class="muted">Each topic has its own page, calendar (.ics) and Atom feed.</p>
-
-  <ul class="related__list">
-    {topics.map((t) => (
-      <li>
-        <a href={`/topics/${t.slug}/`}>{t.label}</a>
-        <span class="mono muted related__aside">{t.count} upcoming</span>
-      </li>
-    ))}
-  </ul>
+  <p class="muted">
+    Each topic has its own page, calendar (.ics) and Atom feed.{' '}
+    {stats && (
+      <>
+        Literature numbers from{' '}
+        <a href="https://openalex.org/" rel="noopener">
+          OpenAlex
+        </a>{' '}
+        (CC0), snapshot of {stats.generated_at}.
+      </>
+    )}
+  </p>
+  <TopicsTable rows={rows} />
 </Base>
+
+<script>
+  import '../scripts/sort-table.ts';
+</script>
