@@ -5,11 +5,13 @@ website: https://polymer.or.kr/conferenceintl/default/introduction/greeting.php
 topics:
   - soft-matter
   - materials-modeling
-  - molecular-dynamics
 description: The Polymer Society of Korea (PSK) is a learned society founded in
-  1976 with over 4,500 members. It promotes polymer science and technology,
-  organizing international conferences and supporting research in polymer
-  synthesis, physics, and advanced materials.
+  1976, dedicated to the advancement of polymer science and technology. This
+  page serves as the official portal for the IUPAC-PSK50 conference,
+  commemorating the society's 50th anniversary, and provides contact…
 added: 2026-09-30
 aliases:
   - the Polymer Society of Korea (PSK)
+location:
+  city: Seoul
+  country: KR
