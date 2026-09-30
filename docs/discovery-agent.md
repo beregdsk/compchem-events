@@ -158,7 +158,8 @@ name that matches is done. Otherwise one no-tools call splits the unmatched
 text into people and organisations.
 
 For each unknown name the pass tries the listing's own link first (unless it is
-a profile page such as Google Scholar or the listing's own host), then one web
+a profile page such as Google Scholar, a reference site (Wikipedia, Wikidata,
+GitHub) or the listing's own host), then one web
 search (`MAX_SEARCHES`, default 20). It fetches up to two candidate URLs
 through the normal polite-fetch path (robots.txt, rate limit, `MAX_PAGES`,
 blocklist) and asks the extraction model whether the page is that group's

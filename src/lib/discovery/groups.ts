@@ -9,7 +9,13 @@ import { normalizeEventUrl, type ExtractOptions } from './extract-client';
 import { politeFetch, type FetchOptions } from './fetch';
 import { groupFilePath, synthesizeGroupDraft } from './group-draft';
 import { extractGroup, splitNames, type ExtractedGroup, type NameItem } from './group-extract';
-import { isProfileHost, matchName, splitOrganizer, type RegistryIndex } from './group-match';
+import {
+  canBeGroupWebsite,
+  isProfileHost,
+  matchName,
+  splitOrganizer,
+  type RegistryIndex,
+} from './group-match';
 import { isPublicHttpsUrl, searchGroupWebsites } from './group-search';
 import type { GroupLead } from './parsers/group-listing';
 import { extractionInputFromPage } from './parsers/page';
@@ -123,9 +129,9 @@ export async function resolveGroupLeads(options: ResolveOptions): Promise<Resolv
     }));
   }
 
-  /** A group's website is never a profile page, nor on the host the lead came from. */
+  /** A group's website is never a profile or reference page, nor on the host the lead came from. */
   const onOtherHost = (url: string, originHost: string) =>
-    !isProfileHost(url) && new URL(url).host.toLowerCase() !== originHost;
+    canBeGroupWebsite(url) && new URL(url).host.toLowerCase() !== originHost;
 
   /** Fetches one URL and asks the model whether it is this item's homepage; `capped` when MAX_PAGES stopped it. */
   async function verify(
