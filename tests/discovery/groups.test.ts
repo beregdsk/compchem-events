@@ -351,6 +351,57 @@ describe('resolveGroupLeads', () => {
     expect(Object.keys(state.groupLookups)).toEqual(['alpha lab']);
   });
 
+  it('does not split an organiser once the searches are spent', async () => {
+    const w = world();
+    const logs: string[] = [];
+    const lead: GroupLead = {
+      text: 'Stephen Cox (Durham University)',
+      origin: EVENT,
+      fromListing: false,
+    };
+    const result = await resolveGroupLeads(
+      options(w, [lead], { maxSearches: 0, log: (m) => logs.push(m) }),
+    );
+    expect(w.seen.llmCalls).toBe(0);
+    expect(result.candidates).toEqual([]);
+    expect(logs).toEqual([
+      'groups: Stephen Cox (Durham University): MAX_SEARCHES reached, left for the next run',
+    ]);
+  });
+
+  it('resolves leads concurrently and returns drafts in lead order', async () => {
+    const w = world({
+      verdicts: { 'https://cootelab.com/': COOTE, 'https://www.epfl.ch/labs/cosmo/': COSMO },
+    });
+    let inFlight = 0;
+    let maxInFlight = 0;
+    const slowFirst = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      if (String(input).endsWith('/robots.txt')) return w.pageFetch(input, init);
+      inFlight += 1;
+      maxInFlight = Math.max(maxInFlight, inFlight);
+      // The first lead's page answers last, so an in-order result can't come from finishing order.
+      if (String(input).includes('cootelab')) await new Promise((r) => setTimeout(r, 30));
+      inFlight -= 1;
+      return w.pageFetch(input, init);
+    }) as typeof fetch;
+    const leads: GroupLead[] = [
+      cooteLead('https://cootelab.com/'),
+      {
+        text: 'COSMO',
+        link: 'https://www.epfl.ch/labs/cosmo/',
+        origin: LISTING,
+        fromListing: true,
+      },
+    ];
+    const base = options(w, leads);
+    const result = await resolveGroupLeads({
+      ...base,
+      fetch: { ...base.fetch, fetchImpl: slowFirst },
+    });
+    expect(maxInFlight).toBe(2);
+    expect(result.candidates.map((c) => c.draft.name)).toEqual([COOTE.name, COSMO.name]);
+  });
+
   it('drops a draft that fails validation', async () => {
     const w = world({ verdicts: { 'https://cootelab.com/': { ...COOTE, location: null } } });
     const state = emptyState();

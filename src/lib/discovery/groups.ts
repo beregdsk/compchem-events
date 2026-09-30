@@ -19,6 +19,11 @@ import type { DiscoveryState } from './state';
 export const LOOKUP_TTL_DAYS = 90;
 /** Search results fetched and verified per name, in citation order. */
 const SEARCH_CANDIDATES = 2;
+/**
+ * Leads resolved at once. Every step is a slow model call or fetch, so one at
+ * a time leaves the run idle; politeFetch still spaces requests per host.
+ */
+const LOOKUP_CONCURRENCY = 4;
 
 export interface GroupCandidate {
   draft: RawGroup;
@@ -103,6 +108,12 @@ export async function resolveGroupLeads(options: ResolveOptions): Promise<Resolv
     }
     const unmatched = splitOrganizer(lead.text).filter((p) => !matchName(options.index, p.name));
     if (unmatched.length === 0) return [];
+    // An organiser has no link, so it can only be found by searching; once the
+    // searches are spent, splitting it is a model call for names all capped anyway.
+    if (result.searches >= options.maxSearches) {
+      log(`groups: ${lead.text}: MAX_SEARCHES reached, left for the next run`);
+      return [];
+    }
     const text = unmatched
       .map((p) => (p.affiliation ? `${p.name} (${p.affiliation})` : p.name))
       .join('; ');
@@ -182,11 +193,16 @@ export async function resolveGroupLeads(options: ResolveOptions): Promise<Resolv
     return undefined;
   }
 
-  leads: for (const lead of options.leads) {
-    if (outOfTokens()) {
-      log('groups: MAX_TOKENS reached');
-      break;
-    }
+  let outOfTokensLogged = false;
+  const stopForTokens = () => {
+    if (!outOfTokens()) return false;
+    if (!outOfTokensLogged) log('groups: MAX_TOKENS reached');
+    outOfTokensLogged = true;
+    return true;
+  };
+
+  /** One lead's names, looked up in turn; its drafts go in `found`, in order. */
+  async function resolveLead(lead: GroupLead, found: GroupCandidate[]): Promise<void> {
     let items: Item[];
     try {
       items = await itemsOf(lead);
@@ -195,13 +211,10 @@ export async function resolveGroupLeads(options: ResolveOptions): Promise<Resolv
         source: lead.origin,
         message: err instanceof Error ? err.message : String(err),
       });
-      continue;
+      return;
     }
     for (const item of items) {
-      if (outOfTokens()) {
-        log('groups: MAX_TOKENS reached');
-        break leads;
-      }
+      if (stopForTokens()) return;
       if (matchName(options.index, item.name)) continue;
       const key = normaliseGroupName(item.name);
       if (handled.has(key) || fresh(key)) {
@@ -211,15 +224,15 @@ export async function resolveGroupLeads(options: ResolveOptions): Promise<Resolv
       handled.add(key);
       const considered: Considered = [];
       try {
-        const found = await lookUp(lead, item, considered);
-        if (found === 'capped') continue;
-        if (!found) {
+        const verified = await lookUp(lead, item, considered);
+        if (verified === 'capped') continue;
+        if (!verified) {
           remember(key, 'not found');
           continue;
         }
         const draft = synthesizeGroupDraft(
-          found.fields,
-          found.website,
+          verified.fields,
+          verified.website,
           item.name,
           takenIds,
           options.today,
@@ -234,9 +247,9 @@ export async function resolveGroupLeads(options: ResolveOptions): Promise<Resolv
         }
         takenIds.add(draft.id);
         remember(key, 'drafted');
-        result.candidates.push({
+        found.push({
           draft,
-          confidence: found.fields.confidence,
+          confidence: verified.fields.confidence,
           lead,
           lookupKey: key,
           considered,
@@ -248,5 +261,20 @@ export async function resolveGroupLeads(options: ResolveOptions): Promise<Resolv
       }
     }
   }
+
+  // A fixed pool of workers pulling leads from one queue. Budgets are checked
+  // and counted with no await in between, so workers can't overshoot them;
+  // `handled` and `takenIds` likewise change synchronously. Drafts are kept
+  // per lead so the result is in lead order however the workers interleave.
+  const perLead: GroupCandidate[][] = options.leads.map(() => []);
+  let next = 0;
+  async function worker(): Promise<void> {
+    while (next < options.leads.length && !stopForTokens()) {
+      const i = next++;
+      await resolveLead(options.leads[i]!, perLead[i]!);
+    }
+  }
+  await Promise.all(Array.from({ length: LOOKUP_CONCURRENCY }, worker));
+  result.candidates = perLead.flat();
   return result;
 }
