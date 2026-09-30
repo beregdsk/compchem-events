@@ -1,0 +1,14 @@
+id: nfdi4chem
+name: NFDI4Chem
+kind: network
+website: https://www.nfdi.de/consortia-nfdi4chem/?lang=en
+topics:
+  - cheminformatics
+  - software-hpc
+  - education-training
+description: NFDI4Chem is the German National Research Data Infrastructure for
+  Chemistry, a consortium building an open, FAIR data infrastructure for
+  chemistry. It focuses on molecular and reaction data to support scientists in
+  collecting, storing, and reusing research data.
+added: 2026-09-30
+parent: University of Jena
