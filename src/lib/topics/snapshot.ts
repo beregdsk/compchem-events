@@ -192,7 +192,9 @@ export async function buildSnapshot(
     try {
       out.topics[t.slug] = await buildSlugStats(t.openalex, year, o);
     } catch (err) {
-      throw new Error(`slug "${t.slug}": ${err instanceof Error ? err.message : String(err)}`);
+      throw new Error(`slug "${t.slug}": ${err instanceof Error ? err.message : String(err)}`, {
+        cause: err,
+      });
     }
   }
   return out;
