@@ -330,6 +330,22 @@ describe('resolveGroupLeads', () => {
     expect(w.seen.queries).toEqual(['"Nobody Institute"', '"Nobody Institute"']);
   });
 
+  it('leaves a name that errored out of the cache, so the next run tries it again', async () => {
+    const w = world();
+    const state = emptyState();
+    const limited = (async () =>
+      new Response('{"error":{"message":"Rate limit exceeded"}}', { status: 429 })) as typeof fetch;
+    const base = options(w, [{ text: 'Busy Institute', origin: LISTING, fromListing: true }], {
+      state,
+    });
+    const result = await resolveGroupLeads({
+      ...base,
+      extract: { ...base.extract, fetchImpl: limited },
+    });
+    expect(result.errors).toHaveLength(1);
+    expect(state.groupLookups).toEqual({});
+  });
+
   it('stops at maxSearches and leaves the unsearched names uncached', async () => {
     const w = world();
     const state = emptyState();

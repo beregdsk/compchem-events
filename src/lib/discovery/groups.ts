@@ -261,8 +261,9 @@ export async function resolveGroupLeads(options: ResolveOptions): Promise<Resolv
           considered,
         });
       } catch (err) {
+        // Not cached: an error (a rate limit, a provider outage, a crash) says
+        // nothing about the name, so the next run tries it again.
         const message = err instanceof Error ? err.message : String(err);
-        remember(key, `error: ${message}`);
         result.errors.push({ source: lead.origin, message: `${item.name}: ${message}` });
       }
     }

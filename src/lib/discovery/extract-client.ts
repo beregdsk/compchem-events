@@ -355,6 +355,41 @@ export function rateLimitWaitMs(response: Response, body: string, now = Date.now
   return Math.min(Math.max(waitMs ?? RATE_LIMIT_DEFAULT_WAIT_MS, 1000), RATE_LIMIT_MAX_WAIT_MS);
 }
 
+/**
+ * OpenRouter's free models allow 20 requests a minute per account, shared by
+ * every free model. Calls run concurrently (four group lookups at once), so
+ * each reserves the next slot this far after the previous one instead of all
+ * firing together and exhausting their retries on 429s.
+ */
+export const FREE_MODEL_INTERVAL_MS = 3_100;
+let nextFreeSlotMs = 0;
+
+/** Waits for this process's next free-model slot; paid models never wait. */
+export async function awaitModelSlot(options: ExtractOptions, now = Date.now): Promise<void> {
+  if (!options.model.endsWith(':free')) return;
+  const t = now();
+  const slot = Math.max(t, nextFreeSlotMs);
+  nextFreeSlotMs = slot + FREE_MODEL_INTERVAL_MS;
+  if (slot > t) {
+    const sleep = options.sleepImpl ?? ((ms: number) => new Promise((r) => setTimeout(r, ms)));
+    await sleep(slot - t);
+  }
+}
+
+/**
+ * The error for a failed chat-completions response: worth another attempt
+ * for a 429, a 5xx, or a 400 that OpenRouter reports as the upstream
+ * provider's own failure (seen live from one provider); final otherwise.
+ */
+export function failedResponseError(message: string, response: Response, body: string): Error {
+  if (response.status === 429)
+    return new RetryableExtractError(message, rateLimitWaitMs(response, body));
+  if (response.status >= 500 || body.includes('Provider returned error')) {
+    return new RetryableExtractError(message);
+  }
+  return new Error(message);
+}
+
 /** A timeout, or a connection that failed or dropped mid-body ("fetch failed", "terminated"). */
 function isTransientNetworkError(err: unknown): boolean {
   return err instanceof Error && (err.name === 'TimeoutError' || err instanceof TypeError);
@@ -440,6 +475,7 @@ export async function completeJson(
   const fetchImpl = options.fetchImpl ?? fetch;
   const baseUrl = options.baseUrl ?? DEFAULT_EXTRACT_BASE_URL;
 
+  await awaitModelSlot(options);
   const response = await fetchWithTimeout(
     fetchImpl,
     baseUrl,
@@ -467,11 +503,7 @@ export async function completeJson(
   if (!response.ok) {
     const body = await response.text().catch(() => '');
     const message = `extract request failed: ${response.status} ${response.statusText}${body ? ` — ${body}` : ''}`;
-    if (response.status === 429) {
-      throw new RetryableExtractError(message, rateLimitWaitMs(response, body));
-    }
-    if (response.status >= 500) throw new RetryableExtractError(message);
-    throw new Error(message);
+    throw failedResponseError(message, response, body);
   }
 
   const data: unknown = await response.json();
