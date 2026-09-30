@@ -13,6 +13,7 @@ import {
   buildMapPrBody,
   classifyTopics,
   fetchCandidates,
+  formatForRepo,
 } from '../../src/lib/topics/propose-map';
 import { loadTopics } from '../../src/lib/validation';
 
@@ -65,7 +66,10 @@ async function main(): Promise<void> {
   const proposal = await new Proposer({ token: GITHUB_TOKEN, repo: GITHUB_REPO }).proposeFile({
     branch: `data/topic-map-${today}`,
     path: 'data/topics.yaml',
-    content: applyMapping(readFileSync('data/topics.yaml', 'utf8'), mapping),
+    content: await formatForRepo(
+      applyMapping(readFileSync('data/topics.yaml', 'utf8'), mapping),
+      'data/topics.yaml',
+    ),
     title: 'Topics: map site topics to OpenAlex topics',
     message: 'Map site topics to OpenAlex topics',
     body: buildMapPrBody(topics, mapping, candidates, byRule, unplaced),
