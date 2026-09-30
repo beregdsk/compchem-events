@@ -1001,3 +1001,32 @@ a:hover {
   width: 1.1em;
   height: 1.1em;
 }
+
+/* Hidden visually, kept for screen readers (chart data tables). */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Static trend charts on topic pages (TrendChart.astro). */
+.trend {
+  margin: var(--space-m) 0;
+}
+.trend__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 40rem;
+}
+.trend__bar {
+  fill: var(--lobe-neg);
+}
+.trend__axis {
+  fill: var(--fg-muted);
+  font: 11px var(--font-mono);
+}
