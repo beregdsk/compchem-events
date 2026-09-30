@@ -14,7 +14,7 @@ import { loadValidationContext } from '../../src/lib/validation';
 import { fetchWithBrowser } from '../../src/lib/discovery/browser-fetch';
 import { ADD_THRESHOLD } from '../../src/lib/discovery/classify-candidate';
 import { serializeDraft } from '../../src/lib/discovery/draft';
-import { clip, type ExtractOptions } from '../../src/lib/discovery/extract-client';
+import type { ExtractOptions } from '../../src/lib/discovery/extract-client';
 import { politeFetch, type FetchOptions } from '../../src/lib/discovery/fetch';
 import {
   getBranchStatus,
@@ -32,8 +32,9 @@ import {
   resolveGroupLeads,
   type GroupCandidate,
 } from '../../src/lib/discovery/groups';
+import { buildBackfillPrBody } from '../../src/lib/discovery/batch-pr-body';
 import { BACKFILL_BRANCH, openGroupDrafts } from '../../src/lib/discovery/groups-pass';
-import { groupSkipReason, inlineCode } from '../../src/lib/discovery/orchestrator';
+import { groupSkipReason } from '../../src/lib/discovery/orchestrator';
 import { parseGroupListing, type GroupLead } from '../../src/lib/discovery/parsers/group-listing';
 import { Proposer, type Proposal } from '../../src/lib/discovery/propose';
 import { loadSources, type Source } from '../../src/lib/discovery/sources';
@@ -42,9 +43,6 @@ import { buildConfig } from './run';
 
 const DEFAULT_MAX_SEARCHES = 200;
 const DEFAULT_MAX_PAGES = 500;
-// GitHub rejects a PR body over 65,536 characters, after the files are already written.
-const FOUND_AS_MAX = 80;
-const SKIPPED_LISTED = 100;
 
 export interface BackfillArgs {
   maxSearches?: number;
@@ -85,54 +83,7 @@ function ownLookupKeys(drafts: readonly unknown[]): string[] {
   return keys;
 }
 
-/** A table cell: inline code with `|` escaped so a hostile value cannot end the cell. */
-const cell = (text: string) => inlineCode(text).replace(/\|/g, '\\|');
-
-/**
- * No `Confidence:` line on purpose: auto-approve reads that line, and a batch
- * of many entries must never be flagged as one high-confidence PR.
- */
-export function buildBackfillPrBody(
-  accepted: readonly GroupCandidate[],
-  skipped: ReadonlyArray<{ name: string; reason: string }>,
-  notRefound: readonly string[] = [],
-): string {
-  const rows = accepted.map((c) =>
-    [
-      cell(c.draft.id),
-      cell(c.draft.name),
-      cell(c.draft.kind),
-      cell(c.draft.website),
-      cell(c.confidence.toFixed(2)),
-      cell(clip(c.lead.text, FOUND_AS_MAX)),
-    ].join(' | '),
-  );
-  return [
-    'Registry entries backfilled from existing events, positions and group listings.',
-    'Check every entry against its website before merging; delete the files of any that are wrong.',
-    '',
-    '| id | name | kind | website | confidence | found as |',
-    '| --- | --- | --- | --- | --- | --- |',
-    ...rows.map((r) => `| ${r} |`),
-    '',
-    `Skipped (${skipped.length}):`,
-    ...(skipped.length === 0
-      ? ['- (none)']
-      : skipped
-          .slice(0, SKIPPED_LISTED)
-          .map((s) => `- ${cell(clip(s.name, FOUND_AS_MAX))}: ${s.reason}`)),
-    ...(skipped.length > SKIPPED_LISTED
-      ? [`…and ${skipped.length - SKIPPED_LISTED} more skipped (see the run log)`]
-      : []),
-    ...(notRefound.length === 0
-      ? []
-      : [
-          '',
-          `Written by an earlier run and not found again this time (${notRefound.length}); check or delete:`,
-          ...notRefound.map((path) => `- ${cell(path)}`),
-        ]),
-  ].join('\n');
-}
+export { buildBackfillPrBody };
 
 export interface BackfillDeps {
   github: GitHubOptions;
