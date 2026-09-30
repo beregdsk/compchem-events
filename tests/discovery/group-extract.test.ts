@@ -106,6 +106,49 @@ describe('extractGroup', () => {
     ).toBeNull();
   });
 
+  /** Answers in turn, repeating the last; counts the calls. */
+  function sequence(...replies: unknown[]) {
+    const calls = { n: 0 };
+    const impl = (async () => {
+      const content = replies[Math.min(calls.n, replies.length - 1)];
+      calls.n += 1;
+      return new Response(
+        JSON.stringify({ choices: [{ message: { content: JSON.stringify(content) } }] }),
+        { status: 200 },
+      );
+    }) as typeof fetch;
+    return { impl, calls };
+  }
+  const noLocation = { found: true, group: { ...found.group, location: null } };
+
+  it('asks again when a group comes back without a location', async () => {
+    const llm = sequence(noLocation, found);
+    const g = await extractGroup('t', { name: 'X', type: 'organisation' }, opts(llm.impl));
+    expect(llm.calls.n).toBe(2);
+    expect(g?.location).toEqual({ city: 'Lausanne', country: 'CH' });
+  });
+
+  it('passes a group still without a location on after the last attempt', async () => {
+    const llm = sequence(noLocation);
+    const g = await extractGroup('t', { name: 'X', type: 'organisation' }, opts(llm.impl));
+    expect(llm.calls.n).toBe(3);
+    expect(g).not.toBeNull();
+    expect(g?.location).toBeUndefined();
+  });
+
+  it('does not ask again for a network without a location', async () => {
+    const llm = sequence({ found: true, group: { ...noLocation.group, kind: 'network' } });
+    await extractGroup('t', { name: 'X', type: 'organisation' }, opts(llm.impl));
+    expect(llm.calls.n).toBe(1);
+  });
+
+  it('asks again on "found" with no group, then treats it as not found', async () => {
+    const llm = sequence({ found: true, group: null });
+    const g = await extractGroup('t', { name: 'X', type: 'organisation' }, opts(llm.impl));
+    expect(llm.calls.n).toBe(3);
+    expect(g).toBeNull();
+  });
+
   it('delimits the page as data, passes the hint, and sends no tools', async () => {
     const seen: { system?: string; user?: string; body?: Record<string, unknown> } = {};
     await extractGroup(
