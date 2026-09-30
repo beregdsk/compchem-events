@@ -163,3 +163,45 @@ describe('buildSnapshotPrBody', () => {
     expect(body).toContain('OpenAlex');
   });
 });
+
+describe('buildSlugStats with odd records', () => {
+  it('clips long names to the schema and drops a paper without a year', async () => {
+    const long = 'N'.repeat(400);
+    const fetchImpl = (async (input: RequestInfo | URL) => {
+      const u = new URL(String(input));
+      const g = u.searchParams.get('group_by');
+      const json = (b: unknown) => new Response(JSON.stringify(b), { status: 200 });
+      if (u.pathname === '/topics') {
+        return json({
+          results: [{ id: `${O}T1`, display_name: long, works_count: 1, cited_by_count: 1 }],
+        });
+      }
+      if (u.pathname === '/institutions') {
+        return json({
+          results: [{ id: `${O}I1`, display_name: long, country_code: 'US', homepage_url: null }],
+        });
+      }
+      if (g === 'authorships.institutions.id') {
+        return json({ group_by: [{ key: `${O}I1`, key_display_name: long, count: 3 }] });
+      }
+      if (g === 'primary_location.source.id') {
+        return json({ group_by: [{ key: `${O}S1`, key_display_name: long, count: 2 }] });
+      }
+      if (g) return json({ group_by: [] });
+      if (u.searchParams.get('sort')) {
+        return json({
+          results: [
+            { title: 'Undated', doi: null, cited_by_count: 9, publication_year: null },
+            { title: 'Dated', doi: null, cited_by_count: 1, publication_year: 2024 },
+          ],
+        });
+      }
+      return json({ meta: { count: 1 }, results: [] });
+    }) as typeof fetch;
+    const s = await buildSlugStats(['T1'], 2026, { mailto: 'a@b.c', fetchImpl });
+    expect(s.top_institutions[0]!.name).toHaveLength(300);
+    expect(s.top_venues[0]!.name).toHaveLength(300);
+    expect(s.subtopics[0]!.name).toHaveLength(300);
+    expect(s.top_papers.map((p) => p.title)).toEqual(['Dated']);
+  });
+});

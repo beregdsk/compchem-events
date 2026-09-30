@@ -21,7 +21,7 @@ describe('TopicsTable', () => {
       },
     });
     expect(html.indexOf('ML potentials')).toBeLessThan(html.indexOf('No Stats'));
-    expect(html).toMatch(/No Stats[\s\S]*?<td[^>]*data-sort="-1"[^>]*>—<\/td>/);
+    expect(html).toMatch(/No Stats[\s\S]*?<td[^>]*data-sort(="")?[^=>]*>\s*—\s*<\/td>/);
     expect(html).toContain('data-sort="21753"');
     expect(html).toMatch(/<polyline points="[\d., ]+"/);
     expect(html).toMatch(/<th[^>]*><button[^>]*data-sort-col/);

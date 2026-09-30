@@ -4,6 +4,12 @@ import type { ValidationResult } from './validation';
 
 const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const TOPIC_ID = /^T\d+$/;
+/**
+ * The snapshot reads a slug's topics in one 50-per-page request and ORs
+ * them in one filter (OpenAlex allows 100), so more would silently drop
+ * subtopics or fail every snapshot.
+ */
+export const MAX_OPENALEX_PER_TOPIC = 50;
 
 export function validateTopics(data: unknown, file = 'data/topics.yaml'): ValidationResult {
   const result: ValidationResult = { errors: [], warnings: [] };
@@ -26,6 +32,12 @@ export function validateTopics(data: unknown, file = 'data/topics.yaml'): Valida
     if (!Array.isArray(entry.openalex)) {
       err(`${slug}.openalex`, 'must be a list of OpenAlex topic ids');
       continue;
+    }
+    if (entry.openalex.length > MAX_OPENALEX_PER_TOPIC) {
+      err(
+        `${slug}.openalex`,
+        `${entry.openalex.length} OpenAlex topics; at most ${MAX_OPENALEX_PER_TOPIC} per site topic`,
+      );
     }
     const seen = new Set<string>();
     for (const id of entry.openalex as unknown[]) {

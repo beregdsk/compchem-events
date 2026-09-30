@@ -56,6 +56,13 @@ describe('openAlexGet', () => {
     expect(s.urls).toHaveLength(3);
   });
 
+  it('gives up at once when Retry-After asks for more than two minutes', async () => {
+    const s = stub([{ status: 429, headers: { 'Retry-After': '43200' } }, { status: 200 }]);
+    await expect(openAlexGet('/works', {}, s.opts)).rejects.toThrow(/HTTP 429/);
+    expect(s.sleeps).toEqual([]);
+    expect(s.urls).toHaveLength(1);
+  });
+
   it('does not retry a 400, and never puts the key in the error', async () => {
     const s = stub([{ status: 400, body: { error: 'bad filter' } }]);
     const e = await openAlexGet('/works', { filter: 'x' }, s.opts).catch((x: Error) => x);

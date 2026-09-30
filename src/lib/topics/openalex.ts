@@ -12,6 +12,7 @@ export interface OpenAlexOptions {
 }
 
 const ATTEMPTS = 3;
+const MAX_RETRY_AFTER_S = 120;
 
 export function stripId(url: string): string {
   return url.replace(/^https:\/\/openalex\.org\//, '');
@@ -49,6 +50,8 @@ export async function openAlexGet<T>(
     last = `OpenAlex ${shown}: HTTP ${response.status}`;
     if (response.status !== 429 && response.status < 500) throw new Error(last);
     const retryAfter = Number(response.headers.get('retry-after'));
+    // A long wait means the daily budget is spent: fail now rather than hang the job for hours.
+    if (Number.isFinite(retryAfter) && retryAfter > MAX_RETRY_AFTER_S) throw new Error(last);
     if (n < ATTEMPTS) {
       await sleep(Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : 2000 * n);
     }

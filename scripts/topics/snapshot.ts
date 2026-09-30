@@ -5,7 +5,11 @@
 import { pathToFileURL } from 'node:url';
 import { site } from '../../site.config';
 import { todayUTC } from '../../src/lib/dates';
-import { syncFailureIssue, type GitHubOptions } from '../../src/lib/discovery/github-client';
+import {
+  syncFailureIssue,
+  type FailureIssue,
+  type GitHubOptions,
+} from '../../src/lib/discovery/github-client';
 import { Proposer } from '../../src/lib/discovery/propose';
 import {
   loadTopicStats,
@@ -37,11 +41,33 @@ export interface SnapshotResult {
   error?: string;
 }
 
+/** Its own tracking issue: the nightly discovery run's sync must neither overwrite nor close it. */
+export const FAILURE_ISSUE: FailureIssue = {
+  title: 'Topic statistics snapshot failed',
+  label: 'topic-stats-failures',
+};
+
+/** The committed snapshot for the PR body's comparison; an unreadable one counts as none. */
+function readPrevious(log: (m: string) => void): TopicStats | undefined {
+  try {
+    return loadTopicStats();
+  } catch (err) {
+    log(
+      `previous snapshot unreadable, comparing against none: ${err instanceof Error ? err.message : String(err)}`,
+    );
+    return undefined;
+  }
+}
+
 export async function runSnapshot(deps: SnapshotDeps): Promise<SnapshotResult> {
   const log = deps.log ?? (() => {});
-  const topics = deps.topics ?? loadTopics();
-  const previous = 'previous' in deps ? deps.previous : loadTopicStats();
+  const syncIssue = (errors: Array<{ source: string; message: string }>) =>
+    syncFailureIssue(errors, deps.github, FAILURE_ISSUE).catch((e: unknown) =>
+      log(`failed to sync the failure issue: ${e instanceof Error ? e.message : String(e)}`),
+    );
   try {
+    const topics = deps.topics ?? loadTopics();
+    const previous = 'previous' in deps ? deps.previous : readPrevious(log);
     const next = await buildSnapshot(topics, deps.today, deps.openalex);
     const problems = validateTopicStats(next, topics);
     if (problems.errors.length > 0) {
@@ -57,6 +83,7 @@ export async function runSnapshot(deps: SnapshotDeps): Promise<SnapshotResult> {
       body: buildSnapshotPrBody(next, previous, new Map(topics.map((t) => [t.slug, t.label]))),
       labels: ['data'],
     });
+    await syncIssue([]);
     if (proposal.outcome === 'reviewed') {
       log(`the ${month} snapshot PR was already closed or merged; nothing written`);
       return { outcome: 'reviewed' };
@@ -68,11 +95,7 @@ export async function runSnapshot(deps: SnapshotDeps): Promise<SnapshotResult> {
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     log(`ERROR ${FAILURE_SOURCE}: ${message}`);
-    // syncFailureIssue replaces the issue body; the next nightly discovery
-    // run rewrites it with its own errors, so this entry lasts until then.
-    await syncFailureIssue([{ source: FAILURE_SOURCE, message }], deps.github).catch((e: unknown) =>
-      log(`failed to sync the failure issue: ${e instanceof Error ? e.message : String(e)}`),
-    );
+    await syncIssue([{ source: FAILURE_SOURCE, message }]);
     return { outcome: 'failed', error: message };
   }
 }

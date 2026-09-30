@@ -50,6 +50,14 @@ describe('validateTopics', () => {
     expect(r.warnings).toEqual(['b.openalex: "T9" is also mapped under "a"']);
   });
 
+  it('rejects more than 50 OpenAlex topics under one slug', () => {
+    const ids = Array.from({ length: 51 }, (_, i) => `T${i + 1}`);
+    expect(msgs([{ slug: 'dft', label: 'DFT', openalex: ids }]).errors).toEqual([
+      'dft.openalex: 51 OpenAlex topics; at most 50 per site topic',
+    ]);
+    expect(msgs([{ slug: 'dft', label: 'DFT', openalex: ids.slice(0, 50) }]).errors).toEqual([]);
+  });
+
   it('rejects a file that is not a list', () => {
     expect(msgs({ slug: 'x' }).errors).toEqual(['(root): must be a list of topics']);
   });

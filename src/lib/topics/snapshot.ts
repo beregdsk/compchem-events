@@ -7,9 +7,11 @@ import { openAlexGet, stripId, type OpenAlexOptions } from './openalex';
 
 export const TREND_YEARS = 15;
 export const RECENT_YEARS = 3;
+/** The schema's limit on institution, venue and topic names. */
+const NAME_MAX = 300;
 
 interface GroupBy {
-  group_by: Array<{ key: string; key_display_name: string; count: number }>;
+  group_by: Array<{ key: string; key_display_name: string | null; count: number }>;
 }
 interface Meta {
   meta: { count: number };
@@ -24,7 +26,7 @@ interface WorkResult {
   title: string | null;
   doi: string | null;
   cited_by_count: number;
-  publication_year: number;
+  publication_year: number | null;
 }
 interface TopicResult {
   id: string;
@@ -100,7 +102,7 @@ export async function buildSlugStats(
     return [
       {
         id: i.id,
-        name: d.display_name,
+        name: d.display_name.slice(0, NAME_MAX),
         ...(d.country_code && /^[A-Z]{2}$/.test(d.country_code) ? { country: d.country_code } : {}),
         ...(isHttps(d.homepage_url) ? { homepage: d.homepage_url } : {}),
         works: i.works,
@@ -117,8 +119,11 @@ export async function buildSlugStats(
     o,
   );
   const top_venues = venues.group_by
-    .map((g) => ({ id: stripId(g.key), name: g.key_display_name, works: g.count }))
-    .filter((v) => /^S\d+$/.test(v.id) && v.name)
+    .flatMap((g) => {
+      const id = stripId(g.key);
+      if (!/^S\d+$/.test(id) || !g.key_display_name) return [];
+      return [{ id, name: g.key_display_name.slice(0, NAME_MAX), works: g.count }];
+    })
     .slice(0, 10);
 
   const papers = await openAlexGet<{ results: WorkResult[] }>(
@@ -132,7 +137,7 @@ export async function buildSlugStats(
     o,
   );
   const top_papers = papers.results.flatMap((p) =>
-    p.title
+    p.title && typeof p.publication_year === 'number' && Number.isInteger(p.publication_year)
       ? [
           {
             title: p.title.slice(0, 500),
@@ -156,7 +161,7 @@ export async function buildSlugStats(
   const subtopics = topics.results
     .map((t) => ({
       id: stripId(t.id),
-      name: t.display_name,
+      name: t.display_name.slice(0, NAME_MAX),
       works: t.works_count,
       citations: t.cited_by_count,
     }))

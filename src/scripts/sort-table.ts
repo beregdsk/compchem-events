@@ -1,5 +1,7 @@
 // Progressive enhancement: header buttons sort a `data-sortable` table by
 // each cell's `data-sort`. Without JS the table keeps its server order.
+import { compareSortKeys } from '../lib/sort-keys';
+
 for (const table of document.querySelectorAll<HTMLTableElement>('table[data-sortable]')) {
   const body = table.tBodies[0];
   if (!body) continue;
@@ -13,15 +15,7 @@ for (const table of document.querySelectorAll<HTMLTableElement>('table[data-sort
       current = col;
       const key = (row: HTMLTableRowElement) =>
         (row.cells[col] as HTMLElement | undefined)?.dataset.sort ?? '';
-      const rows = [...body.rows].sort((a, b) => {
-        const x = key(a);
-        const y = key(b);
-        const nx = Number(x);
-        const ny = Number(y);
-        const numeric = x !== '' && y !== '' && Number.isFinite(nx) && Number.isFinite(ny);
-        const cmp = numeric ? nx - ny : x.localeCompare(y);
-        return ascending ? cmp : -cmp;
-      });
+      const rows = [...body.rows].sort((a, b) => compareSortKeys(key(a), key(b), ascending));
       body.append(...rows);
       for (const th of table.tHead?.rows[0]?.cells ?? []) th.removeAttribute('aria-sort');
       button.parentElement?.setAttribute('aria-sort', ascending ? 'ascending' : 'descending');

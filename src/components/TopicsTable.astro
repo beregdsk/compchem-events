@@ -11,6 +11,8 @@ interface Props {
   rows: Array<{ topic: Topic; stats?: SlugStats; coverage: Coverage }>;
 }
 const lastYear = (s?: SlugStats) => s?.works_by_year.at(-1)?.works ?? -1;
+/** An empty data-sort marks "no value": sort-table.ts keeps those rows last. */
+const key = (v: number | null | undefined) => (v === null || v === undefined ? '' : v);
 const rows = [...Astro.props.rows].sort(
   (a, b) => lastYear(b.stats) - lastYear(a.stats) || a.topic.label.localeCompare(b.topic.label),
 );
@@ -46,13 +48,13 @@ const cols = [
           <th scope="row" data-sort={topic.label}>
             <a href={`/topics/${topic.slug}/`}>{topic.label}</a>
           </th>
-          <td class="mono" data-sort={lastYear(stats)}>
+          <td class="mono" data-sort={key(stats && lastYear(stats))}>
             {stats ? n(lastYear(stats)) : '—'}
           </td>
-          <td class="mono" data-sort={stats?.growth_5y ?? -1}>
+          <td class="mono" data-sort={key(stats?.growth_5y)}>
             {stats?.growth_5y != null ? `${stats.growth_5y.toFixed(2)}×` : '—'}
           </td>
-          <td data-sort={lastYear(stats)}>
+          <td data-sort={key(stats && lastYear(stats))}>
             {stats ? (
               <svg viewBox="0 0 80 20" width="80" height="20" aria-hidden="true" class="spark">
                 <polyline
@@ -67,7 +69,7 @@ const cols = [
               '—'
             )}
           </td>
-          <td class="mono" data-sort={stats?.citations_total ?? -1}>
+          <td class="mono" data-sort={key(stats?.citations_total)}>
             {stats ? n(stats.citations_total) : '—'}
           </td>
           <td class="mono" data-sort={coverage.events}>

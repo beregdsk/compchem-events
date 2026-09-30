@@ -32,6 +32,11 @@ describe('runSnapshot', () => {
       [`PUT ${R}/contents/data/topic-stats.json`]: { status: 201 },
       [`POST ${R}/pulls`]: { status: 201, body: { number: 70 } },
       [`POST ${R}/issues/70/labels`]: { status: 200 },
+      [`GET ${R}/issues?state=open&labels=topic-stats-failures`]: {
+        status: 200,
+        body: [{ number: 9, title: 'Topic statistics snapshot failed' }],
+      },
+      [`PATCH ${R}/issues/9`]: { status: 200 },
     });
     const r = await runSnapshot({
       github: g.github,
@@ -46,11 +51,14 @@ describe('runSnapshot', () => {
     expect(written.topics.dft.works_by_year).toHaveLength(15);
     const labels = g.calls.find((c) => c.key.endsWith('/labels'))!.body as { labels: string[] };
     expect(labels.labels).toEqual(['data']);
+    // A good month closes last month's failure issue.
+    const closed = g.calls.find((c) => c.key === `PATCH ${R}/issues/9`)!.body as { state: string };
+    expect(closed.state).toBe('closed');
   });
 
   it('proposes nothing and reports topic-stats when OpenAlex fails', async () => {
     const g = gh({
-      [`GET ${R}/issues?state=open&labels=discovery-failures`]: { status: 200, body: [] },
+      [`GET ${R}/issues?state=open&labels=topic-stats-failures`]: { status: 200, body: [] },
       [`POST ${R}/issues`]: { status: 201, body: { number: 5 } },
     });
     const failing = (async () => new Response('{}', { status: 400 })) as typeof fetch;
@@ -63,7 +71,14 @@ describe('runSnapshot', () => {
     });
     expect(r.outcome).toBe('failed');
     expect(g.calls.some((c) => c.key.includes('/git/') || c.key.includes('/pulls'))).toBe(false);
-    const issue = g.calls.find((c) => c.key === `POST ${R}/issues`)!.body as { body: string };
+    // Its own issue, so the nightly discovery run's sync can neither overwrite nor close it.
+    const issue = g.calls.find((c) => c.key === `POST ${R}/issues`)!.body as {
+      title: string;
+      body: string;
+      labels: string[];
+    };
+    expect(issue.title).toBe('Topic statistics snapshot failed');
+    expect(issue.labels).toEqual(['topic-stats-failures']);
     expect(issue.body).toContain('topic-stats');
   });
 });
