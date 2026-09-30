@@ -1,0 +1,22 @@
+id: david-winkler-group
+name: David Winkler group
+kind: group
+website: https://www.latrobe.edu.au/lims/research-programs/digital-biology/david-winkler-group
+topics:
+  - ml-chemistry
+  - materials-modeling
+  - drug-design
+  - cheminformatics
+  - biomolecular-simulation
+description: The David Winkler group at La Trobe University focuses on molecular
+  AI and machine learning, utilizing computational chemistry and AI-based
+  methods to model complex systems, design next-generation biomaterials, and
+  discover drugs for neglected tropical diseases.
+added: 2026-09-30
+aliases:
+  - David Winkler
+pi: Professor David Winkler
+parent: La Trobe University
+location:
+  city: Melbourne
+  country: AU
