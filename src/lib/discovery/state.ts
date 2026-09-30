@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 
 export interface HostState {
@@ -63,7 +63,37 @@ export function loadState(path: string): DiscoveryState {
   }
 }
 
+/** Temp file then rename: a kill mid-write never leaves a torn file (which would load as empty). */
 export function saveState(path: string, state: DiscoveryState): void {
   mkdirSync(dirname(path), { recursive: true });
-  writeFileSync(path, JSON.stringify(state, null, 2));
+  const tmp = `${path}.tmp`;
+  writeFileSync(tmp, JSON.stringify(state, null, 2));
+  renameSync(tmp, path);
+}
+
+const sameLookup = (a: GroupLookup | undefined, b: GroupLookup | undefined) =>
+  a?.triedAt === b?.triedAt && a?.outcome === b?.outcome;
+
+/**
+ * For a long process sharing the state file with the nightly run (the
+ * groups crawler): write only the lookups it changed since `before` onto
+ * the file as it is now, so the other process's entries and everything else
+ * in the file survive. An entry this process removed is deleted only if the
+ * file still holds the value it started from.
+ */
+export function mergeGroupLookups(
+  path: string,
+  before: Readonly<Record<string, GroupLookup>>,
+  after: Readonly<Record<string, GroupLookup>>,
+): void {
+  const disk = loadState(path);
+  for (const [key, value] of Object.entries(after)) {
+    if (!sameLookup(before[key], value)) disk.groupLookups[key] = value;
+  }
+  for (const key of Object.keys(before)) {
+    if (!(key in after) && sameLookup(disk.groupLookups[key], before[key])) {
+      delete disk.groupLookups[key];
+    }
+  }
+  saveState(path, disk);
 }

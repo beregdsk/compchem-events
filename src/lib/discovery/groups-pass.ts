@@ -18,8 +18,10 @@ export const GROUPS_PASS_SOURCE = 'groups';
 /** The single branch (and PR) the one-off backfill writes every draft to. */
 export const BACKFILL_BRANCH = 'discovery/groups-backfill';
 const GROUP_BRANCH_PREFIX = 'discovery/group/';
+/** The groups crawler's batch PRs: `discovery/groups-crawl/<date>-<n>`. */
+export const CRAWL_BRANCH_PREFIX = 'discovery/groups-crawl/';
 
-/** The groups in open group PRs (one per `discovery/group/*` branch, many on the backfill branch). */
+/** The groups in open group PRs (one per `discovery/group/*` branch, many on the backfill and crawl branches). */
 export async function openGroupDrafts(
   github: GitHubOptions,
   options: { excludeBranch?: string } = {},
@@ -27,7 +29,11 @@ export async function openGroupDrafts(
   const drafts: RawGroup[] = [];
   for (const pr of await listOpenDiscoveryPrs(github)) {
     if (pr.headRef === options.excludeBranch) continue;
-    if (!pr.headRef.startsWith(GROUP_BRANCH_PREFIX) && pr.headRef !== BACKFILL_BRANCH) continue;
+    const ours =
+      pr.headRef.startsWith(GROUP_BRANCH_PREFIX) ||
+      pr.headRef.startsWith(CRAWL_BRANCH_PREFIX) ||
+      pr.headRef === BACKFILL_BRANCH;
+    if (!ours) continue;
     for (const file of await listFilesOnBranch(pr.headRef, 'data/groups', github)) {
       const data: unknown = parse(file.content);
       if (typeof data === 'object' && data !== null && typeof (data as RawGroup).id === 'string') {

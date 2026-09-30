@@ -420,6 +420,83 @@ describe('resolveGroupLeads', () => {
     expect(result.candidates.map((c) => c.draft.name)).toEqual([COOTE.name, COSMO.name]);
   });
 
+  it('verifies a crawled lead on the same site as the directory that listed it', async () => {
+    const w = world({ verdicts: { 'https://cootelab.com/': COOTE } });
+    const lead: GroupLead = {
+      text: 'Coote Lab',
+      link: 'https://cootelab.com/',
+      origin: 'https://cootelab.com/people/',
+      fromListing: true,
+      crawled: true,
+    };
+    const result = await resolveGroupLeads(options(w, [lead]));
+    expect(result.candidates.map((c) => c.draft.website)).toEqual(['https://cootelab.com/']);
+  });
+
+  it('verifies a crawled group homepage (link equals origin)', async () => {
+    const w = world({ verdicts: { 'https://cootelab.com/': COOTE } });
+    const lead: GroupLead = {
+      text: 'Coote Lab',
+      link: 'https://cootelab.com/',
+      origin: 'https://cootelab.com/',
+      fromListing: true,
+      crawled: true,
+    };
+    const result = await resolveGroupLeads(options(w, [lead]));
+    expect(result.candidates).toHaveLength(1);
+  });
+
+  it('keys crawled leads by link, so generic link texts do not block each other', async () => {
+    const w = world({
+      verdicts: { 'https://cootelab.com/': COOTE, 'https://www.epfl.ch/labs/cosmo/': COSMO },
+    });
+    const state = emptyState();
+    const lead = (link: string): GroupLead => ({
+      text: 'Group website',
+      link,
+      origin: 'https://directory.example/groups/',
+      fromListing: true,
+      crawled: true,
+    });
+    const result = await resolveGroupLeads(
+      options(w, [lead('https://cootelab.com/'), lead('https://www.epfl.ch/labs/cosmo/')], {
+        state,
+      }),
+    );
+    expect(result.candidates).toHaveLength(2);
+    expect(Object.keys(state.groupLookups).sort()).toEqual([
+      'link:https://cootelab.com/',
+      'link:https://www.epfl.ch/labs/cosmo/',
+    ]);
+  });
+
+  it('reports the leads it could not finish, for the caller to keep', async () => {
+    const w = world();
+    const leads: GroupLead[] = [
+      {
+        text: 'Alpha Lab',
+        link: 'https://alpha.example/',
+        origin: LISTING,
+        fromListing: true,
+        crawled: true,
+      },
+      {
+        text: 'Beta Lab',
+        link: 'https://beta.example/',
+        origin: LISTING,
+        fromListing: true,
+        crawled: true,
+      },
+    ];
+    const state = emptyState();
+    const result = await resolveGroupLeads(
+      options(w, leads, { state, maxPages: 1, maxSearches: 0 }),
+    );
+    // Alpha's link was checked and is not a group: not found, cached. Beta never got a page: unresolved.
+    expect(result.unresolved.map((l) => l.text)).toEqual(['Beta Lab']);
+    expect(state.groupLookups['link:https://alpha.example/']?.outcome).toBe('not found');
+  });
+
   it('drops a draft that fails validation', async () => {
     const w = world({ verdicts: { 'https://cootelab.com/': { ...COOTE, location: null } } });
     const state = emptyState();

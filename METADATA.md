@@ -84,6 +84,8 @@ publishing workflow.
 | --- | --- |
 | `scripts/validate.ts` | CLI entry point for `npm run validate`. Walks `data/events/`, `data/positions/` and `data/groups/` and checks `data/sources.yaml`, reports problems and exits non-zero on any error. Thin: the logic is in `src/lib/validation.ts` and `src/lib/discovery/sources.ts` so the discovery agent can import it as a library. |
 | `scripts/discovery/run.ts` | The discovery agent's cron entry point (`npm run discover:run`): validates its environment, then runs fetch → extract → classify → open pull requests → label high-confidence ones. |
+| `scripts/discovery/groups-crawl.ts` | The groups crawler (`npm run discover:groups-crawl`): takes the lock, gathers seeds, crawls, resolves the leads and proposes verified groups in batches of ≤ 50 on `discovery/groups-crawl/<date>-<n>`. Flags for the big crawl; `run.ts` calls it nightly with small defaults. |
+| `scripts/discovery/config.ts` | `buildConfig`: the discovery agent's settings from the environment, shared by `run.ts` and the runners. |
 | `scripts/discovery/groups-backfill.ts` | One-off (`npm run discover:groups-backfill`): resolves the groups behind every merged event, position and group listing and proposes them all as one PR on `discovery/groups-backfill`; a re-run updates that PR. |
 | `scripts/topics/propose-map.ts` | By hand (`npm run topics:propose-map`): pulls OpenAlex topics from the compchem-adjacent subfields, places them under site topics by keyword rules and then a no-tools model call, and proposes the `openalex` lists in `data/topics.yaml` as a PR on `data/topic-map-<date>`. |
 | `scripts/topics/snapshot.ts` | Monthly on the discovery host (`npm run topics:snapshot`): builds `data/topic-stats.json` from OpenAlex, all or nothing, and proposes it on `data/topic-stats-<YYYY-MM>`; a failure opens or updates its own issue (label `topic-stats-failures`), and a good month closes it. |
@@ -135,6 +137,12 @@ behaviour lives and where tests point.
 | `discovery/orchestrator.ts` | Classifies candidates and opens one pull request each, with the candidate-controlled text rendered inert in the PR body. |
 | `discovery/github-client.ts` | The GitHub REST calls the orchestrator needs: branches, files, pull requests, labels, issues. |
 | `discovery/propose.ts` | The `Proposer`: opens (or, for events, refreshes) one branch, file and labelled pull request; shared by events, positions and groups. |
+| `discovery/crawl/score.ts` | The crawl's scope (seed host and subdomains) and deterministic link scores. |
+| `discovery/crawl/frontier.ts` | The crawl queue and visited map in `crawl-state.json`: revisit periods, the 50,000 cap, atomic saves. |
+| `discovery/crawl/seeds.ts` | Crawl seeds: registry websites and parents, position hosts, group listings, OpenAlex institutions, search citations. |
+| `discovery/crawl/classify.ts` | The no-tools page classifier and its gate; answers with link numbers only. |
+| `discovery/crawl/crawl.ts` | One bounded crawl run: four pages at a time on different hosts, budgets, pauses, saves every 50 pages. |
+| `discovery/batch-pr-body.ts` | The table body of a batched registry PR (backfill and crawler). |
 | `discovery/group-match.ts` | Matches a name against the registry's `name`, `aliases` and `pi` (and open group drafts), splits organiser strings, and collects group leads from accepted events and positions. |
 | `discovery/group-extract.ts` | The two group LLM calls, both with no tools: splitting an organiser string into people and organisations, and verifying that a fetched page is a group's homepage. Page text goes in as delimited data. |
 | `discovery/group-search.ts` | The one discovery call with a tool: OpenRouter's `web` plugin, used to find candidate homepages. Keeps only public `https://` URLs from `url_citation` annotations and discards the response text. |

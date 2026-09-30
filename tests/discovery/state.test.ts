@@ -1,8 +1,8 @@
 import { describe, expect, it, afterEach } from 'vitest';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { emptyState, loadState, saveState } from '../../src/lib/discovery/state';
+import { emptyState, loadState, mergeGroupLookups, saveState } from '../../src/lib/discovery/state';
 
 const dirs: string[] = [];
 function tmpPath(name: string): string {
@@ -69,5 +69,46 @@ describe('saveState / loadState round trip', () => {
     };
     saveState(path, state);
     expect(loadState(path)).toEqual(state);
+  });
+});
+
+describe('saveState', () => {
+  it('writes atomically, leaving no temp file behind', () => {
+    const path = tmpPath('atomic/state.json');
+    saveState(path, emptyState());
+    expect(existsSync(`${path}.tmp`)).toBe(false);
+    expect(loadState(path)).toEqual(emptyState());
+  });
+});
+
+describe('mergeGroupLookups', () => {
+  const at = (d: string, outcome = 'not found') => ({ triedAt: `${d}T00:00:00.000Z`, outcome });
+
+  it('applies only what this process changed onto the file as it is now', () => {
+    const path = tmpPath('merge/state.json');
+    const before = { kept: at('2026-09-01'), forgotten: at('2026-09-01') };
+    // Another process wrote its own entry and some pages meanwhile.
+    saveState(path, {
+      ...emptyState(),
+      pages: { 'https://x/': { fetchedAt: '2026-10-01T00:00:00.000Z' } },
+      groupLookups: { ...before, theirs: at('2026-10-01') },
+    });
+    const after = { kept: at('2026-09-01'), mine: at('2026-10-01', 'drafted') };
+    mergeGroupLookups(path, before, after);
+    const s = loadState(path);
+    expect(s.groupLookups).toEqual({
+      kept: at('2026-09-01'),
+      theirs: at('2026-10-01'),
+      mine: at('2026-10-01', 'drafted'),
+    });
+    expect(s.pages).toEqual({ 'https://x/': { fetchedAt: '2026-10-01T00:00:00.000Z' } });
+  });
+
+  it('does not delete an entry another process has since rewritten', () => {
+    const path = tmpPath('merge2/state.json');
+    const before = { k: at('2026-09-01') };
+    saveState(path, { ...emptyState(), groupLookups: { k: at('2026-10-02', 'drafted') } });
+    mergeGroupLookups(path, before, {});
+    expect(loadState(path).groupLookups).toEqual({ k: at('2026-10-02', 'drafted') });
   });
 });

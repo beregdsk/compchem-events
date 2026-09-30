@@ -211,6 +211,54 @@ table of entries followed by the skipped names, and has no `Confidence:` line,
 so auto-approve never flags the batch. Run once by hand, not by cron; a re-run
 updates the same PR. It needs the same environment as `discover:run`.
 
+## Groups crawler
+
+The groups pass only reaches groups named by events, positions and the
+group-listing sources. The crawler (`src/lib/discovery/crawl/`,
+`scripts/discovery/groups-crawl.ts`) finds the pages that *list* many
+groups — a department's "research groups" page, a network's members — and
+feeds their group links into the same resolver. Spec:
+`docs/superpowers/specs/2026-09-30-groups-crawler-design.md`.
+
+- **Seeds**, re-added every run (recently visited ones are ignored):
+  registry and open-PR group websites and their parent paths; the host of
+  each position advert (not job boards or `t.me`); `group-listing`
+  sources; the homepages of the institutions publishing most in each
+  mapped site topic, from OpenAlex (cached 30 days); and up to
+  `--max-searches` web searches, whose citation URLs are seeds only.
+- **Scope:** a link is crawled only on its seed's host or that host's
+  subdomains (`umich.edu` admits `chem.umich.edu`), depth ≤ 3, ≤ 40 pages
+  per host a run. Every URL is upgraded to https and must be public;
+  a page that redirects out of scope or to a private host is dropped.
+- **Classifier:** only pages with ≥ 8 directory-like links or two strong
+  words in the title or headings reach the model. It has no tools, reads
+  the page as data, and answers `directory`, `group-homepage` or `neither`
+  plus the *numbers* of the group links, so no URL ever comes from it.
+- **Proposing:** leads go to the resolver with no searches; verified
+  groups not already in the registry or an open group PR go out in
+  batches of at most 50, ordered by the directory they came from, on
+  `discovery/groups-crawl/<date>-<n>` (labels `needs-review`, `group`, no
+  `Confidence:` line). Groups beyond `--max-prs` are left for the next run.
+- **State:** `crawl-state.json` next to `STATE_PATH` (or
+  `CRAWL_STATE_PATH`): the queue (≤ 50,000), visited pages (180 days;
+  directories re-queued after 30), and the leads found but not yet
+  proposed, so a killed run resumes them. Saved atomically every 50 pages.
+  A 4xx page is gone (not retried); timeouts, 429 and 5xx are retried on
+  up to three later runs. The crawl never writes its page or robots state
+  into `state.json`; it merges only the group lookups it changed onto the
+  file as it is then, so the nightly run's entries survive. The crawl phase
+  uses at most half of `--max-tokens`, leaving the rest for verifying.
+  `crawl.lock` holds the running crawl's pid; a second crawl, including the
+  nightly slice, skips while it is held. Crawled leads may be on the
+  directory's own site, and their lookups are cached by link.
+- **Nightly slice:** `run.ts` runs it last before auto-approve with the
+  defaults (200 pages, 40 classifications, 5 searches, at most one PR, the
+  free model), only when `MAX_PRS` has room left.
+- **Big crawl**, by hand on the host, in the background, never alongside a
+  manual `run.sh`:
+  `npm run discover:groups-crawl -- --max-pages 20000 --max-classify 3000 --max-searches 50 --max-prs 20 --model <paid model id> --max-tokens <n>`.
+  `--max-tokens` is the hard stop; check the model's price first.
+
 ## Testing
 
 - Record real pages as fixtures in `tests/discovery/fixtures/` and test extraction with a stubbed LLM client returning canned JSON. CI must never call the real API.

@@ -15,6 +15,13 @@ export interface GroupLead {
   origin: string;
   /** From a group-listing source: already one name, never sent to the split call. */
   fromListing: boolean;
+  /**
+   * Found by the groups crawler. Its link may be on the same site as the
+   * directory that listed it (a department's own group pages), and its
+   * lookup is cached by link, since crawled link texts are often generic
+   * ("Group website").
+   */
+  crawled?: boolean;
 }
 
 const CONTEXT_SELECTOR = 'h1, h2, h3, h4, h5, h6, caption';
