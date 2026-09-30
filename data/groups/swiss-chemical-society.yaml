@@ -4,12 +4,12 @@ kind: society
 website: https://scg.ch/
 topics:
   - spectroscopy
+  - materials-modeling
   - catalysis
-  - drug-design
-  - electrochemistry
+  - cheminformatics
   - education-training
-description: The Swiss Chemical Society (SCS) is the national learned society
-  and network for chemists in Switzerland, organizing scientific conferences,
-  publishing journals, and supporting chemistry through awards and educational
-  courses.
+description: The Swiss Chemical Society (SCS) is the national professional
+  association for chemists in Switzerland. It fosters chemistry through
+  scientific publications, awards, education courses, thematic communities, and
+  networking events.
 added: 2026-09-30
