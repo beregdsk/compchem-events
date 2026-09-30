@@ -16,7 +16,11 @@ import { ADD_THRESHOLD } from '../../src/lib/discovery/classify-candidate';
 import { serializeDraft } from '../../src/lib/discovery/draft';
 import { clip, type ExtractOptions } from '../../src/lib/discovery/extract-client';
 import { politeFetch, type FetchOptions } from '../../src/lib/discovery/fetch';
-import { listFilesOnBranch, type GitHubOptions } from '../../src/lib/discovery/github-client';
+import {
+  getBranchStatus,
+  listFilesOnBranch,
+  type GitHubOptions,
+} from '../../src/lib/discovery/github-client';
 import { groupFilePath } from '../../src/lib/discovery/group-draft';
 import {
   buildRegistryIndex,
@@ -91,6 +95,7 @@ const cell = (text: string) => inlineCode(text).replace(/\|/g, '\\|');
 export function buildBackfillPrBody(
   accepted: readonly GroupCandidate[],
   skipped: ReadonlyArray<{ name: string; reason: string }>,
+  notRefound: readonly string[] = [],
 ): string {
   const rows = accepted.map((c) =>
     [
@@ -119,6 +124,13 @@ export function buildBackfillPrBody(
     ...(skipped.length > SKIPPED_LISTED
       ? [`…and ${skipped.length - SKIPPED_LISTED} more skipped (see the run log)`]
       : []),
+    ...(notRefound.length === 0
+      ? []
+      : [
+          '',
+          `Written by an earlier run and not found again this time (${notRefound.length}); check or delete:`,
+          ...notRefound.map((path) => `- ${cell(path)}`),
+        ]),
   ].join('\n');
 }
 
@@ -148,6 +160,12 @@ export interface BackfillResult {
 
 export async function runBackfill(deps: BackfillDeps): Promise<BackfillResult> {
   const log = deps.log ?? (() => {});
+  // Checked before any search: a closed batch PR means every paid search would be thrown away.
+  const branch = await getBranchStatus(BACKFILL_BRANCH, deps.github);
+  if (branch.exists && branch.openPr === undefined && branch.everHadPr) {
+    log('the backfill PR was already closed or merged; nothing written');
+    return { proposal: { outcome: 'reviewed' }, accepted: 0, skipped: 0 };
+  }
   const state = loadState(deps.statePath);
   // A re-run must re-propose its own earlier drafts, whose 'drafted' lookups
   // would otherwise be served from the negative cache. Only the batch's own
@@ -210,15 +228,18 @@ export async function runBackfill(deps: BackfillDeps): Promise<BackfillResult> {
     accepted.push(c);
   }
 
+  const files = accepted.map((c) => ({
+    path: groupFilePath(c.draft),
+    content: serializeDraft(c.draft),
+  }));
+  const written = new Set(files.map((f) => f.path));
+  const notRefound = own.map((f) => f.path).filter((path) => !written.has(path));
   const proposal = await new Proposer(deps.github).proposeBatch({
     branch: BACKFILL_BRANCH,
-    files: accepted.map((c) => ({
-      path: groupFilePath(c.draft),
-      content: serializeDraft(c.draft),
-    })),
+    files,
     title: 'Groups registry: backfill from existing events, positions and group listings',
     message: 'Add backfilled registry entries',
-    body: buildBackfillPrBody(accepted, skipped),
+    body: buildBackfillPrBody(accepted, skipped, notRefound),
     labels: ['needs-review', 'group'],
   });
   if (proposal.outcome === 'reviewed') {

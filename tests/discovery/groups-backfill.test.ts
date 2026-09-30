@@ -209,6 +209,15 @@ describe('buildBackfillPrBody', () => {
   });
 });
 
+describe('buildBackfillPrBody earlier files', () => {
+  it('lists files an earlier run wrote that this run did not find again', () => {
+    const body = buildBackfillPrBody([], [], ['data/groups/gone-group.yaml']);
+    expect(body).toContain('not found again this time (1)');
+    expect(body).toContain('- `data/groups/gone-group.yaml`');
+    expect(buildBackfillPrBody([], [])).not.toContain('not found again');
+  });
+});
+
 describe('buildBackfillPrBody size', () => {
   it('lists at most 100 skipped names and clips a long organiser string', () => {
     const skipped = Array.from({ length: 300 }, (_, i) => ({
@@ -309,18 +318,24 @@ describe('runBackfill', () => {
     expect(saved.groupLookups[key]).toEqual(entry);
   });
 
-  it('writes nothing when the batch PR was already closed', async () => {
+  it('writes nothing and searches nothing when the batch PR was already closed', async () => {
     const gh = stubGitHub({
-      [OPEN_LIST]: { status: 200, body: [] },
       [`GET ${R}/git/ref/heads/${BRANCH}`]: { status: 200, body: { object: { sha: 'sha-b' } } },
-      [BRANCH_DIR]: { status: 404 },
       [`GET ${R}/pulls?state=all&head=acme:${BRANCH}`]: {
         status: 200,
         body: [{ number: 60, state: 'closed' }],
       },
     });
-    const result = await runBackfill(deps(gh.impl));
-    expect(result).toEqual({ proposal: { outcome: 'reviewed' }, accepted: 0, skipped: 1 });
+    const d = deps(gh.impl);
+    let pagesFetched = 0;
+    const pageFetch = d.fetch.fetchImpl!;
+    d.fetch = {
+      ...d.fetch,
+      fetchImpl: ((...a) => (pagesFetched++, pageFetch(...a))) as typeof fetch,
+    };
+    const result = await runBackfill(d);
+    expect(result).toEqual({ proposal: { outcome: 'reviewed' }, accepted: 0, skipped: 0 });
+    expect(pagesFetched).toBe(0);
     expect(gh.keys().some((k) => k.startsWith('PUT ') || k.startsWith('POST '))).toBe(false);
   });
 });
