@@ -123,7 +123,8 @@ export async function runBackfill(deps: BackfillDeps): Promise<BackfillResult> {
   // files are forgotten: every other entry (a rejected group PR, a scheduled
   // run's draft) is still the guard against searching that name again.
   const own = await listFilesOnBranch(BACKFILL_BRANCH, 'data/groups', deps.github);
-  forgetLookups(state, ownLookupKeys(own.map((f) => parse(f.content))));
+  const ownDrafts = own.map((f) => parse(f.content) as RawGroup);
+  forgetLookups(state, ownLookupKeys(ownDrafts));
 
   const leads: GroupLead[] = [
     ...leadsFromEvents(deps.events ?? loadEvents({ includeFixtures: false })),
@@ -167,9 +168,12 @@ export async function runBackfill(deps: BackfillDeps): Promise<BackfillResult> {
       skipped.push({ name: c.draft.name, reason: 'low confidence' });
       continue;
     }
+    // The branch's own earlier files count too, except the one this draft
+    // replaces (same id): a re-run that resolves a group under a new id
+    // must not add a second file for it (#125).
     const reason = groupSkipReason(
       c.draft,
-      [...known, ...accepted.map((a) => a.draft)],
+      [...known, ...ownDrafts.filter((o) => o?.id !== c.draft.id), ...accepted.map((a) => a.draft)],
       deps.blockedHosts,
     );
     if (reason) {

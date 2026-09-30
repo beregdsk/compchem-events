@@ -121,7 +121,8 @@ describe('normaliseGroupName / websiteKey', () => {
     );
   });
 
-  it('keys a website by lowercase host and path without trailing slash', () => {
-    expect(websiteKey('https://WWW.Example.org/Lab/')).toBe('www.example.org/Lab');
+  it('keys a website by lowercase host without www. and path without trailing slash', () => {
+    expect(websiteKey('https://WWW.Example.org/Lab/')).toBe('example.org/Lab');
+    expect(websiteKey('https://www.cootelab.com/')).toBe(websiteKey('https://cootelab.com'));
   });
 });
