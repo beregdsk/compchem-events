@@ -300,6 +300,41 @@ describe('runBackfill', () => {
     expect(gh.keys().filter((k) => k.startsWith('PUT '))).toHaveLength(0);
   });
 
+  it('skips a draft that repeats its own earlier file under a different id (#125)', async () => {
+    const old = [
+      'id: group-of-coote',
+      'name: Group of Coote',
+      'kind: group',
+      `website: ${COOTE}`,
+      'topics: [electronic-structure]',
+      'description: d',
+      'added: 2026-09-29',
+      'location: { city: Adelaide, country: AU }',
+      '',
+    ].join('\n');
+    const gh = stubGitHub({
+      [OPEN_LIST]: OPEN_BATCH_LIST,
+      [BRANCH_DIR]: {
+        status: 200,
+        body: [{ path: 'data/groups/group-of-coote.yaml', type: 'file' }],
+      },
+      [`GET ${R}/contents/data/groups/group-of-coote.yaml?ref=${BRANCH}`]: {
+        status: 200,
+        body: { content: Buffer.from(old).toString('base64'), sha: 's' },
+      },
+      ...EXISTING_BRANCH,
+      ...fileStubs(200, ['smith-group']),
+      [`PATCH ${R}/pulls/60`]: { status: 200, body: {} },
+      [`POST ${R}/issues/60/labels`]: { status: 200, body: {} },
+    });
+    const result = await runBackfill(deps(gh.impl));
+    // coote-group has the same website as group-of-coote on this branch: not written again.
+    expect(gh.keys().filter((k) => k.startsWith('PUT '))).toEqual([
+      `PUT ${R}/contents/data/groups/smith-group.yaml`,
+    ]);
+    expect(result.accepted).toBe(1);
+  });
+
   it('leaves a name cached as drafted elsewhere skipped, and keeps its cache entry', async () => {
     const d = deps(stubGitHub({}).impl);
     const key = normaliseGroupName('Jane Smith');

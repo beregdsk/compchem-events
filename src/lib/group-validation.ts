@@ -43,10 +43,10 @@ export function normaliseGroupName(name: string): string {
     .trim();
 }
 
-/** Lowercase host plus path without a trailing slash — how websites are compared. */
+/** Lowercase host without `www.`, plus path without a trailing slash — how websites are compared. */
 export function websiteKey(url: string): string {
   const u = new URL(url);
-  return `${u.host.toLowerCase()}${u.pathname.replace(/\/+$/, '')}`;
+  return `${u.host.toLowerCase().replace(/^www\./, '')}${u.pathname.replace(/\/+$/, '')}`;
 }
 
 /** Every `<id>.yaml` directly under `dir`, sorted; empty when the folder does not exist yet. */
