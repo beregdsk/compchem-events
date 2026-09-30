@@ -39,7 +39,7 @@ import { parseGroupListing, type GroupLead } from '../../src/lib/discovery/parse
 import { Proposer, type Proposal } from '../../src/lib/discovery/propose';
 import { loadSources, type Source } from '../../src/lib/discovery/sources';
 import { loadState, saveState } from '../../src/lib/discovery/state';
-import { buildConfig } from './run';
+import { buildConfig } from './config';
 
 const DEFAULT_MAX_SEARCHES = 200;
 const DEFAULT_MAX_PAGES = 500;

@@ -686,3 +686,15 @@ The trend is papers per year: OpenAlex topics have no per-year citation
 counts, so citations are a total, summed over a slug's topics (a paper under
 two of them counts twice, and the page says so). See
 docs/superpowers/specs/2026-09-30-openalex-topics-design.md.
+
+## 2026-09-30 — Groups found by crawling institution sites for group directories
+
+To cover far more groups than events and positions name, the discovery agent
+crawls institution sites from known seeds to the pages that list many
+groups, and verifies each linked group with the existing resolver. Crawling
+directories needs no per-name web search, so it scales; a model looks only
+at pages that already look like directories, and answers with link numbers,
+never URLs. Seeds include the institutions OpenAlex ranks highest per site
+topic. Groups arrive in batched PRs of at most 50 for human review. A paid
+model is allowed for the one big crawl, the nightly slice stays on the free
+model. See docs/superpowers/specs/2026-09-30-groups-crawler-design.md.

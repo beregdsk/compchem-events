@@ -42,7 +42,7 @@ import { Proposer } from '../../src/lib/discovery/propose';
 import { loadSources, type Source } from '../../src/lib/discovery/sources';
 import { loadState, saveState } from '../../src/lib/discovery/state';
 import type { OpenAlexOptions } from '../../src/lib/topics/openalex';
-import { buildConfig } from './run';
+import { buildConfig } from './config';
 
 const BATCH = 50;
 const OPENALEX_SEED_DAYS = 30;

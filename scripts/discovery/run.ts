@@ -1,15 +1,13 @@
 #!/usr/bin/env node
+import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { site } from '../../site.config';
 import { loadEvents } from '../../src/lib/events';
 import { loadGroups } from '../../src/lib/groups';
 import { loadPositions } from '../../src/lib/positions';
 import { loadValidationContext } from '../../src/lib/validation';
-import { ADD_THRESHOLD, DEFAULT_JEV_MODEL } from '../../src/lib/discovery/classify-candidate';
-import { DEFAULT_EXTRACT_BASE_URL } from '../../src/lib/discovery/extract-client';
-import { DEFAULT_JEV_BASE_URL } from '../../src/lib/discovery/jev-client';
+import { ADD_THRESHOLD } from '../../src/lib/discovery/classify-candidate';
 import { fetchWithBrowser } from '../../src/lib/discovery/browser-fetch';
-import type { MailboxCredentials } from '../../src/lib/discovery/mailbox-client';
 import { leadsFromEvents, leadsFromPositions } from '../../src/lib/discovery/group-match';
 import { passLevelErrors, runGroupsPass } from '../../src/lib/discovery/groups-pass';
 import { todayUTC } from '../../src/lib/dates';
@@ -20,120 +18,9 @@ import { loadState, saveState } from '../../src/lib/discovery/state';
 import { syncFailureIssue } from '../../src/lib/discovery/github-client';
 import { autoApproveHighConfidencePrs } from '../../src/lib/discovery/auto-approve';
 
-export interface ResolvedConfig {
-  statePath: string;
-  maxPages: number;
-  maxPagesPerSource: number;
-  maxTokens: number;
-  maxPrs: number;
-  maxSearches: number;
-  userAgent: string;
-  extract: { apiKey: string; baseUrl: string; model: string };
-  classify: { apiKey: string; baseUrl: string; model: string };
-  github: { token: string; repo: string };
-  /** Undefined until IMAP_HOST/IMAP_USER/IMAP_PASSWORD are all set — `mailbox` sources stay inert until then. */
-  mailbox?: MailboxCredentials;
-}
-
-export type ConfigResult = { ok: true; config: ResolvedConfig } | { ok: false; error: string };
-
-export function buildConfig(env: Record<string, string | undefined>): ConfigResult {
-  const apiKey = env.LLM_API_KEY;
-  if (!apiKey) return { ok: false, error: 'LLM_API_KEY is required' };
-  const extractModel = env.LLM_MODEL_EXTRACT;
-  if (!extractModel) return { ok: false, error: 'LLM_MODEL_EXTRACT is required' };
-  const statePath = env.STATE_PATH;
-  if (!statePath) return { ok: false, error: 'STATE_PATH is required' };
-  const githubToken = env.GITHUB_TOKEN;
-  if (!githubToken) return { ok: false, error: 'GITHUB_TOKEN is required' };
-  const githubRepo = env.GITHUB_REPO;
-  if (!githubRepo || !/^[^/\s]+\/[^/\s]+$/.test(githubRepo)) {
-    return {
-      ok: false,
-      error: `GITHUB_REPO must be in the form "owner/repo", got "${githubRepo}"`,
-    };
-  }
-
-  const maxPages = env.MAX_PAGES ? Number(env.MAX_PAGES) : 200;
-  if (!Number.isFinite(maxPages) || maxPages <= 0) {
-    return { ok: false, error: `MAX_PAGES must be a positive number, got "${env.MAX_PAGES}"` };
-  }
-  const maxPagesPerSource = env.MAX_PAGES_PER_SOURCE ? Number(env.MAX_PAGES_PER_SOURCE) : 40;
-  if (!Number.isFinite(maxPagesPerSource) || maxPagesPerSource <= 0) {
-    return {
-      ok: false,
-      error: `MAX_PAGES_PER_SOURCE must be a positive number, got "${env.MAX_PAGES_PER_SOURCE}"`,
-    };
-  }
-  const maxTokens = env.MAX_TOKENS ? Number(env.MAX_TOKENS) : 500_000;
-  if (!Number.isFinite(maxTokens) || maxTokens <= 0) {
-    return { ok: false, error: `MAX_TOKENS must be a positive number, got "${env.MAX_TOKENS}"` };
-  }
-  const maxPrs = env.MAX_PRS ? Number(env.MAX_PRS) : 20;
-  if (!Number.isFinite(maxPrs) || maxPrs <= 0) {
-    return { ok: false, error: `MAX_PRS must be a positive number, got "${env.MAX_PRS}"` };
-  }
-  const maxSearches = env.MAX_SEARCHES ? Number(env.MAX_SEARCHES) : 20;
-  if (!Number.isFinite(maxSearches) || maxSearches <= 0) {
-    return {
-      ok: false,
-      error: `MAX_SEARCHES must be a positive number, got "${env.MAX_SEARCHES}"`,
-    };
-  }
-
-  // Fully optional: a mailbox account is a human-only operational step (see
-  // docs/discovery-agent.md, "Mailing lists"), so none of these three set at
-  // all just leaves `mailbox` undefined and every `kind: 'mailbox'` source
-  // skips. Only a partial set (a likely typo, e.g. a copy-paste that missed
-  // one var) fails fast, matching this function's style everywhere else.
-  const imapVars = [env.IMAP_HOST, env.IMAP_USER, env.IMAP_PASSWORD];
-  const imapVarsSet = imapVars.filter((v) => v !== undefined).length;
-  if (imapVarsSet !== 0 && imapVarsSet !== imapVars.length) {
-    return {
-      ok: false,
-      error: 'IMAP_HOST, IMAP_USER and IMAP_PASSWORD must all be set together, or all omitted',
-    };
-  }
-  let mailbox: MailboxCredentials | undefined;
-  if (imapVarsSet > 0) {
-    const port = env.IMAP_PORT ? Number(env.IMAP_PORT) : 993;
-    if (!Number.isFinite(port) || port <= 0) {
-      return { ok: false, error: `IMAP_PORT must be a positive number, got "${env.IMAP_PORT}"` };
-    }
-    mailbox = {
-      host: env.IMAP_HOST!,
-      port,
-      secure: env.IMAP_SECURE !== 'false',
-      user: env.IMAP_USER!,
-      password: env.IMAP_PASSWORD!,
-    };
-  }
-
-  return {
-    ok: true,
-    config: {
-      statePath,
-      maxPages,
-      maxPagesPerSource,
-      maxTokens,
-      maxPrs,
-      maxSearches,
-      userAgent: `${site.name} Discovery Agent (+${site.repoUrl}; ${site.contactEmail})`,
-      extract: {
-        apiKey,
-        baseUrl: env.LLM_BASE_URL ?? DEFAULT_EXTRACT_BASE_URL,
-        model: extractModel,
-      },
-      classify: {
-        apiKey,
-        baseUrl: env.LLM_BASE_URL_CLASSIFY ?? DEFAULT_JEV_BASE_URL,
-        model: env.LLM_MODEL ?? DEFAULT_JEV_MODEL,
-      },
-      github: { token: githubToken, repo: githubRepo },
-      mailbox,
-    },
-  };
-}
+export { buildConfig, type ConfigResult, type ResolvedConfig } from './config';
+import { buildConfig } from './config';
+import { parseCrawlArgs, runGroupsCrawl, type GroupsCrawlResult } from './groups-crawl';
 
 async function main(): Promise<void> {
   const resolved = buildConfig(process.env);
@@ -237,6 +124,42 @@ async function main(): Promise<void> {
     }
   }
 
+  // The groups crawler's nightly slice: small budgets, the free model, at
+  // most one batch PR, skipped while a big crawl holds the lock.
+  let crawl: GroupsCrawlResult | { status: 'failed'; error: string } | undefined;
+  const prsLeft = Math.max(0, cfg.maxPrs - result.prsOpened - result.prsUpdated - groups.prsOpened);
+  if (prsLeft > 0) {
+    try {
+      const dir = dirname(cfg.statePath);
+      crawl = await runGroupsCrawl({
+        github: cfg.github,
+        extract: { ...cfg.extract, topics: [...ctx.topics] },
+        fetch: { userAgent: cfg.userAgent, browserFetchImpl: fetchWithBrowser },
+        statePath: cfg.statePath,
+        crawlStatePath: process.env.CRAWL_STATE_PATH ?? join(dir, 'crawl-state.json'),
+        lockPath: join(dir, 'crawl.lock'),
+        today: todayUTC(),
+        args: { ...parseCrawlArgs([]), maxPrs: Math.min(1, prsLeft) },
+        maxTokens: cfg.maxTokens,
+        blockedHosts: ctx.blockedHosts,
+        openalex: { mailto: site.contactEmail, apiKey: process.env.OPENALEX_API_KEY || undefined },
+        log,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      crawl = { status: 'failed', error: message };
+      log(`ERROR groups-crawl: ${message}`);
+      try {
+        await syncFailureIssue(
+          [...sourceErrors, ...result.errors, ...passErrors, { source: 'groups-crawl', message }],
+          cfg.github,
+        );
+      } catch (e) {
+        log(`failed to sync the failure issue: ${e instanceof Error ? e.message : String(e)}`);
+      }
+    }
+  }
+
   // A separate phase, deliberately run after and independent of the loop
   // above: it revisits *all* currently-open discovery PRs (not just this
   // run's candidates), since CI on a PR opened days ago finishes long after
@@ -244,7 +167,7 @@ async function main(): Promise<void> {
   // human review for PRs that already look done. See auto-approve.ts.
   const autoApprove = await autoApproveHighConfidencePrs({ ...cfg.github, log });
 
-  console.log(JSON.stringify({ ...result, groups, autoApprove }, null, 2));
+  console.log(JSON.stringify({ ...result, groups, crawl, autoApprove }, null, 2));
 }
 
 // Only run when invoked directly — see scripts/discovery/parse-sources.ts for
