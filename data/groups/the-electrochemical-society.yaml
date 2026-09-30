@@ -1,0 +1,15 @@
+id: the-electrochemical-society
+name: The Electrochemical Society
+kind: society
+website: https://en.wikipedia.org/wiki/The_Electrochemical_Society
+topics:
+  - electrochemistry
+  - materials-modeling
+  - catalysis
+  - spectroscopy
+  - education-training
+description: The Electrochemical Society is a learned society supporting
+  scientific inquiry in electrochemistry and solid-state science. It publishes
+  journals, hosts technical meetings, and administers international awards for
+  over 8,000 members worldwide.
+added: 2026-09-30
