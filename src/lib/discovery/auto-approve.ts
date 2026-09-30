@@ -1,3 +1,4 @@
+import { POSSIBLE_DUPLICATE_LABEL } from './duplicates';
 import {
   addLabel,
   getCheckRunConclusions,
@@ -58,6 +59,11 @@ export async function autoApproveHighConfidencePrs(
   for (const pr of prs) {
     if (pr.labels.includes(HIGH_CONFIDENCE_LABEL)) {
       skipped.push({ number: pr.number, reason: 'already flagged' });
+      continue;
+    }
+    // A PR that may repeat another needs a human's eye whatever its confidence.
+    if (pr.labels.includes(POSSIBLE_DUPLICATE_LABEL)) {
+      skipped.push({ number: pr.number, reason: 'possible duplicate' });
       continue;
     }
 

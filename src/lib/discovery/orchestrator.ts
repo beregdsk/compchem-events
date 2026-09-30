@@ -8,11 +8,20 @@ import {
   type CriteriaScores,
 } from './classify-candidate';
 import { draftFilePath, serializeDraft } from './draft';
+import {
+  closestEvent,
+  closestPosition,
+  POSSIBLE_DUPLICATE_LABEL,
+  POSSIBLE_DUPLICATE_THRESHOLD,
+  type DuplicateMatch,
+  type KnownDraft,
+} from './duplicates';
 import { groupFilePath } from './group-draft';
 import type { GroupCandidate } from './groups';
 import { getBranchStatus, syncFailureIssue, type GitHubOptions } from './github-client';
 import type { PositionCandidate } from './pipeline';
 import { positionFilePath } from './position-draft';
+import type { PrDrafts } from './pr-drafts';
 import { Proposer } from './propose';
 
 /**
@@ -48,7 +57,22 @@ export interface AddClassification {
   criteria: CriteriaScores;
 }
 
-export function buildPrBody(candidate: RawEvent, classification: AddClassification): string {
+/** The reviewer's warning line; the matched title came from a draft, so it is quoted as code. */
+function duplicateLine(dup: DuplicateMatch | undefined): string[] {
+  if (!dup || dup.score < POSSIBLE_DUPLICATE_THRESHOLD) return [];
+  return [
+    `**Possible duplicate** (${dup.score.toFixed(2)}) of ${dup.where}: ${inlineCode(dup.title)} — ${dup.why}`,
+  ];
+}
+
+const isPossibleDuplicate = (dup: DuplicateMatch | undefined) =>
+  dup !== undefined && dup.score >= POSSIBLE_DUPLICATE_THRESHOLD;
+
+export function buildPrBody(
+  candidate: RawEvent,
+  classification: AddClassification,
+  duplicate?: DuplicateMatch,
+): string {
   const optional = (text: string | undefined) => (text === undefined ? '(none)' : inlineCode(text));
   const details = [
     `- **title:** ${inlineCode(candidate.title)}`,
@@ -69,16 +93,22 @@ export function buildPrBody(candidate: RawEvent, classification: AddClassificati
     `Criteria — relevant: ${c.relevant.toFixed(2)}, organiser: ${c.organiser.toFixed(2)}, ` +
       `programme: ${c.programme.toFixed(2)}, cost: ${c.cost.toFixed(2)}, ` +
       `red_flag: ${c.red_flag.toFixed(2)}`,
+    ...duplicateLine(duplicate),
     '',
     ...details,
   ].join('\n');
 }
 
-export function buildPositionPrBody(p: RawPosition, confidence: number): string {
+export function buildPositionPrBody(
+  p: RawPosition,
+  confidence: number,
+  duplicate?: DuplicateMatch,
+): string {
   const optional = (text: string | undefined) => (text === undefined ? '(none)' : inlineCode(text));
   return [
     `Confidence: ${confidence.toFixed(2)}`,
     'Position advert (no classifier runs on positions; check it against docs/curation-policy.md).',
+    ...duplicateLine(duplicate),
     '',
     `- **title:** ${inlineCode(p.title)}`,
     `- **level:** ${inlineCode(POSITION_LEVEL_LABELS[p.level])}`,
@@ -253,7 +283,21 @@ export interface OrchestratorOptions {
   /** Position adverts from the pipeline, proposed after events. */
   positions: readonly PositionCandidate[];
   existingPositions: readonly RawPosition[];
+  /** Drafts in open and rejected discovery PRs, checked for duplicates like those on main. */
+  prDrafts?: PrDrafts;
   log?: (message: string) => void;
+}
+
+/**
+ * A position at or above this duplicate score is skipped outright: the same
+ * title at the same institution, or the same advert re-read from one post
+ * (PRs #105 and #110 both merged the same Telegram post).
+ */
+const POSITION_DUPLICATE_SKIP = 0.95;
+
+/** Everything a candidate is compared against, minus the open PR it would itself refresh. */
+function othersThan<T>(known: readonly KnownDraft<T>[], branch: string): KnownDraft<T>[] {
+  return known.filter((k) => k.branch !== branch);
 }
 
 export interface OrchestratorResult {
@@ -299,7 +343,12 @@ export async function runDiscoveryRun(options: OrchestratorOptions): Promise<Orc
   // as it stood at the start of the run. This is what actually happened
   // with PRs #16 and #21 (merged): both opened in the same run, same event,
   // same url, from two different sources.
-  const knownEvents: RawEvent[] = [...options.existingEvents];
+  // Also every event draft in an open or rejected discovery PR, so a later
+  // night's second source is caught too (PRs #53 and #85).
+  const knownEvents: KnownDraft<RawEvent>[] = [
+    ...options.existingEvents.map((entry) => ({ entry, where: 'main' })),
+    ...(options.prDrafts?.events ?? []),
+  ];
   const accepted: RawEvent[] = [];
 
   const proposer = new Proposer(options.github);
@@ -313,8 +362,10 @@ export async function runDiscoveryRun(options: OrchestratorOptions): Promise<Orc
         continue;
       }
 
+      const branch = `discovery/${candidate.id}`;
+      const others = othersThan(knownEvents, branch);
       const classification = await classifyCandidate(candidate, {
-        existingEvents: knownEvents,
+        existingEvents: others.map((k) => k.entry),
         blockedHosts: options.blockedHosts,
         apiKey: options.classify.apiKey,
         baseUrl: options.classify.baseUrl,
@@ -325,10 +376,12 @@ export async function runDiscoveryRun(options: OrchestratorOptions): Promise<Orc
         },
       });
 
+      const duplicate = closestEvent(candidate, others);
       if (classification.verdict !== 'add') {
         const reason = skipReasonFor(classification);
         skipped.push({ id: candidate.id, reason });
-        log(`skipping ${candidate.id}: ${reason}`);
+        const of = reason.startsWith('duplicate') && duplicate ? ` of ${duplicate.where}` : '';
+        log(`skipping ${candidate.id}: ${reason}${of}`);
         continue;
       }
 
@@ -336,7 +389,7 @@ export async function runDiscoveryRun(options: OrchestratorOptions): Promise<Orc
       // still to come in this run — see knownEvents' own comment above.
       // Before any MAX_PRS/GitHub step, so a later duplicate is still
       // caught even if this one itself gets skipped by MAX_PRS.
-      knownEvents.push(candidate);
+      knownEvents.push({ entry: candidate, where: 'this run' });
       accepted.push(candidate);
 
       if (prsOpened + prsUpdated >= options.maxPrs) {
@@ -347,13 +400,15 @@ export async function runDiscoveryRun(options: OrchestratorOptions): Promise<Orc
       }
 
       const proposal = await proposer.proposeFile({
-        branch: `discovery/${candidate.id}`,
+        branch,
         path: draftFilePath(candidate),
         content: serializeDraft(candidate),
         title: candidate.title,
         message: `Add candidate event: ${candidate.title}`,
-        body: buildPrBody(candidate, classification),
-        labels: ['needs-review'],
+        body: buildPrBody(candidate, classification, duplicate),
+        labels: isPossibleDuplicate(duplicate)
+          ? ['needs-review', POSSIBLE_DUPLICATE_LABEL]
+          : ['needs-review'],
       });
       if (proposal.outcome === 'reviewed') {
         // A PR existed and is now closed or merged — a human already
@@ -377,7 +432,10 @@ export async function runDiscoveryRun(options: OrchestratorOptions): Promise<Orc
     }
   }
 
-  const knownPositions: RawPosition[] = [...options.existingPositions];
+  const knownPositions: KnownDraft<RawPosition>[] = [
+    ...options.existingPositions.map((entry) => ({ entry, where: 'main' })),
+    ...(options.prDrafts?.positions ?? []),
+  ];
   for (const { draft, confidence } of options.positions) {
     try {
       if (confidence < ADD_THRESHOLD) {
@@ -385,13 +443,23 @@ export async function runDiscoveryRun(options: OrchestratorOptions): Promise<Orc
         log(`skipping position ${draft.id}: low confidence (${confidence.toFixed(2)})`);
         continue;
       }
-      const reason = positionSkipReason(draft, knownPositions, options.blockedHosts);
+      const branch = `discovery/position/${draft.id}`;
+      const others = othersThan(knownPositions, branch);
+      const duplicate = closestPosition(draft, others);
+      const reason =
+        positionSkipReason(
+          draft,
+          others.map((k) => k.entry),
+          options.blockedHosts,
+        ) ??
+        (duplicate && duplicate.score >= POSITION_DUPLICATE_SKIP ? 'duplicate-likely' : undefined);
       if (reason) {
         skipped.push({ id: draft.id, reason });
-        log(`skipping position ${draft.id}: ${reason}`);
+        const of = reason.startsWith('duplicate') && duplicate ? ` of ${duplicate.where}` : '';
+        log(`skipping position ${draft.id}: ${reason}${of}`);
         continue;
       }
-      knownPositions.push(draft);
+      knownPositions.push({ entry: draft, where: 'this run' });
       if (prsOpened + prsUpdated >= options.maxPrs) {
         skipped.push({ id: draft.id, reason: 'MAX_PRS reached' });
         deferred.push(draft.id);
@@ -409,13 +477,15 @@ export async function runDiscoveryRun(options: OrchestratorOptions): Promise<Orc
       // refresh: false — a re-sighting must not rewrite an open PR, or its
       // `added` date ("first seen") would move and restart the 45/90-day clock.
       const proposal = await proposer.proposeFile({
-        branch: `discovery/position/${draft.id}`,
+        branch,
         path: positionFilePath(draft),
         content: serializeDraft(draft),
         title: `Position: ${draft.title}`,
         message: `Add candidate position: ${draft.title}`,
-        body: buildPositionPrBody(draft, confidence),
-        labels: ['needs-review', 'position'],
+        body: buildPositionPrBody(draft, confidence, duplicate),
+        labels: isPossibleDuplicate(duplicate)
+          ? ['needs-review', 'position', POSSIBLE_DUPLICATE_LABEL]
+          : ['needs-review', 'position'],
         refresh: false,
       });
       if (proposal.outcome === 'proposed') {

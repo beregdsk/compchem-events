@@ -16,16 +16,17 @@ afterEach(() => {
 });
 
 describe('emptyState', () => {
-  it('has empty hosts, pages and groupLookups maps', () => {
-    expect(emptyState()).toEqual({ hosts: {}, pages: {}, groupLookups: {} });
+  it('has empty hosts, pages, groupLookups and rejectedPrs maps', () => {
+    expect(emptyState()).toEqual({ hosts: {}, pages: {}, groupLookups: {}, rejectedPrs: {} });
   });
 });
 
 describe('loadState', () => {
-  it('adds an empty groupLookups map to an older state file', () => {
+  it('adds empty groupLookups and rejectedPrs maps to an older state file', () => {
     const path = tmpPath('old.json');
     writeFileSync(path, JSON.stringify({ hosts: {}, pages: {} }));
     expect(loadState(path).groupLookups).toEqual({});
+    expect(loadState(path).rejectedPrs).toEqual({});
   });
 
   it('returns an empty state when the file does not exist', () => {
@@ -61,6 +62,9 @@ describe('saveState / loadState round trip', () => {
       },
       groupLookups: {
         'some group': { triedAt: '2026-09-23T00:00:00.000Z', outcome: 'no-homepage' },
+      },
+      rejectedPrs: {
+        '108': { files: [{ path: 'data/events/2026/x.yaml', data: { title: 'X' } }] },
       },
     };
     saveState(path, state);

@@ -15,6 +15,8 @@ import { passLevelErrors, runGroupsPass } from '../../src/lib/discovery/groups-p
 import { todayUTC } from '../../src/lib/dates';
 import { runDiscoveryRun, type OrchestratorOptions } from '../../src/lib/discovery/orchestrator';
 import { runPipeline, type PipelineOptions } from '../../src/lib/discovery/pipeline';
+import { discoveryPrDrafts, type PrDrafts } from '../../src/lib/discovery/pr-drafts';
+import { loadState, saveState } from '../../src/lib/discovery/state';
 import { syncFailureIssue } from '../../src/lib/discovery/github-client';
 import { autoApproveHighConfidencePrs } from '../../src/lib/discovery/auto-approve';
 
@@ -157,6 +159,22 @@ async function main(): Promise<void> {
   const pipelineResult = await runPipeline(pipelineOptions);
   for (const error of pipelineResult.errors) log(`ERROR ${error.source}: ${error.message}`);
 
+  // Drafts in open and rejected discovery PRs, for the duplicate checks. A
+  // failure here is reported, and the run goes on checking against main only.
+  const sourceErrors = [...pipelineResult.errors];
+  const prState = loadState(cfg.statePath);
+  let prDrafts: PrDrafts | undefined;
+  try {
+    prDrafts = await discoveryPrDrafts(cfg.github, prState);
+    log(
+      `duplicate checks include ${prDrafts.events.length} event and ${prDrafts.positions.length} position draft(s) from PRs`,
+    );
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    sourceErrors.push({ source: 'pr-drafts', message });
+    log(`ERROR pr-drafts: ${message}`);
+  }
+
   const ctx = loadValidationContext();
   const orchestratorOptions: OrchestratorOptions = {
     candidates: pipelineResult.candidates,
@@ -164,12 +182,13 @@ async function main(): Promise<void> {
     blockedHosts: ctx.blockedHosts,
     classify: cfg.classify,
     github: cfg.github,
-    sourceErrors: pipelineResult.errors,
+    sourceErrors,
     maxPrs: cfg.maxPrs,
     maxTokens: cfg.maxTokens,
     tokensUsedSoFar: pipelineResult.tokensUsed,
     positions: pipelineResult.positions,
     existingPositions: loadPositions({ includeFixtures: false }),
+    prDrafts,
     log,
   };
   const result = await runDiscoveryRun(orchestratorOptions);
@@ -177,6 +196,10 @@ async function main(): Promise<void> {
   // a candidate cut off by MAX_TOKENS/MAX_PRS would never be seen again.
   pipelineResult.requeue(result.deferred);
   if (result.deferred.length > 0) log(`requeued ${result.deferred.length} deferred candidate(s)`);
+  // requeue rewrote the state file from the pipeline's own copy; keep the
+  // rejected PRs read above, so they are not fetched again next run.
+  const latest = loadState(cfg.statePath);
+  saveState(cfg.statePath, { ...latest, rejectedPrs: prState.rejectedPrs });
 
   const acceptedPositions = pipelineResult.positions
     .filter((p) => p.confidence >= ADD_THRESHOLD)
@@ -208,10 +231,7 @@ async function main(): Promise<void> {
   const passErrors = passLevelErrors(groups.errors);
   if (passErrors.length > 0) {
     try {
-      await syncFailureIssue(
-        [...pipelineResult.errors, ...result.errors, ...passErrors],
-        cfg.github,
-      );
+      await syncFailureIssue([...sourceErrors, ...result.errors, ...passErrors], cfg.github);
     } catch (err) {
       log(`failed to sync the failure issue: ${err instanceof Error ? err.message : String(err)}`);
     }
