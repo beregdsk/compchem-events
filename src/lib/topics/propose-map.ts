@@ -157,21 +157,21 @@ export function applyMapping(
   const doc = parseDocument(yamlText);
   const root = doc.contents;
   if (!isSeq(root)) throw new Error('data/topics.yaml is not a list');
-  for (const item of root.items) {
-    if (!isMap(item)) continue;
+  root.items.forEach((item, index) => {
+    if (!isMap(item)) return;
     const slug = item.get('slug');
-    if (typeof slug !== 'string' || !mapping.has(slug)) continue;
+    if (typeof slug !== 'string' || !mapping.has(slug)) return;
     const ids = [...new Set(mapping.get(slug))].sort(
       (a, b) => Number(a.slice(1)) - Number(b.slice(1)),
     );
     if (ids.length === 0) {
-      item.delete('openalex');
-      continue;
+      doc.deleteIn([index, 'openalex']);
+      return;
     }
     const seq = doc.createNode(ids);
     seq.flow = true;
-    item.set('openalex', seq);
-  }
+    doc.setIn([index, 'openalex'], seq);
+  });
   return doc.toString();
 }
 
