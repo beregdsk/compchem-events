@@ -289,8 +289,10 @@ checkout and appends to `~/discovery-agent/topic-stats.log`; crontab line
 local, clear of the nightly run). It needs `GITHUB_TOKEN`, `GITHUB_REPO`
 and, for the $1/day OpenAlex tier, `OPENALEX_API_KEY` in `.env`. It opens
 or updates the PR `data/topic-stats-<YYYY-MM>`; a failed month proposes
-nothing, keeps last month's file, and reports `topic-stats` in the
-`discovery-failures` issue.
+nothing, keeps last month's file, and opens or updates its own issue
+(label `topic-stats-failures`, separate from the nightly run's
+`discovery-failures`, so neither job's run closes the other's); a good
+month closes it.
 
 ### Running without Docker
 

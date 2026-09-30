@@ -210,8 +210,10 @@ The discovery host (`~/discovery-agent/`), like the nightly agent:
 - Crontab: `17 4 2 * *` (the 2nd of each month, 04:17 local), clear of the
   23:54 nightly run.
 - `.env` gains `OPENALEX_API_KEY` (set 2026-09-30).
-- A failed run syncs the existing `discovery-failures` issue with source
-  `topic-stats`.
+- A failed run opens or updates its own issue (label
+  `topic-stats-failures`); a good month closes it. Amended 2026-09-30 after
+  review: sharing `discovery-failures` let the nightly run overwrite and
+  close the report within a day.
 
 ## The pages
 
