@@ -36,6 +36,9 @@ npm run discover     # discovery dry run: fetch and extract every source, print 
                      #   LLM_MODEL_EXTRACT, STATE_PATH)
 npm run discover:run # the full discovery run that opens pull requests; see docs/discovery-agent.md
 npm run discover:groups-backfill # one-off: propose registry entries for every existing organiser, group and group listing as one PR (needs the discover:run environment)
+npm run topics:propose-map # by hand: propose OpenAlex topics under each site topic as a PR (needs LLM_API_KEY,
+                     #   LLM_MODEL_EXTRACT, GITHUB_TOKEN, GITHUB_REPO; OPENALEX_API_KEY optional)
+npm run topics:snapshot # monthly on the discovery host: propose data/topic-stats.json as a PR
 ```
 
 ## Documentation

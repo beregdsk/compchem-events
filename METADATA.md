@@ -63,7 +63,8 @@ publishing workflow.
 | `data/events/<start-year>/<id>.yaml` | One file per event. The folder must match the event's start year and the filename must match its `id`; the validator enforces both. |
 | `data/positions/<added-year>/<id>.yaml` | One file per position (PhD, postdoc or permanent academic job). Created by the first merged position PR; the folder must match the year of `added` and the filename must match its `id`. |
 | `data/groups/<id>.yaml` | One file per research group, institute, network or society, listed on `/groups/`. The filename must match its `id`; the folder does not exist until the first group is merged. |
-| `data/topics.yaml` | Controlled vocabulary of topic slugs and labels. Adding a slug is a schema-level change. |
+| `data/topics.yaml` | Controlled vocabulary of topic slugs and labels, each with an optional `openalex` list of OpenAlex topic ids for the statistics. Adding a slug is a schema-level change. |
+| `data/topic-stats.json` | Per-topic literature statistics from OpenAlex, written monthly by `scripts/topics/snapshot.ts` through a PR; never edited by hand. Absent until the first snapshot. See `docs/topic-stats.md`. |
 | `data/blocklist.yaml` | Organiser domains that must never be listed, each with public evidence. Intentionally empty until there is something to add. Matches a registrable host and its subdomains. |
 | `data/sources.yaml` | Pages, feeds, channels and mailing lists the discovery agent watches, each verified by fetch. Read by `src/lib/discovery/sources.ts`, listed publicly on `/sources/`, and checked by `npm run validate`. Unusable candidates are kept in a commented block at the bottom so nobody re-checks them. |
 | `data/LICENSE` | CC0 1.0, for the event data in this directory. |
@@ -75,6 +76,7 @@ publishing workflow.
 | `schema/event.schema.json` | JSON Schema for an event file. The contract. Changing it means changing the validator, `docs/data-schema.md`, the fixtures and the tests in the same pull request. |
 | `schema/position.schema.json` | JSON Schema for a position file. Must match `docs/position-schema.md` exactly. |
 | `schema/group.schema.json` | JSON Schema for a group file. Must match `docs/group-schema.md` exactly. |
+| `schema/topic-stats.schema.json` | JSON Schema for `data/topic-stats.json`. Must match `docs/topic-stats.md`. |
 
 ## `scripts/`
 
@@ -83,6 +85,8 @@ publishing workflow.
 | `scripts/validate.ts` | CLI entry point for `npm run validate`. Walks `data/events/`, `data/positions/` and `data/groups/` and checks `data/sources.yaml`, reports problems and exits non-zero on any error. Thin: the logic is in `src/lib/validation.ts` and `src/lib/discovery/sources.ts` so the discovery agent can import it as a library. |
 | `scripts/discovery/run.ts` | The discovery agent's cron entry point (`npm run discover:run`): validates its environment, then runs fetch → extract → classify → open pull requests → label high-confidence ones. |
 | `scripts/discovery/groups-backfill.ts` | One-off (`npm run discover:groups-backfill`): resolves the groups behind every merged event, position and group listing and proposes them all as one PR on `discovery/groups-backfill`; a re-run updates that PR. |
+| `scripts/topics/propose-map.ts` | By hand (`npm run topics:propose-map`): pulls OpenAlex topics from the compchem-adjacent subfields, places them under site topics by keyword rules and then a no-tools model call, and proposes the `openalex` lists in `data/topics.yaml` as a PR on `data/topic-map-<date>`. |
+| `scripts/topics/snapshot.ts` | Monthly on the discovery host (`npm run topics:snapshot`): builds `data/topic-stats.json` from OpenAlex, all or nothing, and proposes it on `data/topic-stats-<YYYY-MM>`; a failure goes to the `discovery-failures` issue as `topic-stats`. |
 | `scripts/discovery/parse-sources.ts` | Dry run (`npm run discover`): fetches and extracts from every source and prints the candidates as JSON. No classification, no GitHub calls. |
 | `scripts/discovery/classify.ts` | CLI: reads one candidate event file (YAML or JSON), classifies it against `data/events/` and `data/blocklist.yaml` via `src/lib/discovery/classify-candidate.ts`, prints the verdict as JSON. Useful for checking one candidate by hand; `orchestrator.ts` calls the same classifier in a real run. |
 | `scripts/check-links.ts` | CLI: fetches every `url`/`source_url` (or just the files given on the command line) and reports which don't resolve. Never fails — used both by the weekly link-check workflow and the pull-request check on changed files. |
@@ -99,6 +103,13 @@ behaviour lives and where tests point.
 | `validation.ts` | Schema validation (Ajv) plus the semantic rules the schema cannot express — end before start, deadline after end, unknown topic or country, a future `added`, id/filename/folder agreement. Exported as `validateEvent` for reuse. |
 | `position-validation.ts` | The same for positions: schema, id/filename/folder agreement, topics, country, blocklist, plus cross-file duplicate checks. Exports `validatePosition`, `validatePositionCollection` and `readPositionFiles`. |
 | `positions.ts` | The positions loader. Reads and validates `data/positions/`, derives each position's open, stale or archived status from the build date (45 and 90 days for positions without a deadline), and orders each list. |
+| `topic-validation.ts` | Checks `data/topics.yaml`: slugs, labels, and `openalex` ids (a topic under two slugs warns). |
+| `topic-stats.ts` | The `data/topic-stats.json` types, its validator (schema, known slugs, https links, consecutive years, stale-mapping warning) and `loadTopicStats`. |
+| `topic-coverage.ts` | Counts of upcoming events, groups and open positions per topic, for the topic pages. |
+| `charts.ts` | Geometry for the static SVG charts: `barGeometry`, `sparklinePoints`. |
+| `topics/openalex.ts` | Minimal OpenAlex client: mailto and optional key on every request, three attempts on 429/5xx, never prints the key. |
+| `topics/snapshot.ts` | Builds each topic's statistics from OpenAlex and the monthly PR body. |
+| `topics/map-rules.ts`, `topics/propose-map.ts` | Keyword rules, candidate fetching, the model classification and the in-place YAML edit behind `scripts/topics/propose-map.ts`. |
 | `group-validation.ts` | The same for groups: schema, id/filename agreement, topics, country, blocklist, plus cross-file duplicate checks. Exports `validateGroup`, `validateGroupCollection` and `readGroupFiles`. |
 | `groups.ts` | The groups loader. Reads and validates `data/groups/`, drops fixtures in production builds, and groups the result into sections by kind. |
 | `event-graph.ts` | Similarity between events (shared topics, series, organiser) and the graph built from it. Feeds `/graph/` and the related events on each event page. |
@@ -146,8 +157,8 @@ One file per URL. Pages stay thin; they compose `src/lib/`.
 | --- | --- |
 | `index.astro` | `/` — upcoming events with filters. |
 | `events/[id].astro` | `/events/<id>` — one event, with its related events. |
-| `topics.astro` | `/topics/` — every topic, with its upcoming count. |
-| `topics/[slug].astro` | `/topics/<slug>/` — upcoming and past events in one topic, with that topic's feeds. |
+| `topics.astro` | `/topics/` — every topic as a sortable table: papers last year, five-year growth, a sparkline and citations from the OpenAlex snapshot, and this site's own counts. |
+| `topics/[slug].astro` | `/topics/<slug>/` — the topic's literature statistics (when a snapshot exists), then its upcoming and past events and feeds. |
 | `topics/[slug].ics.ts` | `/topics/<slug>.ics` — that topic's upcoming events as a calendar. |
 | `topics/[slug].xml.ts` | `/topics/<slug>.xml` — Atom feed of that topic's newly added events. |
 | `series/[slug].astro` | `/series/<slug>/` — every edition of a recurring event. Built only for a series with two or more listed editions. |
@@ -178,6 +189,9 @@ One file per URL. Pages stay thin; they compose `src/lib/`.
 | `components/GroupRow.astro` | One group in a list: linked name, PI, parent, place, description and topics. |
 | `components/DeadlineList.astro` | An event's deadlines. |
 | `components/OrbitalField.astro` | Renders the orbital plate as inline SVG at build time — inline so the dots can follow the theme tokens, which an external image could not. |
+| `components/TrendChart.astro` | A static bar chart as inline SVG, with a hidden data table for screen readers. |
+| `components/TopicStatsBlock.astro` | A topic page's literature statistics: chart, totals, top institutions, journals and papers, OpenAlex subtopics, this site's coverage. |
+| `components/TopicsTable.astro` | The `/topics/` table. |
 | `components/PageActions.astro` | The row of per-page actions (subscribe, export, submit). |
 
 ## `src/scripts/` — the browser's share
@@ -188,6 +202,7 @@ JavaScript disabled; nothing here is load-bearing.
 | Path | What it does |
 | --- | --- |
 | `filters.ts` | Filters the list client-side and keeps the URL in step. Server-rendered results are the fallback. |
+| `sort-table.ts` | Sorts a `data-sortable` table (the `/topics/` table) by a header click; without JS it keeps its server order. |
 | `countdown.ts` | Appends a relative phrase ("closes in 12 days") beside the rendered date, so a static build never serves a stale countdown. Leaves the `<time>` element's machine-readable text alone. |
 | `graph.ts` | Brings the event map to life: drag, neighbour highlighting, pan and zoom. The static SVG works without it. |
 | `theme.ts` | Reveals and drives the theme toggle. Only unhides the control when it can work, so it never appears uselessly. A small inline script in `<head>` applies a stored choice before first paint. |
