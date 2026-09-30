@@ -16,6 +16,22 @@ export function isProfileHost(url: string): boolean {
   }
 }
 
+/**
+ * Hosts that describe or hold a body's code without being its own website.
+ * Search often cites them first; `*.github.io` lab pages stay allowed.
+ */
+export const REFERENCE_HOSTS = /(^|\.)(wikipedia\.org|wikidata\.org|github\.com)$/i;
+
+/** A URL that may be a group's `website`: not a profile page nor a reference site. */
+export function canBeGroupWebsite(url: string): boolean {
+  try {
+    const host = new URL(url).hostname;
+    return !PROFILE_HOSTS.test(host) && !REFERENCE_HOSTS.test(host);
+  } catch {
+    return false;
+  }
+}
+
 /** Splits on `;` and `,` outside parentheses; a trailing `(…)` becomes the affiliation. */
 export function splitOrganizer(text: string): Array<{ name: string; affiliation?: string }> {
   const parts: string[] = [];

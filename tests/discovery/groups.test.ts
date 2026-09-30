@@ -263,11 +263,13 @@ describe('resolveGroupLeads', () => {
     },
   );
 
-  it('drops profile and origin hosts from search results before taking the first two', async () => {
+  it('drops profile, reference and origin hosts from search results before taking the first two', async () => {
     const w = world({
       searches: {
         '"Michelle Coote" research group Flinders University': [
           'https://www.linkedin.com/in/coote',
+          'https://en.wikipedia.org/wiki/Michelle_Coote',
+          'https://github.com/cootelab',
           'https://labinitio.org/people/coote',
           'https://cootelab.com/',
         ],
@@ -277,7 +279,7 @@ describe('resolveGroupLeads', () => {
     const result = await resolveGroupLeads(
       options(w, [cooteLead('https://scholar.google.com.au/citations?user=x')]),
     );
-    expect(w.seen.requests.some((u) => u.includes('linkedin.com'))).toBe(false);
+    expect(w.seen.requests.some((u) => /linkedin|wikipedia|github\.com/.test(u))).toBe(false);
     expect(w.seen.requests.some((u) => u.includes('labinitio.org'))).toBe(false);
     expect(result.candidates.map((c) => c.draft.website)).toEqual(['https://cootelab.com/']);
   });

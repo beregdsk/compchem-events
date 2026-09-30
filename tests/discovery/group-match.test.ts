@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildRegistryIndex,
+  canBeGroupWebsite,
   isProfileHost,
   leadsFromEvents,
   leadsFromPositions,
@@ -77,6 +78,19 @@ describe('isProfileHost', () => {
     'https://x.com/lab',
   ])('flags %s', (u) => expect(isProfileHost(u)).toBe(true));
   it('does not flag a lab site', () => expect(isProfileHost('https://cootelab.com/')).toBe(false));
+});
+
+describe('canBeGroupWebsite', () => {
+  it.each([
+    'https://en.wikipedia.org/wiki/The_Electrochemical_Society',
+    'https://www.wikidata.org/wiki/Q1',
+    'https://github.com/CCPBioSim',
+    'https://www.linkedin.com/in/x',
+  ])('rejects %s', (u) => expect(canBeGroupWebsite(u)).toBe(false));
+  it.each(['https://cootelab.com/', 'https://somelab.github.io/', 'https://www.ccpbiosim.ac.uk/'])(
+    'accepts %s',
+    (u) => expect(canBeGroupWebsite(u)).toBe(true),
+  );
 });
 
 describe('leadsFromEvents / leadsFromPositions', () => {

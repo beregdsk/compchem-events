@@ -133,7 +133,8 @@ draft). The orchestrator runs the pass after positions, sharing the
    profile host (step 3), otherwise as an organisation.
 3. **Listing link first.** A lead from a group listing whose link is not a
    profile or aggregator page (hosts `scholar.google.*`, `researchgate.net`,
-   `linkedin.com`, `orcid.org`, `x.com`, `twitter.com`, or the listing's own
+   `linkedin.com`, `orcid.org`, `x.com`, `twitter.com`; reference hosts
+   `wikipedia.org`, `wikidata.org`, `github.com`, never a group website either), or the listing's own
    host) goes straight to step 5 with that link as its only candidate; if
    verification rejects it, the lead falls through to search.
 4. **Search.** For each item still unknown and not in the negative cache, one
