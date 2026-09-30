@@ -6,10 +6,12 @@ topics:
   - dft
   - excited-states
   - electronic-structure
-description: The Goerigk Research Group at the University of Melbourne focuses
-  on theoretical and computational quantum chemistry, developing advanced DFT
-  and TD-DFT methods for electronic excited states and various chemical
-  applications.
+  - wavefunction-methods
+  - software-hpc
+description: The Goerigk Research Group at the University of Melbourne
+  specializes in theoretical and computational quantum chemistry. Led by A/Prof.
+  Lars Goerigk, the group develops advanced quantum-chemical methods,
+  particularly TD-DFT, and applies them to diverse chemical problems.
 added: 2026-09-30
 pi: Lars Goerigk
 parent: The University of Melbourne
