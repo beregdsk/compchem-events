@@ -18,6 +18,7 @@ import {
   type TopicStats,
 } from '../../src/lib/topic-stats';
 import type { OpenAlexOptions } from '../../src/lib/topics/openalex';
+import { formatForRepo } from '../../src/lib/topics/propose-map';
 import { buildSnapshot, buildSnapshotPrBody } from '../../src/lib/topics/snapshot';
 import type { Topic } from '../../src/lib/types';
 import { formatProblems, loadTopics } from '../../src/lib/validation';
@@ -77,7 +78,7 @@ export async function runSnapshot(deps: SnapshotDeps): Promise<SnapshotResult> {
     const proposal = await new Proposer(deps.github).proposeFile({
       branch: `data/topic-stats-${month}`,
       path: TOPIC_STATS_FILE,
-      content: `${JSON.stringify(next, null, 2)}\n`,
+      content: await formatForRepo(JSON.stringify(next, null, 2), TOPIC_STATS_FILE),
       title: `Topic statistics: ${month} snapshot`,
       message: `Update topic statistics (${month})`,
       body: buildSnapshotPrBody(next, previous, new Map(topics.map((t) => [t.slug, t.label]))),
