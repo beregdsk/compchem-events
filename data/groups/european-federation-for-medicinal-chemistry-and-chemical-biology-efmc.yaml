@@ -1,0 +1,15 @@
+id: european-federation-for-medicinal-chemistry-and-chemical-biology-efmc
+name: European Federation for Medicinal Chemistry and Chemical Biology (EFMC)
+kind: society
+website: https://www.efmc.info/
+topics:
+  - drug-design
+  - cheminformatics
+  - education-training
+description: The European Federation for Medicinal Chemistry and Chemical
+  Biology (EFMC) is a learned society dedicated to advancing the fields of
+  medicinal chemistry and chemical biology in Europe. It coordinates events,
+  awards, publications, and training courses for the community.
+added: 2026-09-30
+aliases:
+  - EFMC
