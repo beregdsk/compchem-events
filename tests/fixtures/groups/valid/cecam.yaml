@@ -1,0 +1,12 @@
+id: cecam
+name: Centre Européen de Calcul Atomique et Moléculaire
+aliases:
+  - CECAM
+kind: network
+website: https://www.cecam.org/
+topics:
+  - molecular-dynamics
+  - electronic-structure
+description: European network of nodes that organises workshops, schools and tutorials in atomistic and molecular simulation.
+added: '2026-09-29'
+fixture: true

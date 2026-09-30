@@ -1,7 +1,10 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
+  findAggregatorLinks,
   findEventPageLinks,
   findNextListingPage,
+  findPositionLinks,
 } from '../../../src/lib/discovery/parsers/listing';
 
 describe('findEventPageLinks', () => {
@@ -74,5 +77,44 @@ describe('findNextListingPage', () => {
       findNextListingPage('<a rel="next" href="https://other.example/page/2/">n</a>', listing),
     ).toBeUndefined();
     expect(findNextListingPage(`<link rel="next" href="${listing}">`, listing)).toBeUndefined();
+  });
+});
+
+describe('findAggregatorLinks', () => {
+  const html = readFileSync('tests/discovery/fixtures/pages/labinitio-conferences.html', 'utf8');
+  const links = findAggregatorLinks(html, 'https://labinitio.org/explore/comp_chem_conf/');
+
+  it('follows links to other hosts', () => {
+    expect(links).toContain('https://icqc2026.org/');
+  });
+
+  it('drops the aggregator\u2019s own pages, social profiles and the licence', () => {
+    expect(links.every((l) => !l.includes('labinitio.org'))).toBe(true);
+    expect(links.some((l) => /twitter\.com|linkedin\.com|creativecommons\.org/.test(l))).toBe(
+      false,
+    );
+  });
+});
+
+describe('findPositionLinks', () => {
+  const html = readFileSync('tests/discovery/fixtures/pages/ccl-joblist.html', 'utf8');
+  const links = findPositionLinks(html, 'https://ccl.net/cca/jobs/joblist.html', '2026-09-29');
+
+  it('follows adverts dated within 45 days', () => {
+    expect(links).toEqual([
+      'https://ccl.net/cca/jobs/joblist/mess0070344.shtml',
+      'https://ccl.net/cca/jobs/joblist/mess0070247.shtml',
+    ]);
+  });
+
+  it('never follows in-page anchors, the submission form or mailto links', () => {
+    expect(links.some((l) => /cgi-bin|#|mailto/.test(l))).toBe(false);
+  });
+
+  it('keeps every link on a page whose links carry no dates', () => {
+    const undated = '<a href="/cca/jobs/joblist/mess1.shtml">Postdoc, no date</a>';
+    expect(
+      findPositionLinks(undated, 'https://ccl.net/cca/jobs/joblist.html', '2026-09-29'),
+    ).toEqual(['https://ccl.net/cca/jobs/joblist/mess1.shtml']);
   });
 });

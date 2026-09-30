@@ -665,6 +665,102 @@ describe('runPipeline', () => {
     }
   });
 
+  it('aggregator: extracts the linked page and records it, not the aggregator, as url and source_url', async () => {
+    const { path: statePath, cleanup: cleanupState } = tmpStatePath();
+    const { path: sourcesPath, cleanup: cleanupSources } = tmpSourcesFile(
+      '- name: Agg\n  url: https://agg.example/list/\n  kind: aggregator\n',
+    );
+    try {
+      const responses: Record<string, string> = {
+        'https://agg.example/list/':
+          '<html><body><main><a href="https://conf.example/2027/">Conf 2027</a>' +
+          '<a href="/list/own-page">Own page</a></main></body></html>',
+        'https://conf.example/2027/':
+          '<html><body><h1>Conf Workshop 2027</h1><p>A computational chemistry workshop.</p></body></html>',
+      };
+      const pageFetch: typeof fetch = async (input) => {
+        const url = String(input);
+        if (url.endsWith('/robots.txt')) return new Response('', { status: 200 });
+        const body = responses[url];
+        if (body === undefined) throw new Error(`unstubbed url: ${url}`);
+        return new Response(body, { status: 200 });
+      };
+      const result = await runPipeline({
+        sourcesPath,
+        statePath,
+        userAgent: 'Test Agent (+https://example.org)',
+        maxPages: 100,
+        maxTokens: 500_000,
+        sleepImpl: async () => {},
+        fetchImpl: pageFetch,
+        extract: { apiKey: 'sk-test', model: 'test-model', fetchImpl: stubExtractFetch() },
+      });
+      expect(result.candidates).toHaveLength(1);
+      expect(result.candidates[0]!.source_url).toBe('https://conf.example/2027/');
+      for (const c of result.candidates) {
+        expect(c.url.startsWith('https://agg.example')).toBe(false);
+        expect((c.source_url ?? '').startsWith('https://agg.example')).toBe(false);
+      }
+    } finally {
+      cleanupState();
+      cleanupSources();
+    }
+  });
+
+  it('group-listing: yields a lead per external link on every run, without calling the model', async () => {
+    const { path: statePath, cleanup: cleanupState } = tmpStatePath();
+    const { path: sourcesPath, cleanup: cleanupSources } = tmpSourcesFile(
+      '- name: Groups\n  url: https://list.example/groups/\n  kind: group-listing\n',
+    );
+    try {
+      const listing =
+        '<html><body><main><h3>Some University</h3><ul>' +
+        '<li><a href="https://lab-one.example/">Alice Smith</a></li>' +
+        '<li><a href="https://lab-two.example/">Bob Jones</a></li>' +
+        '<li><a href="/groups/own-page">Own page</a></li>' +
+        '</ul></main></body></html>';
+      const pageFetch: typeof fetch = async (input) => {
+        const url = String(input);
+        if (url.endsWith('/robots.txt')) return new Response('', { status: 200 });
+        if (url === 'https://list.example/groups/') return new Response(listing, { status: 200 });
+        throw new Error(`unstubbed url: ${url}`);
+      };
+      let extractCalls = 0;
+      const extractFetch: typeof fetch = async () => {
+        extractCalls += 1;
+        throw new Error('the model must not be called for a group listing');
+      };
+      const runOnce = () =>
+        runPipeline({
+          sourcesPath,
+          statePath,
+          userAgent: 'Test Agent (+https://example.org)',
+          maxPages: 100,
+          maxTokens: 500_000,
+          sleepImpl: async () => {},
+          fetchImpl: pageFetch,
+          extract: { apiKey: 'sk-test', model: 'test-model', fetchImpl: extractFetch },
+        });
+      const first = await runOnce();
+      const second = await runOnce();
+      for (const result of [first, second]) {
+        expect(result.groupLeads.map((l) => l.text)).toEqual(['Alice Smith', 'Bob Jones']);
+        expect(result.groupLeads[0]).toMatchObject({
+          link: 'https://lab-one.example/',
+          context: 'Some University',
+          origin: 'https://list.example/groups/',
+          fromListing: true,
+        });
+        expect(result.pagesFetched).toBe(1);
+        expect(result.errors).toEqual([]);
+      }
+      expect(extractCalls).toBe(0);
+    } finally {
+      cleanupState();
+      cleanupSources();
+    }
+  });
+
   it('runs sources concurrently without overshooting maxPages', async () => {
     const { path: statePath, cleanup: cleanupState } = tmpStatePath();
     const hosts = ['a', 'b', 'c', 'd', 'e'].map((h) => `${h}.example`);
@@ -1173,5 +1269,49 @@ describe('runPipeline positions', () => {
   it('drops a position whose deadline has already passed', async () => {
     const r = await run([advert], [], '2026-12-01');
     expect(r.positions).toEqual([]);
+  });
+  it('position-listing: reads each recent linked advert as a post, and skips adverts over 45 days old', async () => {
+    const calls: string[] = [];
+    const { path: statePath, cleanup } = tmpStatePath();
+    const sources = tmpSourcesFile(
+      '- name: Job board\n  url: https://jobs.example/board/list.html\n  kind: position-listing\n',
+    );
+    const pages: Record<string, string> = {
+      'https://jobs.example/board/list.html':
+        '<html><body><ul>' +
+        '<li><a href="/board/ad1.html">26.09.23 PhD in molecular dynamics</a></li>' +
+        '<li><a href="/board/ad2.html">26.09.10 Winter School</a></li>' +
+        '<li><a href="/board/old.html">26.06.01 Old advert</a></li>' +
+        '</ul></body></html>',
+      'https://jobs.example/board/ad1.html': `<html><body><h1>PhD position</h1><p>${advert}</p></body></html>`,
+      'https://jobs.example/board/ad2.html':
+        '<html><body><h1>Winter School</h1><p>Molecular Dynamics Winter School, 1-3 May 2027. A computational chemistry school.</p></body></html>',
+    };
+    try {
+      const r = await runPipeline({
+        sourcesPath: sources.path,
+        statePath,
+        userAgent: 'Test Agent (+https://example.org)',
+        maxPages: 10,
+        maxTokens: 500_000,
+        today: '2026-09-29',
+        sleepImpl: async () => {},
+        fetchImpl: (async (input: RequestInfo | URL) => {
+          const url = String(input);
+          if (url.endsWith('/robots.txt')) return new Response('', { status: 200 });
+          const body = pages[url];
+          if (body === undefined) throw new Error(`unstubbed url: ${url}`);
+          return new Response(body, { status: 200 });
+        }) as typeof fetch,
+        extract: { apiKey: 'sk-test', model: 'm', fetchImpl: llm(calls) },
+      });
+      expect(r.positions).toHaveLength(1);
+      expect(r.positions[0]!.draft.source_url).toBe('https://jobs.example/board/ad1.html');
+      expect(r.candidates.map((c) => c.title)).toEqual(['Molecular Dynamics Winter School']);
+      expect(r.candidates[0]!.source_url).toBe('https://jobs.example/board/ad2.html');
+    } finally {
+      cleanup();
+      sources.cleanup();
+    }
   });
 });

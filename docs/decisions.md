@@ -634,3 +634,31 @@ again (skip reason `already proposed`), and so is one proposed under last
 year's id: rewriting the PR would move `added`, the "first seen" date that the
 45/90-day clock counts from, and a re-sighting after 1 January would otherwise
 open a second PR. Event PRs still refresh as before.
+
+## 2026-09-29 — Groups registry: one registry with a `kind`
+
+`data/groups/` lists research groups, institutes, networks and societies in
+one registry with a `kind` field, rather than PI-led groups only: most event
+organisers are networks and societies (CECAM, CCP5, MolSSI), and the
+registry is meant to standardise the `organizer` field later. `location` is
+optional for networks and societies, which have no single city. Ids have no
+year: a group is not dated, and the id must stay stable for events to point
+at it. See docs/superpowers/specs/2026-09-29-groups-registry-design.md.
+
+## 2026-09-29 — Other aggregators are allowed as sources
+
+The rule "coverage comparison only; do not scrape another site's curation"
+is dropped. Curated lists such as labinitio.org's are useful leads, so they
+are read as sources, but only the official pages they link to are extracted:
+every fact is rechecked there, and none of the aggregator's text is copied.
+The new source kind `aggregator` does this for events.
+
+## 2026-09-29 — Group homepages found by OpenRouter web search, citations only
+
+The groups pass finds a group's website with OpenRouter's `web` plugin on the
+existing `LLM_API_KEY`: no new credential or dependency, and the key's
+spending cap covers it. It is the first discovery call with a tool, so only
+the response's citation URLs are used, never URLs in its prose, and each
+page is fetched and verified by the no-tools extractor before a draft
+exists. `MAX_SEARCHES` (default 20) caps searches per run, and names that
+found nothing are not searched again for 90 days.

@@ -38,6 +38,13 @@
 #                          redirects to the app). No login needed. Posts are
 #                          exactly as hostile as a web page or mailing-list
 #                          message — same extraction pipeline, no exceptions.
+#   aggregator             another site's curated list of events; links to
+#                          other hosts are followed and only those official
+#                          pages are extracted (never the aggregator's text)
+#   group-listing          a page listing research groups; read by the groups
+#                          pass, one lead per link (docs/discovery-agent.md)
+#   position-listing       page listing job adverts; each linked advert is read
+#                          as a post, adverts dated over 45 days ago skipped
 #
 # Rules:
 #   - Every url below returned HTTP 200 and was read by a human or agent on
@@ -542,6 +549,40 @@
     congress first (18th, Berkeley, 31 May - 5 Jun 2026, when checked). Very
     low volume, very high relevance.
 
+- name: Lab Initio — computational chemistry conferences
+  url: https://labinitio.org/explore/comp_chem_conf/
+  kind: aggregator
+  added: 2026-09-29
+  last_checked: 2026-09-29
+  notes: Curated list of upcoming conferences, each linked to its own site. CC BY 4.0; only the linked official pages are extracted.
+
+- name: Lab Initio — Australian computational chemistry groups
+  url: https://labinitio.org/explore/aust_comp_chem/
+  kind: group-listing
+  added: 2026-09-29
+  last_checked: 2026-09-29
+  notes: PIs under institution headings, mostly linked to Google Scholar, so most resolve through search. CC BY 4.0; none of it is copied.
+
+- name: curlie — computational chemistry research groups
+  url: https://curlie.org/Science/Chemistry/Computational/Research_Groups/
+  kind: group-listing
+  added: 2026-09-29
+  last_checked: 2026-09-29
+  notes: 34 group links (DMOZ descendant), mostly old http:// URLs, so many are stale and resolve through search. robots.txt sets Crawl-delay 1000; one fetch per daily run.
+
+- name: European XFEL — list of external theory groups
+  url: https://www.xfel.eu/organization/scientific_and_technical_groups/theory/list_of_external_theory_groups/index_eng.html
+  kind: group-listing
+  added: 2026-09-29
+  last_checked: 2026-09-29
+  notes: About 113 external group links in tables by research area; many areas (plasmas, X-ray imaging) are out of scope and are rejected at verification. The sitemap's list_of_external_theoretical_groups URL is a 404. robots.txt blocks named AI crawlers, not this agent's user agent.
+
+- name: CCL — jobs offered
+  url: https://ccl.net/cca/jobs/joblist.html
+  kind: position-listing
+  added: 2026-09-29
+  last_checked: 2026-09-29
+  notes: About 25 adverts linked as /cca/jobs/joblist/messNNNNNNN.shtml, dated yy.mm.dd in the link text; academic and industry mixed (the extractor drops industry). robots.txt is a 404.
 # ---------------------------------------------------------------------------
 # Candidates: checked and NOT usable as sources. Kept so nobody re-derives
 # these findings. Each was checked on 2026-09-23.
@@ -580,8 +621,9 @@
 #   file requires a fetch before an entry.
 #
 # labinitio.org and other aggregators
-#   Coverage comparison only. Do not scrape or republish another site's
-#   curation (docs/discovery-agent.md).
+#   Allowed as sources since 2026-09-29 (kind: aggregator for events,
+#   group-listing for groups): every fact is rechecked on the official page
+#   and none of their text is copied. labinitio's lists are live entries above.
 #
 # RSC (Royal Society of Chemistry) events — https://www.rsc.org/events
 #   Checked 2026-09-25. HTTP 403 from a WAF/bot-protection layer, both with
@@ -624,7 +666,7 @@
 #   (newest post 2024). max-centre.eu/events renders its list client-side
 #   and exposes no feed. The yearly Symposium on Theoretical Chemistry and
 #   the Electronic Structure workshop move host site every edition.
-#   Rejected as other people's curation (see labinitio.org above):
+#   Rejected under the old other-people's-curation rule, dropped 2026-09-29, and not yet re-evaluated:
 #   lcpq.ups-tlse.fr/congres, uregina.ca/~eastalla/conf.html,
 #   quantumdynamicsconferences.wikidot.com. Rejected as commercial/predatory
 #   listing farms: 10times.com, waset.org, conferenceindex.org,

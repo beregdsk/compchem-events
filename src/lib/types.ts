@@ -120,3 +120,31 @@ export interface LoadedPosition extends RawPosition {
   /** Whole days from `added` to the build date. */
   age_days: number;
 }
+
+export const GROUP_KINDS = ['group', 'institute', 'network', 'society'] as const;
+export type GroupKind = (typeof GROUP_KINDS)[number];
+
+/** Section headings on /groups/, in page order. */
+export const GROUP_KIND_LABELS: Readonly<Record<GroupKind, string>> = {
+  group: 'Research groups',
+  institute: 'Institutes',
+  network: 'Networks',
+  society: 'Societies',
+};
+
+/** A registry entry exactly as it appears in its YAML file. See docs/group-schema.md. */
+export interface RawGroup {
+  id: string;
+  name: string;
+  aliases?: string[];
+  kind: GroupKind;
+  pi?: string;
+  parent?: string;
+  website: string;
+  source_url?: string;
+  location?: { city: string; country: string };
+  topics: string[];
+  description: string;
+  added: ISODate;
+  fixture?: boolean;
+}

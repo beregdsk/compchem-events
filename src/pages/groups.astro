@@ -1,0 +1,31 @@
+---
+import Base from '../layouts/Base.astro';
+import GroupRow from '../components/GroupRow.astro';
+import { groupSections, loadGroups } from '../lib/groups';
+
+const sections = groupSections(loadGroups());
+---
+
+<Base
+  title="Groups"
+  description="Research groups, institutes, networks and societies in computational and theoretical chemistry."
+  path="/groups/"
+>
+  <h1>Groups</h1>
+  <p class="muted">
+    Research groups, institutes, networks and societies behind the events and positions listed here.
+    Each entry's details are taken from the group's own website.
+  </p>
+
+  {sections.length === 0 && <p class="muted">No groups are listed yet.</p>}
+  {sections.map((s) => (
+    <section>
+      <h2>{s.label}</h2>
+      <ul class="event-list">
+        {s.groups.map((g) => (
+          <GroupRow group={g} />
+        ))}
+      </ul>
+    </section>
+  ))}
+</Base>

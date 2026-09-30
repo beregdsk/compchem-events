@@ -14,13 +14,21 @@ export interface PageState {
   fetchedAt: string;
 }
 
+/** One groups-pass lookup: when a name was last tried, and what came of it. */
+export interface GroupLookup {
+  triedAt: string;
+  outcome: string;
+}
+
 export interface DiscoveryState {
   hosts: Record<string, HostState>;
   pages: Record<string, PageState>;
+  /** Normalised group name → last lookup; see groups.ts's negative cache. */
+  groupLookups: Record<string, GroupLookup>;
 }
 
 export function emptyState(): DiscoveryState {
-  return { hosts: {}, pages: {} };
+  return { hosts: {}, pages: {}, groupLookups: {} };
 }
 
 function isDiscoveryState(data: unknown): data is DiscoveryState {
@@ -37,7 +45,9 @@ export function loadState(path: string): DiscoveryState {
   if (!existsSync(path)) return emptyState();
   try {
     const data: unknown = JSON.parse(readFileSync(path, 'utf8'));
-    return isDiscoveryState(data) ? data : emptyState();
+    return isDiscoveryState(data)
+      ? { ...data, groupLookups: data.groupLookups ?? {} }
+      : emptyState();
   } catch {
     return emptyState();
   }

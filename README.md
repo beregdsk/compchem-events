@@ -12,6 +12,7 @@ Events are listed with topics, location, format and deadlines, and can be filter
 - The site is built with Astro into static files and hosted on Cloudflare (a git-connected Worker serving static assets — see `wrangler.jsonc`). There is no server or database.
 - Feeds: `/events.ics`, `/deadlines.ics`, `/feed.xml` and `/events.json`, plus a calendar and Atom feed per topic (`/topics/<slug>.ics`, `/topics/<slug>.xml`) listed on `/topics/`.
 - Browsing: every topic has a page at `/topics/<slug>/`, a recurring series with two or more listed editions has one at `/series/<slug>/`, and `/graph/` maps similar events close together.
+- Groups: `/groups/` lists research groups, institutes, networks and societies from `data/groups/`, validated against `schema/group.schema.json`.
 - A discovery agent finds candidate events on the sources in [`data/sources.yaml`](data/sources.yaml) and opens pull requests. It never publishes; a maintainer merges.
 - Anyone can add or correct an event with a pull request or an issue. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -34,6 +35,7 @@ npm run check-links  # fetch every event's url/source_url and report the dead on
 npm run discover     # discovery dry run: fetch and extract every source, print candidates (needs LLM_API_KEY,
                      #   LLM_MODEL_EXTRACT, STATE_PATH)
 npm run discover:run # the full discovery run that opens pull requests; see docs/discovery-agent.md
+npm run discover:groups-backfill # one-off: propose registry entries for every existing organiser, group and group listing as one PR (needs the discover:run environment)
 ```
 
 ## Documentation

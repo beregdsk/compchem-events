@@ -13,6 +13,9 @@ export const SOURCE_KINDS = [
   'mailing-list-archive',
   'mailbox',
   'telegram-channel',
+  'aggregator',
+  'group-listing',
+  'position-listing',
 ] as const;
 export type SourceKind = (typeof SOURCE_KINDS)[number];
 

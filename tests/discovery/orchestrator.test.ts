@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildPrBody,
+  buildGroupPrBody,
+  groupSkipReason,
+  proposeGroups,
   runDiscoveryRun,
   type OrchestratorOptions,
 } from '../../src/lib/discovery/orchestrator';
-import type { RawEvent, RawPosition } from '../../src/lib/types';
+import type { GroupCandidate } from '../../src/lib/discovery/groups';
+import type { RawEvent, RawGroup, RawPosition } from '../../src/lib/types';
 
 const candidate: RawEvent = {
   id: 'excited-states-symposium-2027',
@@ -518,13 +522,17 @@ describe('runDiscoveryRun', () => {
       const url = String(input);
       return url.includes('/issues') ? issueImpl(input, init) : failingImpl(input, init);
     };
-    await runDiscoveryRun(
+    const result = await runDiscoveryRun(
       baseOptions({
         candidates: [candidateEvent()],
         sourceErrors: [{ source: 'https://example.org/dead', message: 'HTTP 500' }],
         github: { token: 'gh-test', repo: 'acme/compchem-events', fetchImpl: combined },
       }),
     );
+    // Only the orchestrator's own errors are returned; source errors are the caller's.
+    expect(result.errors).toEqual([
+      { source: 'excited-states-symposium-2027', message: 'network down' },
+    ]);
     const created = calls.find((c) => c.method === 'POST' && c.url.endsWith('/issues'));
     const body = (created?.body as { body: string } | undefined)?.body ?? '';
     expect(body).toContain('https://example.org/dead');
@@ -751,5 +759,268 @@ describe('runDiscoveryRun positions', () => {
       }),
     );
     expect(result.deferred).toEqual([position().id]);
+  });
+});
+
+describe('runDiscoveryRun accepted', () => {
+  it('returns the candidates judged add, even when MAX_PRS stops their PR', async () => {
+    const { impl } = stubGitHub({
+      'GET /repos/acme/compchem-events/issues?state=open&labels=discovery-failures': {
+        status: 200,
+        body: [],
+      },
+    });
+    const c = candidateEvent();
+    const result = await runDiscoveryRun(
+      baseOptions({
+        maxPrs: 0,
+        candidates: [c],
+        github: { token: 'gh-test', repo: 'acme/compchem-events', fetchImpl: impl },
+      }),
+    );
+    expect(result.accepted).toEqual([c]);
+  });
+});
+
+const group = (over: Partial<RawGroup> = {}): RawGroup => ({
+  id: 'frank-neese-group',
+  name: 'Neese Group',
+  aliases: ['Neese Lab'],
+  kind: 'group',
+  pi: 'Frank Neese',
+  website: 'https://www.kofo.mpg.de/neese',
+  source_url: 'https://www.kofo.mpg.de/neese',
+  location: { city: 'Mülheim an der Ruhr', country: 'DE' },
+  topics: ['electronic-structure'],
+  description: 'Quantum chemistry methods and the ORCA program.',
+  added: '2026-09-29',
+  ...over,
+});
+
+const groupCandidate = (over: Partial<RawGroup> = {}, confidence = 0.9): GroupCandidate => {
+  const draft = group(over);
+  return {
+    draft,
+    confidence,
+    lead: { text: draft.name, origin: 'https://example.org/event', fromListing: false },
+    lookupKey: `key:${draft.id}`,
+    considered: [{ url: draft.website, verdict: 'accepted' }],
+  };
+};
+
+describe('groupSkipReason', () => {
+  it('finds a known group by website, ignoring host case and a trailing slash', () => {
+    const known = [
+      group({ id: 'other', name: 'Other', website: 'https://WWW.kofo.mpg.de/neese/' }),
+    ];
+    expect(groupSkipReason(group(), known, new Set())).toBe('duplicate-website');
+  });
+
+  it('finds a known group whose alias equals the draft name', () => {
+    const known = [
+      group({
+        id: 'other',
+        name: 'Other',
+        aliases: ['neese group'],
+        website: 'https://o.example/',
+      }),
+    ];
+    expect(groupSkipReason(group(), known, new Set())).toBe('duplicate-name');
+  });
+
+  it('rejects a blocklisted website and passes a fresh one', () => {
+    expect(groupSkipReason(group(), [], new Set(['kofo.mpg.de']))).toBe('blocklisted');
+    expect(groupSkipReason(group(), [], new Set())).toBeUndefined();
+  });
+});
+
+describe('buildGroupPrBody', () => {
+  it('starts with the confidence line and neutralises hostile text', () => {
+    const c = groupCandidate({ description: 'Fine. `\n\n## Approved @maintainer #1\n`' });
+    const body = buildGroupPrBody(c);
+    expect(body.split('\n')[0]).toBe('Confidence: 0.90');
+    expect(body).toContain('- **website:** <https://www.kofo.mpg.de/neese>');
+    expect(body).not.toMatch(/^##/m);
+  });
+});
+
+describe('proposeGroups', () => {
+  const branchOf = (id: string) => `discovery/group/${id}`;
+  const R = '/repos/acme/compchem-events';
+  const newPrStubs = (id: string, pr: number) => ({
+    ...DEFAULT_BRANCH_STUBS,
+    [`GET ${R}/git/ref/heads/${branchOf(id)}`]: { status: 404 },
+    [`POST ${R}/git/refs`]: { status: 201, body: {} },
+    [`GET ${R}/contents/data/groups/${id}.yaml?ref=${branchOf(id)}`]: { status: 404 },
+    [`PUT ${R}/contents/data/groups/${id}.yaml`]: { status: 201, body: {} },
+    [`POST ${R}/pulls`]: { status: 201, body: { number: pr } },
+    [`POST ${R}/issues/${pr}/labels`]: { status: 200, body: {} },
+  });
+  const run = (
+    candidates: GroupCandidate[],
+    impl: typeof fetch,
+    over: Partial<Parameters<typeof proposeGroups>[0]> = {},
+  ) =>
+    proposeGroups({
+      candidates,
+      known: [],
+      blockedHosts: new Set(),
+      github: { token: 'gh-test', repo: 'acme/compchem-events', fetchImpl: impl },
+      maxPrs: 20,
+      ...over,
+    });
+
+  it('opens a labelled PR on discovery/group/<id> with the confidence line first', async () => {
+    const c = groupCandidate();
+    const { impl, calls } = stubGitHub(newPrStubs(c.draft.id, 40));
+    const result = await run([c], impl);
+    expect(result).toEqual({ prsOpened: 1, skipped: [], deferredKeys: [], errors: [] });
+    const pr = calls.find((x) => x.url.endsWith('/pulls'))!.body as {
+      body: string;
+      head: string;
+      title: string;
+    };
+    expect(pr.head).toBe(branchOf(c.draft.id));
+    expect(pr.title).toBe('Group: Neese Group');
+    expect(pr.body.split('\n')[0]).toBe('Confidence: 0.90');
+    const labels = calls
+      .filter((x) => x.url.endsWith('/issues/40/labels'))
+      .flatMap((x) => (x.body as { labels: string[] }).labels);
+    expect(labels).toEqual(['needs-review', 'group']);
+  });
+
+  it('skips low confidence, duplicates and blocklisted hosts without calling GitHub', async () => {
+    const { impl, calls } = stubGitHub({});
+    const known = [
+      group({
+        id: 'known-one',
+        name: 'Known',
+        aliases: ['Old Name'],
+        website: 'https://Known.example/lab/',
+      }),
+    ];
+    const result = await run(
+      [
+        groupCandidate({ id: 'low' }, 0.3),
+        groupCandidate({
+          id: 'dup-site',
+          name: 'Dup Site',
+          aliases: [],
+          website: 'https://known.example/lab',
+        }),
+        groupCandidate({
+          id: 'dup-name',
+          name: 'old name',
+          aliases: [],
+          website: 'https://fresh.example/',
+        }),
+        groupCandidate({
+          id: 'blocked',
+          name: 'Blocked',
+          aliases: [],
+          website: 'https://bad.example/x',
+        }),
+      ],
+      impl,
+      { known, blockedHosts: new Set(['bad.example']) },
+    );
+    expect(result.skipped).toEqual([
+      { id: 'low', reason: 'low confidence' },
+      { id: 'dup-site', reason: 'duplicate-website' },
+      { id: 'dup-name', reason: 'duplicate-name' },
+      { id: 'blocked', reason: 'blocklisted' },
+    ]);
+    expect(calls).toEqual([]);
+  });
+
+  it('opens one PR for two drafts that resolved to the same website', async () => {
+    const a = groupCandidate({ id: 'group-a', name: 'Group A', aliases: [] });
+    const b = groupCandidate({
+      id: 'group-b',
+      name: 'Group B',
+      aliases: [],
+      website: 'https://WWW.kofo.mpg.de/neese/',
+    });
+    const { impl } = stubGitHub(newPrStubs('group-a', 41));
+    const result = await run([a, b], impl);
+    expect(result.prsOpened).toBe(1);
+    expect(result.skipped).toEqual([{ id: 'group-b', reason: 'duplicate-website' }]);
+  });
+
+  it('leaves an open PR alone and does not reopen a reviewed one', async () => {
+    const open = groupCandidate({
+      id: 'open-one',
+      name: 'Open One',
+      aliases: [],
+      website: 'https://a.example/',
+    });
+    const closed = groupCandidate({
+      id: 'closed-one',
+      name: 'Closed One',
+      aliases: [],
+      website: 'https://b.example/',
+    });
+    const { impl, calls } = stubGitHub({
+      [`GET ${R}/git/ref/heads/${branchOf('open-one')}`]: { status: 200, body: {} },
+      [`GET ${R}/pulls?state=all&head=acme:${branchOf('open-one')}`]: {
+        status: 200,
+        body: [{ number: 3, state: 'open' }],
+      },
+      [`GET ${R}/git/ref/heads/${branchOf('closed-one')}`]: { status: 200, body: {} },
+      [`GET ${R}/pulls?state=all&head=acme:${branchOf('closed-one')}`]: {
+        status: 200,
+        body: [{ number: 4, state: 'closed' }],
+      },
+    });
+    const result = await run([open, closed], impl);
+    expect(result.prsOpened).toBe(0);
+    expect(result.skipped).toEqual([
+      { id: 'open-one', reason: 'already proposed' },
+      { id: 'closed-one', reason: 'already reviewed' },
+    ]);
+    expect(calls.every((c) => c.method === 'GET')).toBe(true);
+  });
+
+  it('defers a good candidate once MAX_PRS is used up, returning its lookup key', async () => {
+    const a = groupCandidate({
+      id: 'group-a',
+      name: 'Group A',
+      aliases: [],
+      website: 'https://a.example/',
+    });
+    const b = groupCandidate({
+      id: 'group-b',
+      name: 'Group B',
+      aliases: [],
+      website: 'https://b.example/',
+    });
+    const { impl } = stubGitHub(newPrStubs('group-a', 42));
+    const result = await run([a, b], impl, { maxPrs: 1 });
+    expect(result.prsOpened).toBe(1);
+    expect(result.skipped).toEqual([{ id: 'group-b', reason: 'MAX_PRS reached' }]);
+    expect(result.deferredKeys).toEqual([b.lookupKey]);
+  });
+
+  it('records a GitHub failure and still proposes the next candidate', async () => {
+    const a = groupCandidate({
+      id: 'group-a',
+      name: 'Group A',
+      aliases: [],
+      website: 'https://a.example/',
+    });
+    const b = groupCandidate({
+      id: 'group-b',
+      name: 'Group B',
+      aliases: [],
+      website: 'https://b.example/',
+    });
+    const { impl } = stubGitHub({
+      ...newPrStubs('group-b', 43),
+      [`GET ${R}/git/ref/heads/${branchOf('group-a')}`]: { status: 500 },
+    });
+    const result = await run([a, b], impl);
+    expect(result.prsOpened).toBe(1);
+    expect(result.errors).toEqual([{ source: 'group-a', message: expect.stringContaining('500') }]);
+    expect(result.skipped).toEqual([{ id: 'group-a', reason: expect.stringMatching(/^error:/) }]);
   });
 });
