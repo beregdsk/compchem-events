@@ -426,12 +426,6 @@ a:hover {
   margin: 0;
 }
 
-.page-head__navs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-s);
-}
-
 .view-switch {
   display: inline-flex;
   border: 1px solid var(--rule-strong);
@@ -460,6 +454,13 @@ a:hover {
 .view-switch [aria-current] {
   color: var(--link);
   background: color-mix(in oklab, var(--link) 14%, transparent);
+}
+
+/* Sits in the same spot on every page that has it, above the heading. */
+.section-nav {
+  display: flex;
+  width: fit-content;
+  margin-block-end: var(--space-m);
 }
 
 @media (max-width: 52rem) {
