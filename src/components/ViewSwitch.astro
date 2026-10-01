@@ -1,15 +1,17 @@
 ---
-// Switches the upcoming-events page between its list and its graph view.
-// Plain links, so it works without JavaScript; the current view is marked
-// with aria-current rather than being a link to itself.
+// Switches a directory (events, positions, groups) between its list and its
+// graph view. Plain links, so it works without JavaScript; the current view is
+// marked with aria-current rather than being a link to itself.
 interface Props {
   current: 'list' | 'graph';
+  /** The list view's path, e.g. `/positions/`; the graph view is `graph/` under it. */
+  list: string;
 }
 
-const { current } = Astro.props;
+const { current, list } = Astro.props;
 const views = [
-  { id: 'list', href: '/', label: 'List' },
-  { id: 'graph', href: '/graph/', label: 'Graph' },
+  { id: 'list', href: list, label: 'List' },
+  { id: 'graph', href: list === '/' ? '/graph/' : `${list}graph/`, label: 'Graph' },
 ] as const;
 ---
 

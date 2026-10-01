@@ -1,18 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import type { EventGraph } from '../../src/lib/event-graph';
+import type { Graph } from '../../src/lib/graph';
 import { graphPayload, layoutGraph } from '../../src/lib/graph-layout';
 
 const node = (id: string, title = id) => ({
   id,
   title,
-  type: 'workshop' as const,
-  status: 'upcoming' as const,
-  start_date: '2027-01-10',
-  end_date: '2027-01-12',
   href: `/events/${id}/`,
+  shape: 'square' as const,
+  dimmed: false,
 });
 
-const graph: EventGraph = {
+const graph: Graph = {
   nodes: ['a', 'b', 'c', 'd', 'lonely'].map((id) => node(id)),
   edges: [
     { source: 'a', target: 'b', weight: 0.6 },
@@ -54,6 +52,14 @@ describe('layoutGraph', () => {
     expect(viewBox[3]).toBeGreaterThan(0);
   });
 
+  it('keeps a small map at its minimum size, centred on the nodes', () => {
+    const { positions, viewBox } = layoutGraph({ nodes: [node('solo')], edges: [] });
+    const [minX, minY, width, height] = viewBox;
+    expect([width, height]).toEqual([640, 400]);
+    expect(minX + width / 2).toBeCloseTo(positions[0]!.x, 0);
+    expect(minY + height / 2).toBeCloseTo(positions[0]!.y, 0);
+  });
+
   it('handles no nodes', () => {
     expect(layoutGraph({ nodes: [], edges: [] }).positions).toEqual([]);
   });
@@ -68,7 +74,7 @@ describe('graphPayload', () => {
   });
 
   it('cannot close the script tag it is embedded in', () => {
-    const hostile: EventGraph = { nodes: [node('x</script><b>')], edges: [] };
+    const hostile: Graph = { nodes: [node('x</script><b>')], edges: [] };
     const json = graphPayload(hostile, layoutGraph(hostile));
     expect(json).not.toContain('<');
     expect(JSON.parse(json).nodes[0].id).toBe('x</script><b>');

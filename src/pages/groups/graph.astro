@@ -1,0 +1,37 @@
+---
+// The groups map: groups that share topics, a parent institution or a
+// country, drawn close together.
+import Base from '../../layouts/Base.astro';
+import GraphFigure from '../../components/GraphFigure.astro';
+import ViewSwitch from '../../components/ViewSwitch.astro';
+import { buildGroupGraph, loadGroups } from '../../lib/groups';
+import { GROUP_KIND_LABELS, GROUP_KINDS } from '../../lib/types';
+import { GROUP_SHAPES } from '../../lib/graph-shapes';
+
+const graph = buildGroupGraph(loadGroups());
+const legend = GROUP_KINDS.map((k) => [GROUP_SHAPES[k], GROUP_KIND_LABELS[k]] as const);
+---
+
+<Base
+  title="Groups graph"
+  description="A graph of computational chemistry research groups, linked by shared topics, institutions and countries."
+  path="/groups/graph/"
+  section="groups"
+>
+  <div class="page-head">
+    <h1>Groups graph</h1>
+    <ViewSwitch current="graph" list="/groups/" />
+  </div>
+  <p class="muted">
+    Groups that share topics, an institution or a country are linked; nearby groups are similar.
+  </p>
+
+  {graph.nodes.length === 0 && <p class="muted">No groups to map yet.</p>}
+  {graph.nodes.length > 0 && (
+    <GraphFigure
+      graph={graph}
+      label="Map of similar groups. Each group links to its listing."
+      legend={legend}
+    />
+  )}
+</Base>

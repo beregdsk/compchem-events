@@ -1,6 +1,8 @@
 // The groups loader: reads data/groups/, validates it (invalid data fails
 // the build, as for events and positions). Spec:
 // docs/superpowers/specs/2026-09-29-groups-registry-design.md.
+import { jaccard, linkSimilar, type Graph } from './graph';
+import { GROUP_SHAPES } from './graph-shapes';
 import { todayUTC, type ISODate } from './dates';
 import {
   GROUPS_DIR,
@@ -48,4 +50,29 @@ export function groupSections(
     label: GROUP_KIND_LABELS[kind],
     groups: groups.filter((g) => g.kind === kind).sort((a, b) => a.name.localeCompare(b.name)),
   })).filter((s) => s.groups.length > 0);
+}
+
+const same = (a: string | undefined, b: string | undefined) =>
+  a !== undefined && b !== undefined && a.trim().toLowerCase() === b.trim().toLowerCase();
+
+/** Linked by shared topics (0.6), a shared parent institution (0.25) and country (0.15). */
+export function groupSimilarity(a: RawGroup, b: RawGroup): number {
+  const topics = jaccard(new Set(a.topics), new Set(b.topics));
+  const parent = same(a.parent, b.parent) ? 0.25 : 0;
+  const country = same(a.location?.country, b.location?.country) ? 0.15 : 0;
+  return Math.min(1, 0.6 * topics + parent + country);
+}
+
+/** Every group, linking to its row on /groups/. */
+export function buildGroupGraph(groups: RawGroup[]): Graph {
+  return {
+    nodes: groups.map((g) => ({
+      id: g.id,
+      title: g.name,
+      href: `/groups/#${g.id}`,
+      shape: GROUP_SHAPES[g.kind],
+      dimmed: false,
+    })),
+    edges: linkSimilar(groups, groupSimilarity),
+  };
 }

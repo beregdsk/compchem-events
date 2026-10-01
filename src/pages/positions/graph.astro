@@ -1,0 +1,38 @@
+---
+// The positions map: positions that share topics or an institution, drawn
+// close together. Archived positions stay on the map, dimmed.
+import Base from '../../layouts/Base.astro';
+import GraphFigure from '../../components/GraphFigure.astro';
+import ViewSwitch from '../../components/ViewSwitch.astro';
+import { buildPositionGraph, loadPositions } from '../../lib/positions';
+import { POSITION_LEVEL_LABELS, POSITION_LEVELS } from '../../lib/types';
+import { POSITION_SHAPES } from '../../lib/graph-shapes';
+
+const graph = buildPositionGraph(loadPositions());
+const legend = POSITION_LEVELS.map((l) => [POSITION_SHAPES[l], POSITION_LEVEL_LABELS[l]] as const);
+---
+
+<Base
+  title="Positions graph"
+  description="A graph of computational chemistry positions, linked by shared topics and institutions."
+  path="/positions/graph/"
+  section="positions"
+>
+  <div class="page-head">
+    <h1>Positions graph</h1>
+    <ViewSwitch current="graph" list="/positions/" />
+  </div>
+  <p class="muted">
+    Positions that share topics or an institution are linked; nearby positions are similar.
+  </p>
+
+  {graph.nodes.length === 0 && <p class="muted">No positions to map yet.</p>}
+  {graph.nodes.length > 0 && (
+    <GraphFigure
+      graph={graph}
+      label="Map of similar positions. Each position links to its listing."
+      legend={legend}
+      currentNote="Open; archived positions are dimmed"
+    />
+  )}
+</Base>

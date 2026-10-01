@@ -1,17 +1,13 @@
 ---
-// The graph view: events that share topics, a series or an organizer, drawn
+// The events map: events that share topics, a series or an organizer, drawn
 // close together. Spec: docs/superpowers/specs/2026-09-28-event-graph-design.md.
-// Everything below renders at build time; src/scripts/graph.ts only enhances.
 import Base from '../layouts/Base.astro';
+import GraphFigure from '../components/GraphFigure.astro';
 import ViewSwitch from '../components/ViewSwitch.astro';
 import { loadEvents } from '../lib/events';
-import { buildEventGraph, shortLabel } from '../lib/event-graph';
-import { graphPayload, layoutGraph } from '../lib/graph-layout';
-import { NODE_RADIUS, shapeFor, shapePath } from '../lib/graph-shapes';
+import { buildEventGraph } from '../lib/event-graph';
 
 const graph = buildEventGraph(loadEvents());
-const layout = layoutGraph(graph);
-const at = new Map(layout.positions.map((p) => [p.id, p]));
 const LEGEND = [
   ['circle', 'Conference'],
   ['square', 'Workshop'],
@@ -29,7 +25,7 @@ const LEGEND = [
 >
   <div class="page-head">
     <h1>Graph view</h1>
-    <ViewSwitch current="graph" />
+    <ViewSwitch current="graph" list="/" />
   </div>
   <p class="muted">
     Events that share topics, a series or an organizer are linked; nearby events are similar.
@@ -37,108 +33,11 @@ const LEGEND = [
 
   {graph.nodes.length === 0 && <p class="muted">No events to map yet.</p>}
   {graph.nodes.length > 0 && (
-    <>
-      <figure class="graph">
-        <svg
-          id="event-graph"
-          class="graph__svg"
-          viewBox={layout.viewBox.join(' ')}
-          role="group"
-          aria-label="Map of similar events. Each event links to its page."
-        >
-          <g class="graph__edges" aria-hidden="true">
-            {graph.edges.map((e) => {
-              const a = at.get(e.source)!;
-              const b = at.get(e.target)!;
-              return (
-                <line
-                  class="graph__edge"
-                  data-source={e.source}
-                  data-target={e.target}
-                  x1={a.x}
-                  y1={a.y}
-                  x2={b.x}
-                  y2={b.y}
-                  stroke-opacity={(0.25 + 0.6 * e.weight).toFixed(2)}
-                />
-              );
-            })}
-          </g>
-          <g class="graph__nodes">
-            {graph.nodes.map((n) => {
-              const p = at.get(n.id)!;
-              const shape = shapeFor(n.type);
-              const label = shortLabel(n.title);
-              return (
-                <a
-                  class:list={[
-                    'graph-node',
-                    n.status === 'past' ? 'graph-node--past' : 'graph-node--current',
-                  ]}
-                  href={n.href}
-                  data-id={n.id}
-                >
-                  <title>{n.title}</title>
-                  <g class="graph-node__body" transform={`translate(${p.x} ${p.y})`}>
-                    {n.status !== 'past' && <circle class="graph-node__halo" r={NODE_RADIUS + 5} />}
-                    <path
-                      class:list={[
-                        'graph-node__shape',
-                        { 'graph-node__shape--ring': shape === 'ring' },
-                      ]}
-                      d={shapePath(shape)}
-                    />
-                    <text
-                      class="graph-node__label"
-                      x={NODE_RADIUS + 7}
-                      y="4"
-                      data-short={label}
-                      data-full={n.title}
-                    >
-                      {label}
-                    </text>
-                  </g>
-                </a>
-              );
-            })}
-          </g>
-        </svg>
-        <figcaption class="graph__legend">
-          <ul>
-            {LEGEND.map(([shape, name]) => (
-              <li>
-                <svg viewBox="-12 -12 24 24" aria-hidden="true">
-                  <path
-                    class:list={[
-                      'graph-node__shape',
-                      { 'graph-node__shape--ring': shape === 'ring' },
-                    ]}
-                    d={shapePath(shape)}
-                  />
-                </svg>
-                {name}
-              </li>
-            ))}
-            <li>
-              <svg viewBox="-16 -16 32 32" aria-hidden="true">
-                <circle class="graph-node__halo" r={NODE_RADIUS + 5} />
-                <path class="graph-node__shape" d={shapePath('circle')} />
-              </svg>
-              Upcoming or ongoing; past events are dimmed
-            </li>
-          </ul>
-        </figcaption>
-      </figure>
-      <script
-        is:inline
-        type="application/json"
-        id="event-graph-data"
-        set:html={graphPayload(graph, layout)}
-      ></script>
-    </>
+    <GraphFigure
+      graph={graph}
+      label="Map of similar events. Each event links to its page."
+      legend={LEGEND}
+      currentNote="Upcoming or ongoing; past events are dimmed"
+    />
   )}
 </Base>
-
-<script>
-  import '../scripts/graph.ts';
-</script>

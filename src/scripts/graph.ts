@@ -7,14 +7,14 @@ import { createSimulation } from '../lib/graph-layout';
 import { NODE_RADIUS } from '../lib/graph-shapes';
 
 const figure = document.querySelector<HTMLElement>('figure.graph');
-const svg = document.querySelector<SVGSVGElement>('#event-graph');
+const svg = document.querySelector<SVGSVGElement>('#graph');
 const payload = readPayload();
 
 if (figure && svg && payload) enhance(figure, svg, payload);
 
 function readPayload(): GraphPayload | null {
   try {
-    const data = JSON.parse(document.querySelector('#event-graph-data')?.textContent ?? '');
+    const data = JSON.parse(document.querySelector('#graph-data')?.textContent ?? '');
     return Array.isArray(data?.nodes) && Array.isArray(data?.edges) ? data : null;
   } catch {
     return null;

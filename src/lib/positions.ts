@@ -1,6 +1,8 @@
 // The positions loader: reads data/positions/, validates it (invalid data
 // fails the build, as for events) and derives each position's status from
 // the build date. Spec: docs/superpowers/specs/2026-09-29-positions-design.md.
+import { jaccard, linkSimilar, type Graph } from './graph';
+import { POSITION_SHAPES } from './graph-shapes';
 import { compareISO, daysBetween, todayUTC, type ISODate } from './dates';
 import { formatProblems, loadValidationContext, type ValidationResult } from './validation';
 import {
@@ -76,4 +78,25 @@ export function stalePositions(ps: LoadedPosition[]): LoadedPosition[] {
 
 export function archivedPositions(ps: LoadedPosition[]): LoadedPosition[] {
   return ps.filter((p) => p.status_derived === 'archived').sort(newestFirst);
+}
+
+/** Linked by shared topics (0.6) and by being at the same institution (0.4). */
+export function positionSimilarity(a: RawPosition, b: RawPosition): number {
+  const topics = jaccard(new Set(a.topics), new Set(b.topics));
+  const institution = a.institution.trim().toLowerCase() === b.institution.trim().toLowerCase();
+  return Math.min(1, 0.6 * topics + (institution ? 0.4 : 0));
+}
+
+/** Every position, linking to its row; archived ones are dimmed and link to the archive. */
+export function buildPositionGraph(ps: LoadedPosition[]): Graph {
+  return {
+    nodes: ps.map((p) => ({
+      id: p.id,
+      title: p.title,
+      href: `${p.status_derived === 'archived' ? '/positions/archive/' : '/positions/'}#${p.id}`,
+      shape: POSITION_SHAPES[p.level],
+      dimmed: p.status_derived === 'archived',
+    })),
+    edges: linkSimilar(ps, positionSimilarity),
+  };
 }
