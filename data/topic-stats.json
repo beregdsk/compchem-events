@@ -8,51 +8,51 @@
       "works_by_year": [
         {
           "year": 2011,
-          "works": 13095
+          "works": 13071
         },
         {
           "year": 2012,
-          "works": 12748
+          "works": 12707
         },
         {
           "year": 2013,
-          "works": 12526
+          "works": 12483
         },
         {
           "year": 2014,
-          "works": 12443
+          "works": 12409
         },
         {
           "year": 2015,
-          "works": 11897
+          "works": 11830
         },
         {
           "year": 2016,
-          "works": 11586
+          "works": 11546
         },
         {
           "year": 2017,
-          "works": 11146
+          "works": 11073
         },
         {
           "year": 2018,
-          "works": 11574
+          "works": 11525
         },
         {
           "year": 2019,
-          "works": 11090
+          "works": 11026
         },
         {
           "year": 2020,
-          "works": 11351
+          "works": 11258
         },
         {
           "year": 2021,
-          "works": 10105
+          "works": 10045
         },
         {
           "year": 2022,
-          "works": 9148
+          "works": 9146
         },
         {
           "year": 2023,
@@ -64,11 +64,11 @@
         },
         {
           "year": 2025,
-          "works": 10314
+          "works": 10305
         }
       ],
-      "works_total": 665870,
-      "growth_5y": 0.91,
+      "works_total": 664959,
+      "growth_5y": 0.92,
       "citations_total": 8506097,
       "top_institutions": [
         {
@@ -175,7 +175,7 @@
         {
           "id": "S4210237713",
           "name": "Physical review. B./Physical review. B",
-          "works": 352
+          "works": 350
         },
         {
           "id": "S4210168441",
@@ -245,51 +245,51 @@
       "works_by_year": [
         {
           "year": 2011,
-          "works": 10506
+          "works": 10490
         },
         {
           "year": 2012,
-          "works": 10144
+          "works": 10119
         },
         {
           "year": 2013,
-          "works": 9653
+          "works": 9621
         },
         {
           "year": 2014,
-          "works": 9796
+          "works": 9774
         },
         {
           "year": 2015,
-          "works": 9181
+          "works": 9134
         },
         {
           "year": 2016,
-          "works": 8836
+          "works": 8807
         },
         {
           "year": 2017,
-          "works": 8515
+          "works": 8463
         },
         {
           "year": 2018,
-          "works": 8887
+          "works": 8846
         },
         {
           "year": 2019,
-          "works": 8340
+          "works": 8292
         },
         {
           "year": 2020,
-          "works": 8887
+          "works": 8805
         },
         {
           "year": 2021,
-          "works": 8105
+          "works": 8050
         },
         {
           "year": 2022,
-          "works": 7497
+          "works": 7495
         },
         {
           "year": 2023,
@@ -301,10 +301,10 @@
         },
         {
           "year": 2025,
-          "works": 6182
+          "works": 6181
         }
       ],
-      "works_total": 538845,
+      "works_total": 538230,
       "growth_5y": 0.7,
       "citations_total": 7800562,
       "top_institutions": [
@@ -412,7 +412,7 @@
         {
           "id": "S4210237713",
           "name": "Physical review. B./Physical review. B",
-          "works": 289
+          "works": 288
         },
         {
           "id": "S4210168441",
@@ -476,51 +476,51 @@
       "works_by_year": [
         {
           "year": 2011,
-          "works": 11930
+          "works": 11903
         },
         {
           "year": 2012,
-          "works": 11742
+          "works": 11699
         },
         {
           "year": 2013,
-          "works": 11893
+          "works": 11858
         },
         {
           "year": 2014,
-          "works": 11790
+          "works": 11750
         },
         {
           "year": 2015,
-          "works": 11275
+          "works": 11218
         },
         {
           "year": 2016,
-          "works": 11318
+          "works": 11267
         },
         {
           "year": 2017,
-          "works": 10859
+          "works": 10809
         },
         {
           "year": 2018,
-          "works": 10770
+          "works": 10722
         },
         {
           "year": 2019,
-          "works": 10902
+          "works": 10844
         },
         {
           "year": 2020,
-          "works": 11353
+          "works": 11263
         },
         {
           "year": 2021,
-          "works": 10881
+          "works": 10823
         },
         {
           "year": 2022,
-          "works": 10120
+          "works": 10119
         },
         {
           "year": 2023,
@@ -532,10 +532,10 @@
         },
         {
           "year": 2025,
-          "works": 9837
+          "works": 9829
         }
       ],
-      "works_total": 579098,
+      "works_total": 578322,
       "growth_5y": 0.87,
       "citations_total": 5610132,
       "top_institutions": [
@@ -551,7 +551,7 @@
           "name": "Chinese Academy of Sciences",
           "country": "CN",
           "homepage": "https://www.cas.cn",
-          "works": 573
+          "works": 572
         },
         {
           "id": "I1313323035",
@@ -592,7 +592,7 @@
           "name": "University of Science and Technology of China",
           "country": "CN",
           "homepage": "https://ustc.edu.cn",
-          "works": 259
+          "works": 258
         },
         {
           "id": "I95457486",
@@ -623,7 +623,7 @@
         {
           "id": "S189701308",
           "name": "Journal of Chemical Theory and Computation",
-          "works": 716
+          "works": 715
         },
         {
           "id": "S146709414",
@@ -713,47 +713,47 @@
       "works_by_year": [
         {
           "year": 2011,
-          "works": 5526
+          "works": 5524
         },
         {
           "year": 2012,
-          "works": 5763
+          "works": 5757
         },
         {
           "year": 2013,
-          "works": 5561
+          "works": 5557
         },
         {
           "year": 2014,
-          "works": 5493
+          "works": 5492
         },
         {
           "year": 2015,
-          "works": 5024
+          "works": 5019
         },
         {
           "year": 2016,
-          "works": 4991
+          "works": 4988
         },
         {
           "year": 2017,
-          "works": 4722
+          "works": 4713
         },
         {
           "year": 2018,
-          "works": 4410
+          "works": 4407
         },
         {
           "year": 2019,
-          "works": 4397
+          "works": 4395
         },
         {
           "year": 2020,
-          "works": 4670
+          "works": 4656
         },
         {
           "year": 2021,
-          "works": 4319
+          "works": 4310
         },
         {
           "year": 2022,
@@ -772,7 +772,7 @@
           "works": 4416
         }
       ],
-      "works_total": 335916,
+      "works_total": 335842,
       "growth_5y": 0.95,
       "citations_total": 2110140,
       "top_institutions": [
@@ -949,51 +949,51 @@
       "works_by_year": [
         {
           "year": 2011,
-          "works": 13398
+          "works": 13353
         },
         {
           "year": 2012,
-          "works": 13102
+          "works": 13033
         },
         {
           "year": 2013,
-          "works": 13357
+          "works": 13295
         },
         {
           "year": 2014,
-          "works": 13327
+          "works": 13257
         },
         {
           "year": 2015,
-          "works": 13006
+          "works": 12911
         },
         {
           "year": 2016,
-          "works": 12892
+          "works": 12822
         },
         {
           "year": 2017,
-          "works": 12282
+          "works": 12216
         },
         {
           "year": 2018,
-          "works": 12445
+          "works": 12365
         },
         {
           "year": 2019,
-          "works": 12523
+          "works": 12437
         },
         {
           "year": 2020,
-          "works": 12838
+          "works": 12730
         },
         {
           "year": 2021,
-          "works": 12250
+          "works": 12171
         },
         {
           "year": 2022,
-          "works": 11468
+          "works": 11461
         },
         {
           "year": 2023,
@@ -1005,11 +1005,11 @@
         },
         {
           "year": 2025,
-          "works": 11597
+          "works": 11586
         }
       ],
-      "works_total": 626271,
-      "growth_5y": 0.9,
+      "works_total": 625045,
+      "growth_5y": 0.91,
       "citations_total": 5055117,
       "top_institutions": [
         {
@@ -1024,7 +1024,7 @@
           "name": "Chinese Academy of Sciences",
           "country": "CN",
           "homepage": "https://www.cas.cn",
-          "works": 871
+          "works": 870
         },
         {
           "id": "I4210165038",
@@ -1052,7 +1052,7 @@
           "name": "University of Science and Technology of China",
           "country": "CN",
           "homepage": "https://ustc.edu.cn",
-          "works": 381
+          "works": 380
         },
         {
           "id": "I74801974",
@@ -1072,7 +1072,7 @@
           "name": "Lawrence Berkeley National Laboratory",
           "country": "US",
           "homepage": "https://www.lbl.gov/",
-          "works": 326
+          "works": 325
         },
         {
           "id": "I20231570",
@@ -1096,12 +1096,12 @@
         {
           "id": "S4210237713",
           "name": "Physical review. B./Physical review. B",
-          "works": 777
+          "works": 776
         },
         {
           "id": "S189701308",
           "name": "Journal of Chemical Theory and Computation",
-          "works": 743
+          "works": 742
         },
         {
           "id": "S181332294",
@@ -1131,7 +1131,7 @@
         {
           "id": "S4210240247",
           "name": "Physical Review Research",
-          "works": 384
+          "works": 383
         }
       ],
       "top_papers": [
@@ -1186,51 +1186,51 @@
       "works_by_year": [
         {
           "year": 2011,
-          "works": 10584
+          "works": 10560
         },
         {
           "year": 2012,
-          "works": 10802
+          "works": 10762
         },
         {
           "year": 2013,
-          "works": 11057
+          "works": 11023
         },
         {
           "year": 2014,
-          "works": 10450
+          "works": 10418
         },
         {
           "year": 2015,
-          "works": 10439
+          "works": 10387
         },
         {
           "year": 2016,
-          "works": 10588
+          "works": 10549
         },
         {
           "year": 2017,
-          "works": 10351
+          "works": 10305
         },
         {
           "year": 2018,
-          "works": 10503
+          "works": 10459
         },
         {
           "year": 2019,
-          "works": 10726
+          "works": 10661
         },
         {
           "year": 2020,
-          "works": 11397
+          "works": 11335
         },
         {
           "year": 2021,
-          "works": 10837
+          "works": 10800
         },
         {
           "year": 2022,
-          "works": 10103
+          "works": 10102
         },
         {
           "year": 2023,
@@ -1242,11 +1242,11 @@
         },
         {
           "year": 2025,
-          "works": 12479
+          "works": 12471
         }
       ],
-      "works_total": 406868,
-      "growth_5y": 1.09,
+      "works_total": 406151,
+      "growth_5y": 1.1,
       "citations_total": 5190368,
       "top_institutions": [
         {
@@ -1424,51 +1424,51 @@
       "works_by_year": [
         {
           "year": 2011,
-          "works": 7692
+          "works": 7676
         },
         {
           "year": 2012,
-          "works": 7853
+          "works": 7834
         },
         {
           "year": 2013,
-          "works": 7898
+          "works": 7877
         },
         {
           "year": 2014,
-          "works": 7485
+          "works": 7469
         },
         {
           "year": 2015,
-          "works": 7460
+          "works": 7433
         },
         {
           "year": 2016,
-          "works": 7537
+          "works": 7513
         },
         {
           "year": 2017,
-          "works": 7459
+          "works": 7439
         },
         {
           "year": 2018,
-          "works": 7557
+          "works": 7524
         },
         {
           "year": 2019,
-          "works": 7712
+          "works": 7666
         },
         {
           "year": 2020,
-          "works": 8678
+          "works": 8631
         },
         {
           "year": 2021,
-          "works": 8511
+          "works": 8481
         },
         {
           "year": 2022,
-          "works": 8277
+          "works": 8276
         },
         {
           "year": 2023,
@@ -1483,8 +1483,8 @@
           "works": 7996
         }
       ],
-      "works_total": 258955,
-      "growth_5y": 0.92,
+      "works_total": 258585,
+      "growth_5y": 0.93,
       "citations_total": 4484833,
       "top_institutions": [
         {
@@ -1656,51 +1656,51 @@
       "works_by_year": [
         {
           "year": 2011,
-          "works": 2552
+          "works": 2549
         },
         {
           "year": 2012,
-          "works": 2669
+          "works": 2658
         },
         {
           "year": 2013,
-          "works": 2564
+          "works": 2556
         },
         {
           "year": 2014,
-          "works": 2774
+          "works": 2765
         },
         {
           "year": 2015,
-          "works": 2748
+          "works": 2736
         },
         {
           "year": 2016,
-          "works": 2668
+          "works": 2652
         },
         {
           "year": 2017,
-          "works": 2425
+          "works": 2417
         },
         {
           "year": 2018,
-          "works": 2547
+          "works": 2531
         },
         {
           "year": 2019,
-          "works": 2396
+          "works": 2381
         },
         {
           "year": 2020,
-          "works": 2466
+          "works": 2451
         },
         {
           "year": 2021,
-          "works": 2103
+          "works": 2094
         },
         {
           "year": 2022,
-          "works": 1852
+          "works": 1851
         },
         {
           "year": 2023,
@@ -1712,10 +1712,10 @@
         },
         {
           "year": 2025,
-          "works": 2162
+          "works": 2161
         }
       ],
-      "works_total": 111184,
+      "works_total": 111025,
       "growth_5y": 0.88,
       "citations_total": 937062,
       "top_institutions": [
@@ -1887,51 +1887,51 @@
       "works_by_year": [
         {
           "year": 2011,
-          "works": 2116
+          "works": 2112
         },
         {
           "year": 2012,
-          "works": 2405
+          "works": 2400
         },
         {
           "year": 2013,
-          "works": 2586
+          "works": 2574
         },
         {
           "year": 2014,
-          "works": 2854
+          "works": 2845
         },
         {
           "year": 2015,
-          "works": 3369
+          "works": 3347
         },
         {
           "year": 2016,
-          "works": 3960
+          "works": 3936
         },
         {
           "year": 2017,
-          "works": 4314
+          "works": 4277
         },
         {
           "year": 2018,
-          "works": 5364
+          "works": 5292
         },
         {
           "year": 2019,
-          "works": 8481
+          "works": 8382
         },
         {
           "year": 2020,
-          "works": 12515
+          "works": 12358
         },
         {
           "year": 2021,
-          "works": 10174
+          "works": 10048
         },
         {
           "year": 2022,
-          "works": 10569
+          "works": 10565
         },
         {
           "year": 2023,
@@ -1939,15 +1939,15 @@
         },
         {
           "year": 2024,
-          "works": 13402
+          "works": 13401
         },
         {
           "year": 2025,
-          "works": 21737
+          "works": 21723
         }
       ],
-      "works_total": 189986,
-      "growth_5y": 1.74,
+      "works_total": 189265,
+      "growth_5y": 1.76,
       "citations_total": 1102887,
       "top_institutions": [
         {
@@ -1955,7 +1955,7 @@
           "name": "Chinese Academy of Sciences",
           "country": "CN",
           "homepage": "https://www.cas.cn",
-          "works": 1159
+          "works": 1158
         },
         {
           "id": "I1294671590",
@@ -2060,7 +2060,7 @@
         {
           "id": "S4210202120",
           "name": "Digital Discovery",
-          "works": 324
+          "works": 323
         },
         {
           "id": "S64187185",
@@ -2119,51 +2119,51 @@
       "works_by_year": [
         {
           "year": 2011,
-          "works": 11026
+          "works": 11000
         },
         {
           "year": 2012,
-          "works": 12184
+          "works": 12166
         },
         {
           "year": 2013,
-          "works": 12883
+          "works": 12858
         },
         {
           "year": 2014,
-          "works": 12945
+          "works": 12925
         },
         {
           "year": 2015,
-          "works": 14080
+          "works": 14032
         },
         {
           "year": 2016,
-          "works": 15757
+          "works": 15708
         },
         {
           "year": 2017,
-          "works": 15644
+          "works": 15582
         },
         {
           "year": 2018,
-          "works": 17225
+          "works": 17127
         },
         {
           "year": 2019,
-          "works": 21314
+          "works": 21182
         },
         {
           "year": 2020,
-          "works": 30715
+          "works": 30505
         },
         {
           "year": 2021,
-          "works": 27771
+          "works": 27607
         },
         {
           "year": 2022,
-          "works": 28037
+          "works": 28031
         },
         {
           "year": 2023,
@@ -2171,15 +2171,15 @@
         },
         {
           "year": 2024,
-          "works": 32565
+          "works": 32563
         },
         {
           "year": 2025,
-          "works": 41466
+          "works": 41452
         }
       ],
-      "works_total": 525427,
-      "growth_5y": 1.35,
+      "works_total": 524398,
+      "growth_5y": 1.36,
       "citations_total": 4355368,
       "top_institutions": [
         {
@@ -2187,7 +2187,7 @@
           "name": "Chinese Academy of Sciences",
           "country": "CN",
           "homepage": "https://www.cas.cn",
-          "works": 1724
+          "works": 1723
         },
         {
           "id": "I1294671590",
@@ -2250,7 +2250,7 @@
           "name": "Shanghai Jiao Tong University",
           "country": "CN",
           "homepage": "https://www.sjtu.edu.cn",
-          "works": 631
+          "works": 630
         }
       ],
       "top_venues": [
@@ -2357,51 +2357,51 @@
       "works_by_year": [
         {
           "year": 2011,
-          "works": 9120
+          "works": 9098
         },
         {
           "year": 2012,
-          "works": 9985
+          "works": 9972
         },
         {
           "year": 2013,
-          "works": 10506
+          "works": 10492
         },
         {
           "year": 2014,
-          "works": 10298
+          "works": 10286
         },
         {
           "year": 2015,
-          "works": 10968
+          "works": 10937
         },
         {
           "year": 2016,
-          "works": 12148
+          "works": 12120
         },
         {
           "year": 2017,
-          "works": 11768
+          "works": 11732
         },
         {
           "year": 2018,
-          "works": 12564
+          "works": 12526
         },
         {
           "year": 2019,
-          "works": 13904
+          "works": 13847
         },
         {
           "year": 2020,
-          "works": 19754
+          "works": 19671
         },
         {
           "year": 2021,
-          "works": 19533
+          "works": 19471
         },
         {
           "year": 2022,
-          "works": 19502
+          "works": 19500
         },
         {
           "year": 2023,
@@ -2409,14 +2409,14 @@
         },
         {
           "year": 2024,
-          "works": 21416
+          "works": 21415
         },
         {
           "year": 2025,
-          "works": 22676
+          "works": 22671
         }
       ],
-      "works_total": 357965,
+      "works_total": 357535,
       "growth_5y": 1.15,
       "citations_total": 3252481,
       "top_institutions": [
@@ -2432,7 +2432,7 @@
           "name": "Chinese Academy of Sciences",
           "country": "CN",
           "homepage": "https://www.cas.cn",
-          "works": 743
+          "works": 742
         },
         {
           "id": "I1294671590",
@@ -2460,7 +2460,7 @@
           "name": "Shanghai Jiao Tong University",
           "country": "CN",
           "homepage": "https://www.sjtu.edu.cn",
-          "works": 359
+          "works": 358
         },
         {
           "id": "I4210165038",
@@ -2589,51 +2589,51 @@
       "works_by_year": [
         {
           "year": 2011,
-          "works": 9120
+          "works": 9098
         },
         {
           "year": 2012,
-          "works": 9985
+          "works": 9972
         },
         {
           "year": 2013,
-          "works": 10506
+          "works": 10492
         },
         {
           "year": 2014,
-          "works": 10298
+          "works": 10286
         },
         {
           "year": 2015,
-          "works": 10968
+          "works": 10937
         },
         {
           "year": 2016,
-          "works": 12148
+          "works": 12120
         },
         {
           "year": 2017,
-          "works": 11768
+          "works": 11732
         },
         {
           "year": 2018,
-          "works": 12564
+          "works": 12526
         },
         {
           "year": 2019,
-          "works": 13904
+          "works": 13847
         },
         {
           "year": 2020,
-          "works": 19754
+          "works": 19671
         },
         {
           "year": 2021,
-          "works": 19533
+          "works": 19471
         },
         {
           "year": 2022,
-          "works": 19502
+          "works": 19500
         },
         {
           "year": 2023,
@@ -2641,14 +2641,14 @@
         },
         {
           "year": 2024,
-          "works": 21416
+          "works": 21415
         },
         {
           "year": 2025,
-          "works": 22676
+          "works": 22671
         }
       ],
-      "works_total": 357965,
+      "works_total": 357535,
       "growth_5y": 1.15,
       "citations_total": 3252481,
       "top_institutions": [
@@ -2664,7 +2664,7 @@
           "name": "Chinese Academy of Sciences",
           "country": "CN",
           "homepage": "https://www.cas.cn",
-          "works": 743
+          "works": 742
         },
         {
           "id": "I1294671590",
@@ -2692,7 +2692,7 @@
           "name": "Shanghai Jiao Tong University",
           "country": "CN",
           "homepage": "https://www.sjtu.edu.cn",
-          "works": 359
+          "works": 358
         },
         {
           "id": "I4210165038",
@@ -2821,51 +2821,51 @@
       "works_by_year": [
         {
           "year": 2011,
-          "works": 2116
+          "works": 2112
         },
         {
           "year": 2012,
-          "works": 2405
+          "works": 2400
         },
         {
           "year": 2013,
-          "works": 2586
+          "works": 2574
         },
         {
           "year": 2014,
-          "works": 2854
+          "works": 2845
         },
         {
           "year": 2015,
-          "works": 3369
+          "works": 3347
         },
         {
           "year": 2016,
-          "works": 3960
+          "works": 3936
         },
         {
           "year": 2017,
-          "works": 4314
+          "works": 4277
         },
         {
           "year": 2018,
-          "works": 5364
+          "works": 5292
         },
         {
           "year": 2019,
-          "works": 8481
+          "works": 8382
         },
         {
           "year": 2020,
-          "works": 12515
+          "works": 12358
         },
         {
           "year": 2021,
-          "works": 10174
+          "works": 10048
         },
         {
           "year": 2022,
-          "works": 10569
+          "works": 10565
         },
         {
           "year": 2023,
@@ -2873,15 +2873,15 @@
         },
         {
           "year": 2024,
-          "works": 13402
+          "works": 13401
         },
         {
           "year": 2025,
-          "works": 21737
+          "works": 21723
         }
       ],
-      "works_total": 189986,
-      "growth_5y": 1.74,
+      "works_total": 189265,
+      "growth_5y": 1.76,
       "citations_total": 1102887,
       "top_institutions": [
         {
@@ -2889,7 +2889,7 @@
           "name": "Chinese Academy of Sciences",
           "country": "CN",
           "homepage": "https://www.cas.cn",
-          "works": 1159
+          "works": 1158
         },
         {
           "id": "I1294671590",
@@ -2994,7 +2994,7 @@
         {
           "id": "S4210202120",
           "name": "Digital Discovery",
-          "works": 324
+          "works": 323
         },
         {
           "id": "S64187185",
@@ -3053,47 +3053,47 @@
       "works_by_year": [
         {
           "year": 2011,
-          "works": 27672
+          "works": 27664
         },
         {
           "year": 2012,
-          "works": 28085
+          "works": 28069
         },
         {
           "year": 2013,
-          "works": 28666
+          "works": 28651
         },
         {
           "year": 2014,
-          "works": 28679
+          "works": 28664
         },
         {
           "year": 2015,
-          "works": 28285
+          "works": 28277
         },
         {
           "year": 2016,
-          "works": 27720
+          "works": 27710
         },
         {
           "year": 2017,
-          "works": 28176
+          "works": 28163
         },
         {
           "year": 2018,
-          "works": 27513
+          "works": 27496
         },
         {
           "year": 2019,
-          "works": 28643
+          "works": 28629
         },
         {
           "year": 2020,
-          "works": 31427
+          "works": 31403
         },
         {
           "year": 2021,
-          "works": 27755
+          "works": 27746
         },
         {
           "year": 2022,
@@ -3112,7 +3112,7 @@
           "works": 39547
         }
       ],
-      "works_total": 1057786,
+      "works_total": 1057617,
       "growth_5y": 1.26,
       "citations_total": 9502702,
       "top_institutions": [
@@ -3301,66 +3301,66 @@
       "works_by_year": [
         {
           "year": 2011,
-          "works": 17222
+          "works": 17212
         },
         {
           "year": 2012,
-          "works": 19338
+          "works": 19320
         },
         {
           "year": 2013,
-          "works": 22887
+          "works": 22878
         },
         {
           "year": 2014,
-          "works": 26867
+          "works": 26848
         },
         {
           "year": 2015,
-          "works": 28369
+          "works": 28353
         },
         {
           "year": 2016,
-          "works": 32060
+          "works": 32039
         },
         {
           "year": 2017,
-          "works": 33036
+          "works": 33012
         },
         {
           "year": 2018,
-          "works": 36711
+          "works": 36678
         },
         {
           "year": 2019,
-          "works": 42170
+          "works": 42141
         },
         {
           "year": 2020,
-          "works": 49441
+          "works": 49411
         },
         {
           "year": 2021,
-          "works": 48764
+          "works": 48741
         },
         {
           "year": 2022,
-          "works": 57280
+          "works": 57277
         },
         {
           "year": 2023,
-          "works": 63008
+          "works": 63007
         },
         {
           "year": 2024,
-          "works": 71749
+          "works": 71748
         },
         {
           "year": 2025,
-          "works": 80694
+          "works": 80689
         }
       ],
-      "works_total": 848370,
+      "works_total": 848094,
       "growth_5y": 1.63,
       "citations_total": 16890349,
       "top_institutions": [
@@ -3551,51 +3551,51 @@
       "works_by_year": [
         {
           "year": 2011,
-          "works": 11865
+          "works": 11824
         },
         {
           "year": 2012,
-          "works": 11632
+          "works": 11575
         },
         {
           "year": 2013,
-          "works": 11725
+          "works": 11677
         },
         {
           "year": 2014,
-          "works": 11709
+          "works": 11647
         },
         {
           "year": 2015,
-          "works": 11329
+          "works": 11255
         },
         {
           "year": 2016,
-          "works": 12521
+          "works": 12456
         },
         {
           "year": 2017,
-          "works": 10761
+          "works": 10698
         },
         {
           "year": 2018,
-          "works": 10874
+          "works": 10804
         },
         {
           "year": 2019,
-          "works": 11045
+          "works": 10967
         },
         {
           "year": 2020,
-          "works": 11521
+          "works": 11400
         },
         {
           "year": 2021,
-          "works": 11029
+          "works": 10958
         },
         {
           "year": 2022,
-          "works": 10253
+          "works": 10252
         },
         {
           "year": 2023,
@@ -3603,15 +3603,15 @@
         },
         {
           "year": 2024,
-          "works": 9419
+          "works": 9418
         },
         {
           "year": 2025,
-          "works": 9922
+          "works": 9914
         }
       ],
-      "works_total": 597447,
-      "growth_5y": 0.86,
+      "works_total": 596442,
+      "growth_5y": 0.87,
       "citations_total": 5078135,
       "top_institutions": [
         {
@@ -3626,7 +3626,7 @@
           "name": "Chinese Academy of Sciences",
           "country": "CN",
           "homepage": "https://www.cas.cn",
-          "works": 628
+          "works": 627
         },
         {
           "id": "I4210165038",
@@ -3667,7 +3667,7 @@
           "name": "University of Science and Technology of China",
           "country": "CN",
           "homepage": "https://ustc.edu.cn",
-          "works": 277
+          "works": 276
         },
         {
           "id": "I74801974",
@@ -3693,7 +3693,7 @@
         {
           "id": "S189701308",
           "name": "Journal of Chemical Theory and Computation",
-          "works": 697
+          "works": 696
         },
         {
           "id": "S181332294",
@@ -3788,67 +3788,67 @@
       "works_by_year": [
         {
           "year": 2011,
-          "works": 4202
+          "works": 4169
         },
         {
           "year": 2012,
-          "works": 4548
+          "works": 4515
         },
         {
           "year": 2013,
-          "works": 4882
+          "works": 4829
         },
         {
           "year": 2014,
-          "works": 5105
+          "works": 5064
         },
         {
           "year": 2015,
-          "works": 5045
+          "works": 4990
         },
         {
           "year": 2016,
-          "works": 5319
+          "works": 5269
         },
         {
           "year": 2017,
-          "works": 5550
+          "works": 5484
         },
         {
           "year": 2018,
-          "works": 6206
+          "works": 6117
         },
         {
           "year": 2019,
-          "works": 7496
+          "works": 7381
         },
         {
           "year": 2020,
-          "works": 8515
+          "works": 8417
         },
         {
           "year": 2021,
-          "works": 9940
+          "works": 9823
         },
         {
           "year": 2022,
-          "works": 10095
+          "works": 10088
         },
         {
           "year": 2023,
-          "works": 11878
+          "works": 11876
         },
         {
           "year": 2024,
-          "works": 12933
+          "works": 12932
         },
         {
           "year": 2025,
-          "works": 19663
+          "works": 19626
         }
       ],
-      "works_total": 209608,
-      "growth_5y": 2.31,
+      "works_total": 208186,
+      "growth_5y": 2.33,
       "citations_total": 1412124,
       "top_institutions": [
         {
@@ -3856,7 +3856,7 @@
           "name": "Centre National de la Recherche Scientifique",
           "country": "FR",
           "homepage": "https://www.cnrs.fr",
-          "works": 720
+          "works": 719
         },
         {
           "id": "I19820366",
@@ -3877,14 +3877,14 @@
           "name": "Tsinghua University",
           "country": "CN",
           "homepage": "https://www.tsinghua.edu.cn",
-          "works": 493
+          "works": 492
         },
         {
           "id": "I62916508",
           "name": "Technical University of Munich",
           "country": "DE",
           "homepage": "https://www.tum.de",
-          "works": 468
+          "works": 467
         },
         {
           "id": "I63966007",
@@ -3919,14 +3919,14 @@
           "name": "University of Chicago",
           "country": "US",
           "homepage": "https://www.uchicago.edu",
-          "works": 349
+          "works": 347
         }
       ],
       "top_venues": [
         {
           "id": "S164566984",
           "name": "Physical Review A",
-          "works": 1629
+          "works": 1628
         },
         {
           "id": "S92819544",
@@ -3941,17 +3941,17 @@
         {
           "id": "S4210240247",
           "name": "Physical Review Research",
-          "works": 613
+          "works": 611
         },
         {
           "id": "S24807848",
           "name": "Physical Review Letters",
-          "works": 586
+          "works": 584
         },
         {
           "id": "S4210195673",
           "name": "PRX Quantum",
-          "works": 392
+          "works": 391
         },
         {
           "id": "S2764453006",
@@ -3961,7 +3961,7 @@
         {
           "id": "S196734849",
           "name": "Scientific Reports",
-          "works": 341
+          "works": 340
         },
         {
           "id": "S59012888",
