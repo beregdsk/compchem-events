@@ -1,0 +1,22 @@
+id: blumberger-group
+name: Blumberger Group
+kind: group
+website: https://blumberger.net/
+topics:
+  - quantum-dynamics
+  - molecular-dynamics
+  - biomolecular-simulation
+  - ml-potentials
+  - electrochemistry
+description: The Blumberger Group at University College London, led by Prof. Dr.
+  Jochen Blumberger, develops and applies quantum and classical molecular
+  simulation methods to study charge transport, excited state processes in
+  organic semiconductors, electron transfer in proteins, and redox…
+added: 2026-10-01
+aliases:
+  - Jochen Blumberger
+pi: Prof. Dr. Jochen Blumberger
+parent: University College London
+location:
+  city: London
+  country: GB
