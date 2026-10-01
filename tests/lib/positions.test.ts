@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   archivedPositions,
+  buildPositionGraph,
   loadPositions,
   openPositions,
+  positionSimilarity,
   positionStatus,
   stalePositions,
 } from '../../src/lib/positions';
@@ -100,5 +102,25 @@ describe('loadPositions', () => {
     expect(() =>
       loadPositions({ positionsDir: dir, today: '2026-09-10', includeFixtures: true }),
     ).toThrow(/added .* is in the future/);
+  });
+});
+
+describe('buildPositionGraph', () => {
+  it('shapes nodes by level, dims archived ones and links them to the archive', () => {
+    const g = buildPositionGraph([
+      loaded({ id: 'a' }),
+      loaded({ id: 'b', level: 'postdoc', status_derived: 'archived' }),
+    ]);
+    expect(g.nodes.map((n) => [n.id, n.href, n.shape, n.dimmed])).toEqual([
+      ['a', '/positions/#a', 'circle', false],
+      ['b', '/positions/archive/#b', 'square', true],
+    ]);
+  });
+
+  it('links positions sharing topics, and more strongly at the same institution', () => {
+    const elsewhere = { ...base, institution: 'Other University' };
+    expect(positionSimilarity(base, elsewhere)).toBeCloseTo(0.6);
+    expect(positionSimilarity(base, { ...base, institution: ' example university ' })).toBe(1);
+    expect(positionSimilarity(base, { ...elsewhere, topics: ['catalysis'] })).toBe(0);
   });
 });

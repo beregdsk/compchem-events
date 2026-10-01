@@ -1,6 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import GroupRow from '../components/GroupRow.astro';
+import ViewSwitch from '../components/ViewSwitch.astro';
 import { groupSections, loadGroups } from '../lib/groups';
 
 const sections = groupSections(loadGroups());
@@ -12,7 +13,10 @@ const sections = groupSections(loadGroups());
   path="/groups/"
   section="groups"
 >
-  <h1>Groups</h1>
+  <div class="page-head">
+    <h1>Groups</h1>
+    <ViewSwitch current="list" list="/groups/" />
+  </div>
   <p class="muted">
     Research groups, institutes, networks and societies behind the events and positions listed here.
     Each entry's details are taken from the group's own website.

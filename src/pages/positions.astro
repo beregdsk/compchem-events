@@ -1,6 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import PageActions from '../components/PageActions.astro';
+import ViewSwitch from '../components/ViewSwitch.astro';
 import PositionRow from '../components/PositionRow.astro';
 import { loadPositions, openPositions, stalePositions } from '../lib/positions';
 
@@ -15,7 +16,10 @@ const stale = stalePositions(positions);
   path="/positions/"
   section="positions"
 >
-  <h1>Positions</h1>
+  <div class="page-head">
+    <h1>Positions</h1>
+    <ViewSwitch current="list" list="/positions/" />
+  </div>
   <p class="muted">
     PhD, postdoc and permanent academic positions, gathered from the same sources as the events and
     reviewed before they appear. Always check the official advert before applying.

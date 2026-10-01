@@ -20,7 +20,7 @@ test.describe('graph view', () => {
     const errors = collectErrors(page);
     await page.goto('/graph/');
     await expect(page.locator('figure.graph')).toHaveClass(/is-live/);
-    expect(await page.locator('#event-graph a.graph-node').count()).toBeGreaterThan(1);
+    expect(await page.locator('#graph a.graph-node').count()).toBeGreaterThan(1);
 
     const [source, target] = await linkedPair(page);
     await page.locator(`a.graph-node[data-id="${source}"] .graph-node__shape`).hover();
@@ -38,8 +38,8 @@ test.describe('graph view', () => {
 
   test('dragging a node moves it and does not navigate', async ({ page }) => {
     await page.goto('/graph/');
-    const shape = page.locator('#event-graph a.graph-node .graph-node__shape').first();
-    const body = page.locator('#event-graph a.graph-node .graph-node__body').first();
+    const shape = page.locator('#graph a.graph-node .graph-node__shape').first();
+    const body = page.locator('#graph a.graph-node .graph-node__body').first();
     const before = await body.getAttribute('transform');
     const box = (await shape.boundingBox())!;
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
@@ -52,7 +52,7 @@ test.describe('graph view', () => {
 
   test('clicking a node opens its event page', async ({ page }) => {
     await page.goto('/graph/');
-    const node = page.locator('#event-graph a.graph-node').first();
+    const node = page.locator('#graph a.graph-node').first();
     const href = (await node.getAttribute('href'))!;
     await node.locator('.graph-node__shape').click();
     await expect(page).toHaveURL(new RegExp(`${href}$`));
@@ -61,7 +61,7 @@ test.describe('graph view', () => {
   test('every node links to a real event page', async ({ page, request }) => {
     await page.goto('/graph/');
     const hrefs = await page
-      .locator('#event-graph a.graph-node')
+      .locator('#graph a.graph-node')
       .evaluateAll((els) => els.map((el) => el.getAttribute('href')!));
     expect(hrefs.length).toBeGreaterThan(0);
     for (const href of hrefs) {
@@ -72,7 +72,7 @@ test.describe('graph view', () => {
 
   test('zooming with ctrl+wheel changes the viewBox', async ({ page }) => {
     await page.goto('/graph/');
-    const svg = page.locator('#event-graph');
+    const svg = page.locator('#graph');
     await svg.scrollIntoViewIfNeeded();
     const before = await svg.getAttribute('viewBox');
     const box = (await svg.boundingBox())!;
@@ -86,7 +86,7 @@ test.describe('graph view', () => {
   test('reduced motion: no simulation, highlight still works', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto('/graph/');
-    const body = page.locator('#event-graph .graph-node__body').first();
+    const body = page.locator('#graph .graph-node__body').first();
     const before = await body.getAttribute('transform');
     await page.waitForTimeout(600);
     expect(await body.getAttribute('transform')).toBe(before);
@@ -101,7 +101,7 @@ test.describe('graph view without JavaScript', () => {
 
   test('shows the static graph with every event linked', async ({ page }) => {
     await page.goto('/graph/');
-    const nodes = await page.locator('#event-graph a.graph-node').count();
+    const nodes = await page.locator('#graph a.graph-node').count();
     expect(nodes).toBeGreaterThan(0);
     await expect(page.locator('figure.graph')).not.toHaveClass(/is-live/);
   });
@@ -130,7 +130,7 @@ test.describe('graph view, pointer edge cases', () => {
 
   test('a plain wheel scrolls the page instead of zooming', async ({ page }) => {
     await page.goto('/graph/');
-    const svg = page.locator('#event-graph');
+    const svg = page.locator('#graph');
     await svg.scrollIntoViewIfNeeded();
     const before = await svg.getAttribute('viewBox');
     const scrolled = await page.evaluate(() => scrollY);
@@ -171,7 +171,7 @@ test.describe('graph view on touch', () => {
   // on the map's background has to be able to reach it.
   test('a one-finger swipe on the background scrolls the page', async ({ page }) => {
     await page.goto('/graph/');
-    const svg = page.locator('#event-graph');
+    const svg = page.locator('#graph');
     await svg.scrollIntoViewIfNeeded();
     const box = (await svg.boundingBox())!;
     const start = { x: box.x + 6, y: box.y + box.height - 10 };
@@ -216,7 +216,7 @@ test.describe('graph view on touch', () => {
     await page.goto('/graph/');
     const [a] = await linkedPair(page);
     const finger = await centreOf(page, a);
-    const svgBox = (await page.locator('#event-graph').boundingBox())!;
+    const svgBox = (await page.locator('#graph').boundingBox())!;
     const other = { x: svgBox.x + 8, y: svgBox.y + 8 };
     const cdp = await page.context().newCDPSession(page);
     const one = { ...finger, id: 1 };
@@ -235,4 +235,30 @@ test.describe('graph view on touch', () => {
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
     expect(Math.hypot(now.x - finger.x, now.y - finger.y)).toBeLessThan(15);
   });
+});
+
+for (const [list, graph] of [
+  ['/positions/', '/positions/graph/'],
+  ['/groups/', '/groups/graph/'],
+] as const) {
+  test(`${graph} maps its directory and switches back to the list`, async ({ page }) => {
+    const errors = collectErrors(page);
+    await page.goto(list);
+    await page.locator('nav[aria-label="View"] a', { hasText: 'Graph' }).click();
+    await expect(page).toHaveURL(graph);
+    expect(await page.locator('#graph a.graph-node').count()).toBeGreaterThan(0);
+    await expect(page.locator('figure.graph')).toHaveClass(/is-live/);
+    await expect(page.locator('nav[aria-label="View"] a', { hasText: 'List' })).toHaveAttribute(
+      'href',
+      list,
+    );
+    expect(errors).toEqual([]);
+  });
+}
+
+test('the section tabs include Topics, current on the topic index', async ({ page }) => {
+  await page.goto('/topics/');
+  await expect(page.locator('nav[aria-label="Sections"] [aria-current="page"]')).toHaveText(
+    'Topics',
+  );
 });

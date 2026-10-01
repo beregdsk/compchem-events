@@ -11,7 +11,7 @@ const { position: p } = Astro.props;
 const place = `${p.location.city}, ${nameOf(p.location.country) ?? p.location.country}`;
 ---
 
-<li class="event position">
+<li class="event position" id={p.id}>
   <p class="mono event__when">
     {p.deadline ? (
       <>

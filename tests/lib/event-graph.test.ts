@@ -3,7 +3,6 @@ import {
   buildEventGraph,
   organizerKeys,
   relatedEvents,
-  shortLabel,
   similarity,
 } from '../../src/lib/event-graph';
 import type { LoadedEvent } from '../../src/lib/types';
@@ -90,24 +89,6 @@ describe('similarity', () => {
   });
 });
 
-describe('shortLabel', () => {
-  it('leaves a short title alone', () => {
-    expect(shortLabel('Sanibel Symposium')).toBe('Sanibel Symposium');
-  });
-
-  it('truncates to the limit with an ellipsis', () => {
-    const label = shortLabel('Total Energy and Force Methods Workshop 2027');
-    expect([...label]).toHaveLength(28);
-    expect(label.endsWith('…')).toBe(true);
-  });
-
-  it('counts code points, never splitting a surrogate pair', () => {
-    const label = shortLabel('🧪'.repeat(40), 10);
-    expect([...label]).toHaveLength(10);
-    expect(label).toBe('🧪'.repeat(9) + '…');
-  });
-});
-
 const ev = (id: string, over: Partial<LoadedEvent> = {}): LoadedEvent =>
   ({
     id,
@@ -130,9 +111,9 @@ const key = (e: { source: string; target: string }) => [e.source, e.target].sort
 describe('buildEventGraph', () => {
   it('makes one node per event, linking to its event page', () => {
     const g = buildEventGraph([ev('a'), ev('b', { status_derived: 'past' })]);
-    expect(g.nodes.map((n) => [n.id, n.href, n.status])).toEqual([
-      ['a', '/events/a/', 'upcoming'],
-      ['b', '/events/b/', 'past'],
+    expect(g.nodes.map((n) => [n.id, n.href, n.shape, n.dimmed])).toEqual([
+      ['a', '/events/a/', 'square', false],
+      ['b', '/events/b/', 'square', true],
     ]);
   });
 

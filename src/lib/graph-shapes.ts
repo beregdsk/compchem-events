@@ -1,7 +1,8 @@
-// Event type on the graph view is carried by shape, not colour: the palette's
+// An item's kind on a graph view (event type, group kind, position level) is
+// carried by shape, not colour: the palette's
 // two accents already mean "interactive" and "time", and a rainbow of types
 // would dilute both. Paths are centred on the origin; the page translates them.
-import type { EventType } from './types';
+import type { EventType, GroupKind, PositionLevel } from './types';
 
 export type Shape = 'circle' | 'square' | 'diamond' | 'triangle' | 'ring';
 
@@ -19,6 +20,19 @@ const SHAPES: Record<EventType, Shape> = {
 export function shapeFor(type: EventType): Shape {
   return SHAPES[type];
 }
+
+export const GROUP_SHAPES: Readonly<Record<GroupKind, Shape>> = {
+  group: 'circle',
+  institute: 'square',
+  network: 'diamond',
+  society: 'triangle',
+};
+
+export const POSITION_SHAPES: Readonly<Record<PositionLevel, Shape>> = {
+  phd: 'circle',
+  postdoc: 'square',
+  permanent: 'diamond',
+};
 
 const f = (n: number) => +n.toFixed(2);
 
