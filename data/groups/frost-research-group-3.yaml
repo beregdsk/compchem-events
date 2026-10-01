@@ -1,0 +1,19 @@
+id: frost-research-group-3
+name: Frost research group
+kind: group
+website: https://frost-group.github.io/
+topics:
+  - electronic-structure
+  - materials-modeling
+  - excited-states
+  - spectroscopy
+description: The Frost research group at Imperial College London, led by Jarvist
+  Frost, combines experiment, computation, and theory to develop functional
+  materials, focusing on photovoltaics and the interaction of light and charges
+  in semiconductors via electronic structure theory.
+added: 2026-10-01
+pi: Jarvist Frost
+parent: Imperial College London
+location:
+  city: London
+  country: GB
