@@ -1,6 +1,7 @@
 ---
 import { site } from '../../site.config';
 import OrbitalField from '../components/OrbitalField.astro';
+import SectionNav, { type Section } from '../components/SectionNav.astro';
 import '../styles/global.css';
 
 interface Props {
@@ -8,9 +9,11 @@ interface Props {
   description: string;
   /** Route path with leading and trailing slashes, e.g. `/deadlines/`. */
   path: string;
+  /** Directory the page belongs to; shows the section tabs when set. */
+  section?: Section;
 }
 
-const { title, description, path } = Astro.props;
+const { title, description, path, section } = Astro.props;
 const canonical = new URL(path, site.url).href;
 const fullTitle = path === '/' ? `${site.name} — ${site.tagline}` : `${title} — ${site.name}`;
 ---
@@ -69,6 +72,7 @@ const fullTitle = path === '/' ? `${site.name} — ${site.tagline}` : `${title} 
     </header>
 
     <main id="main" class="wrap">
+      {section && <SectionNav current={section} {path} />}
       <slot />
     </main>
 

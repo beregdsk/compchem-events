@@ -4,7 +4,6 @@
 // Everything below renders at build time; src/scripts/graph.ts only enhances.
 import Base from '../layouts/Base.astro';
 import ViewSwitch from '../components/ViewSwitch.astro';
-import DirectoryLinks from '../components/DirectoryLinks.astro';
 import { loadEvents } from '../lib/events';
 import { buildEventGraph, shortLabel } from '../lib/event-graph';
 import { graphPayload, layoutGraph } from '../lib/graph-layout';
@@ -26,13 +25,11 @@ const LEGEND = [
   title="Graph view"
   description="A graph of computational chemistry events, linked by shared topics, series and organizers."
   path="/graph/"
+  section="events"
 >
   <div class="page-head">
     <h1>Graph view</h1>
-    <div class="page-head__navs">
-      <ViewSwitch current="graph" />
-      <DirectoryLinks />
-    </div>
+    <ViewSwitch current="graph" />
   </div>
   <p class="muted">
     Events that share topics, a series or an organizer are linked; nearby events are similar.

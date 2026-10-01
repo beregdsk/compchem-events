@@ -1,0 +1,32 @@
+---
+// The site's three directories. Base renders it in one fixed slot above the
+// page heading, so it never moves between them; the graph view counts as
+// Events, so its Events tab is current but still links back to the list.
+export type Section = 'events' | 'positions' | 'groups';
+
+interface Props {
+  current: Section;
+  path: string;
+}
+
+const { current, path } = Astro.props;
+const sections = [
+  { id: 'events', href: '/', label: 'Events' },
+  { id: 'positions', href: '/positions/', label: 'Positions' },
+  { id: 'groups', href: '/groups/', label: 'Groups' },
+] as const;
+---
+
+<nav class="view-switch section-nav mono" aria-label="Sections">
+  {sections.map((s) =>
+    s.id !== current ? (
+      <a href={s.href}>{s.label}</a>
+    ) : s.href === path ? (
+      <span aria-current="page">{s.label}</span>
+    ) : (
+      <a href={s.href} aria-current="true">
+        {s.label}
+      </a>
+    ),
+  )}
+</nav>
