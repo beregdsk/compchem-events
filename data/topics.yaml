@@ -46,8 +46,10 @@
   openalex: [T11948]
 - slug: catalysis
   label: Catalysis
+  openalex: [T10092, T10192, T10353, T11747]
 - slug: electrochemistry
   label: Electrochemistry
+  openalex: [T10018, T10030, T10281, T11784]
 - slug: spectroscopy
   label: Computational spectroscopy
   openalex: [T11177, T12748]
