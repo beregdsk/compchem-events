@@ -1,0 +1,20 @@
+id: atomic-group-jena
+name: Atomic group Jena
+kind: group
+website: https://www.atomic-theory.uni-jena.de/
+topics:
+  - electronic-structure
+  - quantum-dynamics
+  - spectroscopy
+description: The Atomic group Jena at the Helmholtz Institute Jena studies the
+  relativistic quantum dynamics of ions and beams, focusing on the structure,
+  properties and dynamical behaviour of few- and multi-electron ions in strong
+  Coulomb and radiation fields, with applications from astro-…
+added: 2026-10-01
+aliases:
+  - Atomic group Jena, Helmholtz Institute Jena, Germany
+pi: Prof. Dr. Stephan Fritzsche
+parent: Helmholtz Institute Jena
+location:
+  city: Jena
+  country: DE
