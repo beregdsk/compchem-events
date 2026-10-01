@@ -4,6 +4,7 @@
 // Everything below renders at build time; src/scripts/graph.ts only enhances.
 import Base from '../layouts/Base.astro';
 import ViewSwitch from '../components/ViewSwitch.astro';
+import DirectoryLinks from '../components/DirectoryLinks.astro';
 import { loadEvents } from '../lib/events';
 import { buildEventGraph, shortLabel } from '../lib/event-graph';
 import { graphPayload, layoutGraph } from '../lib/graph-layout';
@@ -28,7 +29,10 @@ const LEGEND = [
 >
   <div class="page-head">
     <h1>Graph view</h1>
-    <ViewSwitch current="graph" />
+    <div class="page-head__navs">
+      <ViewSwitch current="graph" />
+      <DirectoryLinks />
+    </div>
   </div>
   <p class="muted">
     Events that share topics, a series or an organizer are linked; nearby events are similar.

@@ -38,12 +38,6 @@ const TICK = 14;
     {nodalLines().map(([x1, y1, x2, y2]) => (
       <line class="field__node" {x1} {y1} {x2} {y2} />
     ))}
-    <text x={TICK * 2} y={TICK * 2 + 30}>
-      z
-    </text>
-    <text x={FIELD_SIZE - TICK * 2} y={FIELD_SIZE - TICK * 2} text-anchor="end">
-      x
-    </text>
   </g>
   {layers.map((layer) => (
     <path
