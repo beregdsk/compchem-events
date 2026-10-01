@@ -29,8 +29,8 @@ for (const js of [true, false]) {
   });
 }
 
-test('the home page and footer link to positions', async ({ page }) => {
+test('the home page links to positions apart from its action row', async ({ page }) => {
   await page.goto('/');
-  await expect(page.locator('ul.actions a[href="/positions/"]')).toHaveCount(1);
-  await expect(page.locator('.site-foot a[href="/positions/"]')).toHaveCount(1);
+  await expect(page.locator('nav[aria-label="Directories"] a[href="/positions/"]')).toHaveCount(1);
+  await expect(page.locator('ul.actions a[href="/positions/"]')).toHaveCount(0);
 });

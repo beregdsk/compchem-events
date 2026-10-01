@@ -160,14 +160,6 @@ body {
   stroke-dasharray: 3 5;
 }
 
-.field__frame text {
-  fill: var(--fg-muted);
-  stroke: none;
-  font-family: var(--font-mono);
-  font-size: 44px;
-  font-style: italic;
-}
-
 /* The load moment: contours draw in from each lobe's peak outwards. */
 @media (prefers-reduced-motion: no-preference) {
   .field__contour {
@@ -432,6 +424,12 @@ a:hover {
 
 .page-head h1 {
   margin: 0;
+}
+
+.page-head__navs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-s);
 }
 
 .view-switch {
