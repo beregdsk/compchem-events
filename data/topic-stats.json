@@ -1,0 +1,3521 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-10-01",
+  "source": "OpenAlex",
+  "topics": {
+    "electronic-structure": {
+      "openalex": ["T10002", "T12044"],
+      "works_by_year": [
+        {
+          "year": 2011,
+          "works": 13099
+        },
+        {
+          "year": 2012,
+          "works": 12760
+        },
+        {
+          "year": 2013,
+          "works": 12537
+        },
+        {
+          "year": 2014,
+          "works": 12451
+        },
+        {
+          "year": 2015,
+          "works": 11900
+        },
+        {
+          "year": 2016,
+          "works": 11596
+        },
+        {
+          "year": 2017,
+          "works": 11155
+        },
+        {
+          "year": 2018,
+          "works": 11585
+        },
+        {
+          "year": 2019,
+          "works": 11101
+        },
+        {
+          "year": 2020,
+          "works": 11372
+        },
+        {
+          "year": 2021,
+          "works": 10179
+        },
+        {
+          "year": 2022,
+          "works": 9264
+        },
+        {
+          "year": 2023,
+          "works": 9429
+        },
+        {
+          "year": 2024,
+          "works": 8423
+        },
+        {
+          "year": 2025,
+          "works": 10334
+        }
+      ],
+      "works_total": 666378,
+      "growth_5y": 0.91,
+      "citations_total": 8505268,
+      "top_institutions": [
+        {
+          "id": "I1294671590",
+          "name": "Centre National de la Recherche Scientifique",
+          "country": "FR",
+          "homepage": "https://www.cnrs.fr",
+          "works": 1229
+        },
+        {
+          "id": "I19820366",
+          "name": "Chinese Academy of Sciences",
+          "country": "CN",
+          "homepage": "https://www.cas.cn",
+          "works": 648
+        },
+        {
+          "id": "I277688954",
+          "name": "Université Paris-Saclay",
+          "country": "FR",
+          "homepage": "https://www.universite-paris-saclay.fr/",
+          "works": 335
+        },
+        {
+          "id": "I4210165038",
+          "name": "University of Chinese Academy of Sciences",
+          "country": "CN",
+          "homepage": "https://www.ucas.ac.cn",
+          "works": 319
+        },
+        {
+          "id": "I126520041",
+          "name": "University of Science and Technology of China",
+          "country": "CN",
+          "homepage": "https://ustc.edu.cn",
+          "works": 312
+        },
+        {
+          "id": "I39804081",
+          "name": "Sorbonne Université",
+          "country": "FR",
+          "homepage": "https://www.sorbonne-universite.fr",
+          "works": 276
+        },
+        {
+          "id": "I1313323035",
+          "name": "Russian Academy of Sciences",
+          "country": "RU",
+          "works": 258
+        },
+        {
+          "id": "I74801974",
+          "name": "The University of Tokyo",
+          "country": "JP",
+          "homepage": "https://www.u-tokyo.ac.jp",
+          "works": 237
+        },
+        {
+          "id": "I47508984",
+          "name": "Imperial College London",
+          "country": "GB",
+          "homepage": "https://www.imperial.ac.uk",
+          "works": 226
+        },
+        {
+          "id": "I148283060",
+          "name": "Lawrence Berkeley National Laboratory",
+          "country": "US",
+          "homepage": "https://www.lbl.gov/",
+          "works": 224
+        }
+      ],
+      "top_venues": [
+        {
+          "id": "S77047749",
+          "name": "The Journal of Chemical Physics",
+          "works": 1556
+        },
+        {
+          "id": "S146709414",
+          "name": "The Journal of Physical Chemistry A",
+          "works": 1049
+        },
+        {
+          "id": "S181332294",
+          "name": "Physical Chemistry Chemical Physics",
+          "works": 844
+        },
+        {
+          "id": "S189701308",
+          "name": "Journal of Chemical Theory and Computation",
+          "works": 721
+        },
+        {
+          "id": "S164566984",
+          "name": "Physical Review A",
+          "works": 419
+        },
+        {
+          "id": "S123480357",
+          "name": "The Journal of Physical Chemistry Letters",
+          "works": 417
+        },
+        {
+          "id": "S4210237713",
+          "name": "Physical review. B./Physical review. B",
+          "works": 352
+        },
+        {
+          "id": "S4210168441",
+          "name": "Physical Review C",
+          "works": 203
+        },
+        {
+          "id": "S21117631",
+          "name": "Journal of Computational Chemistry",
+          "works": 199
+        },
+        {
+          "id": "S95739953",
+          "name": "The Journal of Physical Chemistry C",
+          "works": 197
+        }
+      ],
+      "top_papers": [
+        {
+          "title": "A comprehensive electron wavefunction analysis toolbox for chemists, Multiwfn",
+          "year": 2024,
+          "doi": "https://doi.org/10.1063/5.0216272",
+          "citations": 5057
+        },
+        {
+          "title": "Magnetic Properties of Organic Materials",
+          "year": 2023,
+          "doi": "https://doi.org/10.1201/9780203748503",
+          "citations": 602
+        },
+        {
+          "title": "Simple, Efficient, and Universal Energy Decomposition Analysis Method Based on Dispersion-Corrected Density Functional Theory",
+          "year": 2023,
+          "doi": "https://doi.org/10.1021/acs.jpca.3c04374",
+          "citations": 530
+        },
+        {
+          "title": "Electron Spin Echo Envelope Modulation (ESEEM) Spectroscopy",
+          "year": 2024,
+          "doi": "https://doi.org/10.1201/9781003574170",
+          "citations": 406
+        },
+        {
+          "title": "Lectures on Quantum Mechanics",
+          "year": 2023,
+          "doi": "https://doi.org/10.1007/978-3-031-17635-7",
+          "citations": 393
+        }
+      ],
+      "subtopics": [
+        {
+          "id": "T10002",
+          "name": "Advanced Chemical Physics Studies",
+          "works": 199250,
+          "citations": 7799767
+        },
+        {
+          "id": "T12044",
+          "name": "Advanced Physical and Chemical Molecular Interactions",
+          "works": 61913,
+          "citations": 705501
+        }
+      ]
+    },
+    "dft": {
+      "openalex": ["T10002"],
+      "works_by_year": [
+        {
+          "year": 2011,
+          "works": 10509
+        },
+        {
+          "year": 2012,
+          "works": 10155
+        },
+        {
+          "year": 2013,
+          "works": 9660
+        },
+        {
+          "year": 2014,
+          "works": 9804
+        },
+        {
+          "year": 2015,
+          "works": 9183
+        },
+        {
+          "year": 2016,
+          "works": 8843
+        },
+        {
+          "year": 2017,
+          "works": 8522
+        },
+        {
+          "year": 2018,
+          "works": 8895
+        },
+        {
+          "year": 2019,
+          "works": 8347
+        },
+        {
+          "year": 2020,
+          "works": 8905
+        },
+        {
+          "year": 2021,
+          "works": 8174
+        },
+        {
+          "year": 2022,
+          "works": 7586
+        },
+        {
+          "year": 2023,
+          "works": 7503
+        },
+        {
+          "year": 2024,
+          "works": 6521
+        },
+        {
+          "year": 2025,
+          "works": 6196
+        }
+      ],
+      "works_total": 539270,
+      "growth_5y": 0.7,
+      "citations_total": 7799767,
+      "top_institutions": [
+        {
+          "id": "I1294671590",
+          "name": "Centre National de la Recherche Scientifique",
+          "country": "FR",
+          "homepage": "https://www.cnrs.fr",
+          "works": 1010
+        },
+        {
+          "id": "I19820366",
+          "name": "Chinese Academy of Sciences",
+          "country": "CN",
+          "homepage": "https://www.cas.cn",
+          "works": 607
+        },
+        {
+          "id": "I4210165038",
+          "name": "University of Chinese Academy of Sciences",
+          "country": "CN",
+          "homepage": "https://www.ucas.ac.cn",
+          "works": 304
+        },
+        {
+          "id": "I126520041",
+          "name": "University of Science and Technology of China",
+          "country": "CN",
+          "homepage": "https://ustc.edu.cn",
+          "works": 296
+        },
+        {
+          "id": "I277688954",
+          "name": "Université Paris-Saclay",
+          "country": "FR",
+          "homepage": "https://www.universite-paris-saclay.fr/",
+          "works": 289
+        },
+        {
+          "id": "I39804081",
+          "name": "Sorbonne Université",
+          "country": "FR",
+          "homepage": "https://www.sorbonne-universite.fr",
+          "works": 236
+        },
+        {
+          "id": "I1313323035",
+          "name": "Russian Academy of Sciences",
+          "country": "RU",
+          "works": 226
+        },
+        {
+          "id": "I148283060",
+          "name": "Lawrence Berkeley National Laboratory",
+          "country": "US",
+          "homepage": "https://www.lbl.gov/",
+          "works": 215
+        },
+        {
+          "id": "I20231570",
+          "name": "Peking University",
+          "country": "CN",
+          "homepage": "https://www.pku.edu.cn",
+          "works": 193
+        },
+        {
+          "id": "I95457486",
+          "name": "University of California, Berkeley",
+          "country": "US",
+          "homepage": "https://www.berkeley.edu",
+          "works": 191
+        }
+      ],
+      "top_venues": [
+        {
+          "id": "S77047749",
+          "name": "The Journal of Chemical Physics",
+          "works": 1529
+        },
+        {
+          "id": "S146709414",
+          "name": "The Journal of Physical Chemistry A",
+          "works": 1044
+        },
+        {
+          "id": "S181332294",
+          "name": "Physical Chemistry Chemical Physics",
+          "works": 801
+        },
+        {
+          "id": "S189701308",
+          "name": "Journal of Chemical Theory and Computation",
+          "works": 706
+        },
+        {
+          "id": "S123480357",
+          "name": "The Journal of Physical Chemistry Letters",
+          "works": 412
+        },
+        {
+          "id": "S164566984",
+          "name": "Physical Review A",
+          "works": 407
+        },
+        {
+          "id": "S4210237713",
+          "name": "Physical review. B./Physical review. B",
+          "works": 289
+        },
+        {
+          "id": "S4210168441",
+          "name": "Physical Review C",
+          "works": 203
+        },
+        {
+          "id": "S21117631",
+          "name": "Journal of Computational Chemistry",
+          "works": 194
+        },
+        {
+          "id": "S95739953",
+          "name": "The Journal of Physical Chemistry C",
+          "works": 192
+        }
+      ],
+      "top_papers": [
+        {
+          "title": "A comprehensive electron wavefunction analysis toolbox for chemists, Multiwfn",
+          "year": 2024,
+          "doi": "https://doi.org/10.1063/5.0216272",
+          "citations": 5057
+        },
+        {
+          "title": "Simple, Efficient, and Universal Energy Decomposition Analysis Method Based on Dispersion-Corrected Density Functional Theory",
+          "year": 2023,
+          "doi": "https://doi.org/10.1021/acs.jpca.3c04374",
+          "citations": 530
+        },
+        {
+          "title": "The OpenMolcas Web : A Community-Driven Approach to Advancing Computational Chemistry",
+          "year": 2023,
+          "doi": "https://doi.org/10.1021/acs.jctc.3c00182",
+          "citations": 384
+        },
+        {
+          "title": "TURBOMOLE: Today and Tomorrow",
+          "year": 2023,
+          "doi": "https://doi.org/10.1021/acs.jctc.3c00347",
+          "citations": 297
+        },
+        {
+          "title": "GPAW: An open Python package for electronic structure calculations",
+          "year": 2024,
+          "doi": "https://doi.org/10.1063/5.0182685",
+          "citations": 281
+        }
+      ],
+      "subtopics": [
+        {
+          "id": "T10002",
+          "name": "Advanced Chemical Physics Studies",
+          "works": 199250,
+          "citations": 7799767
+        }
+      ]
+    },
+    "excited-states": {
+      "openalex": ["T11129", "T11177"],
+      "works_by_year": [
+        {
+          "year": 2011,
+          "works": 11933
+        },
+        {
+          "year": 2012,
+          "works": 11746
+        },
+        {
+          "year": 2013,
+          "works": 11903
+        },
+        {
+          "year": 2014,
+          "works": 11800
+        },
+        {
+          "year": 2015,
+          "works": 11281
+        },
+        {
+          "year": 2016,
+          "works": 11324
+        },
+        {
+          "year": 2017,
+          "works": 10864
+        },
+        {
+          "year": 2018,
+          "works": 10775
+        },
+        {
+          "year": 2019,
+          "works": 10907
+        },
+        {
+          "year": 2020,
+          "works": 11364
+        },
+        {
+          "year": 2021,
+          "works": 10938
+        },
+        {
+          "year": 2022,
+          "works": 10224
+        },
+        {
+          "year": 2023,
+          "works": 10634
+        },
+        {
+          "year": 2024,
+          "works": 8884
+        },
+        {
+          "year": 2025,
+          "works": 9858
+        }
+      ],
+      "works_total": 579453,
+      "growth_5y": 0.87,
+      "citations_total": 5609469,
+      "top_institutions": [
+        {
+          "id": "I1294671590",
+          "name": "Centre National de la Recherche Scientifique",
+          "country": "FR",
+          "homepage": "https://www.cnrs.fr",
+          "works": 1149
+        },
+        {
+          "id": "I19820366",
+          "name": "Chinese Academy of Sciences",
+          "country": "CN",
+          "homepage": "https://www.cas.cn",
+          "works": 576
+        },
+        {
+          "id": "I1313323035",
+          "name": "Russian Academy of Sciences",
+          "country": "RU",
+          "works": 411
+        },
+        {
+          "id": "I39804081",
+          "name": "Sorbonne Université",
+          "country": "FR",
+          "homepage": "https://www.sorbonne-universite.fr",
+          "works": 308
+        },
+        {
+          "id": "I277688954",
+          "name": "Université Paris-Saclay",
+          "country": "FR",
+          "homepage": "https://www.universite-paris-saclay.fr/",
+          "works": 297
+        },
+        {
+          "id": "I148283060",
+          "name": "Lawrence Berkeley National Laboratory",
+          "country": "US",
+          "homepage": "https://www.lbl.gov/",
+          "works": 284
+        },
+        {
+          "id": "I4210165038",
+          "name": "University of Chinese Academy of Sciences",
+          "country": "CN",
+          "homepage": "https://www.ucas.ac.cn",
+          "works": 279
+        },
+        {
+          "id": "I126520041",
+          "name": "University of Science and Technology of China",
+          "country": "CN",
+          "homepage": "https://ustc.edu.cn",
+          "works": 259
+        },
+        {
+          "id": "I95457486",
+          "name": "University of California, Berkeley",
+          "country": "US",
+          "homepage": "https://www.berkeley.edu",
+          "works": 255
+        },
+        {
+          "id": "I74801974",
+          "name": "The University of Tokyo",
+          "country": "JP",
+          "homepage": "https://www.u-tokyo.ac.jp",
+          "works": 227
+        }
+      ],
+      "top_venues": [
+        {
+          "id": "S77047749",
+          "name": "The Journal of Chemical Physics",
+          "works": 1811
+        },
+        {
+          "id": "S181332294",
+          "name": "Physical Chemistry Chemical Physics",
+          "works": 765
+        },
+        {
+          "id": "S189701308",
+          "name": "Journal of Chemical Theory and Computation",
+          "works": 716
+        },
+        {
+          "id": "S146709414",
+          "name": "The Journal of Physical Chemistry A",
+          "works": 682
+        },
+        {
+          "id": "S123480357",
+          "name": "The Journal of Physical Chemistry Letters",
+          "works": 639
+        },
+        {
+          "id": "S185621672",
+          "name": "The Journal of Physical Chemistry B",
+          "works": 594
+        },
+        {
+          "id": "S164566984",
+          "name": "Physical Review A",
+          "works": 433
+        },
+        {
+          "id": "S189140625",
+          "name": "Journal of Molecular Liquids",
+          "works": 424
+        },
+        {
+          "id": "S111155417",
+          "name": "Journal of the American Chemical Society",
+          "works": 287
+        },
+        {
+          "id": "S108911230",
+          "name": "Molecules",
+          "works": 243
+        }
+      ],
+      "top_papers": [
+        {
+          "title": "A comprehensive electron wavefunction analysis toolbox for chemists, Multiwfn",
+          "year": 2024,
+          "doi": "https://doi.org/10.1063/5.0216272",
+          "citations": 5057
+        },
+        {
+          "title": "Charge and Energy Transfer Dynamics in Molecular Systems",
+          "year": 2023,
+          "doi": "https://doi.org/10.1002/9783527696277",
+          "citations": 967
+        },
+        {
+          "title": "Simple, Efficient, and Universal Energy Decomposition Analysis Method Based on Dispersion-Corrected Density Functional Theory",
+          "year": 2023,
+          "doi": "https://doi.org/10.1021/acs.jpca.3c04374",
+          "citations": 530
+        },
+        {
+          "title": "The OpenMolcas Web : A Community-Driven Approach to Advancing Computational Chemistry",
+          "year": 2023,
+          "doi": "https://doi.org/10.1021/acs.jctc.3c00182",
+          "citations": 384
+        },
+        {
+          "title": "Electronic Spectra of Polyatomic Molecules",
+          "year": 2023,
+          "doi": "https://doi.org/10.1007/978-981-99-0791-5_7",
+          "citations": 364
+        }
+      ],
+      "subtopics": [
+        {
+          "id": "T11177",
+          "name": "Spectroscopy and Quantum Chemical Studies",
+          "works": 132095,
+          "citations": 3787493
+        },
+        {
+          "id": "T11129",
+          "name": "Photochemistry and Electron Transfer Studies",
+          "works": 83514,
+          "citations": 1821976
+        }
+      ]
+    },
+    "photochemistry": {
+      "openalex": ["T11129", "T13253"],
+      "works_by_year": [
+        {
+          "year": 2011,
+          "works": 5526
+        },
+        {
+          "year": 2012,
+          "works": 5763
+        },
+        {
+          "year": 2013,
+          "works": 5562
+        },
+        {
+          "year": 2014,
+          "works": 5495
+        },
+        {
+          "year": 2015,
+          "works": 5024
+        },
+        {
+          "year": 2016,
+          "works": 4993
+        },
+        {
+          "year": 2017,
+          "works": 4722
+        },
+        {
+          "year": 2018,
+          "works": 4410
+        },
+        {
+          "year": 2019,
+          "works": 4397
+        },
+        {
+          "year": 2020,
+          "works": 4671
+        },
+        {
+          "year": 2021,
+          "works": 4322
+        },
+        {
+          "year": 2022,
+          "works": 4032
+        },
+        {
+          "year": 2023,
+          "works": 4080
+        },
+        {
+          "year": 2024,
+          "works": 3945
+        },
+        {
+          "year": 2025,
+          "works": 4417
+        }
+      ],
+      "works_total": 335896,
+      "growth_5y": 0.95,
+      "citations_total": 2109949,
+      "top_institutions": [
+        {
+          "id": "I1313323035",
+          "name": "Russian Academy of Sciences",
+          "country": "RU",
+          "works": 335
+        },
+        {
+          "id": "I1294671590",
+          "name": "Centre National de la Recherche Scientifique",
+          "country": "FR",
+          "homepage": "https://www.cnrs.fr",
+          "works": 331
+        },
+        {
+          "id": "I19820366",
+          "name": "Chinese Academy of Sciences",
+          "country": "CN",
+          "homepage": "https://www.cas.cn",
+          "works": 168
+        },
+        {
+          "id": "I194450716",
+          "name": "Jilin University",
+          "country": "CN",
+          "homepage": "https://www.jlu.edu.cn/",
+          "works": 107
+        },
+        {
+          "id": "I19880235",
+          "name": "Lomonosov Moscow State University",
+          "country": "RU",
+          "homepage": "https://msu.ru/en/",
+          "works": 102
+        },
+        {
+          "id": "I45084792",
+          "name": "University of Florence",
+          "country": "IT",
+          "homepage": "https://www.unifi.it",
+          "works": 81
+        },
+        {
+          "id": "I277688954",
+          "name": "Université Paris-Saclay",
+          "country": "FR",
+          "homepage": "https://www.universite-paris-saclay.fr/",
+          "works": 79
+        },
+        {
+          "id": "I74801974",
+          "name": "The University of Tokyo",
+          "country": "JP",
+          "homepage": "https://www.u-tokyo.ac.jp",
+          "works": 78
+        },
+        {
+          "id": "I22299242",
+          "name": "Kyoto University",
+          "country": "JP",
+          "works": 75
+        },
+        {
+          "id": "I4210088206",
+          "name": "N.D. Zelinsky Institute of Organic Chemistry",
+          "country": "RU",
+          "homepage": "https://zioc.ru/",
+          "works": 75
+        }
+      ],
+      "top_venues": [
+        {
+          "id": "S77047749",
+          "name": "The Journal of Chemical Physics",
+          "works": 379
+        },
+        {
+          "id": "S181332294",
+          "name": "Physical Chemistry Chemical Physics",
+          "works": 378
+        },
+        {
+          "id": "S146709414",
+          "name": "The Journal of Physical Chemistry A",
+          "works": 354
+        },
+        {
+          "id": "S189140625",
+          "name": "Journal of Molecular Liquids",
+          "works": 212
+        },
+        {
+          "id": "S123480357",
+          "name": "The Journal of Physical Chemistry Letters",
+          "works": 198
+        },
+        {
+          "id": "S108911230",
+          "name": "Molecules",
+          "works": 181
+        },
+        {
+          "id": "S111155417",
+          "name": "Journal of the American Chemical Society",
+          "works": 158
+        },
+        {
+          "id": "S203479135",
+          "name": "Journal of Molecular Structure",
+          "works": 157
+        },
+        {
+          "id": "S189701308",
+          "name": "Journal of Chemical Theory and Computation",
+          "works": 152
+        },
+        {
+          "id": "S68911691",
+          "name": "Chemistry - A European Journal",
+          "works": 147
+        }
+      ],
+      "top_papers": [
+        {
+          "title": "A comprehensive electron wavefunction analysis toolbox for chemists, Multiwfn",
+          "year": 2024,
+          "doi": "https://doi.org/10.1063/5.0216272",
+          "citations": 5057
+        },
+        {
+          "title": "Charge and Energy Transfer Dynamics in Molecular Systems",
+          "year": 2023,
+          "doi": "https://doi.org/10.1002/9783527696277",
+          "citations": 967
+        },
+        {
+          "title": "Electronic Spectra of Polyatomic Molecules",
+          "year": 2023,
+          "doi": "https://doi.org/10.1007/978-981-99-0791-5_7",
+          "citations": 364
+        },
+        {
+          "title": "A new era of LMCT: leveraging ligand-to-metal charge transfer excited states for photochemical reactions",
+          "year": 2024,
+          "doi": "https://doi.org/10.1039/d3sc05268k",
+          "citations": 265
+        },
+        {
+          "title": "EDA photochemistry: Mechanistic investigations and future opportunities",
+          "year": 2023,
+          "doi": "https://doi.org/10.1016/j.chempr.2023.06.013",
+          "citations": 253
+        }
+      ],
+      "subtopics": [
+        {
+          "id": "T11129",
+          "name": "Photochemistry and Electron Transfer Studies",
+          "works": 83514,
+          "citations": 1821976
+        },
+        {
+          "id": "T13253",
+          "name": "Chemical Reactions and Mechanisms",
+          "works": 42548,
+          "citations": 287973
+        }
+      ]
+    },
+    "quantum-dynamics": {
+      "openalex": ["T11177", "T11965"],
+      "works_by_year": [
+        {
+          "year": 2011,
+          "works": 13408
+        },
+        {
+          "year": 2012,
+          "works": 13115
+        },
+        {
+          "year": 2013,
+          "works": 13376
+        },
+        {
+          "year": 2014,
+          "works": 13345
+        },
+        {
+          "year": 2015,
+          "works": 13019
+        },
+        {
+          "year": 2016,
+          "works": 12909
+        },
+        {
+          "year": 2017,
+          "works": 12293
+        },
+        {
+          "year": 2018,
+          "works": 12462
+        },
+        {
+          "year": 2019,
+          "works": 12536
+        },
+        {
+          "year": 2020,
+          "works": 12862
+        },
+        {
+          "year": 2021,
+          "works": 12369
+        },
+        {
+          "year": 2022,
+          "works": 11715
+        },
+        {
+          "year": 2023,
+          "works": 12443
+        },
+        {
+          "year": 2024,
+          "works": 10899
+        },
+        {
+          "year": 2025,
+          "works": 11635
+        }
+      ],
+      "works_total": 627282,
+      "growth_5y": 0.9,
+      "citations_total": 5054580,
+      "top_institutions": [
+        {
+          "id": "I1294671590",
+          "name": "Centre National de la Recherche Scientifique",
+          "country": "FR",
+          "homepage": "https://www.cnrs.fr",
+          "works": 1413
+        },
+        {
+          "id": "I19820366",
+          "name": "Chinese Academy of Sciences",
+          "country": "CN",
+          "homepage": "https://www.cas.cn",
+          "works": 885
+        },
+        {
+          "id": "I4210165038",
+          "name": "University of Chinese Academy of Sciences",
+          "country": "CN",
+          "homepage": "https://www.ucas.ac.cn",
+          "works": 504
+        },
+        {
+          "id": "I277688954",
+          "name": "Université Paris-Saclay",
+          "country": "FR",
+          "homepage": "https://www.universite-paris-saclay.fr/",
+          "works": 417
+        },
+        {
+          "id": "I39804081",
+          "name": "Sorbonne Université",
+          "country": "FR",
+          "homepage": "https://www.sorbonne-universite.fr",
+          "works": 407
+        },
+        {
+          "id": "I126520041",
+          "name": "University of Science and Technology of China",
+          "country": "CN",
+          "homepage": "https://ustc.edu.cn",
+          "works": 385
+        },
+        {
+          "id": "I74801974",
+          "name": "The University of Tokyo",
+          "country": "JP",
+          "homepage": "https://www.u-tokyo.ac.jp",
+          "works": 382
+        },
+        {
+          "id": "I1313323035",
+          "name": "Russian Academy of Sciences",
+          "country": "RU",
+          "works": 362
+        },
+        {
+          "id": "I148283060",
+          "name": "Lawrence Berkeley National Laboratory",
+          "country": "US",
+          "homepage": "https://www.lbl.gov/",
+          "works": 330
+        },
+        {
+          "id": "I20231570",
+          "name": "Peking University",
+          "country": "CN",
+          "homepage": "https://www.pku.edu.cn",
+          "works": 323
+        }
+      ],
+      "top_venues": [
+        {
+          "id": "S77047749",
+          "name": "The Journal of Chemical Physics",
+          "works": 1892
+        },
+        {
+          "id": "S164566984",
+          "name": "Physical Review A",
+          "works": 962
+        },
+        {
+          "id": "S4210237713",
+          "name": "Physical review. B./Physical review. B",
+          "works": 777
+        },
+        {
+          "id": "S189701308",
+          "name": "Journal of Chemical Theory and Computation",
+          "works": 743
+        },
+        {
+          "id": "S181332294",
+          "name": "Physical Chemistry Chemical Physics",
+          "works": 619
+        },
+        {
+          "id": "S123480357",
+          "name": "The Journal of Physical Chemistry Letters",
+          "works": 608
+        },
+        {
+          "id": "S146709414",
+          "name": "The Journal of Physical Chemistry A",
+          "works": 556
+        },
+        {
+          "id": "S185621672",
+          "name": "The Journal of Physical Chemistry B",
+          "works": 545
+        },
+        {
+          "id": "S24807848",
+          "name": "Physical Review Letters",
+          "works": 544
+        },
+        {
+          "id": "S4210240247",
+          "name": "Physical Review Research",
+          "works": 384
+        }
+      ],
+      "top_papers": [
+        {
+          "title": "Quantum physics in one dimension",
+          "year": 2023,
+          "doi": "https://doi.org/10.1016/b978-0-323-90800-9.00233-x",
+          "citations": 1695
+        },
+        {
+          "title": "Charge and Energy Transfer Dynamics in Molecular Systems",
+          "year": 2023,
+          "doi": "https://doi.org/10.1002/9783527696277",
+          "citations": 967
+        },
+        {
+          "title": "TIMSS 2023 International Results in Mathematics and Science",
+          "year": 2024,
+          "doi": "https://doi.org/10.6017/lse.tpisc.timss.rs6460",
+          "citations": 564
+        },
+        {
+          "title": "Simple, Efficient, and Universal Energy Decomposition Analysis Method Based on Dispersion-Corrected Density Functional Theory",
+          "year": 2023,
+          "doi": "https://doi.org/10.1021/acs.jpca.3c04374",
+          "citations": 530
+        },
+        {
+          "title": "Field Theory of Non-Equilibrium Systems",
+          "year": 2023,
+          "doi": "https://doi.org/10.1017/9781108769266",
+          "citations": 391
+        }
+      ],
+      "subtopics": [
+        {
+          "id": "T11177",
+          "name": "Spectroscopy and Quantum Chemical Studies",
+          "works": 132095,
+          "citations": 3787493
+        },
+        {
+          "id": "T11965",
+          "name": "Quantum, superfluid, helium dynamics",
+          "works": 90835,
+          "citations": 1267087
+        }
+      ]
+    },
+    "molecular-dynamics": {
+      "openalex": ["T10044", "T12044"],
+      "works_by_year": [
+        {
+          "year": 2011,
+          "works": 10587
+        },
+        {
+          "year": 2012,
+          "works": 10805
+        },
+        {
+          "year": 2013,
+          "works": 11062
+        },
+        {
+          "year": 2014,
+          "works": 10452
+        },
+        {
+          "year": 2015,
+          "works": 10439
+        },
+        {
+          "year": 2016,
+          "works": 10591
+        },
+        {
+          "year": 2017,
+          "works": 10351
+        },
+        {
+          "year": 2018,
+          "works": 10509
+        },
+        {
+          "year": 2019,
+          "works": 10731
+        },
+        {
+          "year": 2020,
+          "works": 11406
+        },
+        {
+          "year": 2021,
+          "works": 10854
+        },
+        {
+          "year": 2022,
+          "works": 10148
+        },
+        {
+          "year": 2023,
+          "works": 11000
+        },
+        {
+          "year": 2024,
+          "works": 9593
+        },
+        {
+          "year": 2025,
+          "works": 12487
+        }
+      ],
+      "works_total": 406995,
+      "growth_5y": 1.09,
+      "citations_total": 5189520,
+      "top_institutions": [
+        {
+          "id": "I1294671590",
+          "name": "Centre National de la Recherche Scientifique",
+          "country": "FR",
+          "homepage": "https://www.cnrs.fr",
+          "works": 996
+        },
+        {
+          "id": "I19820366",
+          "name": "Chinese Academy of Sciences",
+          "country": "CN",
+          "homepage": "https://www.cas.cn",
+          "works": 441
+        },
+        {
+          "id": "I241749",
+          "name": "University of Cambridge",
+          "country": "GB",
+          "homepage": "https://www.cam.ac.uk",
+          "works": 295
+        },
+        {
+          "id": "I40347166",
+          "name": "University of Chicago",
+          "country": "US",
+          "homepage": "https://www.uchicago.edu",
+          "works": 281
+        },
+        {
+          "id": "I47508984",
+          "name": "Imperial College London",
+          "country": "GB",
+          "homepage": "https://www.imperial.ac.uk",
+          "works": 278
+        },
+        {
+          "id": "I40120149",
+          "name": "University of Oxford",
+          "country": "GB",
+          "homepage": "https://www.ox.ac.uk",
+          "works": 270
+        },
+        {
+          "id": "I136199984",
+          "name": "Harvard University",
+          "country": "US",
+          "homepage": "https://www.harvard.edu",
+          "works": 259
+        },
+        {
+          "id": "I36258959",
+          "name": "University of California San Diego",
+          "country": "US",
+          "homepage": "https://ucsd.edu",
+          "works": 246
+        },
+        {
+          "id": "I63966007",
+          "name": "Massachusetts Institute of Technology",
+          "country": "US",
+          "homepage": "https://web.mit.edu",
+          "works": 245
+        },
+        {
+          "id": "I183067930",
+          "name": "Shanghai Jiao Tong University",
+          "country": "CN",
+          "homepage": "https://www.sjtu.edu.cn",
+          "works": 235
+        }
+      ],
+      "top_venues": [
+        {
+          "id": "S167262187",
+          "name": "Journal of Chemical Information and Modeling",
+          "works": 725
+        },
+        {
+          "id": "S98085912",
+          "name": "Biophysical Journal",
+          "works": 703
+        },
+        {
+          "id": "S189701308",
+          "name": "Journal of Chemical Theory and Computation",
+          "works": 575
+        },
+        {
+          "id": "S185621672",
+          "name": "The Journal of Physical Chemistry B",
+          "works": 481
+        },
+        {
+          "id": "S77047749",
+          "name": "The Journal of Chemical Physics",
+          "works": 407
+        },
+        {
+          "id": "S64187185",
+          "name": "Nature Communications",
+          "works": 386
+        },
+        {
+          "id": "S156919612",
+          "name": "Protein Science",
+          "works": 274
+        },
+        {
+          "id": "S10623703",
+          "name": "International Journal of Molecular Sciences",
+          "works": 273
+        },
+        {
+          "id": "S1336409049",
+          "name": "eLife",
+          "works": 239
+        },
+        {
+          "id": "S52395412",
+          "name": "Bioinformatics",
+          "works": 228
+        }
+      ],
+      "top_papers": [
+        {
+          "title": "Accurate structure prediction of biomolecular interactions with AlphaFold 3",
+          "year": 2024,
+          "doi": "https://doi.org/10.1038/s41586-024-07487-w",
+          "citations": 16106
+        },
+        {
+          "title": "UCSF ChimeraX : Tools for structure building and analysis",
+          "year": 2023,
+          "doi": "https://doi.org/10.1002/pro.4792",
+          "citations": 4781
+        },
+        {
+          "title": "Fast and accurate protein structure search with Foldseek",
+          "year": 2023,
+          "doi": "https://doi.org/10.1038/s41587-023-01773-0",
+          "citations": 2625
+        },
+        {
+          "title": "De novo design of protein structure and function with RFdiffusion",
+          "year": 2023,
+          "doi": "https://doi.org/10.1038/s41586-023-06415-8",
+          "citations": 2275
+        },
+        {
+          "title": "AlphaFold Protein Structure Database in 2024: providing structure coverage for over 214 million protein sequences",
+          "year": 2023,
+          "doi": "https://doi.org/10.1093/nar/gkad1011",
+          "citations": 2146
+        }
+      ],
+      "subtopics": [
+        {
+          "id": "T10044",
+          "name": "Protein Structure and Dynamics",
+          "works": 122839,
+          "citations": 4484019
+        },
+        {
+          "id": "T12044",
+          "name": "Advanced Physical and Chemical Molecular Interactions",
+          "works": 61913,
+          "citations": 705501
+        }
+      ]
+    },
+    "biomolecular-simulation": {
+      "openalex": ["T10044"],
+      "works_by_year": [
+        {
+          "year": 2011,
+          "works": 7693
+        },
+        {
+          "year": 2012,
+          "works": 7854
+        },
+        {
+          "year": 2013,
+          "works": 7899
+        },
+        {
+          "year": 2014,
+          "works": 7485
+        },
+        {
+          "year": 2015,
+          "works": 7459
+        },
+        {
+          "year": 2016,
+          "works": 7537
+        },
+        {
+          "year": 2017,
+          "works": 7456
+        },
+        {
+          "year": 2018,
+          "works": 7560
+        },
+        {
+          "year": 2019,
+          "works": 7713
+        },
+        {
+          "year": 2020,
+          "works": 8684
+        },
+        {
+          "year": 2021,
+          "works": 8520
+        },
+        {
+          "year": 2022,
+          "works": 8294
+        },
+        {
+          "year": 2023,
+          "works": 8908
+        },
+        {
+          "year": 2024,
+          "works": 7516
+        },
+        {
+          "year": 2025,
+          "works": 7997
+        }
+      ],
+      "works_total": 258980,
+      "growth_5y": 0.92,
+      "citations_total": 4484019,
+      "top_institutions": [
+        {
+          "id": "I1294671590",
+          "name": "Centre National de la Recherche Scientifique",
+          "country": "FR",
+          "homepage": "https://www.cnrs.fr",
+          "works": 760
+        },
+        {
+          "id": "I19820366",
+          "name": "Chinese Academy of Sciences",
+          "country": "CN",
+          "homepage": "https://www.cas.cn",
+          "works": 392
+        },
+        {
+          "id": "I241749",
+          "name": "University of Cambridge",
+          "country": "GB",
+          "homepage": "https://www.cam.ac.uk",
+          "works": 267
+        },
+        {
+          "id": "I40347166",
+          "name": "University of Chicago",
+          "country": "US",
+          "homepage": "https://www.uchicago.edu",
+          "works": 241
+        },
+        {
+          "id": "I136199984",
+          "name": "Harvard University",
+          "country": "US",
+          "homepage": "https://www.harvard.edu",
+          "works": 240
+        },
+        {
+          "id": "I36258959",
+          "name": "University of California San Diego",
+          "country": "US",
+          "homepage": "https://ucsd.edu",
+          "works": 237
+        },
+        {
+          "id": "I63966007",
+          "name": "Massachusetts Institute of Technology",
+          "country": "US",
+          "homepage": "https://web.mit.edu",
+          "works": 232
+        },
+        {
+          "id": "I183067930",
+          "name": "Shanghai Jiao Tong University",
+          "country": "CN",
+          "homepage": "https://www.sjtu.edu.cn",
+          "works": 219
+        },
+        {
+          "id": "I40120149",
+          "name": "University of Oxford",
+          "country": "GB",
+          "homepage": "https://www.ox.ac.uk",
+          "works": 219
+        },
+        {
+          "id": "I1299303238",
+          "name": "National Institutes of Health",
+          "country": "US",
+          "homepage": "https://www.nih.gov",
+          "works": 213
+        }
+      ],
+      "top_venues": [
+        {
+          "id": "S167262187",
+          "name": "Journal of Chemical Information and Modeling",
+          "works": 724
+        },
+        {
+          "id": "S98085912",
+          "name": "Biophysical Journal",
+          "works": 701
+        },
+        {
+          "id": "S189701308",
+          "name": "Journal of Chemical Theory and Computation",
+          "works": 538
+        },
+        {
+          "id": "S185621672",
+          "name": "The Journal of Physical Chemistry B",
+          "works": 470
+        },
+        {
+          "id": "S64187185",
+          "name": "Nature Communications",
+          "works": 376
+        },
+        {
+          "id": "S77047749",
+          "name": "The Journal of Chemical Physics",
+          "works": 352
+        },
+        {
+          "id": "S156919612",
+          "name": "Protein Science",
+          "works": 274
+        },
+        {
+          "id": "S10623703",
+          "name": "International Journal of Molecular Sciences",
+          "works": 273
+        },
+        {
+          "id": "S1336409049",
+          "name": "eLife",
+          "works": 239
+        },
+        {
+          "id": "S52395412",
+          "name": "Bioinformatics",
+          "works": 228
+        }
+      ],
+      "top_papers": [
+        {
+          "title": "Accurate structure prediction of biomolecular interactions with AlphaFold 3",
+          "year": 2024,
+          "doi": "https://doi.org/10.1038/s41586-024-07487-w",
+          "citations": 16106
+        },
+        {
+          "title": "UCSF ChimeraX : Tools for structure building and analysis",
+          "year": 2023,
+          "doi": "https://doi.org/10.1002/pro.4792",
+          "citations": 4781
+        },
+        {
+          "title": "Fast and accurate protein structure search with Foldseek",
+          "year": 2023,
+          "doi": "https://doi.org/10.1038/s41587-023-01773-0",
+          "citations": 2625
+        },
+        {
+          "title": "De novo design of protein structure and function with RFdiffusion",
+          "year": 2023,
+          "doi": "https://doi.org/10.1038/s41586-023-06415-8",
+          "citations": 2275
+        },
+        {
+          "title": "AlphaFold Protein Structure Database in 2024: providing structure coverage for over 214 million protein sequences",
+          "year": 2023,
+          "doi": "https://doi.org/10.1093/nar/gkad1011",
+          "citations": 2146
+        }
+      ],
+      "subtopics": [
+        {
+          "id": "T10044",
+          "name": "Protein Structure and Dynamics",
+          "works": 122839,
+          "citations": 4484019
+        }
+      ]
+    },
+    "soft-matter": {
+      "openalex": ["T12274"],
+      "works_by_year": [
+        {
+          "year": 2011,
+          "works": 2552
+        },
+        {
+          "year": 2012,
+          "works": 2670
+        },
+        {
+          "year": 2013,
+          "works": 2564
+        },
+        {
+          "year": 2014,
+          "works": 2775
+        },
+        {
+          "year": 2015,
+          "works": 2749
+        },
+        {
+          "year": 2016,
+          "works": 2669
+        },
+        {
+          "year": 2017,
+          "works": 2428
+        },
+        {
+          "year": 2018,
+          "works": 2547
+        },
+        {
+          "year": 2019,
+          "works": 2396
+        },
+        {
+          "year": 2020,
+          "works": 2468
+        },
+        {
+          "year": 2021,
+          "works": 2105
+        },
+        {
+          "year": 2022,
+          "works": 1864
+        },
+        {
+          "year": 2023,
+          "works": 1978
+        },
+        {
+          "year": 2024,
+          "works": 1963
+        },
+        {
+          "year": 2025,
+          "works": 2165
+        }
+      ],
+      "works_total": 111221,
+      "growth_5y": 0.88,
+      "citations_total": 936967,
+      "top_institutions": [
+        {
+          "id": "I1294671590",
+          "name": "Centre National de la Recherche Scientifique",
+          "country": "FR",
+          "homepage": "https://www.cnrs.fr",
+          "works": 252
+        },
+        {
+          "id": "I39804081",
+          "name": "Sorbonne Université",
+          "country": "FR",
+          "homepage": "https://www.sorbonne-universite.fr",
+          "works": 89
+        },
+        {
+          "id": "I19820366",
+          "name": "Chinese Academy of Sciences",
+          "country": "CN",
+          "homepage": "https://www.cas.cn",
+          "works": 87
+        },
+        {
+          "id": "I1313323035",
+          "name": "Russian Academy of Sciences",
+          "country": "RU",
+          "works": 75
+        },
+        {
+          "id": "I277688954",
+          "name": "Université Paris-Saclay",
+          "country": "FR",
+          "homepage": "https://www.universite-paris-saclay.fr/",
+          "works": 50
+        },
+        {
+          "id": "I4210165038",
+          "name": "University of Chinese Academy of Sciences",
+          "country": "CN",
+          "homepage": "https://www.ucas.ac.cn",
+          "works": 47
+        },
+        {
+          "id": "I2746051580",
+          "name": "Université Paris Sciences et Lettres",
+          "country": "FR",
+          "homepage": "https://psl.eu",
+          "works": 46
+        },
+        {
+          "id": "I171892758",
+          "name": "Forschungszentrum Jülich",
+          "country": "DE",
+          "homepage": "https://www.fz-juelich.de/",
+          "works": 43
+        },
+        {
+          "id": "I100066346",
+          "name": "University of Stuttgart",
+          "country": "DE",
+          "homepage": "https://www.uni-stuttgart.de/",
+          "works": 39
+        },
+        {
+          "id": "I1289243028",
+          "name": "Oak Ridge National Laboratory",
+          "country": "US",
+          "homepage": "https://www.ornl.gov",
+          "works": 36
+        }
+      ],
+      "top_venues": [
+        {
+          "id": "S77047749",
+          "name": "The Journal of Chemical Physics",
+          "works": 163
+        },
+        {
+          "id": "S75741262",
+          "name": "Langmuir",
+          "works": 120
+        },
+        {
+          "id": "S185621672",
+          "name": "The Journal of Physical Chemistry B",
+          "works": 90
+        },
+        {
+          "id": "S189140625",
+          "name": "Journal of Molecular Liquids",
+          "works": 88
+        },
+        {
+          "id": "S6377669",
+          "name": "Soft Matter",
+          "works": 82
+        },
+        {
+          "id": "S177196338",
+          "name": "Macromolecules",
+          "works": 81
+        },
+        {
+          "id": "S22862804",
+          "name": "Physics of Fluids",
+          "works": 72
+        },
+        {
+          "id": "S4210168594",
+          "name": "ECS Meeting Abstracts",
+          "works": 67
+        },
+        {
+          "id": "S4210235286",
+          "name": "Physical review. E",
+          "works": 59
+        },
+        {
+          "id": "S94313546",
+          "name": "Colloids and Surfaces A Physicochemical and Engineering Aspects",
+          "works": 56
+        }
+      ],
+      "top_papers": [
+        {
+          "title": "On validity, physical meaning, mechanism insights and regression of adsorption kinetic models",
+          "year": 2023,
+          "doi": "https://doi.org/10.1016/j.molliq.2023.121416",
+          "citations": 372
+        },
+        {
+          "title": "A Review on the Adsorption Isotherms and Design Calculations for the Optimization of Adsorbent Mass and Contact Time",
+          "year": 2023,
+          "doi": "https://doi.org/10.1021/acsomega.2c08155",
+          "citations": 354
+        },
+        {
+          "title": "A Review of Particle Shape Effects on Material Properties for Various Engineering Applications: From Macro to Nanoscale",
+          "year": 2023,
+          "doi": "https://doi.org/10.3390/min13010091",
+          "citations": 331
+        },
+        {
+          "title": "A critical review of adsorption isotherm models for aqueous contaminants: Curve characteristics, site energy distribution and common controversies",
+          "year": 2023,
+          "doi": "https://doi.org/10.1016/j.jenvman.2022.117104",
+          "citations": 247
+        },
+        {
+          "title": "Fluids and Electrolytes under Confinement in Single-Digit Nanopores",
+          "year": 2023,
+          "doi": "https://doi.org/10.1021/acs.chemrev.2c00155",
+          "citations": 226
+        }
+      ],
+      "subtopics": [
+        {
+          "id": "T12274",
+          "name": "Electrostatics and Colloid Interactions",
+          "works": 46245,
+          "citations": 936967
+        }
+      ]
+    },
+    "ml-potentials": {
+      "openalex": ["T11948"],
+      "works_by_year": [
+        {
+          "year": 2011,
+          "works": 2116
+        },
+        {
+          "year": 2012,
+          "works": 2405
+        },
+        {
+          "year": 2013,
+          "works": 2587
+        },
+        {
+          "year": 2014,
+          "works": 2854
+        },
+        {
+          "year": 2015,
+          "works": 3372
+        },
+        {
+          "year": 2016,
+          "works": 3961
+        },
+        {
+          "year": 2017,
+          "works": 4317
+        },
+        {
+          "year": 2018,
+          "works": 5370
+        },
+        {
+          "year": 2019,
+          "works": 8484
+        },
+        {
+          "year": 2020,
+          "works": 12527
+        },
+        {
+          "year": 2021,
+          "works": 10215
+        },
+        {
+          "year": 2022,
+          "works": 10646
+        },
+        {
+          "year": 2023,
+          "works": 13434
+        },
+        {
+          "year": 2024,
+          "works": 13427
+        },
+        {
+          "year": 2025,
+          "works": 21754
+        }
+      ],
+      "works_total": 190098,
+      "growth_5y": 1.74,
+      "citations_total": 1102096,
+      "top_institutions": [
+        {
+          "id": "I19820366",
+          "name": "Chinese Academy of Sciences",
+          "country": "CN",
+          "homepage": "https://www.cas.cn",
+          "works": 1162
+        },
+        {
+          "id": "I1294671590",
+          "name": "Centre National de la Recherche Scientifique",
+          "country": "FR",
+          "homepage": "https://www.cnrs.fr",
+          "works": 631
+        },
+        {
+          "id": "I63966007",
+          "name": "Massachusetts Institute of Technology",
+          "country": "US",
+          "homepage": "https://web.mit.edu",
+          "works": 573
+        },
+        {
+          "id": "I126520041",
+          "name": "University of Science and Technology of China",
+          "country": "CN",
+          "homepage": "https://ustc.edu.cn",
+          "works": 529
+        },
+        {
+          "id": "I99065089",
+          "name": "Tsinghua University",
+          "country": "CN",
+          "homepage": "https://www.tsinghua.edu.cn",
+          "works": 521
+        },
+        {
+          "id": "I4210165038",
+          "name": "University of Chinese Academy of Sciences",
+          "country": "CN",
+          "homepage": "https://www.ucas.ac.cn",
+          "works": 474
+        },
+        {
+          "id": "I76130692",
+          "name": "Zhejiang University",
+          "country": "CN",
+          "homepage": "https://www.zju.edu.cn",
+          "works": 461
+        },
+        {
+          "id": "I20231570",
+          "name": "Peking University",
+          "country": "CN",
+          "homepage": "https://www.pku.edu.cn",
+          "works": 446
+        },
+        {
+          "id": "I148283060",
+          "name": "Lawrence Berkeley National Laboratory",
+          "country": "US",
+          "homepage": "https://www.lbl.gov/",
+          "works": 408
+        },
+        {
+          "id": "I241749",
+          "name": "University of Cambridge",
+          "country": "GB",
+          "homepage": "https://www.cam.ac.uk",
+          "works": 402
+        }
+      ],
+      "top_venues": [
+        {
+          "id": "S189701308",
+          "name": "Journal of Chemical Theory and Computation",
+          "works": 640
+        },
+        {
+          "id": "S167262187",
+          "name": "Journal of Chemical Information and Modeling",
+          "works": 619
+        },
+        {
+          "id": "S77047749",
+          "name": "The Journal of Chemical Physics",
+          "works": 586
+        },
+        {
+          "id": "S4210168594",
+          "name": "ECS Meeting Abstracts",
+          "works": 585
+        },
+        {
+          "id": "S4210232664",
+          "name": "npj Computational Materials",
+          "works": 442
+        },
+        {
+          "id": "S181332294",
+          "name": "Physical Chemistry Chemical Physics",
+          "works": 362
+        },
+        {
+          "id": "S95739953",
+          "name": "The Journal of Physical Chemistry C",
+          "works": 352
+        },
+        {
+          "id": "S4210202120",
+          "name": "Digital Discovery",
+          "works": 324
+        },
+        {
+          "id": "S64187185",
+          "name": "Nature Communications",
+          "works": 302
+        },
+        {
+          "id": "S26018076",
+          "name": "Computational Materials Science",
+          "works": 301
+        }
+      ],
+      "top_papers": [
+        {
+          "title": "Scientific discovery in the age of artificial intelligence",
+          "year": 2023,
+          "doi": "https://doi.org/10.1038/s41586-023-06221-2",
+          "citations": 1794
+        },
+        {
+          "title": "ProTox 3.0: a webserver for the prediction of toxicity of chemicals",
+          "year": 2024,
+          "doi": "https://doi.org/10.1093/nar/gkae303",
+          "citations": 1570
+        },
+        {
+          "title": "Scaling deep learning for materials discovery",
+          "year": 2023,
+          "doi": "https://doi.org/10.1038/s41586-023-06735-9",
+          "citations": 1473
+        },
+        {
+          "title": "Implementation strategies in phonopy and phono3py",
+          "year": 2023,
+          "doi": "https://doi.org/10.1088/1361-648x/acd831",
+          "citations": 1337
+        },
+        {
+          "title": "ADMETlab 3.0: an updated comprehensive online ADMET prediction platform enhanced with broader coverage, improved performance, API functionality and decision support",
+          "year": 2024,
+          "doi": "https://doi.org/10.1093/nar/gkae236",
+          "citations": 1230
+        }
+      ],
+      "subtopics": [
+        {
+          "id": "T11948",
+          "name": "Machine Learning in Materials Science",
+          "works": 120409,
+          "citations": 1102096
+        }
+      ]
+    },
+    "ml-chemistry": {
+      "openalex": ["T10211", "T11948"],
+      "works_by_year": [
+        {
+          "year": 2011,
+          "works": 11026
+        },
+        {
+          "year": 2012,
+          "works": 12184
+        },
+        {
+          "year": 2013,
+          "works": 12884
+        },
+        {
+          "year": 2014,
+          "works": 12945
+        },
+        {
+          "year": 2015,
+          "works": 14084
+        },
+        {
+          "year": 2016,
+          "works": 15756
+        },
+        {
+          "year": 2017,
+          "works": 15648
+        },
+        {
+          "year": 2018,
+          "works": 17226
+        },
+        {
+          "year": 2019,
+          "works": 21315
+        },
+        {
+          "year": 2020,
+          "works": 30727
+        },
+        {
+          "year": 2021,
+          "works": 27813
+        },
+        {
+          "year": 2022,
+          "works": 28122
+        },
+        {
+          "year": 2023,
+          "works": 35983
+        },
+        {
+          "year": 2024,
+          "works": 32591
+        },
+        {
+          "year": 2025,
+          "works": 41482
+        }
+      ],
+      "works_total": 525460,
+      "growth_5y": 1.35,
+      "citations_total": 4353311,
+      "top_institutions": [
+        {
+          "id": "I19820366",
+          "name": "Chinese Academy of Sciences",
+          "country": "CN",
+          "homepage": "https://www.cas.cn",
+          "works": 1727
+        },
+        {
+          "id": "I1294671590",
+          "name": "Centre National de la Recherche Scientifique",
+          "country": "FR",
+          "homepage": "https://www.cnrs.fr",
+          "works": 1122
+        },
+        {
+          "id": "I28022161",
+          "name": "King Saud University",
+          "country": "SA",
+          "homepage": "https://ksu.edu.sa",
+          "works": 846
+        },
+        {
+          "id": "I76130692",
+          "name": "Zhejiang University",
+          "country": "CN",
+          "homepage": "https://www.zju.edu.cn",
+          "works": 827
+        },
+        {
+          "id": "I63966007",
+          "name": "Massachusetts Institute of Technology",
+          "country": "US",
+          "homepage": "https://web.mit.edu",
+          "works": 744
+        },
+        {
+          "id": "I4210165038",
+          "name": "University of Chinese Academy of Sciences",
+          "country": "CN",
+          "homepage": "https://www.ucas.ac.cn",
+          "works": 738
+        },
+        {
+          "id": "I99065089",
+          "name": "Tsinghua University",
+          "country": "CN",
+          "homepage": "https://www.tsinghua.edu.cn",
+          "works": 709
+        },
+        {
+          "id": "I20231570",
+          "name": "Peking University",
+          "country": "CN",
+          "homepage": "https://www.pku.edu.cn",
+          "works": 680
+        },
+        {
+          "id": "I126520041",
+          "name": "University of Science and Technology of China",
+          "country": "CN",
+          "homepage": "https://ustc.edu.cn",
+          "works": 654
+        },
+        {
+          "id": "I183067930",
+          "name": "Shanghai Jiao Tong University",
+          "country": "CN",
+          "homepage": "https://www.sjtu.edu.cn",
+          "works": 633
+        }
+      ],
+      "top_venues": [
+        {
+          "id": "S167262187",
+          "name": "Journal of Chemical Information and Modeling",
+          "works": 1283
+        },
+        {
+          "id": "S196734849",
+          "name": "Scientific Reports",
+          "works": 935
+        },
+        {
+          "id": "S189701308",
+          "name": "Journal of Chemical Theory and Computation",
+          "works": 754
+        },
+        {
+          "id": "S178711970",
+          "name": "Journal of Biomolecular Structure and Dynamics",
+          "works": 683
+        },
+        {
+          "id": "S10623703",
+          "name": "International Journal of Molecular Sciences",
+          "works": 650
+        },
+        {
+          "id": "S77047749",
+          "name": "The Journal of Chemical Physics",
+          "works": 617
+        },
+        {
+          "id": "S4210168594",
+          "name": "ECS Meeting Abstracts",
+          "works": 592
+        },
+        {
+          "id": "S203479135",
+          "name": "Journal of Molecular Structure",
+          "works": 553
+        },
+        {
+          "id": "S108911230",
+          "name": "Molecules",
+          "works": 518
+        },
+        {
+          "id": "S64187185",
+          "name": "Nature Communications",
+          "works": 483
+        }
+      ],
+      "top_papers": [
+        {
+          "title": "The Gene Ontology knowledgebase in 2023",
+          "year": 2023,
+          "doi": "https://doi.org/10.1093/genetics/iyad031",
+          "citations": 2883
+        },
+        {
+          "title": "antiSMASH 7.0: new and improved predictions for detection, regulation, chemical structures and visualisation",
+          "year": 2023,
+          "doi": "https://doi.org/10.1093/nar/gkad344",
+          "citations": 2402
+        },
+        {
+          "title": "Scientific discovery in the age of artificial intelligence",
+          "year": 2023,
+          "doi": "https://doi.org/10.1038/s41586-023-06221-2",
+          "citations": 1794
+        },
+        {
+          "title": "DrugBank 6.0: the DrugBank Knowledgebase for 2024",
+          "year": 2023,
+          "doi": "https://doi.org/10.1093/nar/gkad976",
+          "citations": 1757
+        },
+        {
+          "title": "ProTox 3.0: a webserver for the prediction of toxicity of chemicals",
+          "year": 2024,
+          "doi": "https://doi.org/10.1093/nar/gkae303",
+          "citations": 1570
+        }
+      ],
+      "subtopics": [
+        {
+          "id": "T10211",
+          "name": "Computational Drug Discovery Methods",
+          "works": 168977,
+          "citations": 3251215
+        },
+        {
+          "id": "T11948",
+          "name": "Machine Learning in Materials Science",
+          "works": 120409,
+          "citations": 1102096
+        }
+      ]
+    },
+    "cheminformatics": {
+      "openalex": ["T10211"],
+      "works_by_year": [
+        {
+          "year": 2011,
+          "works": 9120
+        },
+        {
+          "year": 2012,
+          "works": 9985
+        },
+        {
+          "year": 2013,
+          "works": 10506
+        },
+        {
+          "year": 2014,
+          "works": 10298
+        },
+        {
+          "year": 2015,
+          "works": 10969
+        },
+        {
+          "year": 2016,
+          "works": 12146
+        },
+        {
+          "year": 2017,
+          "works": 11769
+        },
+        {
+          "year": 2018,
+          "works": 12562
+        },
+        {
+          "year": 2019,
+          "works": 13902
+        },
+        {
+          "year": 2020,
+          "works": 19755
+        },
+        {
+          "year": 2021,
+          "works": 19539
+        },
+        {
+          "year": 2022,
+          "works": 19519
+        },
+        {
+          "year": 2023,
+          "works": 25187
+        },
+        {
+          "year": 2024,
+          "works": 21422
+        },
+        {
+          "year": 2025,
+          "works": 22675
+        }
+      ],
+      "works_total": 357896,
+      "growth_5y": 1.15,
+      "citations_total": 3251215,
+      "top_institutions": [
+        {
+          "id": "I28022161",
+          "name": "King Saud University",
+          "country": "SA",
+          "homepage": "https://ksu.edu.sa",
+          "works": 788
+        },
+        {
+          "id": "I19820366",
+          "name": "Chinese Academy of Sciences",
+          "country": "CN",
+          "homepage": "https://www.cas.cn",
+          "works": 743
+        },
+        {
+          "id": "I1294671590",
+          "name": "Centre National de la Recherche Scientifique",
+          "country": "FR",
+          "homepage": "https://www.cnrs.fr",
+          "works": 583
+        },
+        {
+          "id": "I76130692",
+          "name": "Zhejiang University",
+          "country": "CN",
+          "homepage": "https://www.zju.edu.cn",
+          "works": 507
+        },
+        {
+          "id": "I136199984",
+          "name": "Harvard University",
+          "country": "US",
+          "homepage": "https://www.harvard.edu",
+          "works": 430
+        },
+        {
+          "id": "I183067930",
+          "name": "Shanghai Jiao Tong University",
+          "country": "CN",
+          "homepage": "https://www.sjtu.edu.cn",
+          "works": 360
+        },
+        {
+          "id": "I4210165038",
+          "name": "University of Chinese Academy of Sciences",
+          "country": "CN",
+          "homepage": "https://www.ucas.ac.cn",
+          "works": 347
+        },
+        {
+          "id": "I63966007",
+          "name": "Massachusetts Institute of Technology",
+          "country": "US",
+          "homepage": "https://web.mit.edu",
+          "works": 341
+        },
+        {
+          "id": "I85461943",
+          "name": "Saveetha University",
+          "country": "IN",
+          "homepage": "https://www.saveetha.com",
+          "works": 335
+        },
+        {
+          "id": "I241749",
+          "name": "University of Cambridge",
+          "country": "GB",
+          "homepage": "https://www.cam.ac.uk",
+          "works": 334
+        }
+      ],
+      "top_venues": [
+        {
+          "id": "S167262187",
+          "name": "Journal of Chemical Information and Modeling",
+          "works": 1098
+        },
+        {
+          "id": "S196734849",
+          "name": "Scientific Reports",
+          "works": 774
+        },
+        {
+          "id": "S178711970",
+          "name": "Journal of Biomolecular Structure and Dynamics",
+          "works": 682
+        },
+        {
+          "id": "S10623703",
+          "name": "International Journal of Molecular Sciences",
+          "works": 628
+        },
+        {
+          "id": "S203479135",
+          "name": "Journal of Molecular Structure",
+          "works": 543
+        },
+        {
+          "id": "S108911230",
+          "name": "Molecules",
+          "works": 474
+        },
+        {
+          "id": "S4210239500",
+          "name": "ACS Omega",
+          "works": 378
+        },
+        {
+          "id": "S180838163",
+          "name": "Journal of Cheminformatics",
+          "works": 344
+        },
+        {
+          "id": "S189701308",
+          "name": "Journal of Chemical Theory and Computation",
+          "works": 314
+        },
+        {
+          "id": "S132108250",
+          "name": "Frontiers in Pharmacology",
+          "works": 310
+        }
+      ],
+      "top_papers": [
+        {
+          "title": "The Gene Ontology knowledgebase in 2023",
+          "year": 2023,
+          "doi": "https://doi.org/10.1093/genetics/iyad031",
+          "citations": 2883
+        },
+        {
+          "title": "antiSMASH 7.0: new and improved predictions for detection, regulation, chemical structures and visualisation",
+          "year": 2023,
+          "doi": "https://doi.org/10.1093/nar/gkad344",
+          "citations": 2402
+        },
+        {
+          "title": "DrugBank 6.0: the DrugBank Knowledgebase for 2024",
+          "year": 2023,
+          "doi": "https://doi.org/10.1093/nar/gkad976",
+          "citations": 1757
+        },
+        {
+          "title": "ProTox 3.0: a webserver for the prediction of toxicity of chemicals",
+          "year": 2024,
+          "doi": "https://doi.org/10.1093/nar/gkae303",
+          "citations": 1570
+        },
+        {
+          "title": "The ChEMBL Database in 2023: a drug discovery platform spanning multiple bioactivity data types and time periods",
+          "year": 2023,
+          "doi": "https://doi.org/10.1093/nar/gkad1004",
+          "citations": 1441
+        }
+      ],
+      "subtopics": [
+        {
+          "id": "T10211",
+          "name": "Computational Drug Discovery Methods",
+          "works": 168977,
+          "citations": 3251215
+        }
+      ]
+    },
+    "drug-design": {
+      "openalex": ["T10211"],
+      "works_by_year": [
+        {
+          "year": 2011,
+          "works": 9120
+        },
+        {
+          "year": 2012,
+          "works": 9985
+        },
+        {
+          "year": 2013,
+          "works": 10506
+        },
+        {
+          "year": 2014,
+          "works": 10298
+        },
+        {
+          "year": 2015,
+          "works": 10969
+        },
+        {
+          "year": 2016,
+          "works": 12146
+        },
+        {
+          "year": 2017,
+          "works": 11769
+        },
+        {
+          "year": 2018,
+          "works": 12562
+        },
+        {
+          "year": 2019,
+          "works": 13902
+        },
+        {
+          "year": 2020,
+          "works": 19755
+        },
+        {
+          "year": 2021,
+          "works": 19539
+        },
+        {
+          "year": 2022,
+          "works": 19519
+        },
+        {
+          "year": 2023,
+          "works": 25187
+        },
+        {
+          "year": 2024,
+          "works": 21422
+        },
+        {
+          "year": 2025,
+          "works": 22675
+        }
+      ],
+      "works_total": 357896,
+      "growth_5y": 1.15,
+      "citations_total": 3251215,
+      "top_institutions": [
+        {
+          "id": "I28022161",
+          "name": "King Saud University",
+          "country": "SA",
+          "homepage": "https://ksu.edu.sa",
+          "works": 788
+        },
+        {
+          "id": "I19820366",
+          "name": "Chinese Academy of Sciences",
+          "country": "CN",
+          "homepage": "https://www.cas.cn",
+          "works": 743
+        },
+        {
+          "id": "I1294671590",
+          "name": "Centre National de la Recherche Scientifique",
+          "country": "FR",
+          "homepage": "https://www.cnrs.fr",
+          "works": 583
+        },
+        {
+          "id": "I76130692",
+          "name": "Zhejiang University",
+          "country": "CN",
+          "homepage": "https://www.zju.edu.cn",
+          "works": 507
+        },
+        {
+          "id": "I136199984",
+          "name": "Harvard University",
+          "country": "US",
+          "homepage": "https://www.harvard.edu",
+          "works": 430
+        },
+        {
+          "id": "I183067930",
+          "name": "Shanghai Jiao Tong University",
+          "country": "CN",
+          "homepage": "https://www.sjtu.edu.cn",
+          "works": 360
+        },
+        {
+          "id": "I4210165038",
+          "name": "University of Chinese Academy of Sciences",
+          "country": "CN",
+          "homepage": "https://www.ucas.ac.cn",
+          "works": 347
+        },
+        {
+          "id": "I63966007",
+          "name": "Massachusetts Institute of Technology",
+          "country": "US",
+          "homepage": "https://web.mit.edu",
+          "works": 341
+        },
+        {
+          "id": "I85461943",
+          "name": "Saveetha University",
+          "country": "IN",
+          "homepage": "https://www.saveetha.com",
+          "works": 335
+        },
+        {
+          "id": "I241749",
+          "name": "University of Cambridge",
+          "country": "GB",
+          "homepage": "https://www.cam.ac.uk",
+          "works": 334
+        }
+      ],
+      "top_venues": [
+        {
+          "id": "S167262187",
+          "name": "Journal of Chemical Information and Modeling",
+          "works": 1098
+        },
+        {
+          "id": "S196734849",
+          "name": "Scientific Reports",
+          "works": 774
+        },
+        {
+          "id": "S178711970",
+          "name": "Journal of Biomolecular Structure and Dynamics",
+          "works": 682
+        },
+        {
+          "id": "S10623703",
+          "name": "International Journal of Molecular Sciences",
+          "works": 628
+        },
+        {
+          "id": "S203479135",
+          "name": "Journal of Molecular Structure",
+          "works": 543
+        },
+        {
+          "id": "S108911230",
+          "name": "Molecules",
+          "works": 474
+        },
+        {
+          "id": "S4210239500",
+          "name": "ACS Omega",
+          "works": 378
+        },
+        {
+          "id": "S180838163",
+          "name": "Journal of Cheminformatics",
+          "works": 344
+        },
+        {
+          "id": "S189701308",
+          "name": "Journal of Chemical Theory and Computation",
+          "works": 314
+        },
+        {
+          "id": "S132108250",
+          "name": "Frontiers in Pharmacology",
+          "works": 310
+        }
+      ],
+      "top_papers": [
+        {
+          "title": "The Gene Ontology knowledgebase in 2023",
+          "year": 2023,
+          "doi": "https://doi.org/10.1093/genetics/iyad031",
+          "citations": 2883
+        },
+        {
+          "title": "antiSMASH 7.0: new and improved predictions for detection, regulation, chemical structures and visualisation",
+          "year": 2023,
+          "doi": "https://doi.org/10.1093/nar/gkad344",
+          "citations": 2402
+        },
+        {
+          "title": "DrugBank 6.0: the DrugBank Knowledgebase for 2024",
+          "year": 2023,
+          "doi": "https://doi.org/10.1093/nar/gkad976",
+          "citations": 1757
+        },
+        {
+          "title": "ProTox 3.0: a webserver for the prediction of toxicity of chemicals",
+          "year": 2024,
+          "doi": "https://doi.org/10.1093/nar/gkae303",
+          "citations": 1570
+        },
+        {
+          "title": "The ChEMBL Database in 2023: a drug discovery platform spanning multiple bioactivity data types and time periods",
+          "year": 2023,
+          "doi": "https://doi.org/10.1093/nar/gkad1004",
+          "citations": 1441
+        }
+      ],
+      "subtopics": [
+        {
+          "id": "T10211",
+          "name": "Computational Drug Discovery Methods",
+          "works": 168977,
+          "citations": 3251215
+        }
+      ]
+    },
+    "materials-modeling": {
+      "openalex": ["T11948"],
+      "works_by_year": [
+        {
+          "year": 2011,
+          "works": 2116
+        },
+        {
+          "year": 2012,
+          "works": 2405
+        },
+        {
+          "year": 2013,
+          "works": 2587
+        },
+        {
+          "year": 2014,
+          "works": 2854
+        },
+        {
+          "year": 2015,
+          "works": 3372
+        },
+        {
+          "year": 2016,
+          "works": 3961
+        },
+        {
+          "year": 2017,
+          "works": 4317
+        },
+        {
+          "year": 2018,
+          "works": 5370
+        },
+        {
+          "year": 2019,
+          "works": 8484
+        },
+        {
+          "year": 2020,
+          "works": 12527
+        },
+        {
+          "year": 2021,
+          "works": 10215
+        },
+        {
+          "year": 2022,
+          "works": 10646
+        },
+        {
+          "year": 2023,
+          "works": 13434
+        },
+        {
+          "year": 2024,
+          "works": 13427
+        },
+        {
+          "year": 2025,
+          "works": 21754
+        }
+      ],
+      "works_total": 190098,
+      "growth_5y": 1.74,
+      "citations_total": 1102096,
+      "top_institutions": [
+        {
+          "id": "I19820366",
+          "name": "Chinese Academy of Sciences",
+          "country": "CN",
+          "homepage": "https://www.cas.cn",
+          "works": 1162
+        },
+        {
+          "id": "I1294671590",
+          "name": "Centre National de la Recherche Scientifique",
+          "country": "FR",
+          "homepage": "https://www.cnrs.fr",
+          "works": 631
+        },
+        {
+          "id": "I63966007",
+          "name": "Massachusetts Institute of Technology",
+          "country": "US",
+          "homepage": "https://web.mit.edu",
+          "works": 573
+        },
+        {
+          "id": "I126520041",
+          "name": "University of Science and Technology of China",
+          "country": "CN",
+          "homepage": "https://ustc.edu.cn",
+          "works": 529
+        },
+        {
+          "id": "I99065089",
+          "name": "Tsinghua University",
+          "country": "CN",
+          "homepage": "https://www.tsinghua.edu.cn",
+          "works": 521
+        },
+        {
+          "id": "I4210165038",
+          "name": "University of Chinese Academy of Sciences",
+          "country": "CN",
+          "homepage": "https://www.ucas.ac.cn",
+          "works": 474
+        },
+        {
+          "id": "I76130692",
+          "name": "Zhejiang University",
+          "country": "CN",
+          "homepage": "https://www.zju.edu.cn",
+          "works": 461
+        },
+        {
+          "id": "I20231570",
+          "name": "Peking University",
+          "country": "CN",
+          "homepage": "https://www.pku.edu.cn",
+          "works": 446
+        },
+        {
+          "id": "I148283060",
+          "name": "Lawrence Berkeley National Laboratory",
+          "country": "US",
+          "homepage": "https://www.lbl.gov/",
+          "works": 408
+        },
+        {
+          "id": "I241749",
+          "name": "University of Cambridge",
+          "country": "GB",
+          "homepage": "https://www.cam.ac.uk",
+          "works": 402
+        }
+      ],
+      "top_venues": [
+        {
+          "id": "S189701308",
+          "name": "Journal of Chemical Theory and Computation",
+          "works": 640
+        },
+        {
+          "id": "S167262187",
+          "name": "Journal of Chemical Information and Modeling",
+          "works": 619
+        },
+        {
+          "id": "S77047749",
+          "name": "The Journal of Chemical Physics",
+          "works": 586
+        },
+        {
+          "id": "S4210168594",
+          "name": "ECS Meeting Abstracts",
+          "works": 585
+        },
+        {
+          "id": "S4210232664",
+          "name": "npj Computational Materials",
+          "works": 442
+        },
+        {
+          "id": "S181332294",
+          "name": "Physical Chemistry Chemical Physics",
+          "works": 362
+        },
+        {
+          "id": "S95739953",
+          "name": "The Journal of Physical Chemistry C",
+          "works": 352
+        },
+        {
+          "id": "S4210202120",
+          "name": "Digital Discovery",
+          "works": 324
+        },
+        {
+          "id": "S64187185",
+          "name": "Nature Communications",
+          "works": 302
+        },
+        {
+          "id": "S26018076",
+          "name": "Computational Materials Science",
+          "works": 301
+        }
+      ],
+      "top_papers": [
+        {
+          "title": "Scientific discovery in the age of artificial intelligence",
+          "year": 2023,
+          "doi": "https://doi.org/10.1038/s41586-023-06221-2",
+          "citations": 1794
+        },
+        {
+          "title": "ProTox 3.0: a webserver for the prediction of toxicity of chemicals",
+          "year": 2024,
+          "doi": "https://doi.org/10.1093/nar/gkae303",
+          "citations": 1570
+        },
+        {
+          "title": "Scaling deep learning for materials discovery",
+          "year": 2023,
+          "doi": "https://doi.org/10.1038/s41586-023-06735-9",
+          "citations": 1473
+        },
+        {
+          "title": "Implementation strategies in phonopy and phono3py",
+          "year": 2023,
+          "doi": "https://doi.org/10.1088/1361-648x/acd831",
+          "citations": 1337
+        },
+        {
+          "title": "ADMETlab 3.0: an updated comprehensive online ADMET prediction platform enhanced with broader coverage, improved performance, API functionality and decision support",
+          "year": 2024,
+          "doi": "https://doi.org/10.1093/nar/gkae236",
+          "citations": 1230
+        }
+      ],
+      "subtopics": [
+        {
+          "id": "T11948",
+          "name": "Machine Learning in Materials Science",
+          "works": 120409,
+          "citations": 1102096
+        }
+      ]
+    },
+    "spectroscopy": {
+      "openalex": ["T11177", "T12748"],
+      "works_by_year": [
+        {
+          "year": 2011,
+          "works": 11869
+        },
+        {
+          "year": 2012,
+          "works": 11637
+        },
+        {
+          "year": 2013,
+          "works": 11736
+        },
+        {
+          "year": 2014,
+          "works": 11719
+        },
+        {
+          "year": 2015,
+          "works": 11336
+        },
+        {
+          "year": 2016,
+          "works": 12528
+        },
+        {
+          "year": 2017,
+          "works": 10767
+        },
+        {
+          "year": 2018,
+          "works": 10881
+        },
+        {
+          "year": 2019,
+          "works": 11052
+        },
+        {
+          "year": 2020,
+          "works": 11532
+        },
+        {
+          "year": 2021,
+          "works": 11090
+        },
+        {
+          "year": 2022,
+          "works": 10376
+        },
+        {
+          "year": 2023,
+          "works": 10797
+        },
+        {
+          "year": 2024,
+          "works": 9460
+        },
+        {
+          "year": 2025,
+          "works": 9946
+        }
+      ],
+      "works_total": 597912,
+      "growth_5y": 0.86,
+      "citations_total": 5077565,
+      "top_institutions": [
+        {
+          "id": "I1294671590",
+          "name": "Centre National de la Recherche Scientifique",
+          "country": "FR",
+          "homepage": "https://www.cnrs.fr",
+          "works": 1186
+        },
+        {
+          "id": "I19820366",
+          "name": "Chinese Academy of Sciences",
+          "country": "CN",
+          "homepage": "https://www.cas.cn",
+          "works": 631
+        },
+        {
+          "id": "I4210165038",
+          "name": "University of Chinese Academy of Sciences",
+          "country": "CN",
+          "homepage": "https://www.ucas.ac.cn",
+          "works": 345
+        },
+        {
+          "id": "I39804081",
+          "name": "Sorbonne Université",
+          "country": "FR",
+          "homepage": "https://www.sorbonne-universite.fr",
+          "works": 319
+        },
+        {
+          "id": "I277688954",
+          "name": "Université Paris-Saclay",
+          "country": "FR",
+          "homepage": "https://www.universite-paris-saclay.fr/",
+          "works": 298
+        },
+        {
+          "id": "I1313323035",
+          "name": "Russian Academy of Sciences",
+          "country": "RU",
+          "works": 291
+        },
+        {
+          "id": "I148283060",
+          "name": "Lawrence Berkeley National Laboratory",
+          "country": "US",
+          "homepage": "https://www.lbl.gov/",
+          "works": 285
+        },
+        {
+          "id": "I126520041",
+          "name": "University of Science and Technology of China",
+          "country": "CN",
+          "homepage": "https://ustc.edu.cn",
+          "works": 277
+        },
+        {
+          "id": "I74801974",
+          "name": "The University of Tokyo",
+          "country": "JP",
+          "homepage": "https://www.u-tokyo.ac.jp",
+          "works": 271
+        },
+        {
+          "id": "I95457486",
+          "name": "University of California, Berkeley",
+          "country": "US",
+          "homepage": "https://www.berkeley.edu",
+          "works": 266
+        }
+      ],
+      "top_venues": [
+        {
+          "id": "S77047749",
+          "name": "The Journal of Chemical Physics",
+          "works": 1727
+        },
+        {
+          "id": "S189701308",
+          "name": "Journal of Chemical Theory and Computation",
+          "works": 697
+        },
+        {
+          "id": "S181332294",
+          "name": "Physical Chemistry Chemical Physics",
+          "works": 597
+        },
+        {
+          "id": "S123480357",
+          "name": "The Journal of Physical Chemistry Letters",
+          "works": 583
+        },
+        {
+          "id": "S185621672",
+          "name": "The Journal of Physical Chemistry B",
+          "works": 553
+        },
+        {
+          "id": "S146709414",
+          "name": "The Journal of Physical Chemistry A",
+          "works": 515
+        },
+        {
+          "id": "S164566984",
+          "name": "Physical Review A",
+          "works": 456
+        },
+        {
+          "id": "S189140625",
+          "name": "Journal of Molecular Liquids",
+          "works": 307
+        },
+        {
+          "id": "S111155417",
+          "name": "Journal of the American Chemical Society",
+          "works": 290
+        },
+        {
+          "id": "S4210237713",
+          "name": "Physical review. B./Physical review. B",
+          "works": 271
+        }
+      ],
+      "top_papers": [
+        {
+          "title": "Charge and Energy Transfer Dynamics in Molecular Systems",
+          "year": 2023,
+          "doi": "https://doi.org/10.1002/9783527696277",
+          "citations": 967
+        },
+        {
+          "title": "Simple, Efficient, and Universal Energy Decomposition Analysis Method Based on Dispersion-Corrected Density Functional Theory",
+          "year": 2023,
+          "doi": "https://doi.org/10.1021/acs.jpca.3c04374",
+          "citations": 530
+        },
+        {
+          "title": "The OpenMolcas Web : A Community-Driven Approach to Advancing Computational Chemistry",
+          "year": 2023,
+          "doi": "https://doi.org/10.1021/acs.jctc.3c00182",
+          "citations": 384
+        },
+        {
+          "title": "Tailoring water structure with high-tetrahedral-entropy for antifreezing electrolytes and energy storage at −80 °C",
+          "year": 2023,
+          "doi": "https://doi.org/10.1038/s41467-023-36198-5",
+          "citations": 329
+        },
+        {
+          "title": "Solutal Marangoni effect determines bubble dynamics during electrocatalytic hydrogen evolution",
+          "year": 2023,
+          "doi": "https://doi.org/10.1038/s41557-023-01294-y",
+          "citations": 311
+        }
+      ],
+      "subtopics": [
+        {
+          "id": "T11177",
+          "name": "Spectroscopy and Quantum Chemical Studies",
+          "works": 132095,
+          "citations": 3787493
+        },
+        {
+          "id": "T12748",
+          "name": "Molecular spectroscopy and chirality",
+          "works": 100804,
+          "citations": 1290072
+        }
+      ]
+    },
+    "quantum-computing-chemistry": {
+      "openalex": ["T10682"],
+      "works_by_year": [
+        {
+          "year": 2011,
+          "works": 4209
+        },
+        {
+          "year": 2012,
+          "works": 4553
+        },
+        {
+          "year": 2013,
+          "works": 4891
+        },
+        {
+          "year": 2014,
+          "works": 5113
+        },
+        {
+          "year": 2015,
+          "works": 5055
+        },
+        {
+          "year": 2016,
+          "works": 5332
+        },
+        {
+          "year": 2017,
+          "works": 5563
+        },
+        {
+          "year": 2018,
+          "works": 6218
+        },
+        {
+          "year": 2019,
+          "works": 7526
+        },
+        {
+          "year": 2020,
+          "works": 8554
+        },
+        {
+          "year": 2021,
+          "works": 10075
+        },
+        {
+          "year": 2022,
+          "works": 10286
+        },
+        {
+          "year": 2023,
+          "works": 12064
+        },
+        {
+          "year": 2024,
+          "works": 13052
+        },
+        {
+          "year": 2025,
+          "works": 19712
+        }
+      ],
+      "works_total": 210314,
+      "growth_5y": 2.3,
+      "citations_total": 1411775,
+      "top_institutions": [
+        {
+          "id": "I1294671590",
+          "name": "Centre National de la Recherche Scientifique",
+          "country": "FR",
+          "homepage": "https://www.cnrs.fr",
+          "works": 708
+        },
+        {
+          "id": "I126520041",
+          "name": "University of Science and Technology of China",
+          "country": "CN",
+          "homepage": "https://ustc.edu.cn",
+          "works": 516
+        },
+        {
+          "id": "I19820366",
+          "name": "Chinese Academy of Sciences",
+          "country": "CN",
+          "homepage": "https://www.cas.cn",
+          "works": 516
+        },
+        {
+          "id": "I99065089",
+          "name": "Tsinghua University",
+          "country": "CN",
+          "homepage": "https://www.tsinghua.edu.cn",
+          "works": 495
+        },
+        {
+          "id": "I62916508",
+          "name": "Technical University of Munich",
+          "country": "DE",
+          "homepage": "https://www.tum.de",
+          "works": 474
+        },
+        {
+          "id": "I63966007",
+          "name": "Massachusetts Institute of Technology",
+          "country": "US",
+          "homepage": "https://web.mit.edu",
+          "works": 468
+        },
+        {
+          "id": "I165932596",
+          "name": "National University of Singapore",
+          "country": "SG",
+          "homepage": "https://www.nus.edu.sg/",
+          "works": 394
+        },
+        {
+          "id": "I74801974",
+          "name": "The University of Tokyo",
+          "country": "JP",
+          "homepage": "https://www.u-tokyo.ac.jp",
+          "works": 378
+        },
+        {
+          "id": "I40120149",
+          "name": "University of Oxford",
+          "country": "GB",
+          "homepage": "https://www.ox.ac.uk",
+          "works": 376
+        },
+        {
+          "id": "I66946132",
+          "name": "University of Maryland, College Park",
+          "country": "US",
+          "homepage": "https://umd.edu",
+          "works": 354
+        }
+      ],
+      "top_venues": [
+        {
+          "id": "S164566984",
+          "name": "Physical Review A",
+          "works": 1629
+        },
+        {
+          "id": "S92819544",
+          "name": "Quantum Information Processing",
+          "works": 860
+        },
+        {
+          "id": "S4210226432",
+          "name": "Quantum",
+          "works": 735
+        },
+        {
+          "id": "S4210240247",
+          "name": "Physical Review Research",
+          "works": 613
+        },
+        {
+          "id": "S24807848",
+          "name": "Physical Review Letters",
+          "works": 586
+        },
+        {
+          "id": "S4210195673",
+          "name": "PRX Quantum",
+          "works": 392
+        },
+        {
+          "id": "S2764453006",
+          "name": "Physical Review Applied",
+          "works": 349
+        },
+        {
+          "id": "S196734849",
+          "name": "Scientific Reports",
+          "works": 341
+        },
+        {
+          "id": "S59012888",
+          "name": "Physica Scripta",
+          "works": 315
+        },
+        {
+          "id": "S4210237713",
+          "name": "Physical review. B./Physical review. B",
+          "works": 307
+        }
+      ],
+      "top_papers": [
+        {
+          "title": "Suppressing quantum errors by scaling a surface code logical qubit",
+          "year": 2023,
+          "doi": "https://doi.org/10.1038/s41586-022-05434-1",
+          "citations": 1100
+        },
+        {
+          "title": "Logical quantum processor based on reconfigurable atom arrays",
+          "year": 2023,
+          "doi": "https://doi.org/10.1038/s41586-023-06927-3",
+          "citations": 1094
+        },
+        {
+          "title": "Evidence for the utility of quantum computing before fault tolerance",
+          "year": 2023,
+          "doi": "https://doi.org/10.1038/s41586-023-06096-3",
+          "citations": 1040
+        },
+        {
+          "title": "Engineering Non-Linear Decay Dynamics: Pulse-Level Control and Software-Defined Qubit Rescue on Superconducting Processors",
+          "year": 2025,
+          "doi": "https://doi.org/10.5281/zenodo.18067974",
+          "citations": 745
+        },
+        {
+          "title": "Quantum error correction below the surface code threshold",
+          "year": 2024,
+          "doi": "https://doi.org/10.1038/s41586-024-08449-y",
+          "citations": 740
+        }
+      ],
+      "subtopics": [
+        {
+          "id": "T10682",
+          "name": "Quantum Computing Algorithms and Architecture",
+          "works": 122752,
+          "citations": 1411775
+        }
+      ]
+    }
+  }
+}
