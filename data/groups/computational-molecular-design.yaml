@@ -1,0 +1,22 @@
+id: computational-molecular-design
+name: Computational Molecular Design
+kind: group
+website: https://www.zib.de/index.php/research/mcs/mscp/cmd
+topics:
+  - drug-design
+  - molecular-dynamics
+  - biomolecular-simulation
+  - software-hpc
+  - photochemistry
+description: The Computational Molecular Design group at Zuse Institute Berlin
+  develops efficient algorithms for the simulation of complex molecular systems
+  and the design of functional molecules, focusing on drug design, analyticals,
+  and molecular interactions using HPC and…
+added: 2026-10-02
+aliases:
+  - Computational Molecular Design | zib.de
+pi: Marcus Weber
+parent: Zuse Institute Berlin
+location:
+  city: Berlin
+  country: DE
