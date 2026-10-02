@@ -1,0 +1,23 @@
+id: quantum-dynamics-of-nano-objects-q-dyno
+name: Quantum dynamics of nano-objects (Q-Dyno)
+kind: group
+website: https://www.ipcms.unistra.fr/en/equipe/theoretical-quantum-dynamics-of-nano-objects-dyno/
+topics:
+  - quantum-dynamics
+  - dft
+  - electronic-structure
+  - quantum-computing-chemistry
+  - materials-modeling
+description: The Q-Dyno group at IPCMS focuses on theoretical modeling and
+  numerical simulation of nanoscale systems, studying nonlinear quantum dynamics
+  of charges and spins in thin films, nanoparticles, large molecules, and
+  magnetic materials.
+added: 2026-10-02
+aliases:
+  - Quantum dynamics of nano-objects (Q-Dyno) - Institut de physique et chimie
+    des Matériaux de Strasbourg
+pi: Paul-Antoine Hervieux and Giovanni Manfredi
+parent: Institut de physique et chimie des Matériaux de Strasbourg
+location:
+  city: Strasbourg
+  country: FR
