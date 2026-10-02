@@ -1,0 +1,20 @@
+id: quantum-chemistry-research-group
+name: Quantum Chemistry Research Group
+kind: group
+website: https://aidagr.qulis.hiroshima-u.ac.jp/english/link.html
+topics:
+  - electronic-structure
+  - dft
+  - wavefunction-methods
+  - quantum-dynamics
+  - software-hpc
+description: The official website of the Quantum Chemistry Research Group at
+  Hiroshima University, providing navigation to research, members, and links to
+  computational chemistry tools and related societies.
+added: 2026-10-02
+aliases:
+  - Quantum Chemistry Research Group, Hiroshima University
+parent: Hiroshima University, Department of Chemistry
+location:
+  city: Higashihiroshima
+  country: JP
