@@ -1,0 +1,18 @@
+id: lee-group-uow
+name: Lee Group @ UOW
+kind: group
+website: https://riclzh.github.io/novelchemrxn/
+topics:
+  - catalysis
+  - dft
+  - spectroscopy
+description: The Lee Group at the University of Wollongong, led by Dr. Richmond
+  Lee, focuses on using computational chemistry to study catalytic processes,
+  reaction mechanisms, and chemical reactivity, integrating theoretical modeling
+  with experimental validation.
+added: 2026-10-02
+pi: Richmond Lee
+parent: University of Wollongong
+location:
+  city: Wollongong
+  country: AU
