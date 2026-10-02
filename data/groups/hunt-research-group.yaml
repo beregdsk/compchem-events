@@ -1,0 +1,22 @@
+id: hunt-research-group
+name: Hunt Research Group
+kind: group
+website: https://www.huntresearchgroup.org.uk/
+topics:
+  - electronic-structure
+  - catalysis
+  - soft-matter
+  - materials-modeling
+  - molecular-dynamics
+description: The Hunt Research Group is a theoretical and computational
+  chemistry group at Imperial College London. They focus on solvation, ionic
+  liquids, and deep eutectic solvents, studying catalytic mechanisms, chemical
+  decomposition, and electronic structure using MO theory.
+added: 2026-10-02
+aliases:
+  - Hunt theoretical chemistry group researching ionic liquids photochemistry
+    and catalysis, Imperial College London
+parent: Imperial College London
+location:
+  city: London
+  country: GB
