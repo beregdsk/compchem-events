@@ -1,0 +1,20 @@
+id: machine-learning-approaches-to-chemical-reactivity
+name: Machine Learning Approaches to Chemical Reactivity
+kind: group
+website: https://www.kofo.mpg.de/skjelstad
+topics:
+  - electronic-structure
+  - dft
+  - wavefunction-methods
+  - ml-potentials
+  - catalysis
+description: The research group of Bastian Skjelstad at the Max Planck Institute
+  for Coal Research combines quantum chemistry and machine learning to
+  understand, predict, and simulate chemical reactivity. Focusing on transition
+  metal chemistry and homogeneous catalysis, the group leverages…
+added: 2026-10-02
+pi: Bastian Skjelstad
+parent: Max-Planck-Institut für Kohlenforschung
+location:
+  city: Mülheim an der Ruhr
+  country: DE
