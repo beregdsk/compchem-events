@@ -1,0 +1,23 @@
+id: theoretical-and-computational-chemistry-lab
+name: Theoretical and Computational Chemistry Lab.
+kind: group
+website: https://wps.itc.kansai-u.ac.jp/tcc-en/?doing_wp_cron=1790902833.5053529739379882812500
+topics:
+  - molecular-dynamics
+  - biomolecular-simulation
+  - materials-modeling
+  - software-hpc
+  - soft-matter
+description: The Theoretical and Computational Chemistry Laboratory at Kansai
+  University, led by Prof. Kazushi Fujimoto, uses molecular dynamics simulations
+  to study molecular assemblies in biomaterials and complex systems, including
+  proteins, viruses, and polymers, leveraging…
+added: 2026-10-02
+aliases:
+  - Theoretical and Computational Chemistry Lab. – Faculty of Chemistry ,
+    Materials and Bioengineering, Kansai University
+pi: Kazushi Fujimoto
+parent: Faculty of Chemistry, Materials and Bioengineering, Kansai University
+location:
+  city: Osaka
+  country: JP
