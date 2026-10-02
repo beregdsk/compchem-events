@@ -5,6 +5,7 @@ import { EMPTY_FILTER } from '../../src/lib/filter';
 import { filteredCalendar } from '../../src/worker/feed';
 import worker, { type Env } from '../../src/worker/index';
 import { eventsExport } from '../../src/pages/events.json';
+import { fakeD1 } from './fake-d1';
 
 const events = loadEvents({
   eventsDir: 'tests/fixtures/valid',
@@ -47,6 +48,7 @@ describe('worker', () => {
   const json = JSON.stringify(eventsExport(events, now));
   const passedThrough: string[] = [];
   const env: Env = {
+    DB: fakeD1(),
     ASSETS: {
       fetch: (req: Request) => {
         const path = new URL(req.url).pathname;

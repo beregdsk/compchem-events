@@ -706,6 +706,19 @@ a:hover {
   cursor: pointer;
 }
 
+.saved-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-s);
+  align-items: center;
+  margin-block-end: var(--space-s);
+}
+
+.saved-filter p {
+  flex-basis: 100%;
+  margin: 0;
+}
+
 @media (max-width: 52rem) {
   .filters {
     position: static;

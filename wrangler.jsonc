@@ -9,15 +9,34 @@
     "directory": "./dist",
     "binding": "ASSETS",
     "not_found_handling": "404-page",
-    "run_worker_first": ["/feed/*"],
+    "run_worker_first": ["/feed/*", "/api/*"],
   },
+  // Saved preferences (src/worker/prefs.ts). Schema in migrations/.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "compchem-observer",
+      "database_id": "REPLACE_WITH_PRODUCTION_DATABASE_ID",
+    },
+  ],
   // Required by `npx wrangler preview` (the deploy command Cloudflare's
   // Workers Builds runs for every non-production branch) — without it, the
   // build step succeeds but the deploy step fails outright on every PR
   // branch: "Your Wrangler configuration is missing a `previews` block".
-  // Empty because this Worker has no bindings that need preview-only
-  // values — see https://developers.cloudflare.com/workers/previews/configuration/.
-  "previews": {},
+  // Previews do not inherit top-level bindings, so each storage binding is
+  // repeated here — see https://developers.cloudflare.com/workers/previews/configuration/.
+  "previews": {
+    // Previews share one staging database, so a PR branch never writes to
+    // production data. Apply migrations to both with
+    // `npx wrangler d1 migrations apply <name> --remote`.
+    "d1_databases": [
+      {
+        "binding": "DB",
+        "database_name": "compchem-observer-preview",
+        "database_id": "REPLACE_WITH_PREVIEW_DATABASE_ID",
+      },
+    ],
+  },
   // The site's domain. Cloudflare creates the DNS records and certificate on
   // deploy; www is attached too so the common typo resolves.
   "routes": [

@@ -713,3 +713,18 @@ obligation: anything that stores or sends visitor data is described on
 combination. The Worker reads the build's `/events.json` through the assets
 binding, so the YAML stays the only source of truth, and it recomputes
 "upcoming" per request. `wrangler` is a dev dependency for `npm run dev:worker`.
+
+## 2026-10-02 — Saved preferences: a cookie, D1, and a personal calendar
+
+A browser can save one list-page filter as its default. The list opens with it
+when the URL has no filter of its own, and `/feed/my/<feed_id>.ics` serves it as
+a calendar that follows later changes to the saved filter. Identity is a random
+`visitor` cookie (HttpOnly, Secure, SameSite=Lax), set only when someone saves:
+no accounts, so nothing to log in to and no personal data beyond the filter.
+The feed id is separate from the visitor id, so a calendar URL that leaks
+cannot be used to overwrite the filter. Storage is D1, the smallest Cloudflare
+store with a uniqueness constraint (the feed id), and the same database will
+hold reaction counts. Writes check `Origin` against the site's own, since the
+cookie alone would let any page change a visitor's filter. Filters are
+normalised through `filter.ts` and capped at 2,000 characters. Previews bind a
+separate staging database. Described on `/about/` under rule 4.
