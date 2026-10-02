@@ -1,0 +1,20 @@
+id: group-of-dimitrios-manganas
+name: Group of Dimitrios Manganas
+kind: group
+website: https://www.kofo.mpg.de/en/research/molecular-theory-and-spectroscopy/manganas
+topics:
+  - spectroscopy
+  - excited-states
+  - catalysis
+  - electronic-structure
+  - materials-modeling
+description: The group of Dimitrios Manganas develops advanced experimental and
+  theoretical spectroscopic methods to study catalytic reactions, identify
+  active structures and intermediates, and compute accurate ground and excited
+  state energetics.
+added: 2026-10-02
+pi: Dimitrios Manganas
+parent: Max-Planck-Institut für Kohlenforschung
+location:
+  city: Mülheim an der Ruhr
+  country: DE
