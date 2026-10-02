@@ -1,0 +1,20 @@
+id: pantazis-group
+name: Pantazis Group
+kind: group
+website: https://www.kofo.mpg.de/en/research/molecular-theory-and-spectroscopy/pantazis
+topics:
+  - electronic-structure
+  - spectroscopy
+  - photochemistry
+  - biomolecular-simulation
+  - catalysis
+description: The Pantazis Group at the Max Planck Institute for Coal Research
+  performs theoretical and computational chemistry research on electronic
+  structures, spectroscopy, and reactivity of transition metals in
+  photosynthesis and bioinorganic systems.
+added: 2026-10-02
+pi: Dimitrios Pantazis
+parent: Max-Planck-Institut für Kohlenforschung
+location:
+  city: Mülheim an der Ruhr
+  country: DE
