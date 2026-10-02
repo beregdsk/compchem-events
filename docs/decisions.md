@@ -698,3 +698,18 @@ never URLs. Seeds include the institutions OpenAlex ranks highest per site
 topic. Groups arrive in batched PRs of at most 50 for human review. A paid
 model is allowed for the one big crawl, the nightly slice stays on the free
 model. See docs/superpowers/specs/2026-09-30-groups-crawler-design.md.
+
+## 2026-10-02 — Rules 3 and 4 dropped: a Worker script, and no blanket no-tracking rule
+
+The maintainer dropped AGENTS.md rule 3 ("static only") and rule 4 ("no
+tracking"). This supersedes the static-only and privacy lines of TASK.md §4
+and the 2026-09-20 reactions entry's reason for deferring. Pages stay static
+files; a Worker script (`src/worker/`) now answers only the paths listed under
+`run_worker_first`, so every other request still costs no Worker invocation
+and the site reads the same if the script fails. The new rule 4 keeps one
+obligation: anything that stores or sends visitor data is described on
+`/about/` in the same PR. First use: a live calendar for any list-page filter
+(`/feed/events.ics?<filter>`), which a build cannot prebuild for every
+combination. The Worker reads the build's `/events.json` through the assets
+binding, so the YAML stays the only source of truth, and it recomputes
+"upcoming" per request. `wrangler` is a dev dependency for `npm run dev:worker`.

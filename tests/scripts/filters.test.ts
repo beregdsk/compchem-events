@@ -20,6 +20,7 @@ function setFixture(): void {
       <input type="checkbox" name="deadline" value="open" />
     </form>
     <p id="result-count"></p>
+    <p id="filter-feed" hidden><a href="/feed/events.ics">Subscribe</a></p>
     <ul id="event-list">
       <li
         class="event"
@@ -146,5 +147,18 @@ describe('filters island', () => {
     expect(pushSpy).toHaveBeenCalledTimes(1);
     expect(pushSpy).toHaveBeenCalledWith(null, '', '/');
     expect(replaceSpy).not.toHaveBeenCalled();
+  });
+
+  it('points the filtered-feed link at the current filter, and hides it when there is none', async () => {
+    await setup('/?topics=dft&region=Europe');
+    const feed = document.querySelector<HTMLElement>('#filter-feed')!;
+    expect(feed.hidden).toBe(false);
+    const href = new URL(feed.querySelector('a')!.href);
+    expect(href.pathname).toBe('/feed/events.ics');
+    expect(href.searchParams.get('topics')).toBe('dft');
+    expect(href.searchParams.get('region')).toBe('Europe');
+
+    document.querySelector<HTMLButtonElement>('#clear-filters')!.click();
+    expect(feed.hidden).toBe(true);
   });
 });

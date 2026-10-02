@@ -1,3 +1,7 @@
+import { hasOpenDeadline, hasOpenTravelGrant } from './deadlines';
+import type { ISODate } from './dates';
+import type { LoadedEvent } from './types';
+
 export interface FilterState {
   q: string;
   topics: string[];
@@ -44,6 +48,25 @@ export interface FilterRow {
   openDeadline: boolean;
   openGrant: boolean;
   fee: string;
+}
+
+/** The row for one event on `today`: the page encodes it, the Worker's filtered feed matches it. */
+export function filterRowFromEvent(event: LoadedEvent, today: ISODate): FilterRow {
+  return {
+    search: [event.title, event.organizer ?? '', event.location?.city ?? '']
+      .join(' ')
+      .toLowerCase(),
+    topics: event.topics,
+    region: event.region,
+    country: event.location?.country ?? '',
+    format: event.format,
+    type: event.type,
+    start: event.start_date,
+    end: event.end_date,
+    openDeadline: hasOpenDeadline(event, today),
+    openGrant: hasOpenTravelGrant(event, today),
+    fee: event.fee ?? '',
+  };
 }
 
 export function parseFilterState(params: URLSearchParams): FilterState {

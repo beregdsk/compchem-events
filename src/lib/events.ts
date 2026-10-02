@@ -13,6 +13,8 @@ import {
 } from './validation';
 import type { Deadline, DerivedStatus, LoadedEvent, RawEvent } from './types';
 
+export { hasOpenDeadline, hasOpenTravelGrant } from './deadlines';
+
 export interface LoadOptions {
   /** Directory holding `<year>/<id>.yaml`. Defaults to `data/events`. */
   eventsDir?: string;
@@ -138,10 +140,6 @@ export function eventById(events: LoadedEvent[], id: string): LoadedEvent | unde
   return events.find((e) => e.id === id);
 }
 
-export function hasOpenDeadline(event: LoadedEvent, today: ISODate): boolean {
-  return (event.deadlines ?? []).some((d) => compareISO(d.date, today) >= 0);
-}
-
 export function upcomingDeadlines(events: LoadedEvent[], today: ISODate): UpcomingDeadline[] {
   return events
     .filter((e) => e.status !== 'cancelled' && e.status_derived !== 'past')
@@ -154,13 +152,6 @@ export function upcomingDeadlines(events: LoadedEvent[], today: ISODate): Upcomi
       (a, b) =>
         compareISO(a.deadline.date, b.deadline.date) || a.event.title.localeCompare(b.event.title),
     );
-}
-
-/** True when a travel-grant deadline is still open: the filter students ask for most. */
-export function hasOpenTravelGrant(event: LoadedEvent, today: ISODate): boolean {
-  return (event.deadlines ?? []).some(
-    (d) => d.type === 'travel_grant' && compareISO(d.date, today) >= 0,
-  );
 }
 
 export function eventsWithTopic(events: LoadedEvent[], slug: string): LoadedEvent[] {

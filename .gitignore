@@ -10,3 +10,6 @@ playwright-report/
 blob-report/
 links.json
 .playwright-mcp/
+
+# wrangler dev local state
+.wrangler/

@@ -1,6 +1,6 @@
 ---
 import type { LoadedEvent } from '../lib/types';
-import { hasOpenDeadline, hasOpenTravelGrant } from '../lib/events';
+import { filterRowFromEvent } from '../lib/filter';
 import { compareISO, formatDate, formatDateRange, type ISODate } from '../lib/dates';
 
 interface Props {
@@ -10,11 +10,7 @@ interface Props {
 
 const { event, today } = Astro.props;
 
-const search = [event.title, event.organizer ?? '', event.location?.city ?? '']
-  .join(' ')
-  .toLowerCase();
-
-const open = hasOpenDeadline(event, today);
+const row = filterRowFromEvent(event, today);
 const next = (event.deadlines ?? [])
   .filter((d) => compareISO(d.date, today) >= 0)
   .sort((a, b) => compareISO(a.date, b.date))[0];
@@ -27,17 +23,17 @@ const place =
 
 <li
   class="event"
-  data-search={search}
-  data-topics={event.topics.join(' ')}
-  data-region={event.region}
-  data-country={event.location?.country ?? ''}
-  data-format={event.format}
-  data-type={event.type}
-  data-start={event.start_date}
-  data-end={event.end_date}
-  data-deadline={open ? 'open' : ''}
-  data-grant={hasOpenTravelGrant(event, today) ? 'open' : ''}
-  data-fee={event.fee ?? ''}
+  data-search={row.search}
+  data-topics={row.topics.join(' ')}
+  data-region={row.region}
+  data-country={row.country}
+  data-format={row.format}
+  data-type={row.type}
+  data-start={row.start}
+  data-end={row.end}
+  data-deadline={row.openDeadline ? 'open' : ''}
+  data-grant={row.openGrant ? 'open' : ''}
+  data-fee={row.fee}
 >
   <p class="mono event__when">
     <time datetime={event.start_date}>{formatDateRange(event.start_date, event.end_date)}</time>
