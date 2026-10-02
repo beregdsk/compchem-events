@@ -1,0 +1,23 @@
+id: theoretical-and-computational-chemistry-laboratory
+name: Theoretical and Computational Chemistry Laboratory
+kind: group
+website: https://theocomp.chem.okayama-u.ac.jp/home.html
+topics:
+  - molecular-dynamics
+  - biomolecular-simulation
+  - soft-matter
+  - electrochemistry
+  - materials-modeling
+description: Official website of the Theoretical and Computational Chemistry
+  Laboratory at Okayama University. The lab conducts molecular simulations and
+  develops multiscale molecular modeling methodologies, focusing on
+  coarse-grained force fields like SPICA to study biomolecular…
+added: 2026-10-02
+aliases:
+  - Theoretical and Computational Chemistry Laboratory, Department of Chemistry,
+    Okayama University
+pi: Prof. Shinoda
+parent: Department of Chemistry, School of Science, Okayama University
+location:
+  city: Okayama
+  country: JP
