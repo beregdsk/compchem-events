@@ -1,0 +1,22 @@
+id: laboratory-for-computational-molecular-design
+name: Laboratory for Computational Molecular Design
+kind: group
+website: https://www.riken.jp/en/research/labs/bdr/comput_mol_des/index.html
+topics:
+  - biomolecular-simulation
+  - molecular-dynamics
+  - drug-design
+  - software-hpc
+  - electronic-structure
+description: The group aims to simulate biomolecular interactions and design
+  effective molecular regulators using large-scale computer simulations,
+  focusing on molecular dynamics and quantum chemistry to predict molecular
+  functions in large biomolecules.
+added: 2026-10-02
+aliases:
+  - Laboratory for Computational Molecular Design | RIKEN
+pi: Makoto Taiji
+parent: RIKEN Center for Biosystems Dynamics Research
+location:
+  city: Kobe
+  country: JP
