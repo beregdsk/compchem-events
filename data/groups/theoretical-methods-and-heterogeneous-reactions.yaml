@@ -1,0 +1,20 @@
+id: theoretical-methods-and-heterogeneous-reactions
+name: Theoretical Methods and Heterogeneous Reactions
+kind: group
+website: https://www.kofo.mpg.de/en/research/molecular-theory-and-spectroscopy/auer
+topics:
+  - electronic-structure
+  - dft
+  - wavefunction-methods
+  - spectroscopy
+  - electrochemistry
+description: Theoretical Methods and Heterogeneous Reactions group led by
+  Alexander Auer at the Max Planck Institute for Coal Research develops and
+  applies computational chemistry methods for spectroscopy, electrochemistry,
+  and materials science.
+added: 2026-10-02
+pi: Alexander Auer
+parent: Max-Planck-Institut für Kohlenforschung
+location:
+  city: Mülheim an der Ruhr
+  country: DE
