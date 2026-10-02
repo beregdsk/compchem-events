@@ -1,0 +1,22 @@
+id: molecular-quantum-theory-ucl
+name: Molecular Quantum Theory @ UCL
+kind: group
+website: https://www.hughburton.com/research
+topics:
+  - electronic-structure
+  - wavefunction-methods
+  - excited-states
+  - quantum-computing-chemistry
+  - dft
+description: The Molecular Quantum Theory group at UCL, led by Hugh G. A.
+  Burton, focuses on advanced electronic structure methods, including excited
+  states, quantum computing applications, and strong correlation, using energy
+  landscapes and complex-plane theories.
+added: 2026-10-02
+aliases:
+  - Molecular Quantum Theory @ UCL - Research
+pi: Hugh G. A. Burton
+parent: University College London (UCL)
+location:
+  city: London
+  country: GB
