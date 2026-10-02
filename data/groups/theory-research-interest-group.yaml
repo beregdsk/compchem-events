@@ -1,0 +1,21 @@
+id: theory-research-interest-group
+name: Theory Research Interest Group
+kind: group
+website: https://www.ch.cam.ac.uk/rig/tmi/about
+topics:
+  - electronic-structure
+  - quantum-dynamics
+  - electrochemistry
+  - drug-design
+  - soft-matter
+description: The Theory Research Interest Group at the Yusuf Hamied Department
+  of Chemistry focuses on the development and application of theoretical and
+  computational chemistry. Research spans quantum dynamics, electronic
+  structure, electrochemistry, machine learning, drug discovery, and…
+added: 2026-10-02
+aliases:
+  - Theory Research Interest Group | Yusuf Hamied Department of Chemistry
+parent: Yusuf Hamied Department of Chemistry
+location:
+  city: Cambridge
+  country: GB
