@@ -212,8 +212,10 @@ Runs on Cloudflare for the paths under `run_worker_first` in `wrangler.jsonc`; e
 
 | Path | What it is for |
 | --- | --- |
-| `index.ts` | The Worker entry: routes `/feed/events.ics`, `/feed/my/<id>.ics` and `/api/prefs`, and hands anything else to the static build (`ASSETS`). `loadBuiltEvents` reads the build's `/events.json`. A thrown error becomes a 503 for that request only. |
+| `index.ts` | The Worker entry: routes `/feed/events.ics`, `/feed/my/<id>.ics`, `/api/prefs` and `/api/interest/<id>`, and hands anything else to the static build (`ASSETS`). `loadBuiltEvents` reads the build's `/events.json`. A thrown error becomes a 503 for that request only. |
 | `prefs.ts` | Saved preferences: `/api/prefs` (GET, PUT `{ filter }`, DELETE; writes must come from the site's own origin) and `filterForFeed` for the personal calendar. Filters are normalised through `filter.ts` before they are stored. |
+| `interest.ts` | "Interested" marks: `/api/interest/<event id>` (GET count and whether this browser marked it, POST mark, DELETE unmark). Only ids the build lists are accepted. |
+| `http.ts` | Shared API helpers: uncached JSON responses and the same-origin check on writes. |
 | `visitor.ts` | The `visitor` cookie: random ids, reading it, and the `Set-Cookie` value. |
 | `db.ts` | The slice of the D1 binding the Worker uses, declared locally instead of `@cloudflare/workers-types`. |
 | `feed.ts` | `filteredCalendar`: the upcoming events matching a list-page filter, as iCalendar. |
@@ -227,6 +229,7 @@ JavaScript disabled; nothing here is load-bearing.
 | --- | --- |
 | `filters.ts` | Filters the list client-side and keeps the URL in step. Server-rendered results are the fallback. |
 | `sort-table.ts` | Sorts a `data-sortable` table (the `/topics/` table) by a header click; without JS it keeps its server order. |
+| `interest.ts` | The "I'm interested" toggle and count on an upcoming event's page; hidden unless the API answers. |
 | `prefs.ts` | The saved-filter bar on the list page. Hidden unless `/api/prefs` answers; applies a saved filter through the URL and `popstate`, so it never touches the filters island directly. |
 | `countdown.ts` | Appends a relative phrase ("closes in 12 days") beside the rendered date, so a static build never serves a stale countdown. Leaves the `<time>` element's machine-readable text alone. |
 | `graph.ts` | Brings the event map to life: drag, neighbour highlighting, pan and zoom. The static SVG works without it. |
@@ -246,7 +249,7 @@ Vitest. Run with `npm test`.
 | --- | --- |
 | `tests/lib/*.test.ts` | One file per `src/lib/` module: dates, events, filter, ical, orbital, regions, validation, and the semantic rules. |
 | `tests/components/*.test.ts` | Astro components rendered with the container API (`experimental_AstroContainer`); `position-row.test.ts` covers a position row's level label, advert link, deadline and stale label. Production builds carry no position data, so this is where a rendered row is checked. |
-| `tests/worker/*.test.ts` | The Worker: the filtered feed, saved preferences and routing, against a fake `ASSETS` and `fake-d1.ts` (D1 over `node:sqlite` with the real migrations applied). |
+| `tests/worker/*.test.ts` | The Worker: the filtered feed, saved preferences, interest counts and routing, against a fake `ASSETS` and `fake-d1.ts` (D1 over `node:sqlite` with the real migrations applied). |
 | `tests/schema/schema.test.ts` | The JSON Schema itself. |
 | `tests/endpoints/` | The generated outputs: both `.ics` files parsed with a real iCalendar parser, plus the feed, JSON and sitemap. |
 | `tests/pages/links.test.ts` | Internal links resolve. |

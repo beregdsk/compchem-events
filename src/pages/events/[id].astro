@@ -180,6 +180,15 @@ const jsonLd = {
 
     <p>{event.description}</p>
 
+    {event.status_derived !== 'past' && (
+      <p class="interest mono" id="interest" data-event-id={event.id} hidden>
+        <button type="button" class="filters__clear" aria-pressed="false">
+          I’m interested
+        </button>
+        <span id="interest-count" role="status" aria-live="polite"></span>
+      </p>
+    )}
+
     {event.deadlines && event.deadlines.length > 0 && (
       <>
         <h2>Deadlines</h2>
@@ -227,5 +236,6 @@ const jsonLd = {
   <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} is:inline></script>
   <script>
     import '../../scripts/countdown.ts';
+    import '../../scripts/interest.ts';
   </script>
 </Base>
