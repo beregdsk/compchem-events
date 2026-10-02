@@ -1,0 +1,22 @@
+id: laboratory-of-biomolecular-dynamics-tanglab-pku
+name: Laboratory of Biomolecular Dynamics (Tanglab@PKU)
+kind: group
+website: https://www.tanglab.cn/
+topics:
+  - biomolecular-simulation
+  - molecular-dynamics
+  - spectroscopy
+  - drug-design
+  - photochemistry
+description: The Laboratory of Biomolecular Dynamics at Peking University, led
+  by Prof. Chun Tang, integrates NMR spectroscopy, crosslinking mass
+  spectrometry, AI, and molecular dynamics simulations to study
+  biomacromolecular structural dynamics, phase separation, and drug design.
+added: 2026-10-02
+aliases:
+  - LBD@PKU
+pi: Chun Tang
+parent: Peking University
+location:
+  city: Beijing
+  country: CN
