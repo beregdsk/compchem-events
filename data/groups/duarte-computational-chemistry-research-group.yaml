@@ -1,0 +1,22 @@
+id: duarte-computational-chemistry-research-group
+name: Duarte Computational Chemistry Research Group
+kind: group
+website: https://www.duartegroupchem.org/
+topics:
+  - biomolecular-simulation
+  - catalysis
+  - ml-chemistry
+  - ml-potentials
+  - molecular-dynamics
+description: The Duarte Computational Chemistry Research Group at the University
+  of Oxford focuses on advancing molecular design by integrating physical
+  organic chemistry, atomistic simulations, and machine learning to address
+  challenges in catalysis, sustainability, and health.
+added: 2026-10-02
+aliases:
+  - Duarte Research Group
+pi: Professor Fernanda Duarte
+parent: University of Oxford
+location:
+  city: Oxford
+  country: GB
