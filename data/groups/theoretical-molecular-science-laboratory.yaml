@@ -1,0 +1,22 @@
+id: theoretical-molecular-science-laboratory
+name: Theoretical Molecular Science Laboratory
+kind: group
+website: https://www.riken.jp/en/research/labs/chief/theor_mol_sci/
+topics:
+  - biomolecular-simulation
+  - molecular-dynamics
+  - enhanced-sampling
+  - electronic-structure
+  - software-hpc
+description: The Theoretical Molecular Science Laboratory at RIKEN, led by Chief
+  Scientist Yuji Sugita, focuses on understanding biological functions of
+  proteins and membranes through multi-scale simulations, including all-atom and
+  coarse-grained molecular dynamics, QM/MM calculations, and…
+added: 2026-10-02
+aliases:
+  - Theoretical Molecular Science Laboratory | RIKEN
+pi: Yuji Sugita
+parent: RIKEN
+location:
+  city: Wako
+  country: JP
