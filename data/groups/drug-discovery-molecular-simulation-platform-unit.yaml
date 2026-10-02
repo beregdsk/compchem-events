@@ -1,0 +1,21 @@
+id: drug-discovery-molecular-simulation-platform-unit
+name: Drug Discovery Molecular Simulation Platform Unit
+kind: group
+website: https://www.riken.jp/en/research/labs/bdr/drug_discov_mol_sim/index.html
+topics:
+  - drug-design
+  - molecular-dynamics
+  - biomolecular-simulation
+  - software-hpc
+description: The Drug Discovery Molecular Simulation Platform Unit at RIKEN
+  focuses on in silico drug discovery using large-scale supercomputers and
+  molecular simulation technologies to predict binding affinity and drug
+  efficacy parameters, helping identify highly effective and selective…
+added: 2026-10-02
+aliases:
+  - Drug Discovery Molecular Simulation Platform Unit | RIKEN
+pi: Makoto Taiji
+parent: RIKEN Center for Biosystems Dynamics Research
+location:
+  city: Kobe
+  country: JP
