@@ -1,0 +1,20 @@
+id: matsunaga-lab
+name: Matsunaga Lab
+kind: group
+website: https://www.bio.ics.saitama-u.ac.jp/
+topics:
+  - biomolecular-simulation
+  - molecular-dynamics
+  - drug-design
+  - ml-chemistry
+  - enhanced-sampling
+description: The Matsunaga Lab at Saitama University conducts molecular
+  simulation, data analysis, and software development to understand and control
+  biological phenomena, focusing on biomolecular dynamics, drug discovery, VHH
+  antibodies, and machine learning integration.
+added: 2026-10-02
+pi: Yasuhiro Matsunaga
+parent: Saitama University
+location:
+  city: Saitama
+  country: JP
