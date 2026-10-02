@@ -1,0 +1,17 @@
+id: gasteiger-group
+name: Gasteiger Group
+kind: group
+website: https://www.odp.org/Science/Chemistry/Computational/Research_Groups/
+topics:
+  - cheminformatics
+  - drug-design
+  - spectroscopy
+description: The Gasteiger Group at the University of Erlangen-Nürnberg focuses
+  on computational chemistry, including computer representation of chemical
+  structures and reactions, simulation of reactions and synthesis design, and
+  methods for lead structure discovery and optimization.
+added: 2026-10-02
+parent: University of Erlangen-Nürnberg
+location:
+  city: Erlangen
+  country: DE
