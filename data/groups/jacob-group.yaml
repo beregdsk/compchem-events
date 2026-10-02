@@ -1,0 +1,22 @@
+id: jacob-group
+name: Jacob Group
+kind: group
+website: https://www.tu-braunschweig.de/en/pci/agjacob
+topics:
+  - electronic-structure
+  - spectroscopy
+  - catalysis
+  - drug-design
+  - materials-modeling
+description: The Jacob Group at the Institute of Physical and Theoretical
+  Chemistry of TU Braunschweig develops quantum-chemical and multiscale
+  simulation methods for complex chemical systems, focusing on theoretical
+  spectroscopy, uncertainty quantification, and applications in catalysis…
+added: 2026-10-02
+aliases:
+  - Theoretical Chemistry
+pi: Andreas Jacob
+parent: Technische Universität Braunschweig
+location:
+  city: Braunschweig
+  country: DE
