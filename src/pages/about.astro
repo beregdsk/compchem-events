@@ -21,7 +21,8 @@ import { site } from '../../site.config';
     <h2>How it works</h2>
     <p>
       Every event is a YAML file in a public Git repository, validated automatically. The site is
-      built to static files, so there is no server and no database. Anyone can
+      built to static files; a small Cloudflare Worker serves the few things a static file cannot,
+      such as calendars for a filter you choose. Anyone can
       <a href="/submit/">add or correct an event</a>.
     </p>
 
@@ -38,6 +39,10 @@ import { site } from '../../site.config';
       </li>
       <li>
         <a href="/deadlines.ics">Deadlines calendar</a> — every open deadline.
+      </li>
+      <li>
+        Any filter on the <a href="/">event list</a> — the “Subscribe to this filtered view” link
+        under the list is a calendar of just those events that stays current.
       </li>
       <li>
         <a href="/feed.xml">Atom feed</a> — newly added events.

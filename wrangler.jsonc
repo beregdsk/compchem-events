@@ -2,9 +2,14 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "compchem-observer",
   "compatibility_date": "2026-09-24",
+  // The Worker answers only the paths in run_worker_first; every other
+  // request is served from the static build without invoking it.
+  "main": "src/worker/index.ts",
   "assets": {
     "directory": "./dist",
+    "binding": "ASSETS",
     "not_found_handling": "404-page",
+    "run_worker_first": ["/feed/*"],
   },
   // Required by `npx wrangler preview` (the deploy command Cloudflare's
   // Workers Builds runs for every non-production branch) — without it, the

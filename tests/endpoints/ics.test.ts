@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import ICAL from 'ical.js';
-import { eventsCalendar } from '../../src/pages/events.ics';
+import { eventsCalendar } from '../../src/lib/event-calendar';
 import { deadlinesCalendar } from '../../src/pages/deadlines.ics';
 import { loadEvents, upcomingDeadlines, upcomingEvents } from '../../src/lib/events';
 import { addDays } from '../../src/lib/dates';

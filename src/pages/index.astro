@@ -159,6 +159,10 @@ const fees = EVENT_FEES.filter((f) => events.some((e) => e.fee === f));
       <p class="mono" id="topic-feed" hidden>
         <a href="/topics/">Calendar and feed for this topic</a>
       </p>
+      <p class="mono" id="filter-feed" hidden>
+        <a href="/feed/events.ics">Subscribe to this filtered view</a> (iCal; paste the link into
+        your calendar app and it stays up to date)
+      </p>
       <ul class="event-list reveal" id="event-list">
         {events.map((event) => (
           <EventRow event={event} today={today} />

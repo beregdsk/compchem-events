@@ -14,6 +14,7 @@ const list = document.querySelector<HTMLUListElement>('#event-list');
 const countEl = document.querySelector<HTMLElement>('#result-count');
 const clearButton = document.querySelector<HTMLButtonElement>('#clear-filters');
 const topicFeed = document.querySelector<HTMLElement>('#topic-feed');
+const filterFeed = document.querySelector<HTMLElement>('#filter-feed');
 
 if (form && list && countEl) {
   // Filtering is a JavaScript feature, so the controls only appear once it runs.
@@ -80,8 +81,18 @@ if (form && list && countEl) {
       if (state.topics.length === 1) topicFeed.querySelector('a')!.href = `/topics/${only}/`;
     }
 
-    if (mode === 'none') return;
     const params = serialiseFilterState(state).toString();
+    // Any filter: the Worker serves the same selection as a live calendar.
+    if (filterFeed) {
+      filterFeed.hidden = params === '';
+      // Absolute, because the link is meant to be copied into a calendar app.
+      filterFeed.querySelector('a')!.href = new URL(
+        `/feed/events.ics?${params}`,
+        location.origin,
+      ).href;
+    }
+
+    if (mode === 'none') return;
     const next = params ? `${location.pathname}?${params}` : location.pathname;
     const current = `${location.pathname}${location.search}`;
     // A no-op interaction must not create a history entry.

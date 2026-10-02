@@ -9,11 +9,12 @@ code, the code is right and this file is stale: fix it.
 
 ## The shape of the thing
 
-A static site. Event data lives in YAML files, a validator enforces a JSON
-Schema over them, Astro renders them to HTML at build time, and a Cloudflare
-Worker serves the output as static assets. There is no server, no database and no runtime data
-fetching. Every page you can reach is a file that existed before the visitor
-arrived.
+A static site with a thin Worker in front. Event data lives in YAML files, a
+validator enforces a JSON Schema over them, Astro renders them to HTML at build
+time, and a Cloudflare Worker serves the output. Most paths are plain files that
+existed before the visitor arrived; only the paths under `run_worker_first` in
+`wrangler.jsonc` run code (`src/worker/`), and that code reads the build's own
+`/events.json` rather than the YAML.
 
 Separately, a discovery agent (`scripts/discovery/run.ts` over
 `src/lib/discovery/`) runs as a cron job on the maintainer's VDS: it reads
@@ -49,7 +50,7 @@ data/events/*.yaml  →  scripts/validate.ts  (gate: build fails on invalid data
 | `.prettierrc.json` / `.prettierignore` | Formatting rules, and the pre-existing docs exempted from them. |
 | `.nvmrc` | The Node version the project is built and tested against. |
 | `package.json` / `package-lock.json` | Scripts and dependencies, and their locked versions. `npm run` targets are listed in `README.md`. |
-| `wrangler.jsonc` | Cloudflare Worker config: serves `dist/` as static assets. There is no Worker script. |
+| `wrangler.jsonc` | Cloudflare Worker config: serves `dist/` as static assets, and sends only the `run_worker_first` paths to the Worker script in `src/worker/`. |
 | `Dockerfile.discovery` / `.dockerignore` | Image for the discovery agent's cron job, running as an unprivileged user with no credentials baked in. See *Deployment* in `docs/discovery-agent.md`. |
 | `.gitignore` | Ignores `node_modules/`, `dist/`, `.astro/`, `.env*`, logs, `.superpowers/`, and the Playwright run artifacts (`test-results/`, `playwright-report/`). |
 
@@ -152,8 +153,10 @@ behaviour lives and where tests point.
 | `discovery/parsers/group-listing.ts` | Deterministic parser (no LLM) for `group-listing` sources: every link in the main content becomes a group lead with its heading as context. |
 | `discovery/auto-approve.ts` | Labels open discovery PRs `high-confidence` when confidence ≥ 0.90 and CI passed. Never merges. |
 | `types.ts` | The shared vocabulary: event types, formats, deadline types, statuses, and the loaded-event shape. |
-| `filter.ts` | Filter state and matching. Parses and serialises the query string, and decides whether a row matches. Shared verbatim between the server render and the browser so both agree. |
+| `filter.ts` | Filter state and matching. Parses and serialises the query string, and decides whether a row matches. Shared verbatim between the server render, the browser and the Worker so all three agree; `filterRowFromEvent` builds the row each of them matches. |
 | `regions.ts` | Country-to-region mapping and country display names. |
+| `deadlines.ts` | `hasOpenDeadline`, `hasOpenTravelGrant`. Kept free of `node:fs` so the Worker can import it. |
+| `event-calendar.ts` | `eventsCalendar`: events as iCalendar entries, shared by the build-time feeds and the Worker. |
 | `ical.ts` | iCalendar construction: text escaping, 75-octet line folding, date formatting, calendar assembly. RFC compliance lives here. |
 | `orbital.ts` | Monte-Carlo point cloud of a real hydrogenic 3d(z²) orbital — the masthead plate. The dots are samples from ∣ψ∣² and their two colours are the two signs of ψ. Runs at build time only. |
 
@@ -202,6 +205,15 @@ One file per URL. Pages stay thin; they compose `src/lib/`.
 | `components/TopicsTable.astro` | The `/topics/` table. |
 | `components/PageActions.astro` | The row of per-page actions (subscribe, export, submit). |
 
+## `src/worker/` — the Worker script
+
+Runs on Cloudflare for the paths under `run_worker_first` in `wrangler.jsonc`; every other request goes straight to the static files.
+
+| Path | What it is for |
+| --- | --- |
+| `index.ts` | The Worker entry: routes `/feed/events.ics` and hands anything else to the static build (`ASSETS`). `loadBuiltEvents` reads the build's `/events.json`. |
+| `feed.ts` | `filteredCalendar`: the upcoming events matching a list-page filter, as iCalendar. |
+
 ## `src/scripts/` — the browser's share
 
 Progressive enhancement only. The site must be readable and usable with
@@ -229,6 +241,7 @@ Vitest. Run with `npm test`.
 | --- | --- |
 | `tests/lib/*.test.ts` | One file per `src/lib/` module: dates, events, filter, ical, orbital, regions, validation, and the semantic rules. |
 | `tests/components/*.test.ts` | Astro components rendered with the container API (`experimental_AstroContainer`); `position-row.test.ts` covers a position row's level label, advert link, deadline and stale label. Production builds carry no position data, so this is where a rendered row is checked. |
+| `tests/worker/*.test.ts` | The Worker: the filtered feed and its routing, against a fake `ASSETS`. |
 | `tests/schema/schema.test.ts` | The JSON Schema itself. |
 | `tests/endpoints/` | The generated outputs: both `.ics` files parsed with a real iCalendar parser, plus the feed, JSON and sitemap. |
 | `tests/pages/links.test.ts` | Internal links resolve. |

@@ -1,5 +1,5 @@
 import type { APIRoute, GetStaticPaths } from 'astro';
-import { eventsCalendar } from '../events.ics';
+import { eventsCalendar } from '../../lib/event-calendar';
 import { eventsWithTopic, loadEvents, upcomingEvents } from '../../lib/events';
 import { loadTopics } from '../../lib/validation';
 import type { Topic } from '../../lib/types';
