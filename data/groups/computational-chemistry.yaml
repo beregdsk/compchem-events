@@ -1,0 +1,21 @@
+id: computational-chemistry
+name: Computational Chemistry
+kind: group
+website: https://hims.uva.nl/content/research-groups/computational-chemistry/computational-chemistry.html
+topics:
+  - molecular-dynamics
+  - biomolecular-simulation
+  - soft-matter
+  - materials-modeling
+  - ml-chemistry
+description: Computational Chemistry research group at the Van 't Hoff Institute
+  for Molecular Sciences (HIMS), University of Amsterdam, focusing on advanced
+  molecular simulation and multiscale modelling of (bio)materials and complex
+  chemical processes.
+added: 2026-10-03
+aliases:
+  - Computational Chemistry - HIMS - University of Amsterdam
+parent: Van 't Hoff Institute for Molecular Sciences (HIMS), University of Amsterdam
+location:
+  city: Amsterdam
+  country: NL
