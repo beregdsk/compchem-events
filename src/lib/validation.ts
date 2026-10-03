@@ -6,8 +6,36 @@ import type { ValidateFunction } from 'ajv';
 import { parse } from 'yaml';
 import type { ISODate } from './dates';
 import { compareISO, todayUTC } from './dates';
+import { loadSources } from './discovery/sources';
 import { regionOf } from './regions';
 import type { RawEvent, Topic } from './types';
+
+/** The longest description written in our own words (AGENTS.md rule 2). */
+export const DESCRIPTION_MAX = 600;
+/** The longest mailing-list post kept whole as a description; the schemas' hard cap. */
+export const FULL_TEXT_MAX = 8000;
+
+/**
+ * A post from a mailing list that linked no page of its own: the discovery
+ * agent then falls back to the list's page for both `url` and `source_url`,
+ * and keeps the post's full text as the description (rule 2's one exception).
+ */
+export function isLinklessMailingListPost(
+  entry: { url: string; source_url?: string },
+  ctx: Pick<ValidationContext, 'mailingListUrls'>,
+): boolean {
+  return entry.url === entry.source_url && ctx.mailingListUrls.has(entry.url);
+}
+
+/** The description length error for an event or position, if any. */
+export function descriptionLengthError(
+  entry: { url: string; source_url?: string; description: string },
+  ctx: Pick<ValidationContext, 'mailingListUrls'>,
+): string | undefined {
+  if (entry.description.length <= DESCRIPTION_MAX) return undefined;
+  if (isLinklessMailingListPost(entry, ctx)) return undefined;
+  return `description is ${entry.description.length} characters; at most ${DESCRIPTION_MAX}, unless it is the full text of a mailing-list post with no link of its own`;
+}
 
 /** Lowercase, strip punctuation, collapse whitespace — for duplicate detection. */
 export function normaliseTitle(title: string): string {
@@ -117,8 +145,16 @@ function semanticRules(entry: EventFile, ctx: ValidationContext, out: Validation
     }
   }
 
+  // Rule 10: a description in our own words fits DESCRIPTION_MAX.
+  const tooLong = descriptionLengthError(e, ctx);
+  if (tooLong) err('description', tooLong);
+
   // Warning 2: the description looks copied.
-  if (e.description.length > 200 && !e.description.includes('.')) {
+  if (
+    !isLinklessMailingListPost(e, ctx) &&
+    e.description.length > 200 &&
+    !e.description.includes('.')
+  ) {
     warn('description', 'description looks copied: over 200 characters with no full stop');
   }
 
@@ -149,6 +185,8 @@ export interface ValidationResult {
 export interface ValidationContext {
   topics: ReadonlySet<string>;
   blockedHosts: ReadonlySet<string>;
+  /** `url`s of the `kind: mailbox` sources in data/sources.yaml. */
+  mailingListUrls: ReadonlySet<string>;
   today: ISODate;
 }
 
@@ -191,6 +229,11 @@ export function loadValidationContext(root = '.', today: ISODate = todayUTC()): 
   return {
     topics: new Set(topics.map((t) => t.slug)),
     blockedHosts: new Set((blocklist ?? []).map((b) => b.domain.toLowerCase())),
+    mailingListUrls: new Set(
+      loadSources(join(root, 'data/sources.yaml'))
+        .filter((s) => s.kind === 'mailbox')
+        .map((s) => s.url),
+    ),
     today,
   };
 }

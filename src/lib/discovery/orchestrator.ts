@@ -170,9 +170,10 @@ export function groupSkipReason(
 export function buildGroupPrBody(c: GroupCandidate): string {
   const g = c.draft;
   const optional = (t: string | undefined) => (t === undefined ? '(none)' : inlineCode(t));
+  // Laid out like buildPrBody's event PRs; where the name was found, and what
+  // was fetched, stay available but folded away.
   return [
     `Confidence: ${c.confidence.toFixed(2)}`,
-    'Registry entry proposed by the groups pass. Check every field against the website before merging.',
     '',
     `- **name:** ${inlineCode(g.name)}`,
     `- **kind:** ${inlineCode(g.kind)}`,
@@ -184,10 +185,14 @@ export function buildGroupPrBody(c: GroupCandidate): string {
     `- **description:** ${inlineCode(g.description)}`,
     `- **aliases:** ${optional(g.aliases?.join('; '))}`,
     '',
+    '<details><summary>How it was found</summary>',
+    '',
     `Found as ${inlineCode(c.lead.text)} in ${link(c.lead.origin)}${c.lead.context ? ` (${inlineCode(c.lead.context)})` : ''}.`,
     '',
     'Pages considered:',
     ...c.considered.map((x) => `- ${link(x.url)}: ${inlineCode(x.verdict)}`),
+    '',
+    '</details>',
   ].join('\n');
 }
 

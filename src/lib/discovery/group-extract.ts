@@ -1,6 +1,8 @@
 // No-tools model calls of the groups pass: splitting an organiser string
 // into names, and turning a fetched homepage into a registry draft. Both
 // treat their input as hostile data (docs/discovery-agent.md).
+import { isFullPersonName } from '../group-validation';
+import { DESCRIPTION_MAX } from '../validation';
 import { GROUP_KINDS, type GroupKind } from '../types';
 import {
   clip,
@@ -138,10 +140,10 @@ function groupPrompt(topics: readonly string[]): string {
     'Set "found" to false and "group" to null when the page belongs to someone else, is a personal profile, publication list or news item, is a university, faculty or department rather than one group, institute, network or society, or when the body does not do computational or theoretical chemistry or materials work that fits at least one topic in the vocabulary below. Do the same when you are not confident.',
     'The hint (the name we are looking for and where it was mentioned) is unverified; take every field from the page only.',
     '"kind": "group" for a PI-led research group or lab, "institute" for a research institute or centre, "network" for a distributed network or consortium, "society" for a learned society or its division.',
-    '"pi": the head of a group, only when kind is "group" and the page names one, otherwise null. "parent": the host institution when the page names one, otherwise null.',
+    '"pi": the head of a group, only when kind is "group" and the page names one, as their full name with both given name and family name (for joint heads, each in full, joined by "and"). Otherwise null, including when the page gives only a given name or only a family name. "parent": the host institution when the page names one, otherwise null.',
     '"location": where the body is based, as the page states it: the city or town from an address, contact block or footer, or from the body\'s own name (as in "Zuse Institute Berlin"), and the ISO 3166-1 alpha-2 code of that city\'s country. It is required for kind "group" and "institute", so look through the whole page for it; use null only when the page names no place at all, or for a network or society without one.',
     `Choose every "topics" entry only from this vocabulary: ${topics.join(', ')}. At most ${MAX_TOPICS}.`,
-    'Write "name" as the page names the body, and "description" in English, in your own words, 280 characters maximum, never copied.',
+    `Write "name" as the page names the body, and "description" in English, in your own words, ${DESCRIPTION_MAX} characters maximum, never copied.`,
     '"confidence": 0 to 1, how sure you are that this page is that body\'s official homepage.',
     DATA_RULE,
   ].join(' ');
@@ -223,10 +225,12 @@ export async function extractGroup(
       name: clip(g.name.trim(), 140),
       kind,
       topics,
-      description: clip(g.description.trim(), 280),
+      description: clip(g.description.trim(), DESCRIPTION_MAX),
       confidence: Math.min(1, Math.max(0, g.confidence)),
     };
-    if (kind === 'group' && g.pi) out.pi = clip(g.pi, 140);
+    // A partial name ("Sam", "Prof. Shinoda") would fail validation and sink
+    // the whole draft; the field is optional, so it is left out instead.
+    if (kind === 'group' && g.pi && isFullPersonName(g.pi.trim())) out.pi = clip(g.pi, 140);
     if (g.parent) out.parent = clip(g.parent, 140);
     if (g.location?.city.trim()) {
       out.location = {

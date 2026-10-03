@@ -1,4 +1,5 @@
 ---
+import Description from './Description.astro';
 import type { LoadedEvent } from '../lib/types';
 import { filterRowFromEvent } from '../lib/filter';
 import { compareISO, formatDate, formatDateRange, type ISODate } from '../lib/dates';
@@ -53,7 +54,7 @@ const place =
       {event.organizer && <> · {event.organizer}</>}
     </p>
 
-    <p class="event__desc">{event.description}</p>
+    <Description text={event.description} />
 
     <p class="event__tags">
       {event.topics.map((t) => (

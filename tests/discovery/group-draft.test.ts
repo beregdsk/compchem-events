@@ -43,6 +43,20 @@ describe('synthesizeGroupDraft', () => {
     ).toBeUndefined();
   });
 
+  it('adds no alias when the matched text is a page title or an address line', () => {
+    for (const matched of [
+      'Lindh Group – Department of Chemistry – Uppsala University',
+      'Molecular Simulation | Research directory | University of Calgary',
+      'COSMO lab, Department of Physics, EPFL, Switzerland',
+    ]) {
+      expect(
+        synthesizeGroupDraft(fields, 'https://a.example/', matched, new Set(), '2026-09-29')
+          .aliases,
+        matched,
+      ).toBeUndefined();
+    }
+  });
+
   it('suffixes a taken id', () => {
     const taken = new Set(['laboratory-of-computational-science-and-modeling']);
     expect(synthesizeGroupDraft(fields, 'https://a.example/', 'x', taken, '2026-09-29').id).toBe(

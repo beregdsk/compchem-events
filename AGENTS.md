@@ -33,7 +33,7 @@ Run lint, typecheck, validate and test before every commit.
 ## Ground rules
 
 1. **Never invent data.** Do not add an event from memory. Every real event needs a `url` (and, if the dates come from elsewhere, a `source_url`) on the organiser's official site, read by you, not recalled. If you cannot verify something, leave it out and say so.
-2. **Respect copyright.** Do not paste text from organiser websites. Write `description` in your own words, 280 characters or fewer.
+2. **Respect copyright.** Do not paste text from organiser websites. Write `description` in your own words, 600 characters or fewer. The one exception is a mailing-list post that links no page of its own: with nowhere else to read it, its full text is kept as the description (`isLinklessMailingListPost` in `src/lib/validation.ts`).
 3. **Static first.** Pages are built to static files. Server code is allowed in the Cloudflare Worker (`src/worker/`) for what a build cannot do; it answers only the paths listed under `run_worker_first` in `wrangler.jsonc`, and the site must stay readable if it is down.
 4. **Say what you collect.** Cookies, analytics and third-party scripts are allowed, but anything that stores or sends data about a visitor must be described on `/about/` in the same PR.
 5. **No secrets in the repo.** Tokens and hook URLs are GitHub or Cloudflare secrets. Never commit `.env` files. Site-specific placeholder values belong in `site.config.ts` only.

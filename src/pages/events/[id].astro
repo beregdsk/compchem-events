@@ -178,7 +178,7 @@ const jsonLd = {
       </dd>
     </dl>
 
-    <p>{event.description}</p>
+    <p class="event__fulltext">{event.description}</p>
 
     {event.status_derived !== 'past' && (
       <p class="interest mono" id="interest" data-event-id={event.id} hidden>

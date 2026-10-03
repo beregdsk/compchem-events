@@ -986,6 +986,15 @@ describe('buildGroupPrBody', () => {
     expect(body).toContain('- **website:** <https://www.kofo.mpg.de/neese>');
     expect(body).not.toMatch(/^##/m);
   });
+
+  it('is laid out like an event PR, with how it was found folded away', () => {
+    const lines = buildGroupPrBody(groupCandidate({})).split('\n');
+    expect(lines[1]).toBe('');
+    expect(lines[2]).toMatch(/^- \*\*name:\*\* /);
+    const details = lines.indexOf('<details><summary>How it was found</summary>');
+    expect(details).toBeGreaterThan(lines.findIndex((l) => l.startsWith('- **aliases:**')));
+    expect(lines.at(-1)).toBe('</details>');
+  });
 });
 
 describe('proposeGroups', () => {

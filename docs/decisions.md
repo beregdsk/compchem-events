@@ -741,3 +741,33 @@ clearing cookies lets someone mark twice, which is accepted at this scale
 rather than adding accounts. Marks are stored in the same D1 database and
 under the same cookie as saved preferences, only for event ids the build
 lists, and only upcoming events show the control.
+
+## 2026-10-04 — Longer descriptions, and full text for linkless mailing-list posts
+
+280 characters cut most descriptions short (the clipped "…" endings in the
+registry show it), so the own-words limit is now 600, for events, positions and
+groups. A mailing-list post that links no page of its own is different: the
+entry's `url` can only point at the list's page, so a reader has nowhere to
+read the announcement. Its full text becomes the description instead. This
+is an exception to rule 2 made on the maintainer's request; it is narrow by
+construction, since the validator allows a description over 600 characters
+only when `url` and `source_url` both equal a `kind: mailbox` source's `url`.
+The schemas' `maxLength` is therefore 8,000 for events and positions (the
+full-text cap) and 600 for groups; the 600 limit itself lives in the validator.
+
+## 2026-10-04 — A group `pi` names each head in full
+
+A group PR proposed `pi: Sam` and was flagged high-confidence; the extractor's
+confidence is about the page, not each field. `pi` must now give each head's
+given and family name (`isFullPersonName`), as a validator error, so such a PR
+fails CI and is never flagged. The extractor drops a partial name rather than
+losing the whole draft. Two entries on main ("Prof. Shinoda", "Prof Yu") were
+corrected from their groups' own member pages.
+
+## 2026-10-04 — A daily data audit, reported as a PR
+
+Entries on main drift (pages change, extraction mistakes slip through review),
+so a daily job re-checks 40 of them against their own pages and proposes fixes
+in one PR. A model may change only text fields, and only to values the page
+gives; every fix must validate. Findings without a fix are listed for a human
+in the same PR, or, when nothing changed, in an issue (a PR needs a diff).

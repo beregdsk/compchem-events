@@ -292,3 +292,25 @@ describe('warnings', () => {
     expect(errorsFor({ ...valid, url: 'https://example.org' })).toEqual([]);
   });
 });
+
+describe('rule 10: description length', () => {
+  const list = 'https://psi-k.net/important-new-psi-k-mailing-list/';
+
+  it('accepts 600 characters and rejects 601', () => {
+    expect(errorsFor({ ...valid, description: 'x. '.repeat(200) })).toEqual([]);
+    expect(errorsFor({ ...valid, description: `${'x. '.repeat(200)}y` }).join()).toMatch(
+      /description: description is 601 characters/,
+    );
+  });
+
+  it('accepts the full text of a mailing-list post that linked no page', () => {
+    const post = { ...valid, url: list, source_url: list, description: 'Line.\n'.repeat(500) };
+    expect(errorsFor(post)).toEqual([]);
+    expect(warningsFor(post).join()).not.toMatch(/copied/i);
+  });
+
+  it('still caps a long description when the post linked its own page', () => {
+    const post = { ...valid, source_url: list, description: 'Line.\n'.repeat(500) };
+    expect(errorsFor(post).join()).toMatch(/at most 600/);
+  });
+});

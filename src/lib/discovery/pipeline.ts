@@ -1,4 +1,6 @@
 import {
+  FULL_TEXT_MAX,
+  isLinklessMailingListPost,
   loadTopics,
   loadValidationContext,
   validateEvent,
@@ -10,6 +12,7 @@ import type { RawEvent, RawPosition } from '../types';
 import { draftFilePath, synthesizeDraft } from './draft';
 import { cecamEventText, cecamEventUrl, fetchCecamEvents } from './cecam-client';
 import {
+  clip,
   extractEvent,
   extractEvents,
   type ExtractedFields,
@@ -207,7 +210,11 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
   const sources = loadSources(options.sourcesPath);
   const state = loadState(options.statePath);
   const today = options.today ?? todayUTC();
-  const ctx: ValidationContext = loadValidationContext('.', today);
+  // The mailing lists are this run's own mailbox sources, which tests swap out.
+  const ctx: ValidationContext = {
+    ...loadValidationContext('.', today),
+    mailingListUrls: new Set(sources.filter((s) => s.kind === 'mailbox').map((s) => s.url)),
+  };
   const log = options.log ?? (() => {});
   const keywords = relevanceKeywords([...ctx.topics]);
   const vocabulary = loadTopics();
@@ -322,6 +329,20 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
     origins.set(draft.id, keys);
   }
 
+  /**
+   * A mailing-list post that linked no page of its own has nowhere else to
+   * read it, so its full text becomes the description, tidied of trailing
+   * spaces and runs of blank lines.
+   */
+  function withFullPostText<T extends RawEvent | RawPosition>(draft: T, text: string): T {
+    if (!isLinklessMailingListPost(draft, ctx)) return draft;
+    const tidy = text
+      .replace(/[ \t]+$/gm, '')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+    return { ...draft, description: clip(tidy, FULL_TEXT_MAX) };
+  }
+
   function draftFromFields(fields: ExtractedFields, sourceUrl: string): RawEvent {
     return synthesizeDraft(
       {
@@ -403,7 +424,10 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
               ? position.topics
               : keywordTopics(`${position.title} ${position.description}`, vocabulary);
           acceptPosition(
-            synthesizePositionDraft(position, input.sourceUrl, topics, today),
+            withFullPostText(
+              synthesizePositionDraft(position, input.sourceUrl, topics, today),
+              input.text,
+            ),
             position.confidence,
             origin,
           );
@@ -420,7 +444,11 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
             );
       for (const fields of found) {
         if (fields) {
-          acceptDraft(draftFromFields(fields, input.sourceUrl), input.sourceUrl, origin);
+          acceptDraft(
+            withFullPostText(draftFromFields(fields, input.sourceUrl), input.text),
+            input.sourceUrl,
+            origin,
+          );
         }
       }
       return true;

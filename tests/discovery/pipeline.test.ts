@@ -1002,6 +1002,50 @@ describe('runPipeline', () => {
       }
     });
 
+    it('keeps the full text of a post that links no page, and summarises one that does', async () => {
+      const { path: statePath, cleanup: cleanupState } = tmpStatePath();
+      const { path: sourcesPath, cleanup: cleanupSources } = tmpSourcesFile(
+        '- name: Psi-k\n  url: https://psi-k.example/mailing-list\n  kind: mailbox\n',
+      );
+      try {
+        const extractFetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+          const body = JSON.parse((init?.body as string) ?? '{}') as {
+            messages: Array<{ content: string }>;
+          };
+          const title = body.messages[1]!.content.split('\n')[0]!;
+          const url = title.startsWith('First') ? null : 'https://example.org/second';
+          return new Response(
+            JSON.stringify({
+              choices: [{ message: { content: JSON.stringify(extractedFor(title, url)) } }],
+            }),
+            { status: 200 },
+          );
+        }) as typeof fetch;
+        const result = await runPipeline({
+          sourcesPath,
+          statePath,
+          userAgent: 'Test Agent (+https://example.org)',
+          maxPages: 50,
+          maxTokens: 500_000,
+          today: '2026-09-23',
+          sleepImpl: async () => {},
+          extract: { apiKey: 'sk-test', model: 'test-extract-model', fetchImpl: extractFetch },
+          mailbox: dummyCredentials,
+          mailboxFetchImpl: fakeMailboxFetchImpl(allMessages),
+        });
+        const byTitle = new Map(result.candidates.map((c) => [c.title, c]));
+        const first = byTitle.get('First Chemistry Announcement')!;
+        expect(first.url).toBe('https://psi-k.example/mailing-list');
+        expect(first.description).toBe(allMessages[0]!.text);
+        expect(byTitle.get('Second Chemistry Announcement')!.description).toBe(
+          'A workshop: Second Chemistry Announcement.',
+        );
+      } finally {
+        cleanupState();
+        cleanupSources();
+      }
+    });
+
     it('rolls back a message whose extraction fails, retrying it (and only it) on the next run', async () => {
       const { path: statePath, cleanup: cleanupState } = tmpStatePath();
       const { path: sourcesPath, cleanup: cleanupSources } = tmpSourcesFile(

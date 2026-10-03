@@ -393,6 +393,8 @@ export async function postReview(
 export interface FailureIssue {
   title: string;
   label: string;
+  /** The body's first line, given the number of failures. */
+  intro?: (count: number) => string;
 }
 
 const DISCOVERY_ISSUE: FailureIssue = {
@@ -438,7 +440,8 @@ export async function syncFailureIssue(
   }
 
   const body = [
-    `The latest discovery run found ${errors.length} source(s) failing to fetch or extract:`,
+    issue.intro?.(errors.length) ??
+      `The latest discovery run found ${errors.length} source(s) failing to fetch or extract:`,
     '',
     ...errors.map((e) => `- \`${e.source}\`: ${e.message}`),
   ].join('\n');
@@ -462,4 +465,20 @@ export async function syncFailureIssue(
   if (res.status !== 201) {
     throw new Error(`failed to create the failure-tracking issue: HTTP ${res.status}`);
   }
+}
+
+/** Opens a new issue; for reports that are not a rolling tracking issue. */
+export async function createIssue(
+  title: string,
+  body: string,
+  labels: readonly string[],
+  options: GitHubOptions,
+): Promise<{ number: number }> {
+  const res = await githubRequest<{ number: number }>(options, 'POST', '/issues', {
+    title,
+    body,
+    labels,
+  });
+  if (res.status !== 201) throw new Error(`failed to create issue "${title}": HTTP ${res.status}`);
+  return { number: res.data.number };
 }

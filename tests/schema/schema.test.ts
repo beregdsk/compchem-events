@@ -64,8 +64,9 @@ describe('event schema', () => {
     expect(validate({ ...base, topics: ['dft', 'dft'] })).toBe(false);
   });
 
-  it('rejects a description over 280 characters', () => {
-    expect(validate({ ...base, description: 'x'.repeat(281) })).toBe(false);
+  it('accepts a description of up to 8000 characters, the full-text cap', () => {
+    expect(validate({ ...base, description: 'x'.repeat(8000) })).toBe(true);
+    expect(validate({ ...base, description: 'x'.repeat(8001) })).toBe(false);
   });
 
   it('rejects a lowercase country code', () => {

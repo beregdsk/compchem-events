@@ -22,6 +22,7 @@
     "discover:run": "tsx scripts/discovery/run.ts",
     "discover:groups-backfill": "tsx scripts/discovery/groups-backfill.ts",
     "discover:groups-crawl": "tsx scripts/discovery/groups-crawl.ts",
+    "audit": "tsx scripts/audit/run.ts",
     "topics:snapshot": "tsx scripts/topics/snapshot.ts",
     "topics:propose-map": "tsx scripts/topics/propose-map.ts"
   },

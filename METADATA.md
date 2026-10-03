@@ -87,6 +87,7 @@ publishing workflow.
 | `scripts/validate.ts` | CLI entry point for `npm run validate`. Walks `data/events/`, `data/positions/` and `data/groups/` and checks `data/sources.yaml`, reports problems and exits non-zero on any error. Thin: the logic is in `src/lib/validation.ts` and `src/lib/discovery/sources.ts` so the discovery agent can import it as a library. |
 | `scripts/discovery/run.ts` | The discovery agent's cron entry point (`npm run discover:run`): validates its environment, then runs fetch → extract → classify → open pull requests → label high-confidence ones. |
 | `scripts/discovery/groups-crawl.ts` | The groups crawler (`npm run discover:groups-crawl`): takes the lock, gathers seeds, crawls, resolves the leads and proposes verified groups in batches of ≤ 50 on `discovery/groups-crawl/<date>-<n>`. Flags for the big crawl; `run.ts` calls it nightly with small defaults. |
+| `scripts/audit/run.ts` | The daily data audit (`npm run audit`, `--dry-run` prints the report): checks a slice of the entries on main against their pages and opens one PR with the fixes (or an issue when there are none). |
 | `scripts/discovery/config.ts` | `buildConfig`: the discovery agent's settings from the environment, shared by `run.ts` and the runners. |
 | `scripts/discovery/groups-backfill.ts` | One-off (`npm run discover:groups-backfill`): resolves the groups behind every merged event, position and group listing and proposes them all as one PR on `discovery/groups-backfill`; a re-run updates that PR. |
 | `scripts/topics/propose-map.ts` | By hand (`npm run topics:propose-map`): pulls OpenAlex topics from the compchem-adjacent subfields, places them under site topics by keyword rules and then a no-tools model call, and proposes the `openalex` lists in `data/topics.yaml` as a PR on `data/topic-map-<date>`. |
@@ -102,6 +103,7 @@ behaviour lives and where tests point.
 
 | Path | What it does |
 | --- | --- |
+| `excerpt.ts` | The opening of a long text, cut at a word boundary, for cards and meta tags. |
 | `dates.ts` | The only place dates are parsed. ISO `YYYY-MM-DD` strings handled as UTC calendar dates, never through the local timezone. Parsing, arithmetic, comparison, formatting. |
 | `events.ts` | The single data loader. Reads and parses the YAML tree, derives each event's status, and splits upcoming from past. Also computes upcoming deadlines. |
 | `validation.ts` | Schema validation (Ajv) plus the semantic rules the schema cannot express — end before start, deadline after end, unknown topic or country, a future `added`, id/filename/folder agreement. Exported as `validateEvent` for reuse. |
@@ -152,6 +154,7 @@ behaviour lives and where tests point.
 | `discovery/groups.ts` | Resolves group leads into validated drafts: registry match, name split, listing link or search, forced fetch, verification, and the 90-day negative cache. Under `MAX_SEARCHES`, `MAX_PAGES` and `MAX_TOKENS`. |
 | `discovery/groups-pass.ts` | The groups pass of a scheduled run: reads open group PRs, resolves this run's leads, proposes drafts as pull requests, and forgets cached names whose PR was not opened. Never rejects. |
 | `discovery/parsers/group-listing.ts` | Deterministic parser (no LLM) for `group-listing` sources: every link in the main content becomes a group lead with its heading as context. |
+| `discovery/audit.ts` | The data audit's checks: which entries are due, mechanical findings, the model's review against the page, fixes kept only when they validate, and the report. |
 | `discovery/auto-approve.ts` | Labels open discovery PRs `high-confidence` when confidence ≥ 0.90 and CI passed. Never merges. |
 | `types.ts` | The shared vocabulary: event types, formats, deadline types, statuses, and the loaded-event shape. |
 | `filter.ts` | Filter state and matching. Parses and serialises the query string, and decides whether a row matches. Shared verbatim between the server render, the browser and the Worker so all three agree; `filterRowFromEvent` builds the row each of them matches. |
@@ -196,6 +199,7 @@ One file per URL. Pages stay thin; they compose `src/lib/`.
 | Path | What it is |
 | --- | --- |
 | `layouts/Base.astro` | The page shell: masthead, footer, metadata, global stylesheet. |
+| `components/Description.astro` | A card's description; a full mailing-list post shows its opening with the rest in a "Full announcement" disclosure. |
 | `components/EventRow.astro` | One event in a list, with its dates, place and topics. |
 | `components/PositionRow.astro` | One position in a list: deadline or "no deadline", level, institution, place, topics, and a stale note. |
 | `components/GroupRow.astro` | One group in a list: linked name, PI, parent, place, description and topics. |

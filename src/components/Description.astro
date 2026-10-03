@@ -1,0 +1,23 @@
+---
+// A card's description. A mailing-list post kept whole (see
+// isLinklessMailingListPost) is far longer than a card should be, so the card
+// shows its opening and folds the full text into a disclosure that needs no JS.
+import { excerpt } from '../lib/excerpt';
+import { DESCRIPTION_MAX } from '../lib/validation';
+
+interface Props {
+  text: string;
+}
+
+const { text } = Astro.props;
+const long = text.length > DESCRIPTION_MAX;
+const lead = long ? excerpt(text) : text;
+---
+
+<p class="event__desc">{lead}</p>
+{long && (
+  <details class="event__full">
+    <summary class="mono">Full announcement</summary>
+    <p class="event__fulltext">{text}</p>
+  </details>
+)}

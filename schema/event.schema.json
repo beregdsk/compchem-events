@@ -48,7 +48,7 @@
       "uniqueItems": true,
       "items": { "type": "string" }
     },
-    "description": { "type": "string", "minLength": 1, "maxLength": 280 },
+    "description": { "type": "string", "minLength": 1, "maxLength": 8000 },
     "deadlines": { "type": "array", "items": { "$ref": "#/$defs/deadline" } },
     "status": { "enum": ["scheduled", "postponed", "cancelled"] },
     "status_note": { "type": "string", "minLength": 1, "maxLength": 200 },

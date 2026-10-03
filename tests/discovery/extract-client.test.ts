@@ -351,14 +351,14 @@ describe('extractEvent', () => {
           organizer: null,
           cost: null,
           topics: ['a', 'not-a-topic', 'b', 'a', 'c', 'd', 'e', 'f'],
-          description: 'word '.repeat(80),
+          description: 'word '.repeat(150),
           confidence: 0.9,
         },
       }),
     );
     const result = await extractEvent('text', { ...options, topics, fetchImpl: impl });
     expect(result!.topics).toEqual(['a', 'b', 'c', 'd', 'e']);
-    expect(result!.description.length).toBeLessThanOrEqual(280);
+    expect(result!.description.length).toBeLessThanOrEqual(600);
     expect(result!.description.endsWith('word…')).toBe(true);
   });
 });
