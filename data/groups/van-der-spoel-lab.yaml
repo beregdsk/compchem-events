@@ -1,0 +1,23 @@
+id: van-der-spoel-lab
+name: van der Spoel lab
+kind: group
+website: https://www.uu.se/en/department/cell-and-molecular-biology/research/computational-biology-and-bioinformatics/van-der-spoel-lab
+topics:
+  - molecular-dynamics
+  - biomolecular-simulation
+  - ml-potentials
+  - software-hpc
+  - ml-chemistry
+description: The van der Spoel lab at Uppsala University's Department of Cell
+  and Molecular Biology conducts research in computational chemistry and
+  molecular simulation, focusing on machine learning force fields, the
+  Alexandria Chemistry Toolkit (ACT), and GROMACS software for biomolecular…
+added: 2026-10-03
+aliases:
+  - van der Spoel lab – Department of Cell and Molecular Biology – Uppsala
+    University
+pi: David Van der Spoel
+parent: Department of Cell and Molecular Biology, Uppsala University
+location:
+  city: Uppsala
+  country: SE
