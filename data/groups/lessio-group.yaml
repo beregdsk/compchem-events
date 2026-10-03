@@ -1,0 +1,17 @@
+id: lessio-group
+name: Lessio Group
+kind: group
+website: https://sites.google.com/view/martina-lessio/home
+topics:
+  - materials-modeling
+  - electronic-structure
+  - dft
+description: Dr. Martina Lessio's research group at the School of Chemistry,
+  UNSW Sydney, focusing on computational chemistry and materials science for
+  sustainability applications.
+added: 2026-10-03
+pi: Martina Lessio
+parent: School of Chemistry, UNSW Sydney
+location:
+  city: Sydney
+  country: AU
