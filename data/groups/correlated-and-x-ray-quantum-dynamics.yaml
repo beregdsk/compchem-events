@@ -1,0 +1,20 @@
+id: correlated-and-x-ray-quantum-dynamics
+name: Correlated and X-Ray Quantum Dynamics
+kind: group
+website: https://www.mpi-hd.mpg.de/personalhomes/evers/
+topics:
+  - quantum-dynamics
+  - spectroscopy
+description: The group Correlated and X-Ray Quantum Dynamics studies quantum
+  optical phenomena and collective effects at hard x-ray energies, focusing on
+  the coupling of x-rays to nuclear resonances in Mössbauer nuclei to advance
+  nuclear quantum optics and spectroscopy.
+added: 2026-10-01
+aliases:
+  - Group "Correlated and X-Ray Quantum Dynamics", Max Planck Institute for
+    Nuclear Physics, Germany
+pi: Jörg Evers
+parent: Max Planck Institute for Nuclear Physics
+location:
+  city: Heidelberg
+  country: DE
