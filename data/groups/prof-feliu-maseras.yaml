@@ -1,0 +1,18 @@
+id: prof-feliu-maseras
+name: Prof. Feliu Maseras
+kind: group
+website: https://iciq.org/research-group/prof-feliu-maseras/overview/
+topics:
+  - dft
+  - catalysis
+  - photochemistry
+  - electrochemistry
+description: Computational chemistry group led by Prof. Feliu Maseras at ICIQ,
+  focusing on DFT and DFT/MM methods to study homogeneous catalysis,
+  photocatalysis, mechanochemistry, and organic electrosynthesis.
+added: 2026-10-03
+pi: Prof. Feliu Maseras
+parent: Institut Català d’Investigació Química (ICIQ)
+location:
+  city: Tarragona
+  country: ES

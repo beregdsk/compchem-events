@@ -1,0 +1,22 @@
+id: luber-group
+name: Luber Group
+kind: group
+website: https://www.chem.uzh.ch/en/research/groups/luber.html
+topics:
+  - catalysis
+  - molecular-dynamics
+  - materials-modeling
+  - biomolecular-simulation
+  - software-hpc
+description: The Luber Group at the University of Zurich specializes in
+  theoretical and computational chemistry, developing advanced methods to
+  investigate chemical processes across gas and condensed phases, with a focus
+  on catalysis, molecular dynamics, and materials modeling.
+added: 2026-10-03
+aliases:
+  - Theoretical and computational chemistry | Department of Chemistry | UZH
+pi: Sandra Luber
+parent: University of Zurich
+location:
+  city: Zurich
+  country: CH

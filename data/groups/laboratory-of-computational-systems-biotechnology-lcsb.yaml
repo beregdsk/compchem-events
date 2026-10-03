@@ -1,0 +1,20 @@
+id: laboratory-of-computational-systems-biotechnology-lcsb
+name: Laboratory of Computational Systems Biotechnology (LCSB)
+kind: group
+website: https://www.epfl.ch/labs/lcsb/
+topics:
+  - biomolecular-simulation
+  - ml-chemistry
+  - catalysis
+description: The Laboratory of Computational Systems Biotechnology (LCSB) at
+  EPFL, led by Prof. Vassily Hatzimanikatis, works at the interface of synthetic
+  and systems biology, using kinetic modeling and machine learning to study
+  cellular networks and design novel biotransformations.
+added: 2026-10-03
+aliases:
+  - Laboratory of Computational Systems Biotechnology
+pi: Vassily Hatzimanikatis
+parent: EPFL
+location:
+  city: Lausanne
+  country: CH

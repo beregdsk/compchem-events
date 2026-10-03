@@ -1,0 +1,20 @@
+id: quantum-and-semiclassical-molecular-dynamics-with-applications-to-ultrafast-spectroscopy-lcpt-epfl
+name: Quantum and semiclassical molecular dynamics with applications to
+  ultrafast spectroscopy – LCPT, EPFL
+kind: group
+website: https://www.epfl.ch/labs/lcpt/research/quantum_dynamics/
+topics:
+  - quantum-dynamics
+  - molecular-dynamics
+  - spectroscopy
+  - excited-states
+  - electronic-structure
+description: Research group at EPFL's LCPT led by Prof. Jiri Vanicek, focusing
+  on quantum and semiclassical molecular dynamics, nonadiabatic processes, and
+  ultrafast time-resolved spectroscopy using ab initio methods.
+added: 2026-10-03
+pi: Jiri Vanicek
+parent: EPFL
+location:
+  city: Lausanne
+  country: CH

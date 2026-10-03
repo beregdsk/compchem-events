@@ -1,0 +1,22 @@
+id: theoretical-chemistry-the-reiher-research-group
+name: Theoretical Chemistry - The Reiher Research Group
+kind: group
+website: https://reiher.ethz.ch/
+topics:
+  - electronic-structure
+  - dft
+  - wavefunction-methods
+  - quantum-dynamics
+  - molecular-dynamics
+description: Theoretical Chemistry - The Reiher Research Group at ETH Zurich,
+  led by Prof. Dr. Markus Reiher, is a computational and theoretical chemistry
+  group focusing on the development of new quantum chemical methods and their
+  applications in molecular sciences.
+added: 2026-10-03
+aliases:
+  - Homepage – Theoretical Chemistry - The Reiher Research Group | ETH Zurich
+pi: Prof. Dr. Markus Reiher
+parent: ETH Zurich
+location:
+  city: Zürich
+  country: CH

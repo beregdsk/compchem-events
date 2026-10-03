@@ -1,0 +1,21 @@
+id: molecular-theory-and-spectroscopy
+name: Molecular Theory and Spectroscopy
+kind: group
+website: https://www.kofo.mpg.de/en/research/molecular-theory-and-spectroscopy
+topics:
+  - electronic-structure
+  - dft
+  - wavefunction-methods
+  - spectroscopy
+  - software-hpc
+description: The group develops quantum chemical methods, applies computational
+  chemistry and molecular spectroscopy to investigate transition metal catalysis
+  and electronic structure, and creates the ORCA software.
+added: 2026-10-03
+aliases:
+  - Molecular Theory and Spectroscopy | Max-Planck-Institut für Kohlenforschung
+pi: Frank Neese
+parent: Max-Planck-Institut für Kohlenforschung
+location:
+  city: Mülheim
+  country: DE

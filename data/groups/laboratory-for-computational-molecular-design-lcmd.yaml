@@ -1,0 +1,22 @@
+id: laboratory-for-computational-molecular-design-lcmd
+name: Laboratory for Computational Molecular Design (LCMD)
+kind: group
+website: https://www.epfl.ch/labs/lcmd/
+topics:
+  - electronic-structure
+  - catalysis
+  - ml-chemistry
+  - ml-potentials
+  - materials-modeling
+description: The Laboratory for Computational Molecular Design (LCMD) is a
+  computational, theoretical, and digital laboratory at EPFL. It focuses on
+  electronic structure theory, method development, and conceptual work applied
+  to homogeneous catalysis and organic molecular materials…
+added: 2026-10-03
+aliases:
+  - Laboratory for Computational Molecular Design ‐ EPFL
+pi: Prof. Clémence Corminboeuf
+parent: EPFL
+location:
+  city: Lausanne
+  country: CH

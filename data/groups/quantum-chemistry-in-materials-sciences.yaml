@@ -1,0 +1,21 @@
+id: quantum-chemistry-in-materials-sciences
+name: Quantum Chemistry in Materials Sciences
+kind: group
+website: https://www.kofo.mpg.de/en/research/molecular-theory-and-spectroscopy/auer/research-topics/quantum-chemistry-in-material-sciences
+topics:
+  - electronic-structure
+  - dft
+  - materials-modeling
+  - catalysis
+description: The group applies electronic structure theory to materials
+  sciences, focusing on heterogeneous catalysis, twin polymerization, and the
+  computational modeling of complex material systems and reaction mechanisms.
+added: 2026-10-03
+aliases:
+  - Quantum Chemistry in Materials Sciences | Max-Planck-Institut für
+    Kohlenforschung
+pi: Alexander Auer
+parent: Max-Planck-Institut für Kohlenforschung
+location:
+  city: Mülheim an der Ruhr
+  country: DE

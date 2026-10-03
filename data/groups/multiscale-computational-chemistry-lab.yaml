@@ -1,0 +1,23 @@
+id: multiscale-computational-chemistry-lab
+name: Multiscale Computational Chemistry Lab
+kind: group
+website: https://researchdirectory.ucalgary.ca/multiscale-computational-chemistry/people
+topics:
+  - dft
+  - electronic-structure
+  - molecular-dynamics
+  - software-hpc
+  - materials-modeling
+description: The Multiscale Computational Chemistry Lab, also known as the
+  Salahub Lab at the University of Calgary, is a research group led by Principal
+  Investigator Dennis Salahub. The lab focuses on multiscale computational
+  chemistry, developing and applying advanced simulation methods…
+added: 2026-10-03
+aliases:
+  - People | Multiscale Computational Chemistry Lab | Research directory |
+    University of Calgary
+pi: Dennis Salahub
+parent: University of Calgary
+location:
+  city: Calgary
+  country: CA

@@ -1,0 +1,20 @@
+id: havenith-group
+name: Havenith Group
+kind: group
+website: https://www.rug.nl/research/quantum-chemistry/havenith-group/?lang=en
+topics:
+  - electronic-structure
+  - dft
+  - materials-modeling
+  - photochemistry
+  - wavefunction-methods
+description: The Havenith Group at the University of Groningen, working on
+  quantum chemistry, method development, DFT, and valence bond theory for
+  organic photovoltaics and material properties.
+added: 2026-10-03
+aliases:
+  - Quantum Chemistry | Havenith Group | University of Groningen
+parent: University of Groningen
+location:
+  city: Groningen
+  country: NL

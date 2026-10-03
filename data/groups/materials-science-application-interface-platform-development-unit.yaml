@@ -1,0 +1,19 @@
+id: materials-science-application-interface-platform-development-unit
+name: Materials Science Application Interface Platform Development Unit
+kind: group
+website: https://www.riken.jp/en/research/labs/r-ccs/ai_sci_plat/mta_sci_app_interface_plat_dev/index.html
+topics:
+  - electronic-structure
+  - software-hpc
+  - ml-chemistry
+  - materials-modeling
+description: The Materials Science Application Interface Platform Development
+  Unit develops molecular software and theory through foundation models,
+  automating quantum chemistry software generation for HPC and using multimodal
+  AI to drive hypotheses in molecular science.
+added: 2026-10-03
+pi: William Dawson
+parent: RIKEN Center for Computational Science
+location:
+  city: Kobe
+  country: JP

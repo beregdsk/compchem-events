@@ -1,0 +1,20 @@
+id: ananikov-laboratory
+name: Ananikov Laboratory
+kind: group
+website: https://ananikovlab.ru/
+topics:
+  - catalysis
+  - photochemistry
+  - ml-chemistry
+  - spectroscopy
+  - materials-modeling
+description: Ananikov Laboratory, led by Prof. Valentine P. Ananikov, studies
+  molecular complexity and transformations by combining organic synthesis,
+  catalysis, photochemistry, molecular modeling, and machine learning to design
+  sustainable, selective chemical transformations.
+added: 2026-10-03
+pi: Valentine P. Ananikov
+parent: Zelinsky Institute of Organic Chemistry, Russian Academy of Sciences
+location:
+  city: Moscow
+  country: RU

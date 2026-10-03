@@ -1,0 +1,20 @@
+id: digital-materials-science-research-team
+name: Digital Materials Science Research Team
+kind: group
+website: https://www.riken.jp/en/research/labs/r-ccs/digital-mta-sci/index.html
+topics:
+  - materials-modeling
+  - molecular-dynamics
+  - electronic-structure
+  - dft
+  - ml-potentials
+description: The Digital Materials Science Research Team at RIKEN Center for
+  Computational Science develops advanced material simulation methods, data
+  science, and AI techniques to solve materials science issues and build a
+  digital twin for materials research.
+added: 2026-10-03
+pi: Shinji Tsuneyuki
+parent: RIKEN Center for Computational Science
+location:
+  city: Wako
+  country: JP

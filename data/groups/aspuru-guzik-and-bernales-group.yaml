@@ -1,0 +1,22 @@
+id: aspuru-guzik-and-bernales-group
+name: Aspuru-Guzik and Bernales Group
+kind: group
+website: https://www.matter.toronto.edu/
+topics:
+  - quantum-computing-chemistry
+  - materials-modeling
+  - ml-chemistry
+  - electronic-structure
+  - biomolecular-simulation
+description: The Aspuru-Guzik and Bernales Group at the University of Toronto is
+  a theoretical and computational chemistry lab. They work at the interface of
+  theoretical chemistry with physics, computer science, and applied mathematics,
+  focusing on quantum computing, machine learning, and…
+added: 2026-10-03
+aliases:
+  - The Matter Lab
+pi: Alán Aspuru-Guzik
+parent: University of Toronto
+location:
+  city: Toronto
+  country: CA

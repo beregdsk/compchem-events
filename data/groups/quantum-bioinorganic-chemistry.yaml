@@ -1,0 +1,22 @@
+id: quantum-bioinorganic-chemistry
+name: Quantum Bioinorganic Chemistry
+kind: group
+website: https://www.kofo.mpg.de/en/research/molecular-theory-and-spectroscopy/pantazis/research-topics/quantum-bioinorganic-chemistry
+topics:
+  - electronic-structure
+  - dft
+  - wavefunction-methods
+  - spectroscopy
+  - quantum-computing-chemistry
+description: The Quantum Bioinorganic Chemistry group at the Max Planck
+  Institute for Coal Research uses advanced theoretical methods to investigate
+  metalloenzymes and transition metal systems. The group focuses on electronic
+  structure, magnetic properties, and spectroscopic parameters…
+added: 2026-10-03
+aliases:
+  - Quantum Bioinorganic Chemistry | Max-Planck-Institut für Kohlenforschung
+pi: Dimitrios Pantazis
+parent: Max-Planck-Institut für Kohlenforschung
+location:
+  city: Mülheim an der Ruhr
+  country: DE

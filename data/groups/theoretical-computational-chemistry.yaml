@@ -1,0 +1,21 @@
+id: theoretical-computational-chemistry
+name: Theoretical & Computational Chemistry
+kind: group
+website: https://computchem.gal/
+topics:
+  - dft
+  - catalysis
+  - materials-modeling
+  - electronic-structure
+  - molecular-dynamics
+description: Theoretical and computational chemistry group at the University of
+  Santiago de Compostela. Their research focuses on DFT, molecular dynamics,
+  catalysis, and automated methods for studying chemical reactions and molecular
+  systems.
+added: 2026-10-03
+aliases:
+  - Theoretical and Computational Chemistry – Research Group at USC – Spain
+parent: University of Santiago de Compostela
+location:
+  city: Santiago de Compostela
+  country: ES
