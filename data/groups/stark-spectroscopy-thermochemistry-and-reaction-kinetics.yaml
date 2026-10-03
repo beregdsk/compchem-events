@@ -1,0 +1,23 @@
+id: stark-spectroscopy-thermochemistry-and-reaction-kinetics
+name: STARK – Spectroscopy, Thermochemistry And Reaction Kinetics
+kind: group
+website: https://www.sns.it/en/stark-spectroscopy-thermochemistry-and-reaction-kinetics
+topics:
+  - electronic-structure
+  - spectroscopy
+  - dft
+  - ml-chemistry
+  - materials-modeling
+description: The STARK group at Scuola Normale Superiore develops and applies
+  theoretical-computational methods for molecular spectroscopy, thermochemistry,
+  and reaction kinetics, with research focusing on astrochemistry, environmental
+  and sustainable chemistry, and method development.
+added: 2026-10-03
+aliases:
+  - STARK – Spectroscopy, Thermochemistry And Reaction Kinetics |
+    ScuolaNormaleSuperiore
+pi: Nicola Tasinato
+parent: Scuola Normale Superiore
+location:
+  city: Pisa
+  country: IT
