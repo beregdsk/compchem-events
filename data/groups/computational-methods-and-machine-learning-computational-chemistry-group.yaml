@@ -1,0 +1,22 @@
+id: computational-methods-and-machine-learning-computational-chemistry-group
+name: Computational Methods and Machine Learning / Computational Chemistry Group
+kind: group
+website: https://www.compchem.nl/research_areas/advanced-computational-methods-and-machine-learning/
+topics:
+  - ml-chemistry
+  - enhanced-sampling
+  - materials-modeling
+  - molecular-dynamics
+  - software-hpc
+description: The research page for Computational Methods and Machine Learning,
+  part of the Computational Chemistry Group at the Van 't Hoff Institute for
+  Molecular Sciences, University of Amsterdam. It highlights research in
+  molecular visualization, machine learning for molecular modeling…
+added: 2026-10-03
+aliases:
+  - Computational Methods and Machine Learning · Computational Chemistry
+pi: David Dubbeldam, Bernd Ensing, Peter Bolhuis
+parent: Van 't Hoff Institute for Molecular Sciences, University of Amsterdam
+location:
+  city: Amsterdam
+  country: NL
