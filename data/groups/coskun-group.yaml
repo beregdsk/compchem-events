@@ -1,0 +1,17 @@
+id: coskun-group
+name: Coskun Group
+kind: group
+website: https://www.unifr.ch/chem/en/research/groups/coskun/
+topics:
+  - materials-modeling
+  - catalysis
+description: The Coskun Group at the University of Fribourg conducts
+  interdisciplinary research in supramolecular and materials chemistry, focusing
+  on the design, synthesis, and application of functional polymeric materials
+  for CO2 capture and conversion, energy storage, and hydrogen storage.
+added: 2026-10-03
+pi: Ali Coskun
+parent: Department of Chemistry, University of Fribourg
+location:
+  city: Fribourg
+  country: CH
