@@ -1,0 +1,21 @@
+id: computational-chemistry-chimind-c2-spectroscopy-and-computational-chemistry-group-sc2
+name: Computational Chemistry ChimInd (C2χ) - Spectroscopy and Computational
+  Chemistry Group - SC2
+kind: group
+website: https://site.unibo.it/spectroscopy-computational-chemistry/en/research-themes/computational-chemistry-chimind
+topics:
+  - photochemistry
+  - spectroscopy
+  - materials-modeling
+  - molecular-dynamics
+  - biomolecular-simulation
+description: The group conducts advanced research in theoretical and
+  computational photochemistry and spectroscopy, focusing on simulating
+  photoinduced dynamics in complex molecular systems. It also works on
+  computational materials science to predict properties of organic soft matter…
+added: 2026-10-03
+pi: Marco Garavelli
+parent: University of Bologna
+location:
+  city: Bologna
+  country: IT
