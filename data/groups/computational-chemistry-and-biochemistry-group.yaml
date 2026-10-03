@@ -1,0 +1,22 @@
+id: computational-chemistry-and-biochemistry-group
+name: Computational Chemistry and Biochemistry Group
+kind: group
+website: https://www.lnu.se/en/research/research-groups/computational-chemistry-and-biochemistry-group/
+topics:
+  - dft
+  - molecular-dynamics
+  - biomolecular-simulation
+  - drug-design
+  - electronic-structure
+description: The Computational Chemistry and Biochemistry Group (CCBG) at
+  Linnaeus University, based in Kalmar, Sweden, uses computer simulations and
+  quantum chemistry to study biologically relevant molecules, drug resistance in
+  cancer, and metal-ion interactions in proteins.
+added: 2026-10-03
+aliases:
+  - Computational Chemistry and Biochemistry Group | lnu.se
+pi: Ran Friedman
+parent: Department of Chemistry and Biomedical Sciences, Linnaeus University
+location:
+  city: Kalmar
+  country: SE
