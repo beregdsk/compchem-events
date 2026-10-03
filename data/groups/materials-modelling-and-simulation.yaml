@@ -1,0 +1,21 @@
+id: materials-modelling-and-simulation
+name: Materials modelling and simulation
+kind: group
+website: https://www.rmit.edu.au/about/schools-colleges/engineering/research/research-groups/materials-modelling-and-simulation
+topics:
+  - electronic-structure
+  - materials-modeling
+  - molecular-dynamics
+  - biomolecular-simulation
+  - soft-matter
+description: The Materials modelling and simulation research group at RMIT
+  University develops fundamental relationships between atomic structure and
+  properties of molecules and materials to design advanced materials. The team
+  uses electronic structure calculations, molecular mechanics and…
+added: 2026-10-03
+aliases:
+  - Materials modelling and simulation - RMIT University
+parent: RMIT University
+location:
+  city: Melbourne
+  country: AU
