@@ -30,6 +30,13 @@ describe('validatePosition', () => {
     expect(errorsFor(valid)).toEqual([]);
   });
 
+  it('caps the description at 600 characters unless it is a linkless mailing-list post', () => {
+    const list = 'https://www.ccpbiosim.org/';
+    const long = 'A funded PhD project.\n'.repeat(40);
+    expect(errorsFor({ ...valid, description: long }).join()).toMatch(/at most 600/);
+    expect(errorsFor({ ...valid, url: list, source_url: list, description: long })).toEqual([]);
+  });
+
   it('accepts the committed fixtures', () => {
     const entries = readPositionFiles('tests/fixtures/positions/valid');
     expect(entries.length).toBe(2);

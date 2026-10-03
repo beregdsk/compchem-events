@@ -1,6 +1,7 @@
 import ICAL from 'ical.js';
 import { addDays, type ISODate } from '../../dates';
 import type { RawEvent } from '../../types';
+import { DESCRIPTION_MAX } from '../../validation';
 import { synthesizeDraft } from '../draft';
 
 const TYPE_KEYWORDS: Array<[RegExp, RawEvent['type']]> = [
@@ -30,7 +31,7 @@ export interface ICalEvent {
   draft: RawEvent;
   /** LOCATION as written, e.g. "Miramar Palace, San Sebastián, Spain" — not split into city/country. */
   location?: string;
-  /** DESCRIPTION in full; `draft.description` is cut to the schema's 280 characters. */
+  /** DESCRIPTION in full; `draft.description` is cut to `DESCRIPTION_MAX` characters. */
   description?: string;
 }
 
@@ -73,7 +74,7 @@ export function parseICalEvents(feedText: string, sourceUrl: string, today: ISOD
           url: eventUrl,
           source_url: sourceUrl,
           topics: [],
-          description: (event.description || event.summary).slice(0, 280),
+          description: (event.description || event.summary).slice(0, DESCRIPTION_MAX),
         },
         today,
       );

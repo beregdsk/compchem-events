@@ -1,4 +1,5 @@
 ---
+import { excerpt } from '../lib/excerpt';
 import { site } from '../../site.config';
 import OrbitalField from '../components/OrbitalField.astro';
 import SectionNav, { type Section } from '../components/SectionNav.astro';
@@ -14,6 +15,8 @@ interface Props {
 }
 
 const { title, description, path, section } = Astro.props;
+// A mailing-list post kept whole is too long for a meta description; search engines cut at ~160.
+const metaDescription = excerpt(description, 300);
 const canonical = new URL(path, site.url).href;
 const fullTitle = path === '/' ? `${site.name} — ${site.tagline}` : `${title} — ${site.name}`;
 ---
@@ -24,11 +27,11 @@ const fullTitle = path === '/' ? `${site.name} — ${site.tagline}` : `${title} 
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{fullTitle}</title>
-    <meta name="description" content={description} />
+    <meta name="description" content={metaDescription} />
     <link rel="canonical" href={canonical} />
     <meta property="og:type" content="website" />
     <meta property="og:title" content={fullTitle} />
-    <meta property="og:description" content={description} />
+    <meta property="og:description" content={metaDescription} />
     <meta property="og:url" content={canonical} />
     <meta property="og:site_name" content={site.name} />
     <meta name="twitter:card" content="summary" />

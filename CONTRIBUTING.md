@@ -6,7 +6,7 @@ Thank you for helping keep this calendar accurate. There are three ways to add o
 
 1. Fork the repository.
 2. Copy an existing file in `data/events/` (or the example in [docs/data-schema.md](docs/data-schema.md)) to `data/events/<start-year>/<id>.yaml`. The `id` is a lowercase slug ending with the year, for example `euchems-compchem-2027`, and must match the file name.
-3. Fill in every required field from the **organiser's official page**. Write the description in your own words (280 characters or fewer). Do not copy text from the event site.
+3. Fill in every required field from the **organiser's official page**. Write the description in your own words (600 characters or fewer). Do not copy text from the event site.
 4. Set `added` to today's date.
 5. Run `npm run validate` and fix any errors.
 6. Open a pull request. The template has a short checklist.

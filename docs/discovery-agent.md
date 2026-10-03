@@ -94,12 +94,16 @@ So for lists like Psi-k, **subscribe and read the mail**:
 - Deduplicate on `Message-ID`, and keep the same state file as the web sources. A list that cross-posts a CECAM workshop must not produce a second candidate.
 - Everything else is unchanged: schema validation, blocklist, curation screening, one pull request for human review.
 
+A post that links no page of its own (the model reports no `url`) has nowhere else for a reader to see it, so its full text, tidied of trailing spaces and blank-line runs, becomes the entry's `description` instead of a summary; cards show its opening and fold the rest into a "Full announcement" disclosure. This is the one exception to AGENTS.md rule 2, and the validator allows it only when `url` and `source_url` are both a `kind: mailbox` source's `url`.
+
 Implemented as `src/lib/discovery/mailbox-client.ts` (IMAP + MIME parsing), wired into the `kind: 'mailbox'` case in `pipeline.ts`. It was deliberately cheap to add: just another text source feeding the same extract → validate → screen → PR pipeline. The mailbox account, its `discovery` folder and the Psi-k subscription were confirmed working end to end on 2026-09-27, and `data/sources.yaml` has the live `kind: mailbox` entry.
 
 ## Human review
 
 Every discovered PR gets the `needs-review` label. Its body is the raw
 candidate fields plus the classifier's confidence and per-criterion scores —
+group PRs use the same layout, with where the name was found and which pages
+were fetched folded into a "How it was found" section —
 no separate checklist, since one would only restate the fields already shown
 above it. A reviewer checks those fields against the event's official page
 and `docs/curation-policy.md` directly before merging.
@@ -272,6 +276,28 @@ feeds their group links into the same resolver. Spec:
 - Record real pages as fixtures in `tests/discovery/fixtures/` and test extraction with a stubbed LLM client returning canned JSON. CI must never call the real API.
 - Include adversarial fixtures: pages containing prompt-injection text, invalid dates, missing fields, and duplicate events. Assert the pipeline drops or flags them and never produces an invalid file.
 - Test idempotence: running twice on unchanged sources opens no second PR.
+
+## Data audit
+
+`scripts/audit/run.ts` (`npm run audit`) re-checks entries already on main, run daily by cron
+(`~/discovery-agent/audit.sh`, 40 entries a day on the free model). For each upcoming event,
+open position and group it fetches the entry's own page (none for a linkless mailing-list post)
+and collects findings from two places (`src/lib/discovery/audit.ts`):
+
+- mechanical checks: the validator's warnings, and text that `clip` cut off mid-sentence (a
+  description is cut back to its last full sentence);
+- a model that compares the entry with its page and reports contradictions, partial names,
+  wrong locations and broken descriptions, with a fix only when the page gives it.
+
+A model may only fix text fields (`title`, `organizer`, `cost`, `description` for events;
+`title`, `institution`, `group`, `description` for positions; `name`, `pi`, `parent`,
+`description` for groups), and a fix is kept only when the entry still validates. The fixes go
+to one PR on `audit/<date>-<n>` (labels `needs-review`, `audit`; never on a `discovery/` branch,
+so auto-approve leaves it alone), whose body lists every change and every finding that needs a
+human. A run with findings but no fixes has nothing to commit, so it opens an issue with the same
+report instead. Each entry is recorded in `audit-state.json` (next to `STATE_PATH`) with a hash of
+its content, and is audited again only when it changes or after 90 days; entries that errored are
+retried next run and listed in the `Data audit failures` issue.
 
 ## Failure handling
 

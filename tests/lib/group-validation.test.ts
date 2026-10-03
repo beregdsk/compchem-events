@@ -37,6 +37,21 @@ describe('validateGroup', () => {
     expect(errorsFor(valid)).toEqual([]);
   });
 
+  it('requires pi to name each head in full', () => {
+    for (const pi of [
+      'Wataru Shinoda',
+      'Prof. Dr. Markus Reiher',
+      'Dr Agnes Noy',
+      'Tangui Le Bahers and Stephan Steinmann',
+      'David Dubbeldam, Bernd Ensing, Peter Bolhuis',
+    ]) {
+      expect(errorsFor({ ...valid, pi }), pi).toEqual([]);
+    }
+    for (const pi of ['Sam', 'Prof. Shinoda', 'Prof Yu', 'Jeschke and Otsuki']) {
+      expect(errorsFor({ ...valid, pi }).join(), pi).toMatch(/^pi: .*given name and family name/);
+    }
+  });
+
   it('accepts the committed fixtures', () => {
     const entries = readGroupFiles('tests/fixtures/groups/valid');
     expect(entries.length).toBe(2);

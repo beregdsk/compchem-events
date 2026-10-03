@@ -80,6 +80,16 @@ describe('extractGroup', () => {
     });
   });
 
+  it('drops a pi that is not a full name, keeping the rest of the draft', async () => {
+    const g = await extractGroup(
+      'text',
+      { name: 'X', type: 'organisation' },
+      opts(stubLlm({ found: true, group: { ...found.group, pi: 'Sam' } })),
+    );
+    expect(g?.name).toBe(found.group.name);
+    expect(g?.pi).toBeUndefined();
+  });
+
   it('drops pi on a non-group kind', async () => {
     const g = await extractGroup(
       'text',

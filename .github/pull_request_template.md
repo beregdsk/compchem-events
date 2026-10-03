@@ -12,7 +12,7 @@
 
 - [ ] I opened the organiser's **official page** and the title, dates, location and format match
 - [ ] `url` points to the official page; `source_url` (if used) is on the organiser's own site
-- [ ] Description is in my own words and 280 characters or fewer
+- [ ] Description is in my own words and 600 characters or fewer
 - [ ] Deadlines match the official page, with the correct timezone (`AoE` if unstated)
 - [ ] Topics are from `data/topics.yaml`
 - [ ] `added` is set to today's date

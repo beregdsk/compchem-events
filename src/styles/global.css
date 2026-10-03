@@ -625,6 +625,31 @@ a:hover {
   margin-block-end: var(--space-xs);
 }
 
+/* A mailing-list post kept whole: its line breaks carry its structure. */
+.event__fulltext {
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.event__full {
+  margin-block-end: var(--space-xs);
+}
+
+.event__full summary {
+  cursor: pointer;
+  color: var(--link);
+  inline-size: fit-content;
+}
+
+.event__full .event__fulltext {
+  margin-block-start: var(--space-xs);
+}
+
+/* Opened, the full text repeats the preview above it. */
+.event__desc:has(+ .event__full[open]) {
+  display: none;
+}
+
 .event__tags {
   display: flex;
   flex-wrap: wrap;

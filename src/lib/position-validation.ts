@@ -12,7 +12,9 @@ import { compareISO } from './dates';
 import { regionOf } from './regions';
 import type { RawPosition } from './types';
 import {
+  descriptionLengthError,
   isBlocked,
+  isLinklessMailingListPost,
   normaliseTitle,
   type EventFile,
   type ValidationContext,
@@ -92,7 +94,13 @@ export function validatePosition(entry: EventFile, ctx: ValidationContext): Vali
     }
   }
 
-  if (p.description.length > 200 && !p.description.includes('.')) {
+  const tooLong = descriptionLengthError(p, ctx);
+  if (tooLong) err('description', tooLong);
+  if (
+    !isLinklessMailingListPost(p, ctx) &&
+    p.description.length > 200 &&
+    !p.description.includes('.')
+  ) {
     out.warnings.push({
       file: entry.file,
       field: 'description',

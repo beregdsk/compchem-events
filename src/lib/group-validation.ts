@@ -99,6 +99,9 @@ export function validateGroup(entry: EventFile, ctx: ValidationContext): Validat
       err(field, `host of ${field} is on the blocklist in data/blocklist.yaml`);
     }
   }
+  if (g.pi !== undefined && !isFullPersonName(g.pi)) {
+    err('pi', `pi "${g.pi}" must give each head's given name and family name, as on the website`);
+  }
   const own = normaliseGroupName(g.name);
   if ((g.aliases ?? []).some((a) => normaliseGroupName(a) === own)) {
     err('aliases', 'an alias must differ from the name');
@@ -112,6 +115,25 @@ export function validateGroup(entry: EventFile, ctx: ValidationContext): Validat
     });
   }
   return out;
+}
+
+const HONORIFIC = /^(?:prof(?:essor)?|dr|assoc|associate|asst|assistant|ass)\.?\s+/i;
+
+/**
+ * A `pi` names one or more people in full: "Wataru Shinoda", "Prof. Dr. Markus
+ * Reiher", "Tangui Le Bahers and Stephan Steinmann". A bare given name
+ * ("Sam"), a bare family name ("Prof. Shinoda") or a pair of surnames
+ * ("Jeschke and Otsuki") is not one; models drop the rest of a name readily.
+ */
+export function isFullPersonName(pi: string): boolean {
+  const people = pi.split(/\s*(?:,|;|&|\band\b)\s*/i).filter((p) => p.trim() !== '');
+  if (people.length === 0) return false;
+  return people.every((person) => {
+    let rest = person.trim();
+    for (let prev = ''; prev !== rest;) [prev, rest] = [rest, rest.replace(HONORIFIC, '')];
+    const words = rest.split(/\s+/).filter((w) => /\p{L}/u.test(w));
+    return words.length >= 2;
+  });
 }
 
 /** Cross-file checks: no shared id, website, or name/alias. */

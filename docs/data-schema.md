@@ -20,7 +20,7 @@ One YAML file per event at `data/events/<start-year>/<id>.yaml`. The JSON Schema
 | `cost` | string | no | Registration cost as the organiser states it, 1-200 characters, e.g. `Free` or `€200 early bird, €300 after 1 May`. Shown on the event page. |
 | `fee` | enum | no | `free` or `paid`: whether attending costs anything, as the organiser's page states it. `paid` whenever any registration fee applies, even with waivers or student rates. Omit when the page does not say. Drives the home page's cost filter; an event without it matches only "any". |
 | `topics` | string[] | yes | 1-5 unique values from `data/topics.yaml`. |
-| `description` | string | yes | Own words, 280 characters or fewer, plain text. |
+| `description` | string | yes | Own words, 600 characters or fewer, plain text. A mailing-list post that links no page of its own (`url` and `source_url` both the list's page in `data/sources.yaml`) keeps its full text instead, up to 8,000 characters. |
 | `deadlines` | object[] | no | See below. |
 | `status` | enum | no | `scheduled` (default), `postponed`, `cancelled`. |
 | `status_note` | string | if `status` is not `scheduled` | Short explanation, 200 characters or fewer. |
@@ -50,6 +50,7 @@ Errors (fail validation):
 6. `url` and `source_url` use `https://` and their host is not in `data/blocklist.yaml`.
 7. No deadline date falls after `end_date`.
 8. `location` is present unless the format is `online`.
+9. `description` is at most 600 characters, unless the event is a mailing-list post that linked no page of its own (`url` and `source_url` both equal a `kind: mailbox` source's `url`), whose full text is kept.
 
 Warnings (reported, do not fail):
 

@@ -16,7 +16,7 @@ One YAML file per position at `data/positions/<added-year>/<id>.yaml`. Unknown f
 | `source_url`  | string   | no       | Where it was found. `https://`. Equals `url` when the post linked no advert; that equality is how shared fallback URLs are recognised. |
 | `deadline`    | date     | no       | Application deadline, `YYYY-MM-DD`, a real calendar date (as is `added`). Omitted when the advert states none.                         |
 | `topics`      | string[] | yes      | 1-5 unique slugs from `data/topics.yaml`.                                                                                              |
-| `description` | string   | yes      | Own words, plain text, 1–280 characters.                                                                                               |
+| `description` | string   | yes      | Own words, plain text, 1–600 characters; a linkless mailing-list post keeps its full text (up to 8,000), as for events.                |
 | `added`       | date     | yes      | Date first seen. Not in the future.                                                                                                    |
 | `fixture`     | boolean  | no       | Development data; excluded from production builds.                                                                                     |
 
