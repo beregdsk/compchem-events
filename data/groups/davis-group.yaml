@@ -1,0 +1,18 @@
+id: davis-group
+name: Davis Group
+kind: group
+website: https://www.chm.bris.ac.uk/org/adavis/index.html
+topics:
+  - biomolecular-simulation
+  - molecular-dynamics
+  - materials-modeling
+description: The old official website of the Davis Group, led by Professor
+  Anthony Davis at the School of Chemistry, University of Bristol, UK. The group
+  conducts research in supramolecular chemistry, molecular recognition, and
+  synthetic receptors.
+added: 2026-10-03
+pi: Anthony Davis
+parent: School of Chemistry, University of Bristol
+location:
+  city: Bristol
+  country: GB
