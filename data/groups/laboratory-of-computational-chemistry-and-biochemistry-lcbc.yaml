@@ -1,0 +1,20 @@
+id: laboratory-of-computational-chemistry-and-biochemistry-lcbc
+name: Laboratory of Computational Chemistry and Biochemistry (LCBC)
+kind: group
+website: https://www.epfl.ch/labs/lcbc/
+topics:
+  - dft
+  - molecular-dynamics
+  - biomolecular-simulation
+  - ml-potentials
+  - materials-modeling
+description: The Laboratory of Computational Chemistry and Biochemistry (LCBC)
+  at EPFL, led by Ursula Röthlisberger, focuses on ab initio molecular dynamics
+  methods based on density functional theory, such as Car-Parrinello
+  simulations, applied to chemical and biological systems.
+added: 2026-10-03
+pi: Ursula Röthlisberger
+parent: EPFL
+location:
+  city: Lausanne
+  country: CH
