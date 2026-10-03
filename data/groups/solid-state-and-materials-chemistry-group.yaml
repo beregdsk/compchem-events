@@ -1,0 +1,20 @@
+id: solid-state-and-materials-chemistry-group
+name: Solid state and materials chemistry group
+kind: group
+website: https://www.unsw.edu.au/science/our-schools/chemistry/our-research/our-research-groups/solid-state-and-materials-chemistry-group
+topics:
+  - materials-modeling
+  - electrochemistry
+  - spectroscopy
+description: The Solid state and materials chemistry group at UNSW Sydney, led
+  by Professor Neeraj Sharma, focuses on tuning the atomic structure of
+  solid-state materials for energy storage and ionic conductivity, employing
+  diffraction, NMR, and electrochemical analysis.
+added: 2026-10-03
+aliases:
+  - Solid State and Materials Chemistry | School of Chemistry - UNSW Sydney
+pi: Neeraj Sharma
+parent: School of Chemistry, UNSW Sydney
+location:
+  city: Sydney
+  country: AU
