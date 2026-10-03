@@ -1,0 +1,20 @@
+id: entropy-for-energy-s4e-laboratory
+name: Entropy for Energy (S4E) Laboratory
+kind: group
+website: https://s4e.wse.jhu.edu/
+topics:
+  - materials-modeling
+  - ml-chemistry
+  - ml-potentials
+  - quantum-computing-chemistry
+  - catalysis
+description: The Entropy for Energy (S4E) Laboratory at Johns Hopkins University
+  develops AI and computational methods to design chemically disordered
+  materials for nuclear energy, extreme environments, and green hydrogen
+  production. Research spans AI-driven materials design, quantum…
+added: 2026-10-03
+pi: Prof. Oses
+parent: Department of Materials Science and Engineering, Johns Hopkins University
+location:
+  city: Baltimore
+  country: US
