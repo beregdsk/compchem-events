@@ -1,0 +1,21 @@
+id: houk-group
+name: Houk Group
+kind: group
+website: https://www.chem.ucla.edu/dept/Faculty/houk/index.html
+topics:
+  - biomolecular-simulation
+  - molecular-dynamics
+  - catalysis
+  - materials-modeling
+  - electronic-structure
+description: The Houk Group at UCLA solves problems in organic and bio-organic
+  chemistry using theoretical and computational methods, focusing on enzyme
+  mechanisms, catalysis, molecular dynamics, and nanomachines.
+added: 2026-10-01
+aliases:
+  - Houk, Kendall N
+pi: Kendall N. Houk
+parent: University of California, Los Angeles
+location:
+  city: Los Angeles
+  country: US
