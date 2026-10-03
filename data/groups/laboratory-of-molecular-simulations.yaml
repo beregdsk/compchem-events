@@ -1,0 +1,19 @@
+id: laboratory-of-molecular-simulations
+name: Laboratory of Molecular simulations
+kind: group
+website: https://sites.google.com/view/molecular-simulation-lab
+topics:
+  - molecular-dynamics
+  - biomolecular-simulation
+  - drug-design
+description: The Laboratory of Molecular simulations at IITH specializes in
+  atomistic modeling and simulation of biological matter, using molecular
+  dynamics and statistical mechanics to study biomolecular interactions and
+  develop applications in nanobiotechnology, drug design, and water…
+added: 2026-10-03
+aliases:
+  - molecular-simulation-lab
+parent: IITH
+location:
+  city: Hyderabad
+  country: IN
