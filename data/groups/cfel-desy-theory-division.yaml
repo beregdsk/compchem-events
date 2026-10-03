@@ -1,0 +1,22 @@
+id: cfel-desy-theory-division
+name: CFEL-DESY Theory Division
+kind: group
+website: https://desy-theory.cfel.de/
+topics:
+  - excited-states
+  - quantum-dynamics
+  - molecular-dynamics
+  - software-hpc
+  - electronic-structure
+description: The CFEL-DESY Theory Division develops theoretical and
+  computational tools to study the behavior of matter exposed to intense
+  electromagnetic radiation. They focus on ultrafast processes, excited
+  many-electron systems, chemical reactions, and x-ray radiation damage,
+  developing…
+added: 2026-10-01
+aliases:
+  - CFEL-DESY Theory Group, DESY, Germany
+parent: DESY
+location:
+  city: Hamburg
+  country: DE
