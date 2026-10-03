@@ -1,0 +1,19 @@
+id: chair-of-condensed-matter-theory-ctmc
+name: Chair of Condensed Matter Theory (CTMC)
+kind: group
+website: https://www.epfl.ch/labs/ctmc/
+topics:
+  - quantum-dynamics
+  - materials-modeling
+description: The Chair of Condensed Matter Theory (CTMC) at EPFL explores novel
+  quantum states of matter induced by strong correlations, focusing on the
+  analytical and numerical modeling of low-dimensional quantum magnetism,
+  frustration, and quantum spin liquids.
+added: 2026-10-03
+aliases:
+  - Chair of Condensed Matter Theory
+pi: Prof. Frédéric Mila
+parent: EPFL (School of Basic Sciences, Institute of Physics)
+location:
+  city: Lausanne
+  country: CH
