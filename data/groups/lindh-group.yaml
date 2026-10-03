@@ -1,0 +1,22 @@
+id: lindh-group
+name: Lindh Group
+kind: group
+website: https://www.uu.se/en/department/chemistry-for-life-sciences/research/organic-chemistry/lindh-group
+topics:
+  - electronic-structure
+  - wavefunction-methods
+  - excited-states
+  - photochemistry
+  - dft
+description: The Lindh Group at Uppsala University's Department of Chemistry for
+  Life Sciences conducts research in quantum chemistry, focusing on
+  multi-configurational wave function methods, non-adiabatic processes, and
+  photochemistry.
+added: 2026-10-03
+aliases:
+  - Lindh Group – Department of Chemistry for Life Sciences – Uppsala University
+pi: Roland Lindh
+parent: Department of Chemistry for Life Sciences, Uppsala University
+location:
+  city: Uppsala
+  country: SE
