@@ -1,0 +1,22 @@
+id: khetan-group
+name: Khetan Group
+kind: group
+website: https://www.rwth-aachen.de/global/show_document.asp?id=aaaaaaaaddpdbqd
+topics:
+  - dft
+  - catalysis
+  - ml-chemistry
+  - materials-modeling
+  - molecular-dynamics
+description: The research group led by Prof. Abhishek Khetan at RWTH Aachen
+  University specializes in computational catalysis and molecular modeling,
+  applying density functional theory (DFT), molecular simulations, and machine
+  learning to design and understand advanced catalysts and…
+added: 2026-10-01
+aliases:
+  - Prof. Abhishek Khetan
+pi: Abhishek Khetan
+parent: RWTH Aachen University
+location:
+  city: Aachen
+  country: DE
