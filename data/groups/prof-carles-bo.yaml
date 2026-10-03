@@ -1,0 +1,18 @@
+id: prof-carles-bo
+name: Prof. Carles Bo
+kind: group
+website: https://iciq.org/research-group/prof-carles-bo/overview/
+topics:
+  - dft
+  - molecular-dynamics
+  - catalysis
+  - materials-modeling
+description: The research group led by Prof. Carles Bo at ICIQ develops and
+  applies computational methods, including DFT and molecular dynamics, to study
+  chemical reactivity, catalysis, CO2 fixation, and polyoxometalate chemistry.
+added: 2026-10-03
+pi: Prof. Carles Bo
+parent: Institut Català d'Investigació Química (ICIQ)
+location:
+  city: Tarragona
+  country: ES
