@@ -1,0 +1,21 @@
+id: centre-for-molecular-simulation
+name: Centre for Molecular Simulation
+kind: institute
+website: https://researchdirectory.ucalgary.ca/molecular-simulation
+topics:
+  - molecular-dynamics
+  - biomolecular-simulation
+  - materials-modeling
+  - drug-design
+  - catalysis
+description: The Centre for Molecular Simulation at the University of Calgary
+  brings together researchers in quantum mechanics, statistical mechanics,
+  classical molecular dynamics, and multi-scale modeling. They focus on crystal
+  growth, catalysis, drug development, and biological membranes…
+added: 2026-10-03
+aliases:
+  - Molecular Simulation | Research directory | University of Calgary
+parent: University of Calgary
+location:
+  city: Calgary
+  country: CA
