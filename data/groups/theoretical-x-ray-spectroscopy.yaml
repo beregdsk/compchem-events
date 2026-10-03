@@ -1,0 +1,22 @@
+id: theoretical-x-ray-spectroscopy
+name: Theoretical X-Ray Spectroscopy
+kind: group
+website: https://www.kofo.mpg.de/en/research/molecular-theory-and-spectroscopy/manganas/research-topics/theoretical-x-ray-spectroscopy
+topics:
+  - spectroscopy
+  - electronic-structure
+  - wavefunction-methods
+  - excited-states
+  - materials-modeling
+description: Theoretical X-Ray Spectroscopy group at the Max Planck Institute
+  for Coal Research develops and applies wavefunction-based computational
+  methods to simulate X-ray absorption and emission spectra of transition metal
+  complexes and materials.
+added: 2026-10-03
+aliases:
+  - Theoretical X-Ray Spectroscopy | Max-Planck-Institut für Kohlenforschung
+pi: Frank Neese
+parent: Max-Planck-Institut für Kohlenforschung
+location:
+  city: Mülheim an der Ruhr
+  country: DE
