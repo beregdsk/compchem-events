@@ -1,0 +1,22 @@
+id: theoretical-chemical-and-quantum-physics-group
+name: Theoretical Chemical and Quantum Physics Group
+kind: group
+website: https://www.rmit.edu.au/about/schools-colleges/science/research/research-centres-groups/theoretical-chemical-and-quantum-physics
+topics:
+  - dft
+  - wavefunction-methods
+  - molecular-dynamics
+  - electronic-structure
+  - quantum-dynamics
+description: The Theoretical Chemical and Quantum Physics Group at RMIT
+  University conducts fundamental and applied research in theoretical quantum,
+  chemical, and condensed-matter physics, utilizing computational techniques
+  like DFT, Hartree-Fock, and molecular dynamics.
+added: 2026-10-03
+aliases:
+  - Theoretical Chemical and Quantum Physics - RMIT University
+pi: Professor Mike Xie
+parent: RMIT University
+location:
+  city: Melbourne
+  country: AU
