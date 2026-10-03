@@ -1,0 +1,19 @@
+id: chair-of-atomic-scale-simulation
+name: Chair of Atomic Scale Simulation
+kind: group
+website: https://www.epfl.ch/labs/csea/
+topics:
+  - dft
+  - electronic-structure
+  - molecular-dynamics
+  - materials-modeling
+description: The Chair of Atomic Scale Simulation at EPFL, led by Prof. Alfredo
+  Pasquarello, studies atomic-scale phenomena using quantum mechanical
+  approaches, primarily density functional theory, to complement experiments.
+  Research focuses on disordered materials and oxide-semiconductor…
+added: 2026-10-03
+pi: Alfredo Pasquarello
+parent: EPFL
+location:
+  city: Lausanne
+  country: CH
