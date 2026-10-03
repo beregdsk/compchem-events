@@ -1,0 +1,18 @@
+id: kumar-group
+name: Kumar group
+kind: group
+website: https://www.unsw.edu.au/science/our-schools/chemistry/our-research/our-research-groups/kumar-group
+topics:
+  - drug-design
+description: The Kumar group at the School of Chemistry, UNSW Sydney, focuses on
+  synthetic organic and medicinal chemistry. The group designs and synthesizes
+  novel bioactive molecules, including antimicrobial and anticancer agents,
+  combining organic synthesis, molecular modelling, and…
+added: 2026-10-03
+aliases:
+  - Kumar group | School of Chemistry - UNSW Sydney
+pi: Naresh Kumar
+parent: School of Chemistry, UNSW Sydney
+location:
+  city: Sydney
+  country: AU
