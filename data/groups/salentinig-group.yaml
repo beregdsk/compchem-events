@@ -1,0 +1,19 @@
+id: salentinig-group
+name: Salentinig Group
+kind: group
+website: https://www.unifr.ch/chem/en/research/groups/salentinig/
+topics:
+  - soft-matter
+  - spectroscopy
+  - materials-modeling
+  - biomolecular-simulation
+description: The Salentinig Group at the University of Fribourg, led by Stefan
+  Salentinig, studies the physical chemistry of biological and bio-inspired
+  materials. By combining colloid and interface science, soft matter, and
+  advanced scattering techniques, they engineer functional materials…
+added: 2026-10-03
+pi: Stefan Salentinig
+parent: University of Fribourg
+location:
+  city: Fribourg
+  country: CH
