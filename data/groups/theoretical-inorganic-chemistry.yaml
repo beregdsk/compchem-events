@@ -1,0 +1,23 @@
+id: theoretical-inorganic-chemistry
+name: Theoretical Inorganic Chemistry
+kind: group
+website: https://www.uu.se/en/department/chemistry-angstrom-laboratory/research/structural-chemistry/theoretical-inorganic-chemistry
+topics:
+  - dft
+  - molecular-dynamics
+  - materials-modeling
+  - spectroscopy
+  - ml-potentials
+description: The Theoretical Inorganic Chemistry group (Teoroo) at Uppsala
+  University specializes in computational materials chemistry, focusing on how
+  molecular properties are affected by their environment. They develop
+  multiscale models for catalysis, nanochemistry, and hydration…
+added: 2026-10-03
+aliases:
+  - Theoretical Inorganic Chemistry – Department of Chemistry - Ångström
+    Laboratory – Uppsala University
+pi: Kersti Hermansson
+parent: Department of Chemistry - Ångström Laboratory, Uppsala University
+location:
+  city: Uppsala
+  country: SE
