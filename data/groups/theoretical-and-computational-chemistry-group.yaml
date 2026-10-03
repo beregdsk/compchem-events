@@ -1,0 +1,23 @@
+id: theoretical-and-computational-chemistry-group
+name: Theoretical and Computational Chemistry Group
+kind: group
+website: https://www.shibaura-it.ac.jp/en/research/laboratory/00332.html
+topics:
+  - electronic-structure
+  - dft
+  - wavefunction-methods
+  - quantum-computing-chemistry
+  - materials-modeling
+description: Theoretical and Computational Chemistry Group at Shibaura Institute
+  of Technology, led by Prof. Takashi Tsuchimochi. The group focuses on
+  developing quantum chemistry theories and applying them to simulate materials
+  and chemical phenomena.
+added: 2026-10-02
+aliases:
+  - Theoretical and Computational Chemistry Group｜Shibaura Institute of
+    Technology
+pi: Takashi Tsuchimochi
+parent: Shibaura Institute of Technology
+location:
+  city: Tokyo
+  country: JP

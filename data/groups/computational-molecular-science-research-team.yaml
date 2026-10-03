@@ -1,0 +1,23 @@
+id: computational-molecular-science-research-team
+name: Computational Molecular Science Research Team
+kind: group
+website: https://www.r-ccs.riken.jp/en/research/labs/cmsrt/
+topics:
+  - electronic-structure
+  - dft
+  - excited-states
+  - software-hpc
+  - materials-modeling
+description: The Computational Molecular Science Research Team at RIKEN Center
+  for Computational Science develops advanced quantum chemistry theories,
+  algorithms, and the NTChem software package. Focused on electronic structure,
+  excited states, and materials informatics, they leverage…
+added: 2026-10-02
+aliases:
+  - Computational Molecular Science Research Team | RIKEN Center for
+    Computational Science RIKEN Website
+pi: Takahito Nakajima
+parent: RIKEN Center for Computational Science
+location:
+  city: Kobe
+  country: JP

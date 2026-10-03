@@ -1,0 +1,23 @@
+id: molecular-simulations-and-design
+name: Molecular Simulations and Design
+kind: group
+website: https://www.mpi-magdeburg.mpg.de/msd
+topics:
+  - dft
+  - molecular-dynamics
+  - biomolecular-simulation
+  - drug-design
+  - catalysis
+description: The group investigates molecular and structural basis of complex
+  chemical and biological processes using multiscale simulation methods
+  including DFT, QM/MM, molecular dynamics, and coarse-graining, with focus on
+  drug design, catalysis, and membrane proteins.
+added: 2026-10-02
+aliases:
+  - Molecular Simulations and Design | Max Planck Institute for Dynamics of
+    Complex Technical Systems
+pi: Matthias Stein
+parent: Max Planck Institute for Dynamics of Complex Technical Systems
+location:
+  city: Magdeburg
+  country: DE

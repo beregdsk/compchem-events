@@ -1,0 +1,22 @@
+id: theo-chimie-theorique
+name: THEO - Chimie Théorique
+kind: group
+website: https://cpcv.chimie.ens.fr/teams/THEO
+topics:
+  - molecular-dynamics
+  - biomolecular-simulation
+  - ml-chemistry
+  - spectroscopy
+  - dft
+description: The THEO group at ENS is a theoretical chemistry lab focusing on
+  chemical reactivity in complex environments. They use molecular dynamics,
+  quantum chemistry, statistical mechanics, and machine learning to study
+  biomolecules, materials, and spectroscopic processes.
+added: 2026-10-02
+aliases:
+  - https://cpcv.chimie.ens.fr/teams/THEO
+pi: Rodolphe Vuilleumier
+parent: ENS - École Normale Supérieure
+location:
+  city: Paris
+  country: FR

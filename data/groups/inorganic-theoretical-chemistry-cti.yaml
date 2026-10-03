@@ -1,0 +1,22 @@
+id: inorganic-theoretical-chemistry-cti
+name: Inorganic Theoretical Chemistry (CTI)
+kind: group
+website: https://iscr.univ-rennes.fr/inorganic-theoretical-chemistry-cti
+topics:
+  - electronic-structure
+  - materials-modeling
+  - dft
+  - spectroscopy
+  - wavefunction-methods
+description: Computational chemistry group at the Rennes Institute of Chemical
+  Sciences studying the structural and physical properties of molecules and
+  solid-state compounds. Research focuses on rationalising complex
+  architectures, materials for energy and information, and functional…
+added: 2026-10-02
+aliases:
+  - Inorganic Theoretical Chemistry (CTI) | Rennes Institute of Chemical Sciences
+pi: Mikaël Kepenekian
+parent: Rennes Institute of Chemical Sciences
+location:
+  city: Rennes
+  country: FR

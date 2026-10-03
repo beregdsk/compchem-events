@@ -1,0 +1,22 @@
+id: golze-group
+name: Golze Group
+kind: group
+website: https://golzegroup.org/
+topics:
+  - spectroscopy
+  - electronic-structure
+  - photochemistry
+  - materials-modeling
+  - software-hpc
+description: The Golze Group is a junior research group at TU Dresden, hosted at
+  the Chair of Theoretical Chemistry. They focus on large-scale theoretical
+  spectroscopy, computational chemistry, and physics, contributing to the
+  development of FHI-aims and CP2K.
+added: 2026-10-02
+aliases:
+  - Golze Group – Computational chemistry and physics
+pi: Marek Golze
+parent: TU Dresden
+location:
+  city: Dresden
+  country: DE

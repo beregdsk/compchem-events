@@ -1,0 +1,23 @@
+id: theoretical-chemistry-and-molecular-thermodynamics
+name: Theoretical Chemistry and Molecular Thermodynamics
+kind: group
+website: https://www.ens-lyon.fr/CHIMIE/recherche/Teams/Chimie_Theorique/theory-team?cl=en&set_language=en
+topics:
+  - dft
+  - spectroscopy
+  - excited-states
+  - photochemistry
+  - molecular-dynamics
+description: The Theoretical Chemistry and Molecular Thermodynamics axis at ENS
+  de Lyon is a computational research team of 10 permanent staff and 20
+  PhDs/postdocs led by Tangui Le Bahers and Stephan Steinmann. They model
+  reactivity, spectroscopy and thermodynamics using DFT, molecular…
+added: 2026-10-02
+aliases:
+  - Theoretical Chemistry and Molecular Thermodynamics — Laboratoire de Chimie
+    de l'ENS de Lyon
+pi: Tangui Le Bahers and Stephan Steinmann
+parent: Laboratoire de Chimie de l'ENS de Lyon
+location:
+  city: Lyon
+  country: FR

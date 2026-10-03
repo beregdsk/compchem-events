@@ -1,0 +1,22 @@
+id: scanlon-materials-theory-group
+name: Scanlon Materials Theory Group
+kind: group
+website: https://davidscanlon.com/
+topics:
+  - electronic-structure
+  - materials-modeling
+  - electrochemistry
+  - software-hpc
+  - catalysis
+description: The Scanlon Materials Theory Group, led by Prof David O. Scanlon at
+  the University of Birmingham, focuses on the computational design and
+  electronic structure characterization of emerging functional inorganic
+  materials for energy and optoelectronic applications.
+added: 2026-10-02
+aliases:
+  - Research Group webpage
+pi: David O. Scanlon
+parent: University of Birmingham
+location:
+  city: Birmingham
+  country: GB

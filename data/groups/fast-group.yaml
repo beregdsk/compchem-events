@@ -1,0 +1,21 @@
+id: fast-group
+name: FAST Group
+kind: group
+website: https://www.fast-group.phy.cam.ac.uk/
+topics:
+  - ml-potentials
+  - dft
+  - molecular-dynamics
+  - quantum-dynamics
+  - wavefunction-methods
+description: The FAST group is a computational science team at the University of
+  Cambridge, focusing on developing machine learning potentials and advanced
+  atomistic simulation techniques to study complex aqueous systems and
+  materials.
+added: 2026-10-02
+aliases:
+  - Frontiers in Atomistic Simulation Techniques - FAST Group
+parent: University of Cambridge
+location:
+  city: Cambridge
+  country: GB

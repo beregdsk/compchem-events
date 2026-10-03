@@ -1,0 +1,21 @@
+id: theoretical-chemistry-group
+name: Theoretical Chemistry Group
+kind: group
+website: https://www.chem.ox.ac.uk/theoretical-chemistry-group
+topics:
+  - electronic-structure
+  - quantum-dynamics
+  - molecular-dynamics
+  - biomolecular-simulation
+  - soft-matter
+description: The Theoretical Chemistry Group at the University of Oxford
+  conducts pioneering research in theoretical and computational chemistry. Their
+  work spans quantum condensed matter theory, molecular collisions, chemical
+  reaction dynamics, and the simulation of soft condensed matter…
+added: 2026-10-02
+aliases:
+  - Theoretical Chemistry Group | Department of Chemistry
+parent: Department of Chemistry, University of Oxford
+location:
+  city: Oxford
+  country: GB

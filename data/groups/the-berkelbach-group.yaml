@@ -1,0 +1,22 @@
+id: the-berkelbach-group
+name: The Berkelbach Group
+kind: group
+website: https://berkelbach.chem.columbia.edu/
+topics:
+  - excited-states
+  - quantum-dynamics
+  - spectroscopy
+  - electronic-structure
+  - materials-modeling
+description: The Berkelbach Group at Columbia University conducts theoretical
+  chemistry research at the interface of physical chemistry, condensed-matter
+  physics, and materials science, focusing on quantum dynamics, spectroscopy,
+  and condensed-phase electronic structure.
+added: 2026-10-02
+aliases:
+  - The Berkelbach Group at Columbia University
+pi: Timothy Berkelbach
+parent: Columbia University
+location:
+  city: New York
+  country: US

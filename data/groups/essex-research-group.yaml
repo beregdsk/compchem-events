@@ -1,0 +1,20 @@
+id: essex-research-group
+name: Essex Research Group
+kind: group
+website: https://essexgroup.soton.ac.uk/
+topics:
+  - biomolecular-simulation
+  - enhanced-sampling
+  - drug-design
+  - molecular-dynamics
+  - software-hpc
+description: The Essex Research Group, based at the University of Southampton
+  and led by Prof. Jonathan Essex, focuses on computational chemistry and the
+  simulation of biomolecular systems, specializing in enhanced sampling, free
+  energy calculations, and drug design.
+added: 2026-10-02
+pi: Prof. Jonathan Essex
+parent: University of Southampton
+location:
+  city: Southampton
+  country: GB

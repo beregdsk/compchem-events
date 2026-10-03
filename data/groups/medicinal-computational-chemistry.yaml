@@ -1,0 +1,22 @@
+id: medicinal-computational-chemistry
+name: Medicinal Computational Chemistry
+kind: group
+website: https://fabit.unibo.it/en/research/research-groups/research-group-in-medicinal-computational-chemistry-coordinator-masetti
+topics:
+  - drug-design
+  - molecular-dynamics
+  - enhanced-sampling
+  - biomolecular-simulation
+description: The Medicinal Computational Chemistry group, coordinated by Matteo
+  Masetti at the University of Bologna, focuses on developing and applying
+  computational chemistry, molecular simulations, docking, and virtual screening
+  to study molecular systems of pharmaceutical interest.
+added: 2026-10-02
+aliases:
+  - 'Medicinal Computational Chemistry. Coordinator: Masetti — Pharmacy and
+    Biotechnology - FABIT'
+pi: Matteo Masetti
+parent: Department of Pharmacy and Biotechnology - FABIT
+location:
+  city: Bologna
+  country: IT

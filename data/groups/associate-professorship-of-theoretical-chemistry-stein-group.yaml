@@ -1,0 +1,22 @@
+id: associate-professorship-of-theoretical-chemistry-stein-group
+name: Associate Professorship of Theoretical Chemistry (Stein Group)
+kind: group
+website: https://www.ch.nat.tum.de/en/theochem/home/
+topics:
+  - electronic-structure
+  - dft
+  - excited-states
+  - ml-potentials
+  - catalysis
+description: The Stein Group at the Technical University of Munich, led by Prof.
+  Christopher Stein, focuses on theoretical and computational chemistry,
+  developing models for energy materials, solvation, excited states, and machine
+  learning potentials.
+added: 2026-10-02
+aliases:
+  - Home - Theoretical Chemistry
+pi: Prof. Dr. Christopher Stein
+parent: Technical University of Munich
+location:
+  city: Garching
+  country: DE

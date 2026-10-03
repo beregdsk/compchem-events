@@ -1,0 +1,22 @@
+id: computational-theoretical-chemistry-group-pracht-group
+name: Computational & Theoretical Chemistry Group (Pracht Group)
+kind: group
+website: https://www.pracht-lab.de/
+topics:
+  - software-hpc
+  - ml-potentials
+  - spectroscopy
+  - molecular-dynamics
+  - cheminformatics
+description: The Pracht Group is a junior research group in computational and
+  theoretical chemistry at Heidelberg University's Interdisciplinary Center for
+  Scientific Computing. They focus on multiscale modeling, molecular
+  thermodynamics, chemical space exploration, and software development…
+added: 2026-10-02
+aliases:
+  - Pracht Group
+pi: Philipp Pracht
+parent: Heidelberg University (Interdisciplinary Center for Scientific Computing)
+location:
+  city: Heidelberg
+  country: DE

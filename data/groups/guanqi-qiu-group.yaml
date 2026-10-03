@@ -1,0 +1,19 @@
+id: guanqi-qiu-group
+name: Guanqi Qiu Group
+kind: group
+website: https://www.kofo.mpg.de/970824/qiu
+topics:
+  - catalysis
+  - spectroscopy
+  - quantum-dynamics
+  - electronic-structure
+description: The Guanqi Qiu Group at the Max Planck Institute for Coal Research
+  focuses on fundamental principles of organic reactivity and catalysis, aiming
+  to systematically modulate intrinsic reactivity and explore quantum mechanical
+  tunneling under ambient conditions.
+added: 2026-10-02
+pi: Guanqi Qiu
+parent: Max-Planck-Institut für Kohlenforschung
+location:
+  city: Mülheim an der Ruhr
+  country: DE

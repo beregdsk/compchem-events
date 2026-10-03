@@ -1,0 +1,21 @@
+id: computational-chemistry-group
+name: Computational Chemistry Group
+kind: group
+website: https://www.itheoc.uni-stuttgart.de/research/kaestner/
+topics:
+  - catalysis
+  - dft
+  - electronic-structure
+  - ml-potentials
+description: The Computational Chemistry Group of Prof. Dr. Johannes Kästner at
+  the University of Stuttgart investigates chemical reaction mechanisms and
+  catalysis using quantum chemistry, periodic DFT, and machine-learned
+  potentials, with a focus on method development.
+added: 2026-10-02
+aliases:
+  - J. Kästner | Institute for Theoretical Chemistry | University of Stuttgart
+pi: Prof. Dr. Johannes Kästner
+parent: Institute for Theoretical Chemistry, University of Stuttgart
+location:
+  city: Stuttgart
+  country: DE

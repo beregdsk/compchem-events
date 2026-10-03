@@ -1,0 +1,20 @@
+id: the-voth-group
+name: The Voth Group
+kind: group
+website: https://voices.uchicago.edu/vothgroup/
+topics:
+  - biomolecular-simulation
+  - molecular-dynamics
+  - materials-modeling
+  - ml-potentials
+  - software-hpc
+description: The Voth Group at the University of Chicago, led by Gregory A.
+  Voth, focuses on developing theoretical and computational methods, such as
+  multiscale coarse-graining and machine learning, to study complex
+  biomolecular, condensed phase, and materials systems.
+added: 2026-10-02
+pi: Gregory A. Voth
+parent: The University of Chicago
+location:
+  city: Chicago
+  country: US

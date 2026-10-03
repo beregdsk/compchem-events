@@ -1,0 +1,22 @@
+id: truhlar-research-group
+name: Truhlar Research Group
+kind: group
+website: https://truhlar.chem.umn.edu/
+topics:
+  - dft
+  - electronic-structure
+  - excited-states
+  - catalysis
+  - ml-chemistry
+description: The official page of the Truhlar Research Group at the University
+  of Minnesota, led by Donald G. Truhlar. The group performs theoretical and
+  computational chemistry research on density functionals, excited states,
+  catalysis, and chemical dynamics using machine learning.
+added: 2026-10-02
+aliases:
+  - Truhlar Research Group | Theoretical and Computational Chemistry
+pi: Donald G. Truhlar
+parent: University of Minnesota Twin Cities
+location:
+  city: Minneapolis
+  country: US

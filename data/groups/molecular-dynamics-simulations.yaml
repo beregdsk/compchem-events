@@ -1,0 +1,19 @@
+id: molecular-dynamics-simulations
+name: Molecular Dynamics Simulations
+kind: group
+website: https://www.york.ac.uk/physics-engineering-technology/research/physics-of-life/dynamics/
+topics:
+  - molecular-dynamics
+  - biomolecular-simulation
+description: The Molecular Dynamics Simulations group at the University of York,
+  led by Dr. Agnes Noy, investigates the dynamics of biomolecules like DNA and
+  proteins using computational force fields and simulation tools.
+added: 2026-10-02
+aliases:
+  - Molecular Dynamics Simulations - School of Physics, Engineering and
+    Technology, University of York
+pi: Dr Agnes Noy
+parent: School of Physics, Engineering and Technology, University of York
+location:
+  city: York
+  country: GB

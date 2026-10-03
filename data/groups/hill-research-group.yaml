@@ -1,0 +1,20 @@
+id: hill-research-group
+name: Hill Research Group
+kind: group
+website: https://grant-hill.sites.sheffield.ac.uk/
+topics:
+  - electronic-structure
+  - wavefunction-methods
+  - ml-chemistry
+  - spectroscopy
+  - biomolecular-simulation
+description: The Hill research group at the University of Sheffield focuses on
+  theoretical chemistry, developing computational tools for electronic
+  structure, machine learning, and self-driving labs, with applications in
+  spectroscopy and biomolecular dynamics.
+added: 2026-10-02
+pi: Grant Hill
+parent: University of Sheffield
+location:
+  city: Sheffield
+  country: GB

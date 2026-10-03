@@ -1,0 +1,20 @@
+id: computational-and-theoretical-chemistry-group-catco
+name: Computational and Theoretical Chemistry Group (CATCO)
+kind: group
+website: https://s3.smu.edu/dedman/catco/
+topics:
+  - dft
+  - drug-design
+  - catalysis
+  - spectroscopy
+  - software-hpc
+description: The Computational and Theoretical Chemistry Group (CATCO) at
+  Southern Methodist University conducts research in computational and
+  theoretical chemistry, focusing on quantum chemical methods, drug design,
+  catalysis, vibrational spectroscopy, and software development.
+added: 2026-10-02
+pi: Elfi Kraka
+parent: Southern Methodist University
+location:
+  city: Dallas
+  country: US

@@ -1,0 +1,20 @@
+id: computational-organic-chemistry-group
+name: Computational Organic Chemistry Group
+kind: group
+website: https://site.unibo.it/computational-organic-chemistry-group/en
+topics:
+  - catalysis
+  - electronic-structure
+  - molecular-dynamics
+  - biomolecular-simulation
+  - dft
+description: The official page of the Computational Organic Chemistry Group led
+  by Prof. Andrea Bottoni at the University of Bologna. The group applies
+  quantum mechanics, QM/MM, and molecular mechanics to study organic reactivity,
+  binding, and catalysis.
+added: 2026-10-02
+pi: Prof. Andrea Bottoni
+parent: Università di Bologna
+location:
+  city: Bologna
+  country: IT

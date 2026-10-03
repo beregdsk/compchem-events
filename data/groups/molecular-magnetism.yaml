@@ -1,0 +1,19 @@
+id: molecular-magnetism
+name: Molecular Magnetism
+kind: group
+website: https://www.kofo.mpg.de/en/research/molecular-theory-and-spectroscopy/atanasov
+topics:
+  - electronic-structure
+  - wavefunction-methods
+  - spectroscopy
+  - materials-modeling
+description: The research group 'Molecular Magnetism' led by Prof. Dr. Mihail
+  Atanasov at the Max-Planck-Institut für Kohlenforschung focuses on the
+  computational and theoretical study of magnetic and spectroscopic properties
+  of open-shell transition metal, lanthanide, and actinide…
+added: 2026-10-02
+pi: Mihail Atanasov
+parent: Max-Planck-Institut für Kohlenforschung
+location:
+  city: Mülheim an der Ruhr
+  country: DE
