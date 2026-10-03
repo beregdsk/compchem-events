@@ -1,0 +1,19 @@
+id: molecular-design-computational-intelligence-unit
+name: Molecular Design Computational Intelligence Unit
+kind: group
+website: https://www.riken.jp/en/research/labs/r-ccs/hpc_ai_drive_drug_dev_plat/mol_des_comput_intell/index.html
+topics:
+  - molecular-dynamics
+  - biomolecular-simulation
+  - drug-design
+  - ml-chemistry
+description: The Molecular Design Computational Intelligence Unit develops
+  hybrid computational methods combining molecular simulation and AI for
+  rational drug design, targeting small and macro molecules to advance in silico
+  drug discovery.
+added: 2026-10-03
+pi: Mitsunori Ikeguchi
+parent: RIKEN Center for Computational Science
+location:
+  city: Yokohama
+  country: JP
