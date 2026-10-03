@@ -1,0 +1,18 @@
+id: chair-of-computational-condensed-matter-physics
+name: Chair of Computational Condensed Matter Physics
+kind: group
+website: https://www.epfl.ch/labs/c3mp/
+topics:
+  - electronic-structure
+  - dft
+  - materials-modeling
+description: The official webpage of the Chair of Computational Condensed Matter
+  Physics (C3MP) at EPFL, led by Prof. Oleg Yazyev, focusing on computational
+  physics, condensed matter theory, nanoscience, and strongly correlated
+  electron systems.
+added: 2026-10-03
+pi: Oleg Yazyev
+parent: EPFL
+location:
+  city: Lausanne
+  country: CH
