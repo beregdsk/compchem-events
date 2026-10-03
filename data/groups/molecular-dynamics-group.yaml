@@ -1,0 +1,23 @@
+id: molecular-dynamics-group
+name: Molecular Dynamics Group
+kind: group
+website: https://www.rug.nl/research/molecular-dynamics/?lang=en
+topics:
+  - molecular-dynamics
+  - biomolecular-simulation
+  - software-hpc
+  - soft-matter
+  - materials-modeling
+description: The Molecular Dynamics Group at the University of Groningen's GBB
+  Institute, led by Prof. S.J. Marrink, develops and applies multiscale
+  computational tools like the MARTINI forcefield and GROMACS software to
+  simulate complex biomolecular processes.
+added: 2026-10-03
+aliases:
+  - Molecular Dynamics Group | Groningen Biomolecular Sciences and Biotechnology
+    Institute (GBB) | University of Groningen
+pi: Prof. S.J. Marrink
+parent: Groningen Biomolecular Sciences and Biotechnology Institute (GBB)
+location:
+  city: Groningen
+  country: NL
