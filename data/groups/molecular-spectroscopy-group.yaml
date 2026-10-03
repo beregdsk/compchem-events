@@ -1,0 +1,23 @@
+id: molecular-spectroscopy-group
+name: Molecular Spectroscopy Group
+kind: group
+website: https://site.unibo.it/spectroscopy-computational-chemistry/en/research-themes/molecular-spectroscopy
+topics:
+  - spectroscopy
+  - molecular-dynamics
+  - dft
+  - materials-modeling
+  - photochemistry
+description: The Molecular Spectroscopy Group (SC2) at the University of Bologna
+  focuses on the experimental and computational study of molecular crystals,
+  organic semiconductors, and biological systems, utilizing Raman spectroscopy,
+  X-ray diffraction, and molecular dynamics simulations.
+added: 2026-10-03
+aliases:
+  - Molecular Spectroscopy Group — Spectroscopy and Computational Chemistry
+    Group - SC2
+pi: Elisabetta Venuti
+parent: Dipartimento di Chimica Industriale 'Toso Montanari', University of Bologna
+location:
+  city: Bologna
+  country: IT
