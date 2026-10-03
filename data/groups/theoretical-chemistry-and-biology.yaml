@@ -1,0 +1,21 @@
+id: theoretical-chemistry-and-biology
+name: Theoretical Chemistry and Biology
+kind: group
+website: https://www.kth.se/che/tcb/theoretical-chemistry-and-biology-1.786728
+topics:
+  - electronic-structure
+  - quantum-dynamics
+  - software-hpc
+  - catalysis
+  - spectroscopy
+description: Research group at KTH Department of Chemistry focused on
+  theoretical chemistry and biology. Develops software for quantum molecular
+  modeling on HPC platforms, studies novel catalysts for solar energy and
+  bioenergy, and investigates light-matter interactions for spectroscopy…
+added: 2026-10-03
+aliases:
+  - Theoretical Chemistry and Biology | KTH
+parent: Department of Chemistry
+location:
+  city: Stockholm
+  country: SE
