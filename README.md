@@ -10,7 +10,7 @@ Events are listed with topics, location, format and deadlines, and can be filter
 
 - Each event is a YAML file in [`data/events/`](data/events/), validated against [`schema/event.schema.json`](schema/event.schema.json).
 - The site is built with Astro into static files and hosted on Cloudflare as a git-connected Worker (see `wrangler.jsonc`). The static files are served as they are; a small Worker script in `src/worker/` answers the few paths a build cannot, such as filtered calendar feeds.
-- Feeds: `/events.ics`, `/deadlines.ics`, `/feed.xml` and `/events.json`, a live calendar for any filter on the list page (`/feed/events.ics?<filter>`), plus a calendar and Atom feed per topic (`/topics/<slug>.ics`, `/topics/<slug>.xml`) listed on `/topics/`.
+- Feeds: `/events.ics`, `/deadlines.ics`, `/feed.xml` and `/events.json`, a live calendar for any filter on the list page (`/feed/events.ics?<filter>`), a saved default filter per browser with its own calendar (`/feed/my/<id>.ics`), plus a calendar and Atom feed per topic (`/topics/<slug>.ics`, `/topics/<slug>.xml`) listed on `/topics/`.
 - Browsing: every topic has a page at `/topics/<slug>/`, a recurring series with two or more listed editions has one at `/series/<slug>/`, and `/graph/` maps similar events close together.
 - Groups: `/groups/` lists research groups, institutes, networks and societies from `data/groups/`, validated against `schema/group.schema.json`.
 - A discovery agent finds candidate events on the sources in [`data/sources.yaml`](data/sources.yaml) and opens pull requests. It never publishes; a maintainer merges.
@@ -29,7 +29,8 @@ npm run typecheck    # astro check
 npm test             # vitest
 npm run build        # production build into dist/ (fails on invalid data)
 npm run preview      # serve the production build
-npm run dev:worker   # serve the production build through the Worker at http://localhost:8787 (run `npm run build` first)
+npm run dev:worker   # serve the production build through the Worker at http://localhost:8787 (run `npm run build` first,
+                     #   and `npx wrangler d1 migrations apply compchem-observer --local` once for the local database)
 npm run test:e2e     # Playwright smoke test, against a production build (run `npm run build` first;
                      #   one-time setup: npx playwright install --with-deps chromium)
 npm run check-links  # fetch every event's url/source_url and report the dead ones (never fails)

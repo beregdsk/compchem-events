@@ -163,6 +163,19 @@ const fees = EVENT_FEES.filter((f) => events.some((e) => e.fee === f));
         <a href="/feed/events.ics">Subscribe to this filtered view</a> (iCal; paste the link into
         your calendar app and it stays up to date)
       </p>
+      <div class="saved-filter mono" id="saved-filter" hidden>
+        <button type="button" class="filters__clear" id="save-filter">
+          Save as my default
+        </button>
+        <button type="button" class="filters__clear" id="forget-filter" hidden>
+          Forget saved filter
+        </button>
+        <span id="saved-status" role="status" aria-live="polite"></span>
+        <p id="my-feed" hidden>
+          <a href="/feed/events.ics">Your personal calendar</a> follows whatever filter you save
+          here.
+        </p>
+      </div>
       <ul class="event-list reveal" id="event-list">
         {events.map((event) => (
           <EventRow event={event} today={today} />
@@ -175,5 +188,6 @@ const fees = EVENT_FEES.filter((f) => events.some((e) => e.fee === f));
 
 <script>
   import '../scripts/filters.ts';
+  import '../scripts/prefs.ts';
   import '../scripts/countdown.ts';
 </script>

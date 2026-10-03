@@ -50,7 +50,8 @@ data/events/*.yaml  →  scripts/validate.ts  (gate: build fails on invalid data
 | `.prettierrc.json` / `.prettierignore` | Formatting rules, and the pre-existing docs exempted from them. |
 | `.nvmrc` | The Node version the project is built and tested against. |
 | `package.json` / `package-lock.json` | Scripts and dependencies, and their locked versions. `npm run` targets are listed in `README.md`. |
-| `wrangler.jsonc` | Cloudflare Worker config: serves `dist/` as static assets, and sends only the `run_worker_first` paths to the Worker script in `src/worker/`. |
+| `wrangler.jsonc` | Cloudflare Worker config: serves `dist/` as static assets, and sends only the `run_worker_first` paths to the Worker script in `src/worker/`. Binds the D1 database `DB`, with a separate staging database for previews. |
+| `migrations/` | D1 schema migrations, applied with `npx wrangler d1 migrations apply <database> --remote` (production and preview databases both). |
 | `Dockerfile.discovery` / `.dockerignore` | Image for the discovery agent's cron job, running as an unprivileged user with no credentials baked in. See *Deployment* in `docs/discovery-agent.md`. |
 | `.gitignore` | Ignores `node_modules/`, `dist/`, `.astro/`, `.env*`, logs, `.superpowers/`, and the Playwright run artifacts (`test-results/`, `playwright-report/`). |
 
@@ -211,7 +212,10 @@ Runs on Cloudflare for the paths under `run_worker_first` in `wrangler.jsonc`; e
 
 | Path | What it is for |
 | --- | --- |
-| `index.ts` | The Worker entry: routes `/feed/events.ics` and hands anything else to the static build (`ASSETS`). `loadBuiltEvents` reads the build's `/events.json`. |
+| `index.ts` | The Worker entry: routes `/feed/events.ics`, `/feed/my/<id>.ics` and `/api/prefs`, and hands anything else to the static build (`ASSETS`). `loadBuiltEvents` reads the build's `/events.json`. A thrown error becomes a 503 for that request only. |
+| `prefs.ts` | Saved preferences: `/api/prefs` (GET, PUT `{ filter }`, DELETE; writes must come from the site's own origin) and `filterForFeed` for the personal calendar. Filters are normalised through `filter.ts` before they are stored. |
+| `visitor.ts` | The `visitor` cookie: random ids, reading it, and the `Set-Cookie` value. |
+| `db.ts` | The slice of the D1 binding the Worker uses, declared locally instead of `@cloudflare/workers-types`. |
 | `feed.ts` | `filteredCalendar`: the upcoming events matching a list-page filter, as iCalendar. |
 
 ## `src/scripts/` — the browser's share
@@ -223,6 +227,7 @@ JavaScript disabled; nothing here is load-bearing.
 | --- | --- |
 | `filters.ts` | Filters the list client-side and keeps the URL in step. Server-rendered results are the fallback. |
 | `sort-table.ts` | Sorts a `data-sortable` table (the `/topics/` table) by a header click; without JS it keeps its server order. |
+| `prefs.ts` | The saved-filter bar on the list page. Hidden unless `/api/prefs` answers; applies a saved filter through the URL and `popstate`, so it never touches the filters island directly. |
 | `countdown.ts` | Appends a relative phrase ("closes in 12 days") beside the rendered date, so a static build never serves a stale countdown. Leaves the `<time>` element's machine-readable text alone. |
 | `graph.ts` | Brings the event map to life: drag, neighbour highlighting, pan and zoom. The static SVG works without it. |
 | `theme.ts` | Reveals and drives the theme toggle. Only unhides the control when it can work, so it never appears uselessly. A small inline script in `<head>` applies a stored choice before first paint. |
@@ -241,7 +246,7 @@ Vitest. Run with `npm test`.
 | --- | --- |
 | `tests/lib/*.test.ts` | One file per `src/lib/` module: dates, events, filter, ical, orbital, regions, validation, and the semantic rules. |
 | `tests/components/*.test.ts` | Astro components rendered with the container API (`experimental_AstroContainer`); `position-row.test.ts` covers a position row's level label, advert link, deadline and stale label. Production builds carry no position data, so this is where a rendered row is checked. |
-| `tests/worker/*.test.ts` | The Worker: the filtered feed and its routing, against a fake `ASSETS`. |
+| `tests/worker/*.test.ts` | The Worker: the filtered feed, saved preferences and routing, against a fake `ASSETS` and `fake-d1.ts` (D1 over `node:sqlite` with the real migrations applied). |
 | `tests/schema/schema.test.ts` | The JSON Schema itself. |
 | `tests/endpoints/` | The generated outputs: both `.ics` files parsed with a real iCalendar parser, plus the feed, JSON and sitemap. |
 | `tests/pages/links.test.ts` | Internal links resolve. |
