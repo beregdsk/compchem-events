@@ -1,0 +1,21 @@
+id: centre-for-research-in-molecular-modeling-cermm
+name: Centre for Research in Molecular Modeling (CERMM)
+kind: institute
+website: https://www.concordia.ca/research/molecular-modeling.html
+topics:
+  - molecular-dynamics
+  - biomolecular-simulation
+  - materials-modeling
+  - spectroscopy
+  - soft-matter
+description: The Centre for Research in Molecular Modeling (CERMM) is a
+  multi-institutional research centre at Concordia University. It fosters
+  collaborations in molecular simulations across chemistry, biology, physics,
+  and engineering, focusing on multi-scale modelling.
+added: 2026-10-03
+aliases:
+  - Centre for Research in Molecular Modeling - Concordia University
+parent: Concordia University
+location:
+  city: Montreal
+  country: CA
