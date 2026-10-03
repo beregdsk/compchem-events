@@ -1,0 +1,20 @@
+id: laboratory-of-theoretical-physical-chemistry-lcpt
+name: Laboratory of Theoretical Physical Chemistry (LCPT)
+kind: group
+website: https://www.epfl.ch/labs/lcpt/
+topics:
+  - quantum-dynamics
+  - molecular-dynamics
+  - spectroscopy
+  - biomolecular-simulation
+  - software-hpc
+description: The Laboratory of Theoretical Physical Chemistry (LCPT) at EPFL,
+  led by Prof. Jiri Vanicek, conducts research in quantum and semiclassical
+  molecular dynamics, statistical biophysics, chemical kinetics, and efficient
+  numerical algorithms for molecular simulations and spectroscopy.
+added: 2026-10-03
+pi: Prof. Jiri Vanicek
+parent: EPFL
+location:
+  city: Lausanne
+  country: CH
