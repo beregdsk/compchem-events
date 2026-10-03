@@ -1,0 +1,22 @@
+id: lsmo-laboratory-of-molecular-simulation
+name: LSMO – Laboratory of Molecular Simulation
+kind: group
+website: https://www.epfl.ch/labs/lsmo/
+topics:
+  - molecular-dynamics
+  - materials-modeling
+  - software-hpc
+  - electronic-structure
+  - excited-states
+description: The LSMO is a computational chemistry research group at EPFL led by
+  Berend Smit, focusing on molecular simulations of complex systems like
+  metal-organic frameworks for gas capture and photocatalysis, with a strong
+  emphasis on software and method development.
+added: 2026-10-03
+aliases:
+  - Laboratory of Molecular Simulation (LSMO)
+pi: Berend Smit
+parent: EPFL
+location:
+  city: Lausanne
+  country: CH
