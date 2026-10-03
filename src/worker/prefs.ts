@@ -1,5 +1,6 @@
 import { isEmptyFilter, parseFilterState, serialiseFilterState } from '../lib/filter';
 import type { D1Database } from './db';
+import { isSameOriginWrite, json, noContent } from './http';
 import { randomId, readVisitor, visitorCookie } from './visitor';
 
 /** Longer than any real filter; stops the table being used as free storage. */
@@ -17,17 +18,6 @@ export interface SavedFilter {
   feed: string;
 }
 
-function json(body: unknown, status = 200, headers: Record<string, string> = {}): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: {
-      'Content-Type': 'application/json; charset=utf-8',
-      'Cache-Control': 'no-store',
-      ...headers,
-    },
-  });
-}
-
 /** Round-trips through the filter's own parser, so only known keys with clean values are stored. */
 export function normaliseFilter(raw: string): string {
   return serialiseFilterState(parseFilterState(new URLSearchParams(raw))).toString();
@@ -39,12 +29,9 @@ function saved(row: PrefsRow): SavedFilter {
 
 /**
  * `/api/prefs`: GET reads this browser's saved filter, PUT `{ filter }` saves
- * it, DELETE forgets it. Writes must come from the site's own pages: a
- * cross-site page could otherwise overwrite a visitor's filter with their
- * cookie.
+ * it, DELETE forgets it.
  */
 export async function handlePrefs(request: Request, db: D1Database): Promise<Response> {
-  const url = new URL(request.url);
   const visitor = readVisitor(request);
 
   if (request.method === 'GET') {
@@ -59,13 +46,11 @@ export async function handlePrefs(request: Request, db: D1Database): Promise<Res
   if (request.method !== 'PUT' && request.method !== 'DELETE') {
     return json({ error: 'method not allowed' }, 405, { Allow: 'GET, PUT, DELETE' });
   }
-  if (request.headers.get('Origin') !== url.origin) {
-    return json({ error: 'cross-origin write refused' }, 403);
-  }
+  if (!isSameOriginWrite(request)) return json({ error: 'cross-origin write refused' }, 403);
 
   if (request.method === 'DELETE') {
     if (visitor) await db.prepare('DELETE FROM prefs WHERE visitor = ?').bind(visitor).run();
-    return new Response(null, { status: 204, headers: { 'Cache-Control': 'no-store' } });
+    return noContent();
   }
 
   let body: unknown;

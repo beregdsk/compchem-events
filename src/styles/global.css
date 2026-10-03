@@ -714,6 +714,18 @@ a:hover {
   margin-block-end: var(--space-s);
 }
 
+.interest {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-s);
+  align-items: center;
+}
+
+.interest button[aria-pressed='true'] {
+  color: var(--bg);
+  background: var(--time);
+}
+
 .saved-filter p {
   flex-basis: 100%;
   margin: 0;

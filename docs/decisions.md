@@ -728,3 +728,16 @@ hold reaction counts. Writes check `Origin` against the site's own, since the
 cookie alone would let any page change a visitor's filter. Filters are
 normalised through `filter.ts` and capped at 2,000 characters. Previews bind a
 separate staging database. Described on `/about/` under rule 4.
+
+## 2026-10-02 — "Interested" counts on event pages
+
+The 2026-09-20 entry deferred reactions for two reasons: they need runtime
+state, and ratings would collide with the curation policy's neutrality. Runtime
+state is now allowed (rules 3 and 4 above). For neutrality, the reaction is a
+single "I'm interested" mark, not a rating: no scale, no comments, and the
+count never orders or filters listings (stated in the curation policy). One
+mark per visitor cookie per event, enforced by the table's primary key;
+clearing cookies lets someone mark twice, which is accepted at this scale
+rather than adding accounts. Marks are stored in the same D1 database and
+under the same cookie as saved preferences, only for event ids the build
+lists, and only upcoming events show the control.

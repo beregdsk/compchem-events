@@ -30,6 +30,10 @@ already be filled" after 45 days and moves to the archive after 90.
 
 ### Blocklist
 
+Event pages show how many visitors marked an event as interesting. That count
+is a signal of interest, not a rating or an endorsement: it never orders,
+filters or hides listings, and inclusion decisions never depend on it.
+
 `data/blocklist.yaml` lists organiser domains that are not listed. Each entry has the domain, the date added, and at least one **public evidence link** (for example a recognised checklist, a published report, or documented complaints). We describe conduct and evidence, not motives. Anyone can request a review by opening an issue.
 
 ### Corrections and reports

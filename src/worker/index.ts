@@ -2,6 +2,7 @@ import { parseFilterState } from '../lib/filter';
 import type { LoadedEvent } from '../lib/types';
 import type { D1Database } from './db';
 import { filteredCalendar } from './feed';
+import { handleInterest } from './interest';
 import { filterForFeed, handlePrefs } from './prefs';
 
 /** The static build, bound as `ASSETS` in wrangler.jsonc. */
@@ -23,6 +24,7 @@ export async function loadBuiltEvents(env: Env, origin: string): Promise<LoadedE
 }
 
 const PERSONAL_FEED = /^\/feed\/my\/([^/]+)\.ics$/;
+const INTEREST = /^\/api\/interest\/([a-z0-9-]+)$/;
 
 async function calendar(env: Env, url: URL, filter: URLSearchParams, cacheControl: string) {
   const events = await loadBuiltEvents(env, url.origin);
@@ -36,6 +38,13 @@ async function calendar(env: Env, url: URL, filter: URLSearchParams, cacheContro
 
 async function route(request: Request, env: Env, url: URL): Promise<Response> {
   if (url.pathname === '/api/prefs') return handlePrefs(request, env.DB);
+
+  const interest = INTEREST.exec(url.pathname);
+  if (interest) {
+    return handleInterest(request, env.DB, interest[1]!, async (id) =>
+      (await loadBuiltEvents(env, url.origin)).some((e) => e.id === id),
+    );
+  }
 
   if (url.pathname.startsWith('/feed/')) {
     if (request.method !== 'GET' && request.method !== 'HEAD') {
