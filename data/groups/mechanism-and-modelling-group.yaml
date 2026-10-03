@@ -1,0 +1,19 @@
+id: mechanism-and-modelling-group
+name: Mechanism and Modelling Group
+kind: group
+website: https://sites.google.com/view/mmg-unsw
+topics:
+  - electronic-structure
+  - biomolecular-simulation
+  - drug-design
+  - materials-modeling
+  - catalysis
+description: The Mechanism and Modelling Group at UNSW Sydney is a computational
+  chemistry lab developing and applying methods to predict molecular properties,
+  reaction mechanisms and structure-activity relationships for designing
+  materials and drugs.
+added: 2026-10-03
+parent: School of Chemistry, UNSW Sydney
+location:
+  city: Sydney
+  country: AU
