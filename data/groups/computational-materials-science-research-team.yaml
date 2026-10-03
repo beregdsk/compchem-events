@@ -1,0 +1,19 @@
+id: computational-materials-science-research-team
+name: Computational Materials Science Research Team
+kind: group
+website: https://www.riken.jp/en/research/labs/r-ccs/comput_mater_sci/index.html
+topics:
+  - electronic-structure
+  - materials-modeling
+  - quantum-computing-chemistry
+  - software-hpc
+description: The Computational Materials Science Research Team at RIKEN develops
+  advanced numerical methods, such as quantum Monte Carlo and tensor networks,
+  for simulating strongly correlated quantum systems and quantum computing on
+  supercomputers like Fugaku.
+added: 2026-10-03
+pi: Seiji Yunoki
+parent: RIKEN Center for Computational Science
+location:
+  city: Kobe
+  country: JP
