@@ -16,7 +16,7 @@
     {
       "binding": "DB",
       "database_name": "compchem-observer",
-      "database_id": "REPLACE_WITH_PRODUCTION_DATABASE_ID",
+      "database_id": "3af8176b-7ca3-4e8c-9397-e9107840fdfa",
     },
   ],
   // Required by `npx wrangler preview` (the deploy command Cloudflare's
@@ -33,7 +33,7 @@
       {
         "binding": "DB",
         "database_name": "compchem-observer-preview",
-        "database_id": "REPLACE_WITH_PREVIEW_DATABASE_ID",
+        "database_id": "a1c33705-fb41-40a8-be2c-5354972c2a44",
       },
     ],
   },
