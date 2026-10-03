@@ -1,0 +1,22 @@
+id: group-for-computer-aided-chemistry
+name: Group for Computer-Aided Chemistry
+kind: group
+website: https://www.igc.ethz.ch/
+topics:
+  - molecular-dynamics
+  - drug-design
+  - software-hpc
+  - biomolecular-simulation
+  - enhanced-sampling
+description: The Group for Computer-Aided Chemistry at ETH Zurich, part of the
+  Department of Chemistry and Applied Biosciences, focuses on computational
+  chemistry research including molecular dynamics, drug design, and software
+  development.
+added: 2026-10-03
+aliases:
+  - van Gunsteren, Wilfred F.
+pi: Wilfred F. van Gunsteren
+parent: ETH Zurich
+location:
+  city: Zurich
+  country: CH
