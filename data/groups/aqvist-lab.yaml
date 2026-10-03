@@ -1,0 +1,22 @@
+id: aqvist-lab
+name: Åqvist lab
+kind: group
+website: https://www.uu.se/en/department/cell-and-molecular-biology/research/computational-biology-and-bioinformatics/aqvist-lab
+topics:
+  - biomolecular-simulation
+  - molecular-dynamics
+  - catalysis
+  - drug-design
+  - software-hpc
+description: The Åqvist lab at Uppsala University focuses on computational
+  analysis and molecular simulations of biological macromolecules. Their
+  research targets enzyme evolution, adaptation to extreme environments, ligand
+  binding, and computational enzyme design.
+added: 2026-10-03
+aliases:
+  - Åqvist lab – Department of Cell and Molecular Biology – Uppsala University
+pi: Johan Åqvist
+parent: Department of Cell and Molecular Biology, Uppsala University
+location:
+  city: Uppsala
+  country: SE

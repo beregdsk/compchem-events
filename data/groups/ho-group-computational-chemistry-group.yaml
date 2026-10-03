@@ -1,0 +1,22 @@
+id: ho-group-computational-chemistry-group
+name: Ho Group / Computational Chemistry Group
+kind: group
+website: https://www.unsw.edu.au/science/our-schools/chemistry/our-research/our-research-groups/mechanism-and-modelling-group/research
+topics:
+  - electronic-structure
+  - molecular-dynamics
+  - biomolecular-simulation
+  - catalysis
+  - drug-design
+description: The computational chemistry research group led by Jonathan Ho at
+  UNSW Sydney develops and applies high-level quantum chemical methods, QM/MM,
+  and molecular dynamics to study reaction mechanisms, solvation, anion
+  transport, interfaces, and biomolecular systems.
+added: 2026-10-03
+aliases:
+  - Research | School of Chemistry - UNSW Sydney
+pi: Jonathan Ho
+parent: School of Chemistry, UNSW Sydney
+location:
+  city: Sydney
+  country: AU

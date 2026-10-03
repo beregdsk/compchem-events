@@ -1,0 +1,18 @@
+id: theoretical-chemistry-unsw-canberra
+name: Theoretical Chemistry, UNSW Canberra
+kind: group
+website: https://www.unsw.edu.au/canberra/our-research/research-excellence/science-research/theoretical-chemistry
+topics:
+  - quantum-dynamics
+  - dft
+  - materials-modeling
+  - soft-matter
+  - electronic-structure
+description: Theoretical chemistry group at UNSW Canberra, within the School of
+  Science, performing computational chemistry research in quantum dynamics, DFT,
+  soft matter, and materials modeling, led by Frankcombe and Woodward.
+added: 2026-10-03
+parent: School of Science, UNSW Canberra
+location:
+  city: Canberra
+  country: AU

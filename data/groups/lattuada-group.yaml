@@ -1,0 +1,18 @@
+id: lattuada-group
+name: Lattuada Group
+kind: group
+website: https://www.unifr.ch/chem/en/research/groups/lattuada/
+topics:
+  - soft-matter
+  - materials-modeling
+  - molecular-dynamics
+description: The Lattuada Group, led by Prof. Marco Lattuada at the University
+  of Fribourg, designs and synthesizes nano- and microparticles like Janus and
+  patchy particles to study their self-assembly into complex materials. They
+  combine advanced characterization with particle simulations…
+added: 2026-10-03
+pi: Marco Lattuada
+parent: Department of Chemistry, University of Fribourg
+location:
+  city: Fribourg
+  country: CH

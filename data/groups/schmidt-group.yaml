@@ -1,0 +1,17 @@
+id: schmidt-group
+name: Schmidt Group
+kind: group
+website: https://www.unsw.edu.au/science/our-schools/chemistry/our-research/our-research-groups/schmidt-group
+topics:
+  - spectroscopy
+description: The Schmidt Group at UNSW Sydney, led by Timothy Schmidt, conducts
+  research on molecular spectroscopy and photonics, with applications in
+  renewable energy, medicine, and atmospheric chemistry.
+added: 2026-10-03
+aliases:
+  - Schmidt Group | School of Chemistry - UNSW Sydney
+pi: Timothy Schmidt
+parent: School of Chemistry, UNSW Sydney
+location:
+  city: Sydney
+  country: AU

@@ -1,0 +1,22 @@
+id: condensed-matter-and-materials-physics
+name: Condensed matter and materials physics
+kind: group
+website: https://www.york.ac.uk/physics-engineering-technology/research/condensed-matter-and-materials-physics/
+topics:
+  - materials-modeling
+  - dft
+  - electronic-structure
+  - spectroscopy
+  - quantum-dynamics
+description: The Condensed Matter and Materials Physics research group at the
+  University of York, focusing on the design, synthesis, and study of advanced
+  materials and nanostructures using experimental, theoretical, and
+  computational methods.
+added: 2026-10-03
+aliases:
+  - Condensed matter and materials physics - School of Physics, Engineering and
+    Technology, University of York
+parent: School of Physics, Engineering and Technology, University of York
+location:
+  city: York
+  country: GB

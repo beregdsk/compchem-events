@@ -1,0 +1,18 @@
+id: ruggi-group
+name: Ruggi Group
+kind: group
+website: https://www.unifr.ch/chem/en/research/groups/ruggi/
+topics:
+  - photochemistry
+  - catalysis
+  - excited-states
+description: The Ruggi Group at the University of Fribourg's Department of
+  Chemistry, led by Albert Ruggi, focuses on transition metal complexes for
+  artificial photosynthesis, photochemical hydrogen generation, and the
+  development of novel photosensitizers.
+added: 2026-10-03
+pi: Albert Ruggi
+parent: University of Fribourg
+location:
+  city: Fribourg
+  country: CH

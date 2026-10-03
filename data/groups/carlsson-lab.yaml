@@ -1,0 +1,22 @@
+id: carlsson-lab
+name: Carlsson lab
+kind: group
+website: https://www.uu.se/en/department/cell-and-molecular-biology/research/computational-biology-and-bioinformatics/carlsson-lab
+topics:
+  - drug-design
+  - biomolecular-simulation
+  - molecular-dynamics
+  - ml-chemistry
+  - cheminformatics
+description: Jens Carlsson's group at Uppsala University's Department of Cell
+  and Molecular Biology focuses on structure-based protein modelling for drug
+  design. Using molecular dynamics, docking, and machine learning, they study
+  protein-ligand interactions, particularly in GPCRs, to…
+added: 2026-10-03
+aliases:
+  - Carlsson lab – Department of Cell and Molecular Biology – Uppsala University
+pi: Jens Carlsson
+parent: Department of Cell and Molecular Biology, Uppsala University
+location:
+  city: Uppsala
+  country: SE

@@ -1,0 +1,18 @@
+id: zobi-group
+name: Zobi Group
+kind: group
+website: https://www.unifr.ch/chem/en/research/groups/zobi/
+topics:
+  - drug-design
+  - spectroscopy
+  - photochemistry
+description: The Zobi Group at the University of Fribourg, led by Prof. Fabio
+  Zobi, focuses on medicinal inorganic chemistry, developing metal-based
+  complexes, imaging techniques, and clinically useful compounds for biological
+  and medicinal applications.
+added: 2026-10-03
+pi: Fabio Zobi
+parent: University of Fribourg
+location:
+  city: Fribourg
+  country: CH

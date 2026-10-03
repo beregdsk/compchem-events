@@ -1,0 +1,21 @@
+id: theory-group
+name: Theory Group
+kind: group
+website: https://www.xfel.eu/organization/scientific_and_technical_groups/theory/selected_research_projects/index_eng.html
+topics:
+  - electronic-structure
+  - dft
+  - spectroscopy
+  - materials-modeling
+  - photochemistry
+description: The page presents the selected research projects of the Theory
+  Group at European XFEL, focusing on the theoretical and computational study of
+  strongly correlated materials, single-particle structure determination,
+  ultrafast structural dynamics of photoreactions, and transition…
+added: 2026-10-03
+aliases:
+  - Selected Research Projects
+parent: European XFEL
+location:
+  city: Schenefeld
+  country: DE

@@ -1,0 +1,20 @@
+id: persson-lab
+name: Persson lab
+kind: group
+website: https://www.uu.se/en/department/cell-and-molecular-biology/research/computational-biology-and-bioinformatics/persson-lab
+topics:
+  - biomolecular-simulation
+  - cheminformatics
+  - software-hpc
+description: The Persson lab at Uppsala University focuses on computational
+  biology and bioinformatics. Their research includes structural protein
+  calculations to predict mutation effects, automated protein classification,
+  and studying gene expression in heart failure.
+added: 2026-10-03
+aliases:
+  - Persson lab – Department of Cell and Molecular Biology – Uppsala University
+pi: Bengt Persson
+parent: Department of Cell and Molecular Biology, Uppsala University
+location:
+  city: Uppsala
+  country: SE

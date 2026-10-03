@@ -1,0 +1,22 @@
+id: research-group-on-theoretical-and-computational-chemistry-giqtc
+name: Research Group on Theoretical and Computational Chemistry (GIQTC)
+kind: group
+website: https://www.uv.es/scientific-technological-offer/en/research-groups/research-lines/research-group-theoretical-computational-chemistry-1286225405503/GrupsInves.html?id=1286248049502
+topics:
+  - electronic-structure
+  - materials-modeling
+  - dft
+  - software-hpc
+  - spectroscopy
+description: Research group in theoretical and computational chemistry focusing
+  on the electronic and optical properties of molecular and polymeric materials
+  for molecular electronics and energy storage, alongside grid computing and
+  eScience applications.
+added: 2026-10-03
+aliases:
+  - Research Group on Theoretical and Computational Chemistry
+pi: Carmen Piqueras Garcia
+parent: Universitat de València
+location:
+  city: Burjassot
+  country: ES
