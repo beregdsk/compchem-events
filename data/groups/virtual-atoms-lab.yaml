@@ -1,0 +1,20 @@
+id: virtual-atoms-lab
+name: Virtual Atoms Lab
+kind: group
+website: https://virtualatoms.org/research/
+topics:
+  - materials-modeling
+  - ml-chemistry
+  - dft
+  - electronic-structure
+  - software-hpc
+description: The Virtual Atoms Lab at Imperial College London, led by Dr Alex
+  Ganose, focuses on computational materials chemistry, data-driven discovery,
+  and machine learning to design functional materials for photovoltaics and
+  thermoelectrics.
+added: 2026-10-01
+pi: Alex Ganose
+parent: Imperial College London
+location:
+  city: London
+  country: GB
