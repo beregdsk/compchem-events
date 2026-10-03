@@ -1,0 +1,18 @@
+id: computational-structural-biology-research-team
+name: Computational Structural Biology Research Team
+kind: group
+website: https://www.riken.jp/en/research/labs/r-ccs/comput_struct_biol/index.html
+topics:
+  - biomolecular-simulation
+  - molecular-dynamics
+  - software-hpc
+description: The Computational Structural Biology Research Team develops
+  computational methods to integrate experimental data from cryo-EM, X-ray
+  crystallography, and XFEL with high-performance computing to model the
+  dynamics of large biomolecular complexes.
+added: 2026-10-03
+pi: Florence Tama
+parent: RIKEN Center for Computational Science
+location:
+  city: Kobe
+  country: JP
