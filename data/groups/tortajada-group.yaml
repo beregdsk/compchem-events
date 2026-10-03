@@ -1,0 +1,19 @@
+id: tortajada-group
+name: Tortajada Group
+kind: group
+website: https://www.unifr.ch/chem/en/research/groups/tortajada-group/
+topics:
+  - catalysis
+  - materials-modeling
+  - electronic-structure
+  - molecular-dynamics
+description: The Tortajada Group at the University of Fribourg focuses on
+  developing sustainable catalytic processes using Earth-abundant transition
+  metals. Their research aims to replace precious metals with more
+  environmentally friendly and cost-effective alternatives, exploring low…
+added: 2026-10-03
+pi: Andreu Tortajada Navarro
+parent: University of Fribourg
+location:
+  city: Fribourg
+  country: CH
