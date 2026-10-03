@@ -1,0 +1,18 @@
+id: medicinal-chemistry-applied-ai-unit
+name: Medicinal Chemistry Applied AI Unit
+kind: group
+website: https://www.riken.jp/en/research/labs/r-ccs/hpc_ai_drive_drug_dev_plat/med_chem_intell_appl_ai/index.html
+topics:
+  - drug-design
+  - cheminformatics
+  - ml-chemistry
+description: The Medicinal Chemistry Applied AI Unit at RIKEN Center for
+  Computational Science aims to accelerate drug discovery by using AI for
+  molecular generation, synthetic pathway prediction, and ADMET property
+  optimization.
+added: 2026-10-03
+pi: Kazuyoshi Ikeda
+parent: RIKEN Center for Computational Science
+location:
+  city: Yokohama
+  country: JP
