@@ -1,0 +1,19 @@
+id: rahm-s-research-group
+name: Rahm's Research Group
+kind: group
+website: https://www.chalmers.se/en/departments/chem/research/chemistry-and-biochemistry/rahms-research-group/
+topics:
+  - electronic-structure
+  - materials-modeling
+description: A theoretical chemistry group at Chalmers University of Technology
+  in Gothenburg, Sweden, led by Prof. Martin Rahm. The group bridges chemistry,
+  physics, materials science, and planetary science, focusing on electronic
+  structure analysis, quantum mechanical methods, and…
+added: 2026-10-03
+aliases:
+  - Rahm's Research Group | Chalmers
+pi: Martin Rahm
+parent: Chalmers University of Technology
+location:
+  city: Gothenburg
+  country: SE
