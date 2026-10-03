@@ -1,0 +1,23 @@
+id: attosecond-and-ultrafast-x-ray-optics
+name: Attosecond and ultrafast x-ray optics
+kind: group
+website: https://picongroup.wordpress.com/people/
+topics:
+  - quantum-dynamics
+  - spectroscopy
+  - excited-states
+  - materials-modeling
+  - biomolecular-simulation
+description: The Attosecond and ultrafast x-ray optics group at ICMM-CSIC, led
+  by Antonio Picón, conducts theoretical and computational research on quantum
+  dynamics, ultrafast phenomena, and exciton dynamics in materials using
+  advanced spectroscopy and simulation methods.
+added: 2026-10-01
+aliases:
+  - Group "Attosecond and ultrafast x-ray optics", Instituto de Ciencia de
+    Materiales de Madrid (ICMM-CSIC), Spain
+pi: Antonio Picón
+parent: Instituto de Ciencia de Materiales de Madrid (ICMM-CSIC)
+location:
+  city: Madrid
+  country: ES
