@@ -1,0 +1,21 @@
+id: computer-simulation-of-molecular-systems-csms
+name: Computer Simulation of Molecular Systems (CSMS)
+kind: group
+website: https://csms.ethz.ch/group.html
+topics:
+  - molecular-dynamics
+  - biomolecular-simulation
+  - enhanced-sampling
+  - software-hpc
+description: The Computer Simulation of Molecular Systems (CSMS) group, led by
+  Prof. P. H. Hünenberger at ETH Zurich, focuses on methodology developments and
+  practical applications in the classical simulation of molecular systems
+  relevant to chemistry and biology.
+added: 2026-10-03
+aliases:
+  - Group – Computer Simulation of Molecular Systems (CSMS) | ETH Zurich
+pi: Prof. P. H. Hünenberger
+parent: ETH Zurich
+location:
+  city: Zurich
+  country: CH
