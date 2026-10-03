@@ -1,0 +1,19 @@
+id: ai-driven-drug-discovery-collaborative-unit
+name: AI-driven Drug Discovery Collaborative Unit
+kind: group
+website: https://www.riken.jp/en/research/labs/r-ccs/hpc_ai_drive_drug_dev_plat/ai_drug_discov_collab/index.html
+topics:
+  - drug-design
+  - molecular-dynamics
+  - biomolecular-simulation
+  - ml-chemistry
+  - enhanced-sampling
+description: A research unit at RIKEN Center for Computational Science focusing
+  on AI and HPC-driven drug discovery, molecular simulation, and genomic
+  medicine, led by Yasushi Okuno.
+added: 2026-10-03
+pi: Yasushi Okuno
+parent: RIKEN Center for Computational Science
+location:
+  city: Kobe
+  country: JP
