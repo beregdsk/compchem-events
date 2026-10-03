@@ -1,0 +1,23 @@
+id: gutierrez-de-teran-lab
+name: Gutiérrez de Terán lab
+kind: group
+website: https://www.uu.se/en/department/cell-and-molecular-biology/research/computational-biology-and-bioinformatics/gutierrez-de-teran-lab
+topics:
+  - molecular-dynamics
+  - biomolecular-simulation
+  - drug-design
+  - ml-chemistry
+  - software-hpc
+description: The Gutiérrez de Terán lab at Uppsala University focuses on
+  computational biology and bioinformatics, developing molecular dynamics
+  simulation methods and machine learning models for membrane receptors,
+  protein-ligand interactions, and predicting pathogenic mutations for drug…
+added: 2026-10-03
+aliases:
+  - Gutiérrez de Terán lab – Department of Cell and Molecular Biology – Uppsala
+    University
+pi: Hugo Gutierrez de Terán
+parent: Department of Cell and Molecular Biology, Uppsala University
+location:
+  city: Uppsala
+  country: SE
